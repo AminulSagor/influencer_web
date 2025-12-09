@@ -1,34 +1,36 @@
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { GoGoal } from 'react-icons/go';
-import { BiSolidBriefcaseAlt } from 'react-icons/bi';
-import { IoIosHourglass } from 'react-icons/io';
-import { FaHandHoldingHeart } from 'react-icons/fa';
-import { ChevronRight } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { BiSolidBriefcaseAlt } from "react-icons/bi";
+import { FaHandHoldingHeart } from "react-icons/fa";
+import { GoGoal } from "react-icons/go";
+import { IoIosHourglass } from "react-icons/io";
+import EarningOverviewCard from "./_components/earning-overview-card";
+import ActionRequiredCard from "./_components/action-required-card";
 
 const dashboardCards = [
   {
-    title: 'Lifetime Earning',
-    value: '৳ 3,000,000',
+    title: "Lifetime Earning",
+    value: "৳ 3,000,000",
     icon: GoGoal,
   },
   {
-    title: 'Pending Earning',
-    value: '৳ 120,000',
+    title: "Pending Earning",
+    value: "৳ 120,000",
     icon: IoIosHourglass,
   },
   {
-    title: 'Active Jobs',
-    value: '14',
+    title: "Active Jobs",
+    value: "14",
     icon: BiSolidBriefcaseAlt,
-    link: '/',
+    link: "/",
   },
   {
-    title: 'New Offers',
-    value: '6',
+    title: "New Offers",
+    value: "6",
     icon: FaHandHoldingHeart,
-    link: '/',
+    link: "/",
   },
 ];
 
@@ -82,8 +84,12 @@ const page = () => {
       </div>
       <div className="pt-6 px-4">
         <div className="grid grid-cols-6 gap-4">
-          <Card className="col-span-4"></Card>
-          <Card className="col-span-2"></Card>
+          <div className="col-span-4 space-y-4">
+            <EarningOverviewCard />
+          </div>
+          <div className="col-span-2 space-y-4">
+            <ActionRequiredCard />
+          </div>
         </div>
       </div>
     </div>
