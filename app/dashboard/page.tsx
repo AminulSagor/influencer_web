@@ -8,6 +8,7 @@ import { GoGoal } from "react-icons/go";
 import { IoIosHourglass } from "react-icons/io";
 import EarningOverviewCard from "./_components/earning-overview-card";
 import ActionRequiredCard from "./_components/action-required-card";
+import WorkInProgressCard from "./_components/work-in-progress-card";
 
 const dashboardCards = [
   {
@@ -86,6 +87,7 @@ const page = () => {
         <div className="grid grid-cols-6 gap-4">
           <div className="col-span-4 space-y-4">
             <EarningOverviewCard />
+            <WorkInProgressCard />
           </div>
           <div className="col-span-2 space-y-4">
             <ActionRequiredCard />
