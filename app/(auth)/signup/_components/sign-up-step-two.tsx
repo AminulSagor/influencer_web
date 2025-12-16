@@ -68,12 +68,12 @@ const SignUpStepTwo = ({ nextstep }: Props) => {
               {
                 name: "brandName",
                 label: "Brand Name*",
-                placeholder: "enter your brand/Business Name",
+                placeholder: "Enter your brand/Business Name",
               },
               {
                 name: "firstName",
                 label: "First Name*",
-                placeholder: "enter your first name ",
+                placeholder: "Enter your first name ",
               },
               {
                 name: "lastName",
