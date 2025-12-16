@@ -41,9 +41,24 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /*************custom color variable****************/
+  --color-Primary: var(--Primary);
+  --color-Secondary: var(--Secondary);
+  --color-light-green: var(--light-green);
+  --color-off-white: var(--off-white);
+  --color-light-gray: var(--light-gray);
 }
 
 :root {
+  /****************custom colors**************/
+  --Primary: #2d5016;
+  --Secondary: #f5f5dc;
+  --light-green: #7a9b57;
+  --off-white: #f8f8f8;
+  --light-gray: #cacaca;
+
+  /*shadcn*/
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -120,3 +135,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+/**/
