@@ -11,10 +11,10 @@ export default function layout({
       <SidebarProvider>
         <AppSidebar />
         <main className="w-full flex flex-col">
-          <div className="border-b py-2.5 bg-white">
+          <div className="border-b py-2.5 bg-white sticky top-0">
             <SidebarTrigger />
           </div>
-          <div className="bg-[#F4F5F7] grow">
+          <div className="bg-[#F4F5F7] grow ">
             <div>{children}</div>
           </div>
         </main>

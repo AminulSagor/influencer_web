@@ -102,7 +102,7 @@ const WorkInProgressCard = () => {
               <p className="text-yellow-600 text-sm">
                 {data.progress}% Complete
               </p>
-              <Button variant="link" size={"sm"} className="p-0">
+              <Button variant="link" size={"sm"}>
                 <Link href={"/"} className="flex items-center text-xs">
                   View <ChevronRight />
                 </Link>
@@ -112,7 +112,7 @@ const WorkInProgressCard = () => {
         ))}
       </CardContent>
       <CardFooter className="justify-center">
-        <Button className="px-40 bg-[#F5F5DC]/60 text-[#2D5016] border-[#2D5016] border hover:bg-[#F5F5DC] hover:text-[#2D5016] hover:border-[#2D5016] cursor-pointer">
+        <Button className="w-full md:w-[50%] bg-[#F5F5DC]/60 text-[#2D5016] border-[#2D5016] border hover:bg-[#F5F5DC] hover:text-[#2D5016] hover:border-[#2D5016] cursor-pointer">
           View All Jobs
           <span>
             <FaArrowRightLong />

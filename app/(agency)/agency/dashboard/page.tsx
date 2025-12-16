@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { BiSolidBriefcaseAlt } from "react-icons/bi";
@@ -9,6 +8,9 @@ import { IoIosHourglass } from "react-icons/io";
 import EarningOverviewCard from "./_components/earning-overview-card";
 import ActionRequiredCard from "./_components/action-required-card";
 import WorkInProgressCard from "./_components/work-in-progress-card";
+import UpcomingDeadline from "./_components/upcoming-deadlines";
+import NewJobOffers from "./_components/new-job-offers";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const dashboardCards = [
   {
@@ -37,7 +39,7 @@ const dashboardCards = [
 
 const page = () => {
   return (
-    <div>
+    <div className="pb-20">
       <div className="pt-4 px-4">
         <div
           className="
@@ -83,15 +85,80 @@ const page = () => {
           ))}
         </div>
       </div>
-      <div className="pt-6 px-4">
-        <div className="grid grid-cols-6 gap-4">
-          <div className="col-span-4 space-y-4">
+      <div className="pt-6 px-4 space-y-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
+          {/* Left section */}
+          <div className="space-y-4 lg:col-span-4">
             <EarningOverviewCard />
             <WorkInProgressCard />
           </div>
-          <div className="col-span-2 space-y-4">
+
+          {/* Right section */}
+          <div className="space-y-4 lg:col-span-2">
             <ActionRequiredCard />
+            <UpcomingDeadline />
+            <NewJobOffers />
           </div>
+        </div>
+
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-[#2d5016]">Lifetime Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="grid lg:grid-cols-4 gap-2">
+              <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                <p className="text-sm font-medium">Top Client</p>
+                <div>
+                  <h2 className="text-3xl font-semibold text-[#7a9b57]">
+                    TechGuru
+                  </h2>
+                  <p className="text-sm font-medium text-[#7a9b57]">
+                    12 Jobs Completed
+                  </p>
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Last Job: 12 Dec 2025
+                </p>
+              </div>
+
+              <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                <div className="flex flex-col justify-center gap-1  h-full">
+                  <h2 className="text-3xl font-semibold text-[#7a9b57]">40</h2>
+                  <div className="flex items-center justify-between ">
+                    <p className="text-sm font-medium ">12 Jobs Completed</p>
+                    <div>
+                      <ChevronRight size={14} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                <div className="flex flex-col justify-center gap-1  h-full">
+                  <h2 className="text-3xl font-semibold text-yellow-700">40</h2>
+                  <div className="flex items-center justify-between ">
+                    <p className="text-sm font-medium ">4 Jobs Declined</p>
+                    <div>
+                      <ChevronRight size={14} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                <div className="flex flex-col justify-center gap-1  h-full">
+                  <h2 className="text-3xl font-semibold text-[#7a9b57]">
+                    Tiktok
+                  </h2>
+                  <div className="flex items-center justify-between ">
+                    <p className="text-sm font-medium ">Most Used Platform</p>
+                    <div>{/* <ChevronRight size={14} /> */}</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -6,7 +6,7 @@ import {
   BarChart3,
   LifeBuoy,
   Settings,
-} from 'lucide-react';
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -18,40 +18,40 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/sidebar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const items = [
   {
-    title: 'Dashboard',
-    url: '/dashboard',
+    title: "Dashboard",
+    url: "/agency/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: 'Jobs',
-    url: '/jobs',
+    title: "Jobs",
+    url: "/agency/jobs",
     icon: BriefcaseBusiness, // or "Briefcase"
   },
   {
-    title: 'Earnings',
-    url: '/earnings',
+    title: "Earnings",
+    url: "/agency/earnings",
     icon: Wallet, // or "DollarSign"
   },
   {
-    title: 'Reports',
-    url: '/reports',
+    title: "Reports",
+    url: "/agency/reports",
     icon: BarChart3,
   },
   {
-    title: 'Support Center',
-    url: '/support-center',
+    title: "Support Center",
+    url: "/agency/support-center",
     icon: LifeBuoy,
   },
   {
-    title: 'Account Settings',
-    url: '/account-settings',
+    title: "Account Settings",
+    url: "/agency/account-settings",
     icon: Settings,
   },
 ];
@@ -75,8 +75,8 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       className={cn(
-                        'py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white',
-                        isActive && 'bg-[#7A9B57] text-white'
+                        "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white",
+                        isActive && "bg-[#7A9B57] text-white"
                       )}
                     >
                       <Link href={item.url}>
