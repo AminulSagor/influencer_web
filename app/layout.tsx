@@ -21,9 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased`}>
-        <div className="px-4 md:px-10 lg:px-40 min-h-screen bg-Secondary p-8">
-          {children}
-        </div>
+        <div className="min-h-screen bg-Secondary p-4 md:p-6">{children}</div>
       </body>
     </html>
   );
