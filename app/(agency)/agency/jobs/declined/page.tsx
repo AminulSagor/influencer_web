@@ -6,8 +6,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import ButtonLinks from "../_components/button-links";
-import ActiveJobSearch from "./_components/active-job-search";
-import ActiveJobList from "./_components/active-job-list";
+import DeclinedJobSearch from "./_components/declined-job-search";
+import DeclinedJobList from "./_components/declined-job-list";
 
 const page = () => {
   return (
@@ -28,8 +28,8 @@ const page = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-4 space-y-8">
-            <ActiveJobSearch />
-            <ActiveJobList />
+            <DeclinedJobSearch />
+            <DeclinedJobList />
           </CardContent>
         </Card>
       </div>

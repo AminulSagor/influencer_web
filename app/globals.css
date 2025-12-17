@@ -49,6 +49,7 @@
   --color-off-white: var(--off-white);
   --color-light-gray: var(--light-gray);
   --color-orange: var(--orange);
+  --color-dark-gray: var(--dark-gray);
 }
 
 :root {
@@ -59,6 +60,7 @@
   --off-white: #f8f8f8;
   --light-gray: #cacaca;
   --orange: #cc7722;
+  --dark-gray: #989898;
 
   /*shadcn*/
   --radius: 0.625rem;
