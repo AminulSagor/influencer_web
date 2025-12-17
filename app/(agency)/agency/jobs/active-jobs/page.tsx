@@ -1,11 +1,15 @@
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React from "react";
 import ButtonLinks from "../_components/button-links";
+import QuotedSearch from "../quoted/_components/quoted-search";
+import QuotedList from "../quoted/_components/quoted-list";
+import ActiveJobSearch from "./_components/active-job-search";
+import ActiveJobList from "./_components/active-job-list";
 
 const page = () => {
   return (
@@ -25,6 +29,10 @@ const page = () => {
               <ButtonLinks />
             </div>
           </CardHeader>
+          <CardContent className="pt-4 space-y-8">
+            <ActiveJobSearch />
+            <ActiveJobList />
+          </CardContent>
         </Card>
       </div>
     </div>

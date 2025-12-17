@@ -1,16 +1,15 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Search } from "lucide-react";
-const NewOfferSearch = () => {
+const QuotedSearch = () => {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* Left section */}
       {/* <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 flex-1">
         <h3 className="text-sm font-semibold text-Primary whitespace-nowrap">
-          New offers just for you
+          Quoted
         </h3>
 
-     
         <div className="relative w-full sm:max-w-sm lg:max-w-md">
           <Search
             size={18}
@@ -28,7 +27,7 @@ const NewOfferSearch = () => {
       </div> */}
       <div className="flex flex-col gap-3  flex-1">
         <h3 className="text-sm font-semibold text-Primary whitespace-nowrap">
-          New jobs only for you
+          Quoted
         </h3>
 
         <div className="flex sm:items-center gap-4 flex-col sm:flex-row">
@@ -49,6 +48,7 @@ const NewOfferSearch = () => {
           </p>
         </div>
       </div>
+
       {/* Sort button */}
       <div className="flex justify-end">
         <Button
@@ -63,4 +63,4 @@ const NewOfferSearch = () => {
   );
 };
 
-export default NewOfferSearch;
+export default QuotedSearch;
