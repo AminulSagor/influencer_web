@@ -1,0 +1,21 @@
+{
+  "HomePage": {
+    "title": "Hello world!"
+  },
+  "Signup": {
+    "step1": {
+      "title": "Sign Up",
+      "subtitle": "Select your account type",
+      "continue": "Continue",
+      "login": "Login",
+      "rightTitle1": "Connect with Top",
+      "rightTitle2": "Talent & Brands",
+      "rightDescription": "The ultimate marketplace connecting visionary brands with verified influencers and agencies.",
+      "users": {
+        "brand": { "title": "Brand", "role": "Promote My Business" },
+        "influencer": { "title": "Influencer", "role": "Monetize My Reach" },
+        "agency": { "title": "Ad Agency", "role": "Manage Client Campaigns" }
+      }
+    }
+  }
+}
