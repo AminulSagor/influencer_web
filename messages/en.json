@@ -1,7 +1,4 @@
 {
-  "HomePage": {
-    "title": "Hello world!"
-  },
   "Signup": {
     "step1": {
       "title": "Sign Up",
@@ -16,6 +13,67 @@
         "influencer": { "title": "Influencer", "role": "Monetize My Reach" },
         "agency": { "title": "Ad Agency", "role": "Manage Client Campaigns" }
       }
+    },
+     "step2": {
+      "title": "Ready to launch?",
+      "subtitle": "Lets grow your brand!",
+      "profileDetails": "Profile Details",
+      "continue": "Continue",
+      "rightTitle": "Secure Payments & Milestones",
+      "rightDescription": "Manage campaigns with ease. Funds are held securely and released only when milestones are met.",
+      "fields": {
+        "brandName": { "label": "Brand Name*", "placeholder": "Enter your brand/Business Name" },
+        "firstName": { "label": "First Name*", "placeholder": "Enter your first name" },
+        "lastName": { "label": "Last Name*", "placeholder": "Enter your last name" },
+        "email": { "label": "Email Address*", "placeholder": "Ex: johndoe@email.com" },
+        "phone": { "label": "Phone Number*", "placeholder": "Ex: +8801234567890" },
+        "password": { "label": "Password*", "placeholder": "Min 8 characters long" }
+      }
+    },
+     "step3": {
+      "title": "Verification Code Sent!",
+      "subtitle": "We send a code to +880123456798",
+      "inputPlaceholder": "",
+      "resend": "Resend",
+      "continue": "Continue",
+      "loginText": "Already have an account?",
+      "loginButton": "Login",
+      "rightTitle": "Scale Your Impact",
+      "rightDescription": "Whether you're launching a product or building your personal brand, grow faster with BrandGuru."
+    },
+    "step4": {
+      "title": "Phone Number Verified!",
+      "subtitle": "Great! Your phone number is now linked to your account. Let's continue by setting up your profile.",
+      "continue": "Continue"
+    },
+    "step5": {
+      "title": "Hello, Partner!",
+      "subtitle": "Establish Your Business Presence",
+      "description": "Let's get your office location registered to connect with local and regional talents!",
+      "addressSection": "Address *",
+      "thanaLabel": "Thana *",
+      "zilaLabel": "Zila *",
+      "fullAddressLabel": "Full Address",
+      "thanaPlaceholder": "Enter your Thana",
+      "zilaPlaceholder": "Enter your Zila",
+      "fullAddressPlaceholder": "Enter your full address",
+      "customizeExperience": "This helps us customize your experience",
+      "continue": "Continue"
+    },
+    "step6": {
+      "title": "Time to shine!",
+      "subtitle": "Let shine your social presence!",
+      "description": "Help creators understand your brand's voice and aesthetic by linking your active social channels.",
+      "descriptionSmall": "We use these links to verify your business as well as audience and match you with the perfect paid collaborations.",
+      "socialSection": "Your Social Media Links",
+      "websiteLabel": "Website Address (if you have)",
+      "websitePlaceholder": "Website Address",
+      "platformLabel": "Choose Platforms *",
+      "platformPlaceholder": "Select platform",
+      "profileLinkLabel": "Profile Link *",
+      "profileLinkPlaceholder": "Page Link",
+      "addAnother": "Add Another",
+      "continue": "Continue"
     }
   }
 }

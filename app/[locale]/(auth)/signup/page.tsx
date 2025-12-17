@@ -6,9 +6,10 @@ import SignUpStepTwo from "@/app/[locale]/(auth)/signup/_components/sign-up-step
 import SignUpStepThree from "@/app/[locale]/(auth)/signup/_components/sign-up-step-three";
 import SignUpStepFour from "@/app/[locale]/(auth)/signup/_components/signup-step-four";
 import SignUpStepFive from "@/app/[locale]/(auth)/signup/_components/signup-step-five";
+import SignUpStepSix from "@/app/[locale]/(auth)/signup/_components/signup-step-six";
 
 const SignUpPage = () => {
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(6);
 
   const increaseStep = () => {
     setStep(step + 1);
@@ -23,7 +24,7 @@ const SignUpPage = () => {
     <div className=" md:flex items-center justify-center">
       <div className="bg-white max-w-255 rounded-md shadow-md p-4 md:p-6 lg:p-8 min-h-205.5 h-full mx-auto border">
         {/* Header with back button and stepper */}
-        <div className="flex">
+        <div className="flex items-center">
           <button
             className="text-Primary cursor-pointer"
             onClick={decreaseStep}
@@ -33,8 +34,8 @@ const SignUpPage = () => {
           </button>
 
           {/* stepper */}
-          <div className="w-full flex justify-center">
-            <div className="flex items-center mt-4 gap-2">
+          <div className="w-full flex justify-end md:justify-center ">
+            <div className="flex items-center gap-2">
               {/* first line */}
               <span className="bg-Primary h-2 rounded-md w-14 inline-block"></span>
 
@@ -63,6 +64,8 @@ const SignUpPage = () => {
             <SignUpStepFour nextStep={increaseStep} />
           ) : step === 5 ? (
             <SignUpStepFive nextStep={increaseStep} />
+          ) : step === 6 ? (
+            <SignUpStepSix nextStep={increaseStep} />
           ) : (
             <div>Step 3 or other content</div>
           )}

@@ -1,24 +1,27 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   nextStep: () => void;
 };
 
 const SignUpStepThree = ({ nextStep }: Props) => {
+  const t = useTranslations("Signup.step3");
+
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleChange = (index: number, value: string) => {
-    // Only allow single digit and numbers
     if (value.length <= 1 && /^\d*$/.test(value)) {
       const newCodes = [...codes];
       newCodes[index] = value;
       setCodes(newCodes);
 
-      // Auto-focus next input
       if (value && index < 3) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -26,17 +29,12 @@ const SignUpStepThree = ({ nextStep }: Props) => {
   };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace to focus previous input
     if (e.key === "Backspace" && !codes[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
-    // Handle left arrow
     if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-
-    // Handle right arrow
     if (e.key === "ArrowRight" && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -56,7 +54,6 @@ const SignUpStepThree = ({ nextStep }: Props) => {
 
       setCodes(newCodes);
 
-      // Focus the last input after paste
       if (digits.length >= 4) {
         inputRefs.current[3]?.focus();
       } else if (digits.length > 0) {
@@ -69,10 +66,8 @@ const SignUpStepThree = ({ nextStep }: Props) => {
     const code = codes.join("");
     if (code.length === 4) {
       console.log("Verification code:", code);
-      nextStep();
-    } else {
-      nextStep();
     }
+    nextStep();
   };
 
   return (
@@ -80,10 +75,10 @@ const SignUpStepThree = ({ nextStep }: Props) => {
       {/* Left content */}
       <div className="md:w-1/2 flex flex-col items-center justify-center">
         <h1 className="text-Primary text-[32px] lg:text-[38px] text-center max-w-72 font-semibold">
-          Verification Code Sent!
+          {t("title")}
         </h1>
-        <p className="text-[16px] text-black mt-6 font-normal">
-          We send a code to +880123456798
+        <p className="text-[16px] text-black mt-6 font-normal text-center">
+          {t("subtitle")}
         </p>
 
         {/* code send part */}
@@ -112,9 +107,9 @@ const SignUpStepThree = ({ nextStep }: Props) => {
             ))}
           </div>
           <p className="text-light-gray text-sm mt-4 text-center">
-            Didn&apos;t receive a code?{" "}
+            {t("resend")}:{" "}
             <button className="text-black cursor-pointer font-medium hover:underline">
-              Resend
+              {t("resend")}
             </button>
           </p>
         </div>
@@ -123,7 +118,7 @@ const SignUpStepThree = ({ nextStep }: Props) => {
           className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full sm:w-78.5 text-[18px] mt-10"
           onClick={handleContinue}
         >
-          Continue
+          {t("continue")}
         </Button>
 
         <p className="text-light-gray text-sm mt-12 text-center">
@@ -143,11 +138,10 @@ const SignUpStepThree = ({ nextStep }: Props) => {
           alt="brand-image"
         />
         <div className="text-Primary text-[30px] text-center mt-4">
-          <h1>Scale Your Impact</h1>
+          <h1>{t("rightTitle")}</h1>
         </div>
         <p className="text-Primary mt-14 text-[15px] text-center px-4">
-          Whether you&apos;re launching a product or building your personal
-          brand, grow faster with BrandGuru.
+          {t("rightDescription")}
         </p>
       </div>
     </div>

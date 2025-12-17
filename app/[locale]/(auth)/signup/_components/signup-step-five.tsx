@@ -1,72 +1,170 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
-import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { useTranslations } from "next-intl";
 
 type Props = {
   nextStep: () => void;
 };
 
-const SignUpStepFive = ({ nextStep }: Props) => {
-  return (
-    <div className="flex flex-col md:flex-row gap-6 lg:gap-8 justify-between">
-      <div className="md:w-1/2">
-        <div className="flex flex-col md:items-center text-start">
-          <div className="md:w-auto lg:w-full lg:pl-16">
-            <h1 className="text-Primary text-[52px] font-semibold">
-              Hello, Partner!
-            </h1>
-            <p className="text-[23px] text-light-green font-semibold">
-              Establish Your Business Presence
-            </p>
-          </div>
-          <p className="text-[18px] text-primary">
-            Let&apos;s get your office location registered to connect with local
-            and regional talents!
-          </p>
+type AddressFormValues = {
+  thana: string;
+  zila: string;
+  fullAddress: string;
+};
 
-          <Button
-            className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full sm:w-78.5 text-[18px] mt-10"
-            onClick={() => nextStep()}
-          >
-            Continue
-          </Button>
+const SignUpStepFive = ({ nextStep }: Props) => {
+  const t = useTranslations("Signup.step5");
+
+  const methods = useForm<AddressFormValues>({
+    defaultValues: {
+      thana: "",
+      zila: "",
+      fullAddress: "",
+    },
+  });
+
+  const onSubmit = (data: AddressFormValues) => {
+    console.log(data);
+    nextStep();
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-10">
+      {/* Left Content */}
+      <div className="w-full md:w-1/2">
+        <div className="flex flex-col md:items-center space-y-5 md:space-y-10 text-center lg:px-4">
+          <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
+            {t("title")}
+          </h1>
+          <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
+            {t("subtitle")}
+          </p>
+          <p className="text-[18px] text-Primary">{t("description")}</p>
+
+          <Image
+            src={"/auth-images/step-1-brand-image.png"}
+            height={428}
+            width={428}
+            alt="brand-image"
+            className="hidden md:block"
+          />
         </div>
-        <p className="text-light-gray text-sm mt-5 text-center">
-          Already have an account?{" "}
-          <span className="text-black">
-            <Link href={"/login"}>Login</Link>
-          </span>
-        </p>
       </div>
 
-      <div className="hidden md:block border border-light-green rounded-xl p-2 w-1/2">
-        <Image
-          src={"/auth-images/step-1-brand-image.png"}
-          height={428}
-          width={428}
-          alt="brand-image"
-        />
-        <div className="text-Primary text-[30px] font-semibold flex flex-col items-center justify-center">
-          <h1 className="text-center">Connect with Top </h1>
-          <h1>Talent & Brands</h1>
+      {/* Right Content / Form */}
+      <div className="rounded-xl md:p-4 w-full md:w-1/2 ">
+        <div className="flex gap-2 text-Primary">
+          <Image
+            src={"/auth-images/step-5-subimage.png"}
+            height={29}
+            width={29}
+            alt="logo-images"
+            className="h-8"
+          />
+          <p>{t("customizeExperience")}</p>
         </div>
-        <p className="text-Primary mt-6 text-[15px] text-center px-4 lg:px-8">
-          The ultimate marketplace connecting visionary brands with verified
-          influencers and agencies.
-        </p>
 
-        {/*  language swticher */}
-        {/* language switcher */}
-        <div className="flex justify-center mt-6">
-          <div className="flex border border-light-gray p-1.5 rounded-full overflow-hidden">
-            <button className="px-6 py-2 bg-light-green text-white text-sm rounded-full font-medium cursor-pointer">
-              EN
-            </button>
-            <button className="px-4 py-2 text-Primary text-sm font-medium cursor-pointer">
-              বাং
-            </button>
-          </div>
+        <div className="flex gap-2 text-Primary mt-10 items-center pb-4">
+          <Image
+            src={"/auth-images/step-5-location.png"}
+            height={29}
+            width={29}
+            alt="logo-images"
+            className="h-8"
+          />
+          <p className="font-semibold text-lg">{t("addressSection")}</p>
         </div>
+
+        {/* Form Area */}
+        <Form {...methods}>
+          <form
+            onSubmit={methods.handleSubmit(onSubmit)}
+            className="space-y-4 mt-4"
+          >
+            <FormField
+              control={methods.control}
+              name="thana"
+              rules={{ required: `${t("thanaLabel")} is required` }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-light-green">
+                    {t("thanaLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("thanaPlaceholder")}
+                      {...field}
+                      className="bg-white border py-3 font-normal focus-visible:ring-1"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={methods.control}
+              name="zila"
+              rules={{ required: `${t("zilaLabel")} is required` }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-light-green">
+                    {t("zilaLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t("zilaPlaceholder")}
+                      {...field}
+                      className="bg-white border py-3 font-normal focus-visible:ring-1"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={methods.control}
+              name="fullAddress"
+              rules={{ required: `${t("fullAddressLabel")} is required` }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-light-green">
+                    {t("fullAddressLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder={t("fullAddressPlaceholder")}
+                      {...field}
+                      className="bg-white border h-32 font-normal focus-visible:ring-1"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-4"
+            >
+              {t("continue")}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );
