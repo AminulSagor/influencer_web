@@ -45,19 +45,21 @@ const SignUpStepFive = ({ nextStep }: Props) => {
     <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-10">
       {/* Left Content */}
       <div className="w-full md:w-1/2">
-        <div className="flex flex-col md:items-center space-y-5 md:space-y-10 text-center lg:px-4">
-          <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
-            {t("title")}
-          </h1>
-          <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
-            {t("subtitle")}
-          </p>
-          <p className="text-[18px] text-Primary">{t("description")}</p>
+        <div className="flex flex-col md:items-center  text-center lg:px-4">
+          <div className="space-y-5 md:space-y-10">
+            <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
+              {t("title")}
+            </h1>
+            <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
+              {t("subtitle")}
+            </p>
+            <p className="text-[18px] text-Primary">{t("description")}</p>
+          </div>
 
           <Image
-            src={"/auth-images/step-1-brand-image.png"}
-            height={428}
-            width={428}
+            src={"/auth-images/step-5-brand.png"}
+            height={400}
+            width={400}
             alt="brand-image"
             className="hidden md:block"
           />

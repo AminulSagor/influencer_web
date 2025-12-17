@@ -42,37 +42,39 @@ const SignUpStepSix = ({ nextStep }: Props) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-10">
+    <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-4">
       {/* Left Content */}
       <div className="w-full md:w-1/2">
-        <div className="flex flex-col  space-y-5 md:space-y-10 text-center lg:text-start lg:px-4">
-          <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
-            {t("title")}
-          </h1>
-          <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
-            {t("subtitle")}
-          </p>
-          <p className=" text-md md:text-[18px] text-Primary">
-            {t("description")}
-          </p>
+        <div className="flex flex-col  text-center lg:text-start lg:px-4">
+          <div className=" space-y-5 md:space-y-10">
+            <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
+              {t("title")}
+            </h1>
+            <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
+              {t("subtitle")}
+            </p>
+            <p className=" text-md md:text-[18px] text-Primary">
+              {t("description")}
+            </p>
+          </div>
 
           <Image
-            src={"/auth-images/step-1-brand-image.png"}
+            src={"/auth-images/step-6-brand.png"}
             height={428}
             width={428}
             alt="brand-image"
-            className="hidden md:block"
+            className="hidden md:block object-cover"
           />
         </div>
       </div>
 
       {/* Right Content / Form */}
       <div className="rounded-xl md:p-4 w-full md:w-1/2 ">
-        <div className="flex gap-4 text-Primary items-center">
+        <div className="flex gap-4 text-Primary md:items-center">
           <Image
             src={"/auth-images/step-6-handshack.png"}
-            height={29}
-            width={29}
+            height={35}
+            width={35}
             alt="logo-images"
             className="h-8"
           />
@@ -82,8 +84,8 @@ const SignUpStepSix = ({ nextStep }: Props) => {
         <div className="flex gap-4 text-Primary mt-10 items-center pb-4">
           <Image
             src={"/auth-images/step-6-media.png"}
-            height={29}
-            width={29}
+            height={35}
+            width={35}
             alt="logo-images"
             className="h-8"
           />
@@ -156,13 +158,13 @@ const SignUpStepSix = ({ nextStep }: Props) => {
               )}
             />
 
-            <div className="border border-dashed border-Primary w-full rounded-lg h-12 text-light-green cursor-pointer flex items-center justify-center">
+            <div className="border border-dashed border-Primary w-full rounded-lg h-14 text-light-green cursor-pointer flex items-center justify-center">
               + {t("addAnother")}
             </div>
 
             <Button
               type="submit"
-              className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-4"
+              className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-10"
             >
               {t("continue")}
             </Button>

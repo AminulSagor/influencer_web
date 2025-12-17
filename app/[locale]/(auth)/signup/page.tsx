@@ -7,9 +7,13 @@ import SignUpStepThree from "@/app/[locale]/(auth)/signup/_components/sign-up-st
 import SignUpStepFour from "@/app/[locale]/(auth)/signup/_components/signup-step-four";
 import SignUpStepFive from "@/app/[locale]/(auth)/signup/_components/signup-step-five";
 import SignUpStepSix from "@/app/[locale]/(auth)/signup/_components/signup-step-six";
+import SignUpStepSeven from "@/app/[locale]/(auth)/signup/_components/signup-step-seven";
+import SignUpStepEight from "@/app/[locale]/(auth)/signup/_components/signup-step-eight";
+import SignUpStepNine from "@/app/[locale]/(auth)/signup/_components/signup-step-nine";
+import FinalStep from "@/app/[locale]/(auth)/signup/_components/final-step";
 
 const SignUpPage = () => {
-  const [step, setStep] = useState<number>(6);
+  const [step, setStep] = useState<number>(1);
 
   const increaseStep = () => {
     setStep(step + 1);
@@ -22,7 +26,7 @@ const SignUpPage = () => {
   return (
     // main container
     <div className=" md:flex items-center justify-center">
-      <div className="bg-white max-w-255 rounded-md shadow-md p-4 md:p-6 lg:p-8 min-h-205.5 h-full mx-auto border">
+      <div className="bg-white max-w-255 rounded-md shadow-md p-4 md:p-6 lg:px-9 min-h-205.5 h-full mx-auto">
         {/* Header with back button and stepper */}
         <div className="flex items-center">
           <button
@@ -66,8 +70,14 @@ const SignUpPage = () => {
             <SignUpStepFive nextStep={increaseStep} />
           ) : step === 6 ? (
             <SignUpStepSix nextStep={increaseStep} />
+          ) : step === 7 ? (
+            <SignUpStepSeven nextStep={increaseStep} />
+          ) : step === 8 ? (
+            <SignUpStepEight nextStep={increaseStep} />
+          ) : step === 9 ? (
+            <SignUpStepNine nextStep={increaseStep} />
           ) : (
-            <div>Step 3 or other content</div>
+            <FinalStep />
           )}
         </div>
       </div>

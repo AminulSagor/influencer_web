@@ -14,7 +14,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import LanguageSwitcher from "@/app/[locale]/(auth)/signup/_components/language-switcher";
 
 type Props = {
   nextStep: () => void;
@@ -108,7 +107,7 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
                 key={field.name}
                 control={methods.control}
                 name={field.name as keyof SignUpFormValues}
-                rules={{ required: `${field.label} is required` }}
+                rules={{ required: t(`fields.${field.name}.required`) }}
                 render={({ field: hookField }) => (
                   <FormItem>
                     <FormLabel className="text-light-green">
@@ -118,7 +117,7 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
                       <Input
                         type={field.type || "text"}
                         placeholder={field.placeholder}
-                        className="bg-white border py-4 focus:outline-none focus:border-white focus:ring-0 focus:ring-offset-0 focus:shadow-none"
+                        className="bg-white border py-6 focus:outline-none font-normal focus-visible:ring-1"
                         {...hookField}
                       />
                     </FormControl>
