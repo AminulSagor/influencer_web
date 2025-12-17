@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import TopBar from "./_component/top-bar";
 
 export default function layout({
   children,
@@ -11,9 +12,7 @@ export default function layout({
       <SidebarProvider>
         <AppSidebar />
         <main className="w-full flex flex-col">
-          <div className="border-b py-2.5 bg-white sticky top-0">
-            <SidebarTrigger />
-          </div>
+          <TopBar />
           <div className="bg-[#F4F5F7] grow ">
             <div>{children}</div>
           </div>
