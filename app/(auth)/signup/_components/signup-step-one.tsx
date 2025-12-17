@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 
 type Props = {
-  nextstep: () => void;
+  nextStep: () => void;
 };
 
 type User = {
@@ -14,7 +14,7 @@ type User = {
   role: string;
 };
 
-const SignUpStepOne = ({ nextstep }: Props) => {
+const SignUpStepOne = ({ nextStep }: Props) => {
   const [selected, setSelected] = useState<string | null>(null);
 
   const users: User[] = [
@@ -73,7 +73,7 @@ const SignUpStepOne = ({ nextstep }: Props) => {
 
           <Button
             className="text-white bg-light-green h-16 w-full sm:w-78.5 text-[18px] mt-10"
-            onClick={() => nextstep()}
+            onClick={() => nextStep()}
           >
             Continue
           </Button>
