@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 
 type Props = {
-  nextstep: () => void;
+  nextStep: () => void;
 };
 
 type SignUpFormValues = {
@@ -27,7 +27,7 @@ type SignUpFormValues = {
   password: string;
 };
 
-const SignUpStepTwo = ({ nextstep }: Props) => {
+const SignUpStepTwo = ({ nextStep }: Props) => {
   const methods = useForm<SignUpFormValues>({
     defaultValues: {
       brandName: "",
@@ -41,7 +41,7 @@ const SignUpStepTwo = ({ nextstep }: Props) => {
 
   const onSubmit = (data: SignUpFormValues) => {
     console.log(data); // API call here
-    nextstep();
+    nextStep();
   };
 
   return (
@@ -126,7 +126,7 @@ const SignUpStepTwo = ({ nextstep }: Props) => {
 
             <Button
               type="submit"
-              className="text-white bg-light-green h-12 w-full text-[18px]"
+              className="text-white bg-light-green h-12 w-full text-[18px] hover:bg-Primary cursor-pointer"
             >
               Continue
             </Button>

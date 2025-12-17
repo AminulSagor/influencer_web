@@ -3,6 +3,9 @@ import { GoArrowLeft } from "react-icons/go";
 import { useState } from "react";
 import SignUpStepOne from "@/app/(auth)/signup/_components/signup-step-one";
 import SignUpStepTwo from "@/app/(auth)/signup/_components/sign-up-step-two";
+import SignUpStepThree from "@/app/(auth)/signup/_components/sign-up-step-three";
+import SignUpStepFour from "@/app/(auth)/signup/_components/signup-step-four";
+import SignUpStepFive from "@/app/(auth)/signup/_components/signup-step-five";
 
 const SignUpPage = () => {
   const [step, setStep] = useState<number>(1);
@@ -51,9 +54,15 @@ const SignUpPage = () => {
         {/* Step content */}
         <div className="p-4 lg:pt-6">
           {step === 1 ? (
-            <SignUpStepOne nextstep={increaseStep} />
+            <SignUpStepOne nextStep={increaseStep} />
           ) : step === 2 ? (
-            <SignUpStepTwo nextstep={increaseStep} />
+            <SignUpStepTwo nextStep={increaseStep} />
+          ) : step === 3 ? (
+            <SignUpStepThree nextStep={increaseStep} />
+          ) : step === 4 ? (
+            <SignUpStepFour nextStep={increaseStep} />
+          ) : step === 5 ? (
+            <SignUpStepFive nextStep={increaseStep} />
           ) : (
             <div>Step 3 or other content</div>
           )}
