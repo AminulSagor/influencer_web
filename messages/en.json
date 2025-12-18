@@ -1,0 +1,233 @@
+{
+  "Signup": {
+    "step1": {
+      "title": "Sign Up",
+      "subtitle": "Select your account type",
+      "continue": "Continue",
+      "login": "Login",
+      "rightTitle1": "Connect with Top",
+      "rightTitle2": "Talent & Brands",
+      "rightDescription": "The ultimate marketplace connecting visionary brands with verified influencers and agencies.",
+      "users": {
+        "brand": { "title": "Brand", "role": "Promote My Business" },
+        "influencer": { "title": "Influencer", "role": "Monetize My Reach" },
+        "agency": { "title": "Ad Agency", "role": "Manage Client Campaigns" }
+      }
+    },
+     "step2": {
+      "title": "Ready to launch?",
+      "subtitle": "Lets grow your brand!",
+      "profileDetails": "Profile Details",
+      "continue": "Continue",
+      "rightTitle": "Secure Payments & Milestones",
+      "rightDescription": "Manage campaigns with ease. Funds are held securely and released only when milestones are met.",
+      "fields": {
+         "brandName": { 
+          "label": "Brand Name*", 
+          "placeholder": "Enter your brand/Business Name",
+          "required": "Brand Name is required"
+        },
+        "firstName": { 
+          "label": "First Name*", 
+          "placeholder": "Enter your first name",
+          "required": "First Name is required"
+        },
+        "lastName": { 
+          "label": "Last Name*", 
+          "placeholder": "Enter your last name",
+          "required": "Last Name is required"
+        },
+        "email": { 
+          "label": "Email Address*", 
+          "placeholder": "Ex: johndoe@email.com",
+          "required": "Email Address is required"
+        },
+        "phone": { 
+          "label": "Phone Number*", 
+          "placeholder": "Ex: +8801234567890",
+          "required": "Phone Number is required"
+        },
+        "password": { 
+          "label": "Password*", 
+          "placeholder": "Min 8 characters long",
+          "required": "Password is required"
+        }
+      }
+    },
+     "step3": {
+      "title": "Verification Code Sent!",
+      "subtitle": "We send a code to +880123456798",
+      "inputPlaceholder": "",
+      "resend": "Resend",
+      "continue": "Continue",
+      "loginText": "Already have an account?",
+      "loginButton": "Login",
+      "rightTitle": "Scale Your Impact",
+      "rightDescription": "Whether you're launching a product or building your personal brand, grow faster with BrandGuru."
+    },
+    "step4": {
+      "title": "Phone Number Verified!",
+      "subtitle": "Great! Your phone number is now linked to your account. Let's continue by setting up your profile.",
+      "continue": "Continue"
+    },
+    "step5": {
+      "title": "Hello, Partner!",
+      "subtitle": "Establish Your Business Presence",
+      "description": "Let's get your office location registered to connect with local and regional talents!",
+      "addressSection": "Address *",
+      "thanaLabel": "Thana *",
+      "zilaLabel": "Zila *",
+      "fullAddressLabel": "Full Address",
+      "thanaPlaceholder": "Enter your Thana",
+      "zilaPlaceholder": "Enter your Zila",
+      "fullAddressPlaceholder": "Enter your full address",
+      "customizeExperience": "This helps us customize your experience",
+      "continue": "Continue"
+    },
+    "step6": {
+      "title": "Time to shine!",
+      "subtitle": "Let shine your social presence!",
+      "description": "Help creators understand your brand's voice and aesthetic by linking your active social channels.",
+      "descriptionSmall": "We use these links to verify your business as well as audience and match you with the perfect paid collaborations.",
+      "socialSection": "Your Social Media Links",
+      "websiteLabel": "Website Address (if you have)",
+      "websitePlaceholder": "Website Address",
+      "platformLabel": "Choose Platforms *",
+      "platformPlaceholder": "Select platform",
+      "profileLinkLabel": "Profile Link *",
+      "profileLinkPlaceholder": "Page Link",
+      "addAnother": "Add Another",
+      "continue": "Continue",
+      "uploadHint": "PNG, JPEG, PDF (Max 2MB)",
+      "required": "This field is required",
+      "fileSizeError": "Max file size is 2MB",
+      "fileTypeError": "Only PNG, JPEG or PDF allowed",
+      "selectedFile": "Selected:"
+    },
+     "step7": {
+      "title": "Build Brand Trust",
+      "subtitle": "Let's get you ready to grow!",
+      "description": "Just a quick check to make sure you're the real you! This ensures your money goes to the right place. We keep your info 100% private.",
+      "securityText": "We use this to prevent fraud and secure your account. For more information, please see our",
+      "privacyPolicy": "Privacy Policy.",
+      "provideNidTitle": "Provide your NID",
+      "nidLabel": "Provide your NID",
+      "nidPlaceholder": "Enter your NID Number",
+      "nidFront": "Front Side of NID",
+      "nidBack": "Back Side of NID",
+      "continue": "Continue",
+      "skip": "Skip",
+      "uploadHint": "PNG, JPEG, PDF (Max 2MB)",
+      "required": "This field is required",
+      "fileSizeError": "Max file size is 2MB",
+      "fileTypeError": "Only PNG, JPEG or PDF allowed",
+      "selectedFile": "Selected:"
+    },
+    "step8": {
+      "title": "Make it Official!",
+      "subtitle": "Become a Certified Partner",
+      "description": "Uploading your trade license shows you're a legitimate and professional business, ready for serious partnerships.",
+      "securityText": "Think of it as the key to the VIP room. Your data is encrypted and secure.For more information, please see our Privacy Policy.",
+      "privacyPolicy": "Privacy Policy.",
+      "provideNidTitle": "Provide your Trade License",
+      "nidLabel": "Your Trade License Number *",
+      "nidPlaceholder": "Enter your Trade License Number",
+      "nidFront": "Upload Trade License",
+      "continue": "Continue",
+      "skip": "Skip",
+      "uploadHint": "PNG, JPEG, PDF (Max 2MB)",
+      "required": "This field is required",
+      "fileSizeError": "Max file size is 2MB",
+      "fileTypeError": "Only PNG, JPEG or PDF allowed",
+      "selectedFile": "Selected:"
+    },
+     "step9": {
+      "title": "One Final Step!",
+      "subtitle": "Establish Your Brand's Credibility",
+      "description": "To comply with financial regulations and enable secure invoicing and payouts, please provide your official business tax and identification numbers.",
+      "securityText": "Your data is encrypted and secure. For more information, please see our",
+      "privacyPolicy": "Privacy Policy",
+      "provideTinTitle": "Provide your TIN certification",
+      "tinLabel": "Your TIN Number *",
+      "tinPlaceholder": "Enter your TIN Number",
+      "tinUpload": "Upload TIN Certificate",
+      "binLabel": "Your BIN Number (optional)",
+      "binPlaceholder": "Enter your BIN Number",
+      "continue": "Continue",
+      "skip": "Skip"
+    },
+    "finalStep": {
+      "title": "Welcome aboard!",
+      "successTitle": "Your Account was created Successfully!",
+      "description": "Our team will now securely review your information to complete the verification process.",
+      "infoText": "This typically takes 24-48 business hours. We will send you a push notification and an email as soon as your account is officially verified. In the meantime, you can continue setting up the rest of your profile.",
+      "cta": "Explore Dashboard"
+    }
+  },
+
+   "login": {
+    "title": "Login",
+    "subtitle": "Good to see you back!",
+    "fields": {
+      "email": {
+        "placeholder": "Phone Number or Email",
+        "required": "Email is required"
+      },
+      "password": {
+        "placeholder": "Password",
+        "required": "Password is required"
+      }
+    },
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Login",
+    "footer": {
+      "text": "Don’t have an account?",
+      "signup": "Sign up"
+    }
+  },
+  "forgotPassword": {
+    "stepOne": {
+      "title": "Forgotten Password?",
+      "subtitle": "No worries, we’ll send you reset instructions",
+      "label": "Phone Number / Email",
+      "placeholder": "Enter your email",
+      "button": "Continue"
+    },
+     "stepTwo": {
+      "title": "Verification Code Sent!",
+      "subtitle": "Enter the 4 digit code sent to your email",
+      "continue": "Continue",
+      "resendText": "Didn’t receive the code?",
+      "resendAction": "Click to Resend"
+    },
+    "step3": {
+      "title": "Set new password",
+      "subtitle": "Must be at least 8 characters long",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "passwordPlaceholder": "***********",
+      "confirmPasswordPlaceholder": "***********",
+      "submit": "Reset Password",
+      "errors": {
+          "passwordRequired": "Password is required",
+          "passwordMin": "Password must be at least 8 characters",
+          "confirmRequired": "Confirm password is required",
+          "passwordMismatch": "Passwords do not match"
+        }
+    },
+     "finalStep": {
+    "title": "All set",
+    "subtitle": "Your password has been reset",
+    "button": "Now Log In"
+  },
+        
+    "footer": {
+      "backToLogin": "Back to login",
+      "noAccount": "Don’t have an account?",
+      "signUp": "Sign UP"
+    },
+    "validation": {
+      "emailRequired": "Email is required"
+    }
+  }
+}
