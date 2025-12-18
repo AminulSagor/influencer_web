@@ -1,9 +1,7 @@
 "use client";
 
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 const FinalStep = () => {
@@ -28,11 +26,10 @@ const FinalStep = () => {
       </p>
 
       {/* Login Button */}
-      <Link href="/login" className="w-full sm:w-78.5">
-        <Button className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6">
-          {t("button")}
-        </Button>
-      </Link>
+
+      <Button className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6">
+        {t("button")}
+      </Button>
     </div>
   );
 };
