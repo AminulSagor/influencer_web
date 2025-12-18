@@ -11,7 +11,7 @@ import FinalStep from "@/app/[locale]/(auth)/login/_components/forgot-password-f
 
 const ForgotPasswordPage = () => {
   const t = useTranslations("forgotPassword");
-  const [step, setStep] = useState<number>(4);
+  const [step, setStep] = useState<number>(1);
 
   const increaseStep = () => {
     setStep(step + 1);
