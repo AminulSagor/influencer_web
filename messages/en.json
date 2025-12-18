@@ -184,5 +184,50 @@
       "text": "Don’t have an account?",
       "signup": "Sign up"
     }
+  },
+  "forgotPassword": {
+    "stepOne": {
+      "title": "Forgotten Password?",
+      "subtitle": "No worries, we’ll send you reset instructions",
+      "label": "Phone Number / Email",
+      "placeholder": "Enter your email",
+      "button": "Continue"
+    },
+     "stepTwo": {
+      "title": "Verification Code Sent!",
+      "subtitle": "Enter the 4 digit code sent to your email",
+      "continue": "Continue",
+      "resendText": "Didn’t receive the code?",
+      "resendAction": "Click to Resend"
+    },
+    "step3": {
+      "title": "Set new password",
+      "subtitle": "Must be at least 8 characters long",
+      "passwordLabel": "Password",
+      "confirmPasswordLabel": "Confirm Password",
+      "passwordPlaceholder": "***********",
+      "confirmPasswordPlaceholder": "***********",
+      "submit": "Reset Password",
+      "errors": {
+          "passwordRequired": "Password is required",
+          "passwordMin": "Password must be at least 8 characters",
+          "confirmRequired": "Confirm password is required",
+          "passwordMismatch": "Passwords do not match"
+        }
+    },
+     "finalStep": {
+    "title": "All set",
+    "subtitle": "Your password has been reset",
+    "button": "Now Log In"
+  },
+        
+    "footer": {
+      "backToLogin": "Back to login",
+      "noAccount": "Don’t have an account?",
+      "signUp": "Sign UP"
+    },
+    "validation": {
+      "emailRequired": "Email is required"
+    }
   }
 }
