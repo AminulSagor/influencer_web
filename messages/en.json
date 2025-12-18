@@ -163,5 +163,26 @@
       "infoText": "This typically takes 24-48 business hours. We will send you a push notification and an email as soon as your account is officially verified. In the meantime, you can continue setting up the rest of your profile.",
       "cta": "Explore Dashboard"
     }
+  },
+
+   "login": {
+    "title": "Login",
+    "subtitle": "Good to see you back!",
+    "fields": {
+      "email": {
+        "placeholder": "Phone Number or Email",
+        "required": "Email is required"
+      },
+      "password": {
+        "placeholder": "Password",
+        "required": "Password is required"
+      }
+    },
+    "forgotPassword": "Forgot password?",
+    "loginButton": "Login",
+    "footer": {
+      "text": "Don’t have an account?",
+      "signup": "Sign up"
+    }
   }
 }
