@@ -180,6 +180,7 @@
       "signup": "সাইন আপ করুন"
     }
   },
+
   "forgotPassword": {
     "stepOne": {
       "title": "পাসওয়ার্ড ভুলে গেছেন?",
@@ -222,6 +223,76 @@
     },
     "validation": {
       "emailRequired": "ইমেইল দেওয়া বাধ্যতামূলক"
+    }
+  },
+
+  "influencer": {
+    "dashboard": {
+      "cards": {
+        "lifetimeEarning": "মোট আয়",
+        "pendingEarning": "বাকি আয়",
+        "activeJobs": "সক্রিয় কাজসমূহ",
+        "newOffers": "নতুন অফার",
+        "viewAll": "সব দেখুন"
+      },
+      "summary": {
+        "title": "মোট সারসংক্ষেপ",
+        "topClient": "শীর্ষ ক্লায়েন্ট",
+        "jobsCompleted": "সম্পন্ন কাজসমূহ",
+        "lastJob": "শেষ কাজ",
+        "totalJobsCompleted": "মোট সম্পন্ন কাজ",
+        "totalJobsDeclined": "মোট বাতিলকৃত কাজ",
+        "mostUsedPlatform": "সবচেয়ে ব্যবহৃত প্ল্যাটফর্ম"
+      },
+        "actionRequired": {
+        "title": "প্রয়োজনীয় পদক্ষেপ",
+        "card1Title": "Summer Fashion Campaign",
+        "card1Description": "মাইলস্টোন ১ - সাবমিশন ০১ প্রত্যাখ্যাত",
+        "card1Time": "গতকাল, ৪:৩০পিএম",
+        "card1Button": "পর্যালোচনা",
+        "card2Title": "ট্রেড লাইসেন্স প্রত্যাখ্যাত",
+        "card2Time": "গতকাল, ৪:৩০পিএম",
+        "card2Button": "পর্যালোচনা"
+      },
+      "earningOverviewCard": {
+      "title": "উপার্জনের সংক্ষিপ্ত বিবরণ",
+      "footer": "হাজারে উপার্জন"
+        },
+        "upcomingDeadline": {
+        "title": "আসন্ন সময়সীমা",
+        "milestone": "মাইলস্টোন বাকি",
+        "view": "দেখুন"
+      },
+      "newJobOffers": {
+        "title": "নতুন চাকরির অফার",
+        "viewAll": "সব দেখুন",
+        "view": "দেখুন",
+        "budget": "বাজেট",
+        "accept": "গ্রহণ করুন",
+        "decline": "প্রত্যাখ্যান করুন"
+      },
+       "workInProgress": {
+      "title": "চলমান কাজ",
+      "active": "সক্রিয়",
+      "due": "মেয়াদ শেষ:",
+      "complete": "সম্পন্ন",
+      "view": "দেখুন",
+      "viewAllJobs": "সব কাজ দেখুন"
+    }
+
+    },
+    "jobs":{
+       "jobMarketplace": {
+            "title": "চাকরির বাজার",
+            "description": "আপনার চাকরির অফার ব্রাউজ এবং ম্যানেজ করুন"
+       },
+       "jobLinks": {
+            "newOffers": "নতুন অফার",
+            "activeJobs": "সক্রিয় কাজ",
+            "completed": "সম্পন্ন",
+            "pending": "পেন্ডিং",
+            "declined": "প্রত্যাখ্যান"
+  }
     }
   }
 }
