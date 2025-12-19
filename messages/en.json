@@ -7,6 +7,7 @@
       "login": "Login",
       "rightTitle1": "Connect with Top",
       "rightTitle2": "Talent & Brands",
+      "Already have an account" : "Already have an account?",
       "rightDescription": "The ultimate marketplace connecting visionary brands with verified influencers and agencies.",
       "users": {
         "brand": { "title": "Brand", "role": "Promote My Business" },
@@ -19,6 +20,8 @@
       "subtitle": "Lets grow your brand!",
       "profileDetails": "Profile Details",
       "continue": "Continue",
+      "Hello, Influencer!" : "Hello, Influencer!",
+      "Let's Get You Set Up!" : "Let's Get You Set Up!",
       "rightTitle": "Secure Payments & Milestones",
       "rightDescription": "Manage campaigns with ease. Funds are held securely and released only when milestones are met.",
       "fields": {
@@ -292,12 +295,24 @@
           "description": "Browse and manage your job offers"
        },
        "jobLinks": {
-      "newOffers": "New Offers",
-      "activeJobs": "Active Jobs",
-      "completed": "Completed",
-      "pending": "Pending",
-      "declined": "Declined"
-  }
+        "newOffers": "New Offers",
+        "activeJobs": "Active Jobs",
+        "completed": "Completed",
+        "pending": "Pending",
+        "declined": "Declined"
+  },
+    "active": { "title": "Active Job" },
+      "completed": { "title": "Completed Jobs" },
+      "declined": { "title": "Declined Jobs" },
+      "newOffer": { "title": "New jobs only for you" },
+      "pending": { "title": "Pending Payments" },
+      "Platforms" : "Platforms",
+      "Deadline" : "Deadline",
+      "Duration" : "Duration",
+      "Accepted": "Accepted",
+      "Decline": "Decline",
+      "View Campaign Details": "View Campaign Details",
+      "Completed On": "Completed On"
     }
   }
 }

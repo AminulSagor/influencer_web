@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { FaClock } from "react-icons/fa";
@@ -19,7 +20,7 @@ export const newOffers = [
     id: 1,
     title: "Summer Fashion Campaign",
     clientName: "StyleCo",
-    avatar: "/avatars/avatar-1.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "youtube"],
     totalBudget: 115000,
@@ -35,7 +36,7 @@ export const newOffers = [
     id: 2,
     title: "Winter Jacket Launch",
     clientName: "NorthWear",
-    avatar: "/avatars/avatar-2.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "tiktok"],
     totalBudget: 85000,
@@ -51,7 +52,7 @@ export const newOffers = [
     id: 3,
     title: "Smartphone Review Series",
     clientName: "TechNova",
-    avatar: "/avatars/avatar-3.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["youtube"],
     totalBudget: 240000,
@@ -67,7 +68,7 @@ export const newOffers = [
     id: 4,
     title: "Organic Skincare Promotion",
     clientName: "GlowPure",
-    avatar: "/avatars/avatar-4.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram"],
     totalBudget: 67000,
@@ -83,7 +84,7 @@ export const newOffers = [
     id: 5,
     title: "Fitness App Growth Campaign",
     clientName: "FitTrack",
-    avatar: "/avatars/avatar-5.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["instagram", "youtube", "tiktok"],
     totalBudget: 190000,
@@ -99,7 +100,7 @@ export const newOffers = [
     id: 6,
     title: "Luxury Watch Brand Awareness",
     clientName: "ChronoLux",
-    avatar: "/avatars/avatar-6.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["youtube", "instagram"],
     totalBudget: 320000,
@@ -115,7 +116,7 @@ export const newOffers = [
     id: 7,
     title: "Travel Vlog Sponsorship",
     clientName: "Wanderly",
-    avatar: "/avatars/avatar-7.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["youtube"],
     totalBudget: 150000,
@@ -131,7 +132,7 @@ export const newOffers = [
     id: 8,
     title: "Food Delivery App Promo",
     clientName: "QuickBite",
-    avatar: "/avatars/avatar-8.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "tiktok"],
     totalBudget: 72000,
@@ -152,6 +153,7 @@ const platformIcons: Record<string, JSX.Element> = {
 };
 
 const CompletedJobList = () => {
+  const t = useTranslations("influencer.jobs");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
       {newOffers.map((offer) => (
@@ -172,7 +174,7 @@ const CompletedJobList = () => {
               {/* Platforms */}
               <div className="flex items-center gap-6">
                 <p className="text-muted-foreground text-sm font-medium">
-                  Platforms
+                  {t("Platforms")}
                 </p>
                 <div className="flex gap-2">
                   {offer.platforms.map((p) => (
@@ -183,9 +185,7 @@ const CompletedJobList = () => {
 
               {/* Budget */}
               <div className="border  border-border bg-secondary  rounded-lg  px-4 py-6 space-y-2">
-                <p className="text-Primary text-xs font-semibold">
-                  Total Budget
-                </p>
+                <p className="text-Primary text-xs font-semibold">Offered</p>
                 <p className="text-light-green text-2xl font-semibold">
                   ৳{offer.totalBudget.toLocaleString()}
                 </p>
@@ -194,7 +194,7 @@ const CompletedJobList = () => {
               <div className="space-y-1">
                 <div className="flex justify-between">
                   <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> Completed On
+                    <FaClock /> {t("Completed on")}
                   </p>
                   <p className="text-yellow-600 text-sm">{offer.deadline}</p>
                 </div>
@@ -206,7 +206,7 @@ const CompletedJobList = () => {
 
               {/* Actions */}
               <Button variant="outline" className="w-full cursor-pointer">
-                View Campaign Details
+                {t("View Campaign Details")}
               </Button>
             </CardContent>
           </CardHeader>

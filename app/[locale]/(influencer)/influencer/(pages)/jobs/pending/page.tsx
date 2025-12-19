@@ -1,11 +1,14 @@
+import { useTranslations } from "next-intl";
 import PendingJobList from "../_components/pending-job-list";
 import JobSearchBar from "@/app/[locale]/(influencer)/influencer/(pages)/jobs/_components/job-search-bar";
 
-const page = () => {
+const Page = () => {
+  const t = useTranslations("influencer.jobs");
+
   return (
     <div className="space-y-8">
       <JobSearchBar
-        title="Pending Payments"
+        title={t("pending.title")}
         resultText="Showing 3 of 8 results"
       />
       <PendingJobList />
@@ -13,4 +16,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

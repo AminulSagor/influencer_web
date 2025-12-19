@@ -14,13 +14,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 type Props = {
   nextStep: () => void;
 };
 
 type SignUpFormValues = {
-  brandName: string;
+  brandName?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -30,29 +31,28 @@ type SignUpFormValues = {
 
 const SignUpStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step2");
+  const { userType, stepTwoData, setStepTwoData } = useAuthStore();
 
   const methods = useForm<SignUpFormValues>({
-    defaultValues: {
-      brandName: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-    },
+    defaultValues: stepTwoData, // load from Zustand if exists
   });
 
   const onSubmit = (data: SignUpFormValues) => {
-    console.log(data); // API call here
+    setStepTwoData(data); // save in Zustand
     nextStep();
   };
 
+  // Fields array
   const fields = [
-    {
-      name: "brandName",
-      label: t("fields.brandName.label"),
-      placeholder: t("fields.brandName.placeholder"),
-    },
+    ...(userType === "brand"
+      ? [
+          {
+            name: "brandName",
+            label: t("fields.brandName.label"),
+            placeholder: t("fields.brandName.placeholder"),
+          },
+        ]
+      : []),
     {
       name: "firstName",
       label: t("fields.firstName.label"),
@@ -87,10 +87,16 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
       {/* Left content */}
       <div className="md:w-1/2 lg:px-8">
         <h1 className="text-Primary text-[32px] lg:text-[38px] font-semibold">
-          {t("title")}
+          {userType === "brand"
+            ? t("title")
+            : userType === "influencer"
+            ? t("Hello, Influencer!")
+            : userType === "agency"
+            ? "Hey Agency"
+            : ""}
         </h1>
         <p className="text-[18px] text-Primary mt-2 font-normal">
-          {t("subtitle")}
+          {userType === "brand" ? t("subtitle") : t("Let's Get You Set Up!")}
         </p>
 
         <h2 className="text-Primary text-[15px] font-semibold mt-3">
@@ -137,12 +143,10 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
         </Form>
 
         <p className="text-light-gray text-sm mt-5 text-center">
-          {" "}
           Already have an account?{" "}
           <span className="text-black">
-            {" "}
-            <Link href="/login">Login</Link>{" "}
-          </span>{" "}
+            <Link href="/login">Login</Link>
+          </span>
         </p>
       </div>
 
@@ -160,9 +164,6 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
         <p className="text-Primary mt-4 text-[15px] text-center px-4">
           {t("rightDescription")}
         </p>
-        {/* <div className="flex justify-center mt-5">
-          <LanguageSwitcher />
-        </div> */}
       </div>
     </div>
   );

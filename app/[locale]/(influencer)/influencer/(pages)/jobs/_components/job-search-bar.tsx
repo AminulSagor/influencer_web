@@ -24,7 +24,7 @@ const JobSearchBar = ({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* Left */}
-      <div className="flex flex-col gap-3 flex-1">
+      <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 lg:gap-10">
         <h3 className="text-sm font-semibold text-Primary whitespace-nowrap">
           {title}
         </h3>
@@ -37,7 +37,7 @@ const JobSearchBar = ({
             />
             <Input
               placeholder={placeholder}
-              className="pl-10 focus-visible:border-Primary focus-visible:ring-Primary/50 focus-visible:ring-2"
+              className="pl-10 lg:w-94 focus-visible:border-Primary focus-visible:ring-Primary/50 focus-visible:ring-2"
               onChange={(e) => onSearch?.(e.target.value)}
             />
           </div>

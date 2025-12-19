@@ -16,6 +16,7 @@ import { BsFillCalendarDateFill } from "react-icons/bs";
 import { FaClock } from "react-icons/fa";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import PercentageBar from "../../../(pages)/jobs/_components/percentage-bar";
+import { useTranslations } from "next-intl";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -23,7 +24,7 @@ export const newOffers = [
     id: 1,
     title: "Summer Fashion Campaign",
     clientName: "StyleCo",
-    avatar: "/avatars/avatar-1.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "youtube"],
     totalBudget: 115000,
@@ -38,7 +39,7 @@ export const newOffers = [
     id: 2,
     title: "Winter Jacket Launch",
     clientName: "NorthWear",
-    avatar: "/avatars/avatar-2.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "tiktok"],
     totalBudget: 85000,
@@ -53,7 +54,7 @@ export const newOffers = [
     id: 3,
     title: "Smartphone Review Series",
     clientName: "TechNova",
-    avatar: "/avatars/avatar-3.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["youtube"],
     totalBudget: 240000,
@@ -68,7 +69,7 @@ export const newOffers = [
     id: 4,
     title: "Organic Skincare Promotion",
     clientName: "GlowPure",
-    avatar: "/avatars/avatar-4.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram"],
     totalBudget: 67000,
@@ -83,7 +84,7 @@ export const newOffers = [
     id: 5,
     title: "Fitness App Growth Campaign",
     clientName: "FitTrack",
-    avatar: "/avatars/avatar-5.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["instagram", "youtube", "tiktok"],
     totalBudget: 190000,
@@ -98,7 +99,7 @@ export const newOffers = [
     id: 6,
     title: "Luxury Watch Brand Awareness",
     clientName: "ChronoLux",
-    avatar: "/avatars/avatar-6.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["youtube", "instagram"],
     totalBudget: 320000,
@@ -118,6 +119,7 @@ const platformIcons: Record<string, JSX.Element> = {
 };
 
 const ActiveJobList = () => {
+  const t = useTranslations("influencer.jobs");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
       {newOffers.map((offer) => (
@@ -138,7 +140,7 @@ const ActiveJobList = () => {
               {/* Platforms */}
               <div className="flex items-center gap-6">
                 <p className="text-muted-foreground text-sm font-medium">
-                  Platforms
+                  {t("Platforms")}
                 </p>
                 <div className="flex gap-2">
                   {offer.platforms.map((p) => (
@@ -158,7 +160,7 @@ const ActiveJobList = () => {
               <div className="space-y-1">
                 <div className="flex justify-between">
                   <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> Deadline
+                    <FaClock /> {t("Deadline")}
                   </p>
                   <p className="text-yellow-600 text-sm">{offer.deadline}</p>
                 </div>
@@ -174,7 +176,7 @@ const ActiveJobList = () => {
               </div>
               {/* Actions */}
               <Button variant="outline" className="w-full cursor-pointer">
-                View Campaign Details
+                {t("View Campaign Details")}
               </Button>
             </CardContent>
           </CardHeader>

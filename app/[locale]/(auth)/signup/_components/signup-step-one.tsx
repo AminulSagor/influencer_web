@@ -7,72 +7,100 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 import { useTranslations } from "next-intl";
+import {
+  useAuthStore,
+  UserType,
+} from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 type Props = {
   nextStep: () => void;
 };
 
 type User = {
+  key: UserType;
   title: string;
   role: string;
 };
 
 const SignUpStepOne = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step1");
+  const { setUserType } = useAuthStore();
 
-  // translation users
+  // selected now UserType
+  const [selected, setSelected] = useState<UserType>(null);
+
   const users: User[] = [
     {
+      key: "brand",
       title: t("users.brand.title"),
       role: t("users.brand.role"),
     },
     {
+      key: "influencer",
       title: t("users.influencer.title"),
       role: t("users.influencer.role"),
     },
     {
+      key: "agency",
       title: t("users.agency.title"),
       role: t("users.agency.role"),
     },
   ];
 
-  const [selected, setSelected] = useState<string | null>(null);
-
   return (
     <div className="flex flex-col md:flex-row gap-6 lg:gap-8 justify-between">
-      <div className="md:w-1/2">
-        <div className="flex flex-col md:items-center text-start">
-          <div className="md:w-auto lg:w-full lg:pl-16">
-            <h1 className="text-Primary text-[52px] font-semibold">
+      <div className="md:w-1/2 flex flex-col md:items-center">
+        <div className="">
+          <div className="md:w-auto lg:w-full">
+            <h1 className="text-Primary text-4xl lg:text-[52px] font-semibold text-center md:text-start">
               {t("title")}
             </h1>
-            <p className="text-[18px] text-Primary border-Primary ">
+            <p className="text-[18px] text-Primary border-Primary hidden md:block">
               {t("subtitle")}
             </p>
           </div>
 
+          <div className="md:hidden mt-4">
+            <div className="text-Primary text-2xl font-semibold flex flex-col items-center justify-center">
+              <h1 className="text-center">{t("rightTitle1")}</h1>
+              <h1>{t("rightTitle2")}</h1>
+            </div>
+            <p className="text-Primary mt-3 text-base text-center lg:px-8 h-18">
+              {t("rightDescription")}
+            </p>
+
+            <div className="flex justify-center mt-7">
+              <LanguageSwitcher />
+            </div>
+          </div>
+
+          <p className="text-[18px] text-Primary border-Primary md:hidden mt-7 ">
+            {t("subtitle")}
+          </p>
+
           <div className="gap-3">
             {users.map((user) => (
               <div
-                key={user.title}
-                onClick={() => setSelected(user.title)}
-                className={`mt-3 border rounded-xl p-4 cursor-pointer h-31.5 sm:w-78.5
+                key={user.key}
+                onClick={() => {
+                  setSelected(user.key);
+                  setUserType(user.key);
+                }}
+                className={`mt-3 border rounded-xl p-4 cursor-pointer h-31.5 md:w-78.5
                 flex justify-between items-center
                 ${
-                  selected === user.title
+                  selected === user.key
                     ? "bg-Secondary border-Primary"
                     : "bg-off-white"
                 }
               `}
               >
-                {/* Left content */}
                 <div className="text-Primary">
                   <h1 className="font-semibold text-[26px]">{user.title}</h1>
                   <p>{user.role}</p>
                 </div>
 
-                {/* Right tick */}
-                {selected === user.title && (
+                {selected === user.key && (
                   <FaCheck className="text-Primary text-xl" />
                 )}
               </div>
@@ -80,19 +108,26 @@ const SignUpStepOne = ({ nextStep }: Props) => {
           </div>
 
           <Button
-            className="text-white hover hover:bg-Primary cursor-pointer bg-light-green h-16 w-full sm:w-78.5 text-[18px] mt-10"
-            onClick={() => nextStep()}
+            className="text-white hover hover:bg-Primary cursor-pointer bg-light-green h-16 w-full md:w-78.5 text-[18px] mt-10"
+            onClick={() => {
+              if (!selected) {
+                alert("Please select a user type to continue.");
+                return;
+              }
+              nextStep();
+            }}
           >
             {t("continue")}
           </Button>
         </div>
+
         <p className="text-light-gray text-sm mt-5 text-center">
-          {" "}
-          Already have an account?{" "}
+          {t("Already have an account")}{" "}
           <span className="text-black">
-            {" "}
-            <Link href={"/login"}>Login</Link>{" "}
-          </span>{" "}
+            <Link href={"/login"} className="hover:border-b border-black">
+              Login
+            </Link>
+          </span>
         </p>
       </div>
 
@@ -111,7 +146,6 @@ const SignUpStepOne = ({ nextStep }: Props) => {
           {t("rightDescription")}
         </p>
 
-        {/* language switcher */}
         <div className="flex justify-center mt-2">
           <LanguageSwitcher />
         </div>

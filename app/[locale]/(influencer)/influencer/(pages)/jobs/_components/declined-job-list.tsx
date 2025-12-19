@@ -1,6 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,11 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Percent } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
-import { BsFillCalendarDateFill } from "react-icons/bs";
+
 import { FaClock } from "react-icons/fa";
 import {
   RiFacebookFill,
@@ -20,8 +18,6 @@ import {
   RiLinkedinFill,
   RiYoutubeFill,
 } from "react-icons/ri";
-import PercentageBar from "../../../(pages)/jobs/_components/percentage-bar";
-import StarRating from "../../../(pages)/jobs/completed/_components/star-rating";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -29,7 +25,7 @@ export const newOffers = [
     id: 1,
     title: "Summer Fashion Campaign",
     clientName: "StyleCo",
-    avatar: "/avatars/avatar-1.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "youtube"],
     totalBudget: 115000,
@@ -45,7 +41,7 @@ export const newOffers = [
     id: 2,
     title: "Winter Jacket Launch",
     clientName: "NorthWear",
-    avatar: "/avatars/avatar-2.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "tiktok"],
     totalBudget: 85000,
@@ -61,7 +57,7 @@ export const newOffers = [
     id: 3,
     title: "Smartphone Review Series",
     clientName: "TechNova",
-    avatar: "/avatars/avatar-3.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["youtube"],
     totalBudget: 240000,
@@ -77,7 +73,7 @@ export const newOffers = [
     id: 4,
     title: "Organic Skincare Promotion",
     clientName: "GlowPure",
-    avatar: "/avatars/avatar-4.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram"],
     totalBudget: 67000,
@@ -93,7 +89,7 @@ export const newOffers = [
     id: 5,
     title: "Fitness App Growth Campaign",
     clientName: "FitTrack",
-    avatar: "/avatars/avatar-5.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["instagram", "youtube", "tiktok"],
     totalBudget: 190000,
@@ -109,7 +105,7 @@ export const newOffers = [
     id: 6,
     title: "Luxury Watch Brand Awareness",
     clientName: "ChronoLux",
-    avatar: "/avatars/avatar-6.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["youtube", "instagram"],
     totalBudget: 320000,
@@ -125,7 +121,7 @@ export const newOffers = [
     id: 7,
     title: "Travel Vlog Sponsorship",
     clientName: "Wanderly",
-    avatar: "/avatars/avatar-7.png",
+    avatar: "/avatar/avatar.png",
     isNew: false,
     platforms: ["youtube"],
     totalBudget: 150000,
@@ -141,7 +137,7 @@ export const newOffers = [
     id: 8,
     title: "Food Delivery App Promo",
     clientName: "QuickBite",
-    avatar: "/avatars/avatar-8.png",
+    avatar: "/avatar/avatar.png",
     isNew: true,
     platforms: ["instagram", "tiktok"],
     totalBudget: 72000,
@@ -164,6 +160,7 @@ export const platformIcons: Record<string, JSX.Element> = {
 };
 
 const DeclinedJobList = () => {
+  const t = useTranslations("influencer.jobs");
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
       {newOffers.map((offer) => (
@@ -183,7 +180,9 @@ const DeclinedJobList = () => {
             <CardContent className="p-0 space-y-4">
               {/* Platforms */}
               <div className="flex items-center gap-6">
-                <p className="text-dark-gray text-sm font-medium">Platforms</p>
+                <p className="text-dark-gray text-sm font-medium">
+                  {t("Platforms")}
+                </p>
                 <div className="flex gap-2">
                   {offer.platforms.map((p) => (
                     <span key={p} title={p} className="cursor-pointer">
@@ -204,7 +203,7 @@ const DeclinedJobList = () => {
               <div className="space-y-1">
                 <div className="flex justify-between">
                   <p className="flex items-center gap-1 text-sm text-dark-gray">
-                    <FaClock /> Deadline
+                    <FaClock /> {t("Deadline")}
                   </p>
                   <p className="text-dark-gray text-sm">{offer.deadline}</p>
                 </div>
