@@ -34,7 +34,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale}>
       <body className={`${poppins.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <div className="min-h-screen bg-Secondary p-4 md:p-6">{children}</div>
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

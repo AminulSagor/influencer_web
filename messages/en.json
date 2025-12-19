@@ -219,7 +219,7 @@
     "title": "All set",
     "subtitle": "Your password has been reset",
     "button": "Now Log In"
-  },
+   },
         
     "footer": {
       "backToLogin": "Back to login",
@@ -228,6 +228,76 @@
     },
     "validation": {
       "emailRequired": "Email is required"
+    }
+  },
+
+
+  "influencer": {
+    "dashboard": {
+      "cards": {
+        "lifetimeEarning": "Lifetime Earning",
+        "pendingEarning": "Pending Earning",
+        "activeJobs": "Active Jobs",
+        "newOffers": "New Offers",
+        "viewAll": "View All"
+      },
+      "summary": {
+        "title": "Lifetime Summary",
+        "topClient": "Top Client",
+        "jobsCompleted": "Jobs Completed",
+        "lastJob": "Last Job",
+        "totalJobsCompleted": "Total Jobs Completed",
+        "totalJobsDeclined": "Total Jobs Declined",
+        "mostUsedPlatform": "Most Used Platform"
+      },
+      "actionRequired": {
+        "title": "Action Required",
+        "card1Title": "Summer Fashion Campaign",
+        "card1Description": "Milestone 1 - Submission 01 Rejected",
+        "card1Time": "Yesterday, 4:30pm",
+        "card1Button": "Review",
+        "card2Title": "Trade License Rejected",
+        "card2Time": "Yesterday, 4:30pm",
+        "card2Button": "Review"
+      },
+      "earningOverviewCard": {
+         "title": "Earning Overview",
+          "footer": "Earning in Thousands"
+      },
+      "upcomingDeadline": {
+      "title": "Upcoming Deadlines",
+      "milestone": "Milestone left",
+      "view": "View"
+      },
+      "newJobOffers": {
+        "title": "New Job Offers",
+        "viewAll": "View All",
+        "view": "View",
+        "budget": "Budget",
+        "accept": "Accept",
+        "decline": "Decline"
+      },
+       "workInProgress": {
+        "title": "Work in progress",
+        "active": "Active",
+        "due": "Due:",
+        "complete": "Complete",
+        "view": "View",
+        "viewAllJobs": "View All Jobs"
+      }
+    },
+    "jobs":{
+       "jobMarketplace": {
+          "title": "Job Marketplace",
+          "description": "Browse and manage your job offers"
+       },
+       "jobLinks": {
+      "newOffers": "New Offers",
+      "activeJobs": "Active Jobs",
+      "completed": "Completed",
+      "pending": "Pending",
+      "declined": "Declined"
+  }
     }
   }
 }

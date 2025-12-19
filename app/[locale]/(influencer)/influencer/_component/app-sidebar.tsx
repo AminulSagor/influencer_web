@@ -13,7 +13,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -26,32 +25,32 @@ import { cn } from "@/lib/utils";
 const items = [
   {
     title: "Dashboard",
-    url: "/agency/dashboard",
+    url: "/influencer/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Jobs",
-    url: "/agency/jobs",
+    url: "/influencer/jobs",
     icon: BriefcaseBusiness, // or "Briefcase"
   },
   {
     title: "Earnings",
-    url: "/agency/earnings",
+    url: "/influencer/earnings",
     icon: Wallet, // or "DollarSign"
   },
   {
     title: "Reports",
-    url: "/agency/reports",
+    url: "/influencer/reports",
     icon: BarChart3,
   },
   {
     title: "Support Center",
-    url: "/agency/support-center",
+    url: "/influencer/support-center",
     icon: LifeBuoy,
   },
   {
     title: "Account Settings",
-    url: "/agency/account-settings",
+    url: "/influencer/account-settings",
     icon: Settings,
   },
 ];
