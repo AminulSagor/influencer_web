@@ -20,8 +20,8 @@ import {
   RiLinkedinFill,
   RiYoutubeFill,
 } from "react-icons/ri";
-import PercentageBar from "../../_components/percentage-bar";
-import StarRating from "../../completed/_components/star-rating";
+import PercentageBar from "../../../(pages)/jobs/_components/percentage-bar";
+import StarRating from "../../../(pages)/jobs/completed/_components/star-rating";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -156,34 +156,33 @@ export const newOffers = [
 ];
 
 export const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} color="#989898" />,
-  youtube: <RiYoutubeFill size={30} color="#989898" />,
-  tiktok: <AiFillTikTok size={30} color="#989898" />,
-  facebook: <RiFacebookFill size={30} color="#989898" />,
-  linkedin: <RiLinkedinFill size={30} color="#989898" />,
+  instagram: <RiInstagramFill size={30} color="#cc7722" />,
+  youtube: <RiYoutubeFill size={30} color="#cc7722" />,
+  tiktok: <AiFillTikTok size={30} color="#cc7722" />,
+  facebook: <RiFacebookFill size={30} color="#cc7722" />,
+  linkedin: <RiLinkedinFill size={30} color="#cc7722" />,
 };
 
-const DeclinedJobList = () => {
+const PendingJobList = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
       {newOffers.map((offer) => (
         <Card key={offer.id} className="relative overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-dark-gray">{offer.title}</CardTitle>
+            <CardTitle className="text-Primary">{offer.title}</CardTitle>
             <CardDescription className="flex items-center gap-4">
               <Avatar>
                 <AvatarImage src={offer.avatar} />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
-              <p className="text-dark-gray text-sm font-medium">
-                {offer.clientName}
-              </p>
             </CardDescription>
 
             <CardContent className="p-0 space-y-4">
               {/* Platforms */}
               <div className="flex items-center gap-6">
-                <p className="text-dark-gray text-sm font-medium">Platforms</p>
+                <p className="text-muted-foreground text-sm font-medium">
+                  Platforms
+                </p>
                 <div className="flex gap-2">
                   {offer.platforms.map((p) => (
                     <span key={p} title={p} className="cursor-pointer">
@@ -195,20 +194,27 @@ const DeclinedJobList = () => {
 
               {/* Budget */}
               <div className="border border-border bg-secondary  rounded-lg  px-4 py-5 space-y-2">
-                <p className="text-dark-gray text-xs font-semibold">Offered</p>
-                <p className="text-dark-gray text-2xl font-semibold">
+                <p className="text-orange text-xs font-semibold">
+                  Total Budget
+                </p>
+                <p className="text-orange text-2xl font-semibold">
                   ৳{offer.totalBudget.toLocaleString()}
                 </p>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-dark-gray">
+                  <p className="flex items-center gap-1 text-sm text-yellow-600">
                     <FaClock /> Deadline
                   </p>
-                  <p className="text-dark-gray text-sm">{offer.deadline}</p>
+                  <p className="text-yellow-600 text-sm">{offer.deadline}</p>
                 </div>
               </div>
+
+              {/* Actions */}
+              <Button variant="outline" className="w-full cursor-pointer">
+                View Campaign Details
+              </Button>
             </CardContent>
           </CardHeader>
         </Card>
@@ -217,4 +223,4 @@ const DeclinedJobList = () => {
   );
 };
 
-export default DeclinedJobList;
+export default PendingJobList;

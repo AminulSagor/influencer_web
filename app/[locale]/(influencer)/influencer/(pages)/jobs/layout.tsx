@@ -1,5 +1,6 @@
 "use client";
 
+import ButtonLinks from "@/app/[locale]/(influencer)/influencer/(pages)/jobs/_components/button-links";
 import {
   Card,
   CardContent,
@@ -7,16 +8,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import ButtonLinks from "./_components/button-links";
-import NewOfferSearch from "./_components/new-offer-search";
-import NewOfferList from "./_components/new-offer-list";
 import { useTranslations } from "next-intl";
+import React from "react";
 
-const Page = () => {
-  const t = useTranslations("influencer.jobs.jobMarketplace"); // ✅
+const InfluencerJobsLayout = ({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) => {
+  const t = useTranslations("influencer.jobs.jobMarketplace");
 
   return (
-    <div className="p-4">
+    <div className="p-4 border">
       <Card>
         {/* Header */}
         <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-center sm:justify-between">
@@ -34,13 +37,10 @@ const Page = () => {
         </CardHeader>
 
         {/* Content */}
-        <CardContent className="pt-4 space-y-8">
-          <NewOfferSearch />
-          <NewOfferList />
-        </CardContent>
+        <CardContent className="">{children}</CardContent>
       </Card>
     </div>
   );
 };
 
-export default Page;
+export default InfluencerJobsLayout;

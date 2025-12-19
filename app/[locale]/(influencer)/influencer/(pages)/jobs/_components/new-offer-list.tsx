@@ -8,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { BsFillCalendarDateFill } from "react-icons/bs";

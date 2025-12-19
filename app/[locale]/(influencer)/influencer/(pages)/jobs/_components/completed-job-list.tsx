@@ -1,5 +1,5 @@
+import StarRating from "@/app/[locale]/(influencer)/influencer/(pages)/jobs/_components/star-rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,12 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { FaClock } from "react-icons/fa";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
-import StarRating from "./star-rating";
 
 // data/new-offers.ts
 export const newOffers = [

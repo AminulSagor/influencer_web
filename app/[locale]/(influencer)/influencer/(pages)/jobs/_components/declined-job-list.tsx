@@ -14,8 +14,14 @@ import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { BsFillCalendarDateFill } from "react-icons/bs";
 import { FaClock } from "react-icons/fa";
-import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
-import PercentageBar from "../../_components/percentage-bar";
+import {
+  RiFacebookFill,
+  RiInstagramFill,
+  RiLinkedinFill,
+  RiYoutubeFill,
+} from "react-icons/ri";
+import PercentageBar from "../../../(pages)/jobs/_components/percentage-bar";
+import StarRating from "../../../(pages)/jobs/completed/_components/star-rating";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -33,6 +39,7 @@ export const newOffers = [
     timeLeft: "12H : 00M",
     requoteText: "Request to requote within 12 Dec, 2025, 12:00pm",
     completePercentage: 80,
+    rating: 4.5,
   },
   {
     id: 2,
@@ -48,6 +55,7 @@ export const newOffers = [
     timeLeft: "18H : 45M",
     requoteText: "Request to requote within 02 Jan, 2026, 9:00am",
     completePercentage: 45,
+    rating: 3.0,
   },
   {
     id: 3,
@@ -63,6 +71,7 @@ export const newOffers = [
     timeLeft: "2D : 6H",
     requoteText: "Request to requote within 26 Dec, 2025, 6:00pm",
     completePercentage: 40,
+    rating: 3.5,
   },
   {
     id: 4,
@@ -78,6 +87,7 @@ export const newOffers = [
     timeLeft: "6H : 30M",
     requoteText: "Request to requote within 19 Dec, 2025, 3:00pm",
     completePercentage: 90,
+    rating: 5.0,
   },
   {
     id: 5,
@@ -93,6 +103,7 @@ export const newOffers = [
     timeLeft: "3D : 12H",
     requoteText: "Request to requote within 08 Jan, 2026, 10:00am",
     completePercentage: 20,
+    rating: 2.5,
   },
   {
     id: 6,
@@ -108,28 +119,63 @@ export const newOffers = [
     timeLeft: "5D : 4H",
     requoteText: "Request to requote within 28 Jan, 2026, 11:00am",
     completePercentage: 30,
+    rating: 3.0,
+  },
+  {
+    id: 7,
+    title: "Travel Vlog Sponsorship",
+    clientName: "Wanderly",
+    avatar: "/avatars/avatar-7.png",
+    isNew: false,
+    platforms: ["youtube"],
+    totalBudget: 150000,
+    profit: 22500,
+    deadline: "Jan 18, 2026",
+    duration: "15 days",
+    timeLeft: "1D : 20H",
+    requoteText: "Request to requote within 16 Jan, 2026, 4:00pm",
+    completePercentage: 50,
+    rating: 4.0,
+  },
+  {
+    id: 8,
+    title: "Food Delivery App Promo",
+    clientName: "QuickBite",
+    avatar: "/avatars/avatar-8.png",
+    isNew: true,
+    platforms: ["instagram", "tiktok"],
+    totalBudget: 72000,
+    profit: 10800,
+    deadline: "Dec 22, 2025",
+    duration: "5 days",
+    timeLeft: "9H : 10M",
+    requoteText: "Request to requote within 21 Dec, 2025, 8:00pm",
+    completePercentage: 75,
+    rating: 4.0,
   },
 ];
 
-const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
-  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
-  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
+export const platformIcons: Record<string, JSX.Element> = {
+  instagram: <RiInstagramFill size={30} color="#989898" />,
+  youtube: <RiYoutubeFill size={30} color="#989898" />,
+  tiktok: <AiFillTikTok size={30} color="#989898" />,
+  facebook: <RiFacebookFill size={30} color="#989898" />,
+  linkedin: <RiLinkedinFill size={30} color="#989898" />,
 };
 
-const ActiveJobList = () => {
+const DeclinedJobList = () => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
       {newOffers.map((offer) => (
         <Card key={offer.id} className="relative overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-Primary">{offer.title}</CardTitle>
+            <CardTitle className="text-dark-gray">{offer.title}</CardTitle>
             <CardDescription className="flex items-center gap-4">
               <Avatar>
                 <AvatarImage src={offer.avatar} />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
-              <p className="text-yellow-600 text-sm font-medium">
+              <p className="text-dark-gray text-sm font-medium">
                 {offer.clientName}
               </p>
             </CardDescription>
@@ -137,45 +183,32 @@ const ActiveJobList = () => {
             <CardContent className="p-0 space-y-4">
               {/* Platforms */}
               <div className="flex items-center gap-6">
-                <p className="text-muted-foreground text-sm font-medium">
-                  Platforms
-                </p>
+                <p className="text-dark-gray text-sm font-medium">Platforms</p>
                 <div className="flex gap-2">
                   {offer.platforms.map((p) => (
-                    <span key={p}>{platformIcons[p]}</span>
+                    <span key={p} title={p} className="cursor-pointer">
+                      {platformIcons[p]}
+                    </span>
                   ))}
                 </div>
               </div>
 
               {/* Budget */}
               <div className="border border-border bg-secondary  rounded-lg  px-4 py-5 space-y-2">
-                <p className="text-Primary text-xs font-semibold">Offered</p>
-                <p className="text-light-green text-2xl font-semibold">
+                <p className="text-dark-gray text-xs font-semibold">Offered</p>
+                <p className="text-dark-gray text-2xl font-semibold">
                   ৳{offer.totalBudget.toLocaleString()}
                 </p>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
+                  <p className="flex items-center gap-1 text-sm text-dark-gray">
                     <FaClock /> Deadline
                   </p>
-                  <p className="text-yellow-600 text-sm">{offer.deadline}</p>
-                </div>
-                <div className="mt-4">
-                  <div className="w-full bg-orange/20 border text-orange border-orange rounded-lg px-4 py-2  text-sm font-medium text-center">
-                    Due: 3 Days
-                  </div>
+                  <p className="text-dark-gray text-sm">{offer.deadline}</p>
                 </div>
               </div>
-
-              <div>
-                <PercentageBar value={offer.completePercentage} />
-              </div>
-              {/* Actions */}
-              <Button variant="outline" className="w-full cursor-pointer">
-                View Campaign Details
-              </Button>
             </CardContent>
           </CardHeader>
         </Card>
@@ -184,4 +217,4 @@ const ActiveJobList = () => {
   );
 };
 
-export default ActiveJobList;
+export default DeclinedJobList;
