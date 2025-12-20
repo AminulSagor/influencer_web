@@ -13,7 +13,7 @@ import SignUpStepNine from "@/app/[locale]/(auth)/signup/_components/signup-step
 import FinalStep from "@/app/[locale]/(auth)/signup/_components/final-step";
 
 const SignUpPage = () => {
-  const [step, setStep] = useState<number>(10);
+  const [step, setStep] = useState<number>(1);
 
   const increaseStep = () => {
     setStep(step + 1);
