@@ -1,17 +1,20 @@
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { BiSolidBriefcaseAlt } from "react-icons/bi";
 import { FaHandHoldingHeart } from "react-icons/fa";
 import { GoGoal } from "react-icons/go";
 import { IoIosHourglass } from "react-icons/io";
+import { ChevronRight } from "lucide-react";
 
+
+import EarningOverviewCard from "./_components/earning-overview-card";
+import ActionRequiredCard from "./_components/action-required-card";
 import WorkInProgressCard from "./_components/work-in-progress-card";
 import UpcomingDeadline from "./_components/upcoming-deadlines";
 import NewJobOffers from "./_components/new-job-offers";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import EarningOverviewCard from "./_components/earning-overview-card";
-import ActionRequiredCard from "./_components/action-required-card";
+
+import Link from "next/link";
 
 const dashboardCards = [
   {

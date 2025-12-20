@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { BsFillCalendarDateFill } from "react-icons/bs";
@@ -319,8 +320,10 @@ const NewOfferList = () => {
                 <Button className="flex-1 bg-light-green text-white">
                   Accept Quote
                 </Button>
-                <Button variant="outline" className="flex-1">
-                  View Details
+                <Button variant="outline" className="flex-1" asChild>
+                  <Link href={`/agency/campaign-details/${offer.id}`}>
+                    View Details
+                  </Link>
                 </Button>
               </div>
 

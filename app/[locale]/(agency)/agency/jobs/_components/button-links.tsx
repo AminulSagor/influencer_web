@@ -16,19 +16,26 @@ const links = [
 
 export default function ButtonLinks() {
   const pathname = usePathname();
+  const normalizedPath = pathname.replace(/^\/(en|bn)/, "");
 
   return (
     <div className="flex flex-wrap gap-3">
       {links.map((link) => {
-        const isActive = pathname === link.href;
+        const isRootJobs = link.href === "/agency/jobs";
+
+        const isActive = isRootJobs
+          ? normalizedPath === "/agency/jobs"
+          : normalizedPath === link.href ||
+            normalizedPath.startsWith(link.href + "/");
 
         return (
           <Button
-            variant={"link"}
             key={link.label}
+            variant="link"
+            asChild
             className={cn(
               isActive &&
-                "bg-light-green shadow-md text-white hover:no-underline  rounded-full px-6"
+                "bg-light-green shadow-md text-white hover:no-underline rounded-full px-6"
             )}
           >
             <Link href={link.href}>{link.label}</Link>
