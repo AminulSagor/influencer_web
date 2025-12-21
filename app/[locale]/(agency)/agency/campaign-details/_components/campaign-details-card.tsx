@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { AiFillTikTok } from "react-icons/ai";
-import { BiLeftArrow, BiSolidLeftArrow } from "react-icons/bi";
+import { BiSolidLeftArrow } from "react-icons/bi";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
+import RequestToRequote from "./request-to-requote-drawer";
 const CampaignDetailsCard = () => {
   return (
     <Card className="gap-2 h-full">
@@ -87,13 +88,11 @@ const CampaignDetailsCard = () => {
             </p>
           </label>
         </div>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2">
           <Button className="flex-1 rounded-full bg-light-green hover:bg-light-green/90">
             Accept Quote
           </Button>
-          <Button className="flex-1 rounded-full" variant={"outline"}>
-            Request To Requote
-          </Button>
+          <RequestToRequote />
         </div>
       </CardContent>
     </Card>

@@ -51,7 +51,10 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
         <Carousel className="overflow-visible">
           <CarouselContent className="-ml-4 pr-24">
             {[1, 2, 3, 4].map((item) => (
-              <CarouselItem key={item} className="basis-[34%] pl-4">
+              <CarouselItem
+                key={item}
+                className="basis-full md:basis-[34%] pl-4"
+              >
                 <div className="border p-4 border-light-green rounded-md space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-light-green flex items-center justify-center text-white">

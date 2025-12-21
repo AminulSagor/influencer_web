@@ -45,7 +45,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       <div>
         <Card>
           <CardContent>
-            <div className="flex items-start">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-0 items-start">
               <CampaignBrief />
               <TermsAndConditions />
             </div>

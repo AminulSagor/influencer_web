@@ -5,7 +5,7 @@ import { VscPinned } from "react-icons/vsc";
 import { FaFileAlt } from "react-icons/fa";
 const CampaignBrief = () => {
   return (
-    <div className="flex-3 border-r-2 mr-4 space-y-2 pr-4">
+    <div className="flex-3 md:border-r-2 mr-4 space-y-2 pr-4">
       <div className="text-Primary flex items-center gap-2 mb-6">
         <span>
           <FaFileAlt />
