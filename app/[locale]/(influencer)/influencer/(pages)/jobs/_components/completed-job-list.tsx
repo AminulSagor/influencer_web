@@ -194,7 +194,7 @@ const CompletedJobList = () => {
               <div className="space-y-1">
                 <div className="flex justify-between">
                   <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> {t("Completed on")}
+                    <FaClock /> {t("Completed On")}
                   </p>
                   <p className="text-yellow-600 text-sm">{offer.deadline}</p>
                 </div>

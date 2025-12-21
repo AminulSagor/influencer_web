@@ -307,7 +307,91 @@
        "Accept" : "গ্রহণ করুন",
        "Decline" : "বাতিল করুন",
        "View Campaign Details" : "ক্যাম্পেইন বিস্তারিত দেখুন",
-       "Completed on": "শেষ হয়েছে"
+       "Completed On": "শেষ হয়েছে"
+    }
+  },
+  "brand" : {
+    "dashboard": {
+      "cards": {
+        "Active Jobs": "সক্রিয় কাজসমূহ",
+        "Pending": "বাকি",
+        "activeJobs": "সক্রিয় কাজসমূহ",
+        "newOffers": "নতুন অফার",
+        "viewAll": "সব দেখুন"
+      },
+      "summary": {
+        "title": "মোট সারসংক্ষেপ",
+        "topClient": "শীর্ষ ক্লায়েন্ট",
+        "jobsCompleted": "সম্পন্ন কাজসমূহ",
+        "lastJob": "শেষ কাজ",
+        "totalJobsCompleted": "মোট সম্পন্ন কাজ",
+        "totalJobsDeclined": "মোট বাতিলকৃত কাজ",
+        "mostUsedPlatform": "সবচেয়ে ব্যবহৃত প্ল্যাটফর্ম"
+      },
+        "actionRequired": {
+        "title": "প্রয়োজনীয় পদক্ষেপ",
+        "card1Title": "Summer Fashion Campaign",
+        "card1Description": "মাইলস্টোন ১ - সাবমিশন ০১ প্রত্যাখ্যাত",
+        "card1Time": "গতকাল, ৪:৩০পিএম",
+        "card1Button": "পর্যালোচনা",
+        "card2Title": "ট্রেড লাইসেন্স প্রত্যাখ্যাত",
+        "card2Time": "গতকাল, ৪:৩০পিএম",
+        "card2Button": "পর্যালোচনা"
+      },
+      "earningOverviewCard": {
+      "title": "উপার্জনের সংক্ষিপ্ত বিবরণ",
+      "footer": "হাজারে উপার্জন"
+        },
+        "upcomingDeadline": {
+        "title": "আসন্ন সময়সীমা",
+        "milestone": "মাইলস্টোন বাকি",
+        "view": "দেখুন"
+      },
+      "newJobOffers": {
+        "title": "নতুন চাকরির অফার",
+        "viewAll": "সব দেখুন",
+        "view": "দেখুন",
+        "budget": "বাজেট",
+        "accept": "গ্রহণ করুন",
+        "decline": "প্রত্যাখ্যান করুন"
+      },
+       "workInProgress": {
+      "title": "চলমান কাজ",
+      "active": "সক্রিয়",
+      "due": "মেয়াদ শেষ:",
+      "complete": "সম্পন্ন",
+      "view": "দেখুন",
+      "viewAllJobs": "সব কাজ দেখুন"
+    }
+
+    },
+     "campaigns": {
+       "campaignsList": {
+            "title": "ক্যাম্পেইনসমূহ",
+            "description": "আপনার ক্যাম্পেইনসমূহ ও তাদের অবস্থা"
+       },
+       "campaignsLinks": {
+          "Budgeting & Quoting": "বাজেট ও দরপত্র",
+          "Active": "চলমান কাজ",
+          "completed": "সম্পন্ন",
+          "Draft": "ড্রাফটস",
+          "Cancelled": "বাতিলসমূহ",
+          "+   Create New Campaign": "+   নতুন ক্যাম্পেইন বানান"
+
+      },
+    "active": { "title": "চলমান কাজ" },
+      "completed": { "title": "সম্পন্ন কাজসমূহ" },
+      "Cancelled": { "title": "বাতিলকৃত কাজসমূহ" },
+      "newOffer": { "title": "শুধু আপনার জন্য নতুন কাজ" },
+      "pending": { "title": "বকেয়া পেমেন্ট" },
+      "Platforms" : "প্লাটফর্ম",
+      "Deadline": "সময়সীমা",
+       "Duration": "মেয়াদকাল",
+       "Accept" : "গ্রহণ করুন",
+       "Decline" : "বাতিল করুন",
+       "View Campaign Details" : "ক্যাম্পেইন বিস্তারিত দেখুন",
+       "Completed On": "শেষ হয়েছে",
+       "Search By Job name, client name": "ক্যাম্পেইন খুঁজুন"
     }
   }
 }

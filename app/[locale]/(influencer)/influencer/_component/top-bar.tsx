@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const TopBar = () => {
   return (
-    <div className="sticky top-0 z-40 flex items-center justify-between border-b bg-white pl-2 pr-6 py-2.5">
+    <div className="flex items-center justify-between border-b bg-white pl-2 pr-6 py-2.5">
       <div className="flex items-center justify-center gap-4">
         <div>
           <SidebarTrigger />

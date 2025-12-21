@@ -234,7 +234,6 @@
     }
   },
 
-
   "influencer": {
     "dashboard": {
       "cards": {
@@ -313,6 +312,89 @@
         "Decline": "Decline",
         "View Campaign Details": "View Campaign Details",
         "Completed On": "Completed On"
+      }
+  },
+
+  "brand" : {
+     "dashboard": {
+      "cards": {
+        "Active Jobs": "Active Jobs",
+        "Pending": "Pending",
+        "activeJobs": "Active Jobs",
+        "newOffers": "New Offers",
+        "viewAll": "View All"
+      },
+      "summary": {
+        "title": "Lifetime Summary",
+        "topClient": "Top Client",
+        "jobsCompleted": "Jobs Completed",
+        "lastJob": "Last Job",
+        "totalJobsCompleted": "Total Jobs Completed",
+        "totalJobsDeclined": "Total Jobs Declined",
+        "mostUsedPlatform": "Most Used Platform"
+      },
+      "actionRequired": {
+        "title": "Action Required",
+        "card1Title": "Summer Fashion Campaign",
+        "card1Description": "Milestone 1 - Submission 01 Rejected",
+        "card1Time": "Yesterday, 4:30pm",
+        "card1Button": "Review",
+        "card2Title": "Trade License Rejected",
+        "card2Time": "Yesterday, 4:30pm",
+        "card2Button": "Review"
+      },
+      "earningOverviewCard": {
+         "title": "Earning Overview",
+          "footer": "Earning in Thousands"
+      },
+      "upcomingDeadline": {
+      "title": "Upcoming Deadlines",
+      "milestone": "Milestone left",
+      "view": "View"
+      },
+      "newJobOffers": {
+        "title": "New Job Offers",
+        "viewAll": "View All",
+        "view": "View",
+        "budget": "Budget",
+        "accept": "Accept",
+        "decline": "Decline"
+      },
+       "workInProgress": {
+        "title": "Work in progress",
+        "active": "Active",
+        "due": "Due:",
+        "complete": "Complete",
+        "view": "View",
+        "viewAllJobs": "View All Jobs"
+      }
+    },
+    "campaigns": {
+       "campaignsList": {
+          "title": "Campaigns",
+          "description": "Browse and manage your campaigns"
+        },
+        "campaignsLinks": {
+          "Budgeting & Quoting": "Budgeting & Quoting",
+          "Active": "Active",
+          "completed": "Completed",
+          "Draft": "Draft",
+          "Cancelled": "Cancelled",
+          "+   Create New Campaign" : "+   Create New Campaign"
+        },
+        "active": { "title": "Active Job" },
+          "completed": { "title": "Completed Jobs" },
+          "Cancelled": { "title": "Cancelled" },
+          "newOffer": { "title": "New jobs only for you" },
+          "pending": { "title": "Pending Payments" },
+          "Platforms" : "Platforms",
+          "Deadline" : "Deadline",
+          "Duration" : "Duration",
+          "Accept": "Accept",
+          "Decline": "Decline",
+          "View Campaign Details": "View Campaign Details",
+          "Completed On": "Completed On",
+          "Search By Job name, client name" : "Search By Job name, client name..."
       }
   }
 }
