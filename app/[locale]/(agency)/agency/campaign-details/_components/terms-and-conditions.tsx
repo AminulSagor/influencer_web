@@ -1,6 +1,4 @@
-import React from "react";
 import { TbMessageReportFilled } from "react-icons/tb";
-
 import {
   Accordion,
   AccordionContent,
@@ -8,8 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FaFileAlt } from "react-icons/fa";
-import { GoGoal } from "react-icons/go";
-import { FaCopyright, FaRegCircleCheck } from "react-icons/fa6";
+import { FaCopyright } from "react-icons/fa6";
 const TermsAndConditions = () => {
   return (
     <div className="flex-2">

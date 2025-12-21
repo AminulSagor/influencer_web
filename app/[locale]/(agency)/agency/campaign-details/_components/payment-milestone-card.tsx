@@ -76,7 +76,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
           </CarouselContent>
 
           <CarouselPrevious />
-          <CarouselNext />
+          <CarouselNext variant={"ghost"} />
         </Carousel>
       </CardContent>
     </Card>
