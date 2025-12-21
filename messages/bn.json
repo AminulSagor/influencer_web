@@ -308,7 +308,31 @@
        "Decline" : "বাতিল করুন",
        "View Campaign Details" : "ক্যাম্পেইন বিস্তারিত দেখুন",
        "Completed On": "শেষ হয়েছে"
-    }
+    },
+    "reports": {
+      "Report Log": "রিপোর্ট লগ",
+      "View reports on your works, manage and resolve them": "আপনার কাজের রিপোর্ট দেখুন, ম্যানেজ করুন এবং সমাধান করুন",
+      "Flagged": "ফ্ল্যাগড",
+      "Pending": "পেন্ডিং",
+      "Resolved": "রিজলভড",
+      "Search By Campaign Name": "ক্যাম্পেইন নাম দিয়ে সার্চ করুন",
+      "Audio Quality Does Not Meet Requirements": "অডিও কোয়ালিটি প্রয়োজনীয় মান পূরণ করেনি...",
+      "Help Line 1": "হেল্প লাইন ১",
+      "Help Line 2": "হেল্প লাইন ২",
+      "Help Line 3": "হেল্প লাইন ৩",
+      "Help Line 4": "হেল্প লাইন ৪",
+      "2 Hours Ago": "২ ঘণ্টা আগে",
+      "Milestone 1": "মাইলস্টোন ১",
+      "Milestone 2": "মাইলস্টোন ২",
+      "Milestone 3": "মাইলস্টোন ৩",
+      "StyleCo": "স্টাইলকো",
+      "Dec 15, 2025": "১৫ ডিসেম্বর, ২০২৫",
+      "No reports found": "কোনো রিপোর্ট পাওয়া যায়নি।",
+      "Show All": "সব দেখুন",
+      "Page": "পৃষ্ঠা",
+      "Of": "মোট",
+      "Next": "পরবর্তী"
+  }
   },
   "brand" : {
     "dashboard": {

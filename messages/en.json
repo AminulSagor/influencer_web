@@ -312,7 +312,32 @@
         "Decline": "Decline",
         "View Campaign Details": "View Campaign Details",
         "Completed On": "Completed On"
-      }
+      },
+      
+    "reports": {
+        "Report Log": "Report Log",
+        "View reports on your works, manage and resolve them": "View reports on your works, manage and resolve them",
+        "Flagged": "Flagged",
+        "Pending": "Pending",
+        "Resolved": "Resolved",
+        "Search By Campaign Name": "Search By Campaign Name",
+        "Audio Quality Does Not Meet Requirements": "Audio Quality Does Not Meet Requirements...",
+        "Help Line 1": "Help Line 1",
+        "Help Line 2": "Help Line 2",
+        "Help Line 3": "Help Line 3",
+        "Help Line 4": "Help Line 4",
+        "2 Hours Ago": "2 Hours Ago",
+        "Milestone 1": "Milestone 1",
+        "Milestone 2": "Milestone 2",
+        "Milestone 3": "Milestone 3",
+        "StyleCo": "StyleCo",
+        "Dec 15, 2025": "Dec 15, 2025",
+        "No reports found": "No reports found.",
+        "Show All": "Show All",
+        "Page": "Page",
+        "Of": "Of",
+        "Next": "Next"
+    }
   },
 
   "brand" : {
