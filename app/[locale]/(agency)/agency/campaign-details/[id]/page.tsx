@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import BrandAssetCard from "../_components/brand-asset-card";
 import CampaignDetailsCard from "../_components/campaign-details-card";
 import ContentAssetCard from "../_components/content-asset-card";
@@ -15,11 +15,18 @@ import { BiSolidLeftArrow } from "react-icons/bi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import { AiFillTikTok } from "react-icons/ai";
+import { MilestoneIcon, MountainIcon, MountainSnow } from "lucide-react";
+import { GoMilestone } from "react-icons/go";
+import Image from "next/image";
+import MileStoneCard from "../_components/milestone-card";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
 
   const isAccepted = true;
+  const paidStatus = false;
+  const todoStatus = true;
+  const inProgressStatus = false;
 
   return (
     <div className="p-4 space-y-4">
@@ -141,8 +148,20 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
       {/* 4th row */}
       <div>
-        <PaymentMilestone paid={1} total={4} />
+        <PaymentMilestone
+          inProgressStatus={inProgressStatus}
+          paidStatus={paidStatus}
+          todoStatus={todoStatus}
+          paid={1}
+          total={4}
+        />
       </div>
+      {/* 5th */}
+      {isAccepted && (
+        <div>
+          <MileStoneCard />
+        </div>
+      )}
     </div>
   );
 };
