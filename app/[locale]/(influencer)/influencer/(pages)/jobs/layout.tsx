@@ -19,7 +19,7 @@ const InfluencerJobsLayout = ({
   const t = useTranslations("influencer.jobs.jobMarketplace");
 
   return (
-    <div className="p-4 border">
+    <div className="md:p-4">
       <Card>
         {/* Header */}
         <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-center sm:justify-between">
@@ -37,7 +37,7 @@ const InfluencerJobsLayout = ({
         </CardHeader>
 
         {/* Content */}
-        <CardContent className="">{children}</CardContent>
+        <CardContent className="overflow-y-auto">{children}</CardContent>
       </Card>
     </div>
   );
