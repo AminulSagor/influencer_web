@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React from "react";
 
-const RequestToRequote = () => {
-  const [open, setOpen] = React.useState(false);
+interface RequestToRequoteProps {
+  setIsQuotationSent: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const RequestToRequote = ({ setIsQuotationSent }: RequestToRequoteProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -68,7 +70,10 @@ const RequestToRequote = () => {
             </div>
           </div>
           <div>
-            <Button className="w-full bg-light-green hover:bg-light-green/90">
+            <Button
+              className="w-full bg-light-green hover:bg-light-green/90"
+              onClick={() => setIsQuotationSent(true)}
+            >
               Requote to client
             </Button>
           </div>

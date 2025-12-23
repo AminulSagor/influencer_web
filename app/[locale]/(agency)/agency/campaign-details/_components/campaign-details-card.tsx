@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,14 @@ import { AiFillTikTok } from "react-icons/ai";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import RequestToRequote from "./request-to-requote-drawer";
-const CampaignDetailsCard = () => {
+import { useState } from "react";
+import { Divide } from "lucide-react";
+
+interface Props {
+  isAccepted?: boolean;
+}
+const CampaignDetailsCard = ({ isAccepted }: Props) => {
+  const [isQuotationSent, setIsQuotationSent] = useState(false);
   return (
     <Card className="gap-2 h-full">
       <CardHeader>
@@ -88,12 +96,23 @@ const CampaignDetailsCard = () => {
             </p>
           </label>
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <Button className="flex-1 rounded-full bg-light-green hover:bg-light-green/90">
-            Accept Quote
+        {/* ACTION BUTTONS */}
+        {isAccepted ? (
+          <Button className="w-full rounded-full bg-light-green hover:bg-light-green/90">
+            Ongoing Campaign
           </Button>
-          <RequestToRequote />
-        </div>
+        ) : !isQuotationSent ? (
+          <div className="flex items-center justify-between gap-2">
+            <Button className="flex-1 rounded-full bg-light-green hover:bg-light-green/90">
+              Accept Quote
+            </Button>
+            <RequestToRequote setIsQuotationSent={setIsQuotationSent} />
+          </div>
+        ) : (
+          <Button className="w-full bg-orange rounded-full hover:bg-orange/90">
+            Quote Sent For Client Review
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
