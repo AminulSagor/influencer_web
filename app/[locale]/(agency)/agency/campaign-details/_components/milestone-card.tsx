@@ -2,14 +2,22 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
 import Image from "next/image";
 import { FaClock } from "react-icons/fa6";
-
 import SubmissionForm from "./submission-form";
+import {
+  IN_REVIEW,
+  PAID,
+  PaymanetMilestoneDataType,
+  TODO,
+} from "../[id]/consts";
+import { cn } from "@/lib/utils";
 
-const MileStoneCard = () => {
-  const todo = false;
+interface MileStoneCardProps {
+  milestone: PaymanetMilestoneDataType | null;
+}
+
+const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
   return (
     <Card>
       <CardHeader>
@@ -24,9 +32,9 @@ const MileStoneCard = () => {
               />
             </div>
             <div>
-              <p className="text-Primary">Milestone 1</p>
+              <p className="text-Primary">Milestone {milestone?.id}</p>
               <h2 className="text-Primary text-xl font-semibold">
-                Initial Brand Awarness
+                {milestone?.title}
               </h2>
             </div>
           </div>
@@ -59,7 +67,7 @@ const MileStoneCard = () => {
                 Content Requirement
               </h2>
               <ul className="list-disc text-Primary ml-5 text-sm">
-                <li>2 instagram Posts + 3 Stories</li>
+                <li>{milestone?.contentRequirement.map((item) => item)}</li>
               </ul>
               <div className="space-y-1">
                 <h2 className="text-xl font-medium text-Primary">
@@ -67,7 +75,7 @@ const MileStoneCard = () => {
                 </h2>
 
                 <p className="text-Primary  text-sm">
-                  Gain page like as much as possible
+                  {milestone?.promotionalGoal}
                 </p>
               </div>
             </div>
@@ -78,27 +86,66 @@ const MileStoneCard = () => {
                 Promotion Target
               </h2>
               <p className="text-sm text-Primary">Facebook Reach</p>
-              <p className="text-2xl font-bold text-Primary">300k</p>
+              <p className="text-2xl font-bold text-Primary">
+                {milestone?.promotionTarget}
+              </p>
             </div>
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-Primary">
                 Payout On Approval
               </h2>
-              <p className="text-2xl font-bold text-light-green">৳3,000</p>
+              <p className="text-2xl font-bold text-light-green">
+                ৳{milestone?.payout}
+              </p>
             </div>
-            <div className="border p-2 w-[200px] bg-linear-to-r from-off-white to-white rounded-lg border-gray-300 flex flex-col items-center justify-center gap-2">
-              <p className="text-dark-gray">Status</p>
-              <Badge className="bg-dark-gray px-10 py-1 text-lg">To Do</Badge>
-              <div className="flex items-center gap-1">
+
+            <div
+              className={cn(
+                "border p-2 w-[200px] bg-linear-to-r  rounded-lg  flex flex-col items-center justify-center gap-2",
+                milestone?.status === TODO &&
+                  "from-off-white to-white border-gray-300",
+                milestone?.status === IN_REVIEW &&
+                  "from-white to-orange/20 border-orange-400",
+                milestone?.status === PAID &&
+                  "from-Secondary to-white border-light-green"
+              )}
+            >
+              <p
+                className={cn(
+                  milestone?.status === TODO && "text-dark-gray",
+                  milestone?.status === IN_REVIEW && "text-orange",
+                  milestone?.status === PAID && "text-light-green"
+                )}
+              >
+                Status
+              </p>
+              <Badge
+                className={cn(
+                  "px-10 py-1 text-lg",
+                  milestone?.status === TODO && "bg-dark-gray ",
+                  milestone?.status === IN_REVIEW && "bg-orange",
+                  milestone?.status === PAID && "bg-light-green"
+                )}
+              >
+                {milestone?.status}
+              </Badge>
+              <div
+                className={cn(
+                  "flex items-center gap-1",
+                  milestone?.status === TODO && "text-gray-400",
+                  milestone?.status === IN_REVIEW && "text-orange",
+                  milestone?.status === PAID && "text-light-green"
+                )}
+              >
                 <span>
-                  <FaClock size={12} className="fill-gray-400" />
+                  <FaClock size={12} />
                 </span>
-                <span className="text-xs text-gray-400">12 Dec, 2024</span>
+                <span className="text-xs ">12 Dec, 2024</span>
               </div>
             </div>
           </div>
         </div>
-        {todo && <SubmissionForm />}
+        <SubmissionForm />
       </CardContent>
     </Card>
   );

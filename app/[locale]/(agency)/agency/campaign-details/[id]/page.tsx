@@ -20,15 +20,11 @@ import { GoMilestone } from "react-icons/go";
 import Image from "next/image";
 import MileStoneCard from "../_components/milestone-card";
 import { IN_REVIEW, PAID, paymentMileStoneData, TODO } from "./consts";
+import MilestoneClient from "./milestone-client";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
-
   const isAccepted = true;
-  const paidStatus = false;
-  const todoStatus = true;
-  const inProgressStatus = false;
-
   return (
     <div className="p-4 space-y-4">
       {/* 1st row */}
@@ -147,23 +143,9 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           </CardContent>
         </Card>
       </div>
-      {/* 4th row */}
-      <div>
-        <PaymentMilestone
-          inProgressStatus={inProgressStatus}
-          paidStatus={paidStatus}
-          todoStatus={todoStatus}
-          paymentMilestoneData={paymentMileStoneData}
-          paid={1}
-          total={4}
-        />
-      </div>
-      {/* 5th */}
-      {isAccepted && (
-        <div>
-          <MileStoneCard />
-        </div>
-      )}
+
+      {/* 4 + 5 row */}
+      <MilestoneClient isAccepted={isAccepted} />
     </div>
   );
 };

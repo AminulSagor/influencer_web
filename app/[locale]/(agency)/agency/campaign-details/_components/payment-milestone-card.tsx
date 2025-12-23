@@ -22,16 +22,18 @@ import {
 interface PaymentMilestoneProps {
   paid?: number;
   total?: number;
-  paidStatus?: boolean;
-  inProgressStatus?: boolean;
-  todoStatus?: boolean;
   paymentMilestoneData: PaymanetMilestoneDataType[];
+
+  selectedMilestone: PaymanetMilestoneDataType | null;
+  onSelectMilestone: (m: PaymanetMilestoneDataType) => void;
 }
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paid = 0,
   total = 4,
   paymentMilestoneData,
+  onSelectMilestone,
+  selectedMilestone,
 }) => {
   const progress = total ? Math.min((paid / total) * 100, 100) : 0;
   return (
@@ -72,13 +74,13 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
         <Carousel className="overflow-visible">
           <CarouselContent className="-ml-4 pr-24">
             {paymentMilestoneData.map((item) => (
-              <CarouselItem
-                key={item.id}
-                className="basis-full md:basis-[34%] pl-4"
-              >
+              <CarouselItem key={item.id} className="basis-full md:basis-[34%]">
                 <div
+                  onClick={() => onSelectMilestone(item)}
                   className={cn(
-                    "border p-4 border-light-green rounded-md space-y-2",
+                    "border p-4 rounded-md space-y-2 cursor-pointer transition",
+                    selectedMilestone?.id === item.id &&
+                      "ring-2 ring-offset-0 ring-light-green",
                     item.status === TODO &&
                       "border-gray-200 bg-linear-to-r from-white to-light-gray",
                     item.status === PAID &&

@@ -11,6 +11,7 @@ export interface PaymanetMilestoneDataType {
   payout: number;
   status: string;
   day: number;
+  promotionalGoal: string;
 }
 export const paymentMileStoneData = [
   {
