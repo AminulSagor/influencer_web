@@ -10,9 +10,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
-import { FaFlag, FaClock } from "react-icons/fa";
+import { FaFlag, FaClock, FaCheckCircle } from "react-icons/fa";
 import { RiUser2Fill } from "react-icons/ri";
-import { FiClock, FiCheckCircle, FiSearch } from "react-icons/fi";
+import { FiClock, FiSearch } from "react-icons/fi";
 
 type ReportStatus = "Flagged" | "Pending" | "Resolved";
 const STATUS_CONFIG: Record<
@@ -35,7 +35,7 @@ const STATUS_CONFIG: Record<
     cardBorder: "border-rose-300",
   },
   Pending: {
-    Icon: FiClock,
+    Icon: FaClock,
     badgeBg: "bg-yellow-500",
     badgeBorder: "border-yellow-500",
     badgeText: "text-white",
@@ -43,7 +43,7 @@ const STATUS_CONFIG: Record<
     cardBorder: "border-yellow-300",
   },
   Resolved: {
-    Icon: FiCheckCircle,
+    Icon: FaCheckCircle,
     badgeBg: "bg-green-600",
     badgeBorder: "border-green-600",
     badgeText: "text-white",
@@ -240,7 +240,6 @@ const ReportCard = () => {
                 onClick={() => setActiveFilter(report.tag as ReportStatus)}
                 className={cn(
                   "cursor-pointer border flex-1 rounded-lg p-2 space-y-4 select-none transition-colors duration-200",
-
                   report.tag === "Flagged" &&
                     "bg-rose-100 border-rose-300 text-rose-600",
                   report.tag === "Pending" &&
