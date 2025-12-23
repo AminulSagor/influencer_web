@@ -86,7 +86,6 @@ const SubmissionForm = () => {
   };
   return (
     <>
-      {" "}
       <div className="space-y-2">
         {submissionFields.map((field, index) => (
           <div key={field.id} className="border rounded-xl p-4">

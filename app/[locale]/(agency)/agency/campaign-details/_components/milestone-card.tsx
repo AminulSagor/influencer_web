@@ -12,6 +12,7 @@ import {
   TODO,
 } from "../[id]/consts";
 import { cn } from "@/lib/utils";
+import SubmissionHistory from "./submission-history";
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
@@ -145,7 +146,11 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
             </div>
           </div>
         </div>
-        <SubmissionForm />
+        {milestone?.status === TODO && <SubmissionForm />}
+
+        {(milestone?.status === PAID || milestone?.status === IN_REVIEW) && (
+          <SubmissionHistory />
+        )}
       </CardContent>
     </Card>
   );
