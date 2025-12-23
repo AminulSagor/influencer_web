@@ -2,6 +2,7 @@
 
 import { ArrowDown, ArrowUp, Search } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const transactions = [
   {
@@ -36,16 +37,17 @@ const transactions = [
 
 export default function RecentTransactionsCard() {
   const [search, setSearch] = useState("");
+  const t = useTranslations("influencer.earning");
 
   return (
     <div className="rounded-2xl border bg-white">
       {/* Header */}
       <div className="p-6 border-b">
         <h3 className="text-lg font-semibold text-[#4B6B2A]">
-          Recent Transactions
+          {t("Recent Transactions")}
         </h3>
         <p className="text-sm text-gray-400">
-          Browse and manage your earnings of each campaigns
+          {t("Browse and manage your earnings of each campaigns")}
         </p>
       </div>
 
@@ -57,7 +59,7 @@ export default function RecentTransactionsCard() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search By Job Name, Client Name"
+            placeholder={t("Search By Job name, client name")}
             className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none focus:border-[#7FA35A]"
           />
         </div>
@@ -128,7 +130,7 @@ export default function RecentTransactionsCard() {
                   ${isIncome ? "text-[#4B6B2A]" : "text-[#C96A1B]"}
                 `}
               >
-                View Campaign Details →
+                {t("View Campain Details")} →
               </button>
             </div>
           );
@@ -144,7 +146,7 @@ export default function RecentTransactionsCard() {
         <span className="text-gray-400">Of 5</span>
 
         <button className="px-4 py-1.5 rounded-lg bg-[#6E8F4A] text-white">
-          Next
+          {t("Next")}
         </button>
       </div>
     </div>

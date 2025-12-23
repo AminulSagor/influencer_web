@@ -332,7 +332,14 @@
       "Page": "পৃষ্ঠা",
       "Of": "মোট",
       "Next": "পরবর্তী"
-  }
+  },
+  "earning":{
+      "Recent Transactions" : "সাম্প্রতিক লেনদেন",
+      "Browse and manage your earnings of each campaigns": "প্রতিটি ক্যাম্পেইনের আয় সহজেই দেখুন ",
+      "Search By Job name, client name":"ক্যাম্পেইন নাম বা ক্লায়েন্ট নাম দিয়ে খুঁজুন...",
+      "View Campain Details": "ক্যাম্পেইন বিস্তারিত দেখুন",
+      "Next": "পরবর্তী"
+    }
   },
   "brand" : {
     "dashboard": {

@@ -337,6 +337,13 @@
         "Page": "Page",
         "Of": "Of",
         "Next": "Next"
+    },
+    "earning":{
+      "Recent Transactions" : "Recent Transactions",
+      "Browse and manage your earnings of each campaigns" : "Browse and manage your earnings of each campaigns",
+      "Search By Job name, client name" : "Search By Job name, client name...",
+      "View Campain Details": "View Campain Details",
+      "Next": "Next"
     }
   },
 
@@ -423,3 +430,4 @@
       }
   }
 }
+
