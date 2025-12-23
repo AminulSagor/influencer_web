@@ -63,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Page content scrolls */}
           <div className="flex-1 min-w-0 overflow-y-auto">
-            <div className="w-full p-4 md:p-6">{children}</div>
+            <div className="w-full">{children}</div>
           </div>
         </div>
       </div>

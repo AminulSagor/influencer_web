@@ -12,12 +12,13 @@ import {
   ScrollText,
   BarChart3,
 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function CampaignBriefSection() {
   const [open, setOpen] = useState(true);
 
   return (
-    <div className={`relative rounded-2xl bg-white p-4 ${open ? "pb-4" : "pb-0"}`}>
+    <Card className={`relative rounded-2xl bg-white p-2 md:px-4 xl:px-6 ${open ? "pb-4" : "pb-0"}`}>
       <div className="grid md:grid-cols-2 gap-6">
         {/* ================= LEFT : CAMPAIGN BRIEF ================= */}
         <div
@@ -133,7 +134,7 @@ export default function CampaignBriefSection() {
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
