@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GiMountains } from "react-icons/gi";
 import {
   Carousel,
   CarouselContent,
@@ -9,30 +8,32 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
-import { todo } from "node:test";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
+import {
+  IN_REVIEW,
+  PAID,
+  PaymanetMilestoneDataType,
+  TODO,
+} from "../[id]/consts";
+
 interface PaymentMilestoneProps {
   paid?: number;
   total?: number;
-
   paidStatus?: boolean;
   inProgressStatus?: boolean;
   todoStatus?: boolean;
+  paymentMilestoneData: PaymanetMilestoneDataType[];
 }
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paid = 0,
   total = 4,
-
-  inProgressStatus,
-  paidStatus,
-  todoStatus,
+  paymentMilestoneData,
 }) => {
   const progress = total ? Math.min((paid / total) * 100, 100) : 0;
-
   return (
     <Card>
       <CardHeader className="flex  gap-4">
@@ -70,17 +71,20 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
       <CardContent>
         <Carousel className="overflow-visible">
           <CarouselContent className="-ml-4 pr-24">
-            {[1, 2, 3, 4].map((item) => (
+            {paymentMilestoneData.map((item) => (
               <CarouselItem
-                key={item}
+                key={item.id}
                 className="basis-full md:basis-[34%] pl-4"
               >
                 <div
                   className={cn(
                     "border p-4 border-light-green rounded-md space-y-2",
-
-                    todoStatus &&
-                      "border-gray-200 bg-linear-to-r from-white to-light-gray"
+                    item.status === TODO &&
+                      "border-gray-200 bg-linear-to-r from-white to-light-gray",
+                    item.status === PAID &&
+                      "border-light-green bg-linear-to-r from-Secondary to-white",
+                    item.status === IN_REVIEW &&
+                      "border-orange-400 bg-linear-to-r from-orange/20 to-white"
                   )}
                 >
                   <div className="flex justify-between">
@@ -88,47 +92,60 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                       <div
                         className={cn(
                           "w-6 h-6 rounded-full bg-light-green flex items-center justify-center text-white",
-                          todoStatus && "bg-dark-gray"
+                          item.status === TODO && "bg-dark-gray",
+                          item.status === IN_REVIEW && "bg-orange"
                         )}
                       >
-                        {item}
+                        {item.id}
                       </div>
                       <h2
                         className={cn(
                           "text-base font-medium text-Primary",
-                          todoStatus && "text-dark-gray"
+                          item.status === TODO && "text-dark-gray",
+                          item.status === IN_REVIEW && "text-orange"
                         )}
                       >
-                        Initial Brand Awareness
+                        {item.title}
                       </h2>
                     </div>
-                    {todoStatus && (
+                    {item.status && (
                       <div>
-                        <Badge className="bg-dark-gray">
-                          Todo <ChevronRight />
+                        <Badge
+                          className={cn(
+                            item.status === TODO && "bg-dark-gray",
+                            item.status === IN_REVIEW && "bg-orange",
+                            item.status === PAID && "bg-light-green"
+                          )}
+                        >
+                          {item.status} <ChevronRight />
                         </Badge>
                       </div>
                     )}
                   </div>
 
                   <p className="text-gray-500 text-sm">
-                    2 Instagram Posts + 3 Stories
+                    {item.contentRequirement.map((i, index) => (
+                      <span key={i}>
+                        {i}
+                        {index !== item.contentRequirement.length - 1 && " + "}
+                      </span>
+                    ))}
                   </p>
 
                   <div
                     className={cn(
                       "flex items-center justify-between text-light-green",
-                      todoStatus && "text-gray-600"
+                      item.status === TODO && "text-gray-600",
+                      item.status === IN_REVIEW && "text-orange"
                     )}
                   >
-                    <p className="text-xl font-semibold">৳ 3,000</p>
-                    <p className="text-sm">DAY {item}</p>
+                    <p className="text-xl font-semibold">৳ {item.payout}</p>
+                    <p className="text-sm">DAY {item.day}</p>
                   </div>
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-
           <CarouselPrevious />
           <CarouselNext variant={"ghost"} />
         </Carousel>

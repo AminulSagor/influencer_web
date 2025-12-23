@@ -19,6 +19,7 @@ import { MilestoneIcon, MountainIcon, MountainSnow } from "lucide-react";
 import { GoMilestone } from "react-icons/go";
 import Image from "next/image";
 import MileStoneCard from "../_components/milestone-card";
+import { IN_REVIEW, PAID, paymentMileStoneData, TODO } from "./consts";
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
@@ -152,6 +153,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
           inProgressStatus={inProgressStatus}
           paidStatus={paidStatus}
           todoStatus={todoStatus}
+          paymentMilestoneData={paymentMileStoneData}
           paid={1}
           total={4}
         />

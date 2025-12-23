@@ -9,7 +9,7 @@ import { FaClock } from "react-icons/fa6";
 import SubmissionForm from "./submission-form";
 
 const MileStoneCard = () => {
-  const todo = true;
+  const todo = false;
   return (
     <Card>
       <CardHeader>
