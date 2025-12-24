@@ -6,6 +6,8 @@ import ServiceFeeCard from "./_components/service-fee-card";
 import SocialLinksCard from "./_components/social-links-card";
 import ProfileCard from "./_components/profile-card";
 import PayoutSettingsCard from "./_components/payout-settings-card";
+import VerificationMethodCard from "./_components/verification-method-card";
+import Link from "next/link";
 
 const page = () => {
   return (
@@ -16,7 +18,9 @@ const page = () => {
           <BasicInfoCard />
         </div>
         <div className="col-span-12 md:col-span-6">
-          <ProfileCompletionCard />
+          <Link href={"/agency/account-settings/verification-checklist"}>
+            <ProfileCompletionCard />
+          </Link>
         </div>
       </div>
       {/* row 2 */}
@@ -41,6 +45,11 @@ const page = () => {
         <div className="col-span-12 md:col-span-4">
           <PayoutSettingsCard />
         </div>
+      </div>
+
+      {/* row 4 */}
+      <div>
+        <VerificationMethodCard />
       </div>
     </div>
   );
