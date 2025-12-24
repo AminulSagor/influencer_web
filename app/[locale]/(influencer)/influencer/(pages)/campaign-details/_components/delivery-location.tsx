@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Plus, Pencil } from "lucide-react";
+import { MapPin, Plus, Pencil, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ---------------- Radio ---------------- */
 type RadioProps = {
@@ -32,6 +32,7 @@ const Radio = ({ checked }: RadioProps) => (
 const DeliveryLocation = () => {
   const [location, setLocation] = useState<"House" | "Office">("House");
   const [openAddDialog, setOpenAddDialog] = useState(false);
+  const t = useTranslations("influencer.campaign-details");
 
   return (
     <Card className="h-full shadow-md">
@@ -39,7 +40,7 @@ const DeliveryLocation = () => {
         {/* Header */}
         <div className="flex items-center gap-2 text-Primary font-semibold">
           <MapPin size={22} />
-          <h1>Delivery Location</h1>
+          <h1>{t("Delivery Location")}</h1>
         </div>
 
         {/* Current location */}
@@ -60,7 +61,7 @@ const DeliveryLocation = () => {
                 variant="outline"
                 className="mt-4 border-light-green text-Primary bg-linear-to-l from-bg-white to-Secondary"
               >
-                Change
+                {t("change")}
               </Button>
             </div>
           </DialogTrigger>
@@ -71,7 +72,7 @@ const DeliveryLocation = () => {
                 <DialogTitle asChild>
                   <CardTitle className="flex items-center gap-2 text-Primary">
                     <MapPin size={20} />
-                    Where to send the product?
+                    {t("Where to send the product?")}
                   </CardTitle>
                 </DialogTitle>
               </CardHeader>
@@ -102,22 +103,29 @@ const DeliveryLocation = () => {
                       </p>
                     </div>
 
-                    {/* Edit icon */}
-                    <button
+                    {/* Edit icon (FIXED) */}
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenAddDialog(true);
                       }}
-                      className={`transition
-      ${
-        location === "House"
-          ? "text-Primary"
-          : "text-muted-foreground hover:text-Primary"
-      }`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          setOpenAddDialog(true);
+                        }
+                      }}
+                      className={`cursor-pointer transition ${
+                        location === "House"
+                          ? "text-Primary"
+                          : "text-muted-foreground hover:text-Primary"
+                      }`}
                       aria-label="Edit house address"
                     >
                       <Pencil size={16} />
-                    </button>
+                    </div>
                   </div>
                 </button>
 
@@ -141,22 +149,29 @@ const DeliveryLocation = () => {
                       </p>
                     </div>
 
-                    {/* Edit icon */}
-                    <button
+                    {/* Edit icon (FIXED) */}
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenAddDialog(true);
                       }}
-                      className={`transition
-      ${
-        location === "Office"
-          ? "text-Primary"
-          : "text-muted-foreground hover:text-Primary"
-      }`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          setOpenAddDialog(true);
+                        }
+                      }}
+                      className={`cursor-pointer transition ${
+                        location === "Office"
+                          ? "text-Primary"
+                          : "text-muted-foreground hover:text-Primary"
+                      }`}
                       aria-label="Edit office address"
                     >
                       <Pencil size={16} />
-                    </button>
+                    </div>
                   </div>
                 </button>
 
@@ -167,7 +182,9 @@ const DeliveryLocation = () => {
                 >
                   <div className="flex items-center justify-center gap-2">
                     <Plus size={18} />
-                    <span className="font-medium">Add another location</span>
+                    <span className="font-medium">
+                      Add another location
+                    </span>
                   </div>
                 </button>
               </CardContent>
@@ -178,31 +195,28 @@ const DeliveryLocation = () => {
         {/* Add / Edit Location Dialog */}
         <Dialog open={openAddDialog} onOpenChange={setOpenAddDialog}>
           <DialogContent className="p-0 overflow-hidden *:data-radix-dialog-close:hidden">
-            {/* Accessibility-only title */}
             <VisuallyHidden>
               <DialogTitle>Add Address</DialogTitle>
             </VisuallyHidden>
 
             {/* Header */}
-            <div className=" px-4 py-3 border">
+            <div className="px-4 py-3 border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-Primary font-semibold">
                   <MapPin size={18} />
                   <span>Address</span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Close dialog */}
-                  <DialogClose asChild>
-                    <button
-                      aria-label="Close dialog"
-                      className="cursor-pointer text-Primary hover:opacity-70 transition bg-white z-50"
-                    >
-                      <X size={24} />
-                    </button>
-                  </DialogClose>
-                </div>
+                <DialogClose asChild>
+                  <button
+                    aria-label="Close dialog"
+                    className="cursor-pointer text-Primary hover:opacity-70 transition bg-white z-50"
+                  >
+                    <X size={24} />
+                  </button>
+                </DialogClose>
               </div>
+
               <div className="flex justify-end mt-2">
                 <button className="text-xs bg-muted px-3 py-1 rounded-full text-Primary">
                   Set Default
@@ -212,7 +226,6 @@ const DeliveryLocation = () => {
 
             {/* Form */}
             <div className="space-y-4 px-4 pb-4">
-              {/* Give a name */}
               <div className="space-y-1">
                 <label className="text-sm text-Primary font-medium">
                   Give A Name
@@ -223,7 +236,6 @@ const DeliveryLocation = () => {
                 />
               </div>
 
-              {/* Thana */}
               <div className="space-y-1">
                 <label className="text-sm text-Primary font-medium">
                   Thana<span className="text-red-500">*</span>
@@ -233,7 +245,6 @@ const DeliveryLocation = () => {
                 </select>
               </div>
 
-              {/* Zilla */}
               <div className="space-y-1">
                 <label className="text-sm text-Primary font-medium">
                   Zilla<span className="text-red-500">*</span>
@@ -243,7 +254,6 @@ const DeliveryLocation = () => {
                 </select>
               </div>
 
-              {/* Full Address */}
               <div className="space-y-1">
                 <label className="text-sm text-Primary font-medium">
                   Full Address<span className="text-red-500">*</span>
@@ -255,7 +265,6 @@ const DeliveryLocation = () => {
                 />
               </div>
 
-              {/* Save */}
               <div className="flex items-center justify-center px-2">
                 <button
                   className="px-7 min-w-44 bg-light-green text-white rounded-md py-2 font-medium"
