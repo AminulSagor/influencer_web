@@ -1,10 +1,17 @@
 "use client";
+
 import { Control, useFieldArray } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TrashIcon } from "lucide-react";
+import {
+  TrashIcon,
+  UploadCloud,
+  Eye,
+  Play,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { UploadCloud } from "lucide-react";
 import {
   FormField,
   FormItem,
@@ -43,37 +50,72 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
               )}
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-4 xl:gap-20">
               <div className="flex-1 space-y-4">
-                {" "}
                 {/* Live Link */}
                 <FormField
                   control={control}
                   name={`submissions.${submissionIndex}.proofs.${proofIndex}.liveLink`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Live Link</FormLabel>
+                      <FormLabel> Add Live Link</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com" {...field} />
+                        <Input
+                          placeholder="https://instagram/p/acc..."
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                {/* Performance Metric */}
-                <FormField
-                  control={control}
-                  name={`submissions.${submissionIndex}.proofs.${proofIndex}.performanceMetric`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Performance Metrics</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Reach / Likes / Views" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+                {/* Performance Metric (same UI, now correct typing) */}
+                <FormItem>
+                  <FormLabel>Performance Metrics</FormLabel>
+                  <FormControl>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {[
+                        { key: "reach", label: "Reach", icon: Eye },
+                        { key: "views", label: "Views", icon: Play },
+                        { key: "likes", label: "Likes", icon: Heart },
+                        {
+                          key: "comments",
+                          label: "Comments",
+                          icon: MessageCircle,
+                        },
+                      ].map(({ key, label, icon: Icon }) => (
+                        <FormField
+                          key={key}
+                          control={control}
+                          name={`submissions.${submissionIndex}.proofs.${proofIndex}.performanceMetric.${key}`}
+                          render={({ field }) => (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Icon className="h-4 w-4" />
+                                <span>{label}</span>
+                              </div>
+
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={field.value ?? ""}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value === ""
+                                      ? undefined
+                                      : Number(e.target.value)
+                                  )
+                                }
+                              />
+                            </div>
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               </div>
 
               <div className="flex-1">
@@ -82,7 +124,9 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
                   name={`submissions.${submissionIndex}.proofs.${proofIndex}.attachment`}
                   render={({ field }) => {
                     const file = field.value as File | undefined;
-                    const previewUrl = file ? URL.createObjectURL(file) : null;
+                    const previewUrl = file
+                      ? URL.createObjectURL(file)
+                      : null;
                     const fileType = file?.type;
 
                     return (
@@ -169,16 +213,21 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
       {/* Add another proof */}
       <button
         type="button"
-        className="border border-light-green rounded-lg border-dashed py-6 w-full text-light-green font-semibold cursor-pointer hover:bg-light-green hover:text-white transition-all duration-150"
+        className="border border-light-green rounded-lg border-dashed py-6 w-full text-light-green font-semibold cursor-pointer  transition-all duration-150"
         onClick={() =>
           append({
             liveLink: "",
-            performanceMetric: "",
-            attachment: "",
+            attachment: undefined,
+            performanceMetric: {
+              reach: undefined,
+              views: undefined,
+              likes: undefined,
+              comments: undefined,
+            },
           })
         }
       >
-        + Add Another Proof
+        + Add Another Live Links
       </button>
     </div>
   );

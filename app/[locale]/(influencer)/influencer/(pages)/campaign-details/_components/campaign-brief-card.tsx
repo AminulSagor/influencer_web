@@ -13,12 +13,18 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 export default function CampaignBriefSection() {
   const [open, setOpen] = useState(true);
+  const t = useTranslations("influencer.campaign-details");
 
   return (
-    <Card className={`relative rounded-2xl bg-white p-2 md:px-4 xl:px-6 ${open ? "pb-4" : "pb-0"}`}>
+    <Card
+      className={`relative rounded-2xl bg-white p-3 md:px-4 xl:px-6 ${
+        open ? "pb-4" : "pb-0"
+      }`}
+    >
       <div className="grid md:grid-cols-2 gap-6">
         {/* ================= LEFT : CAMPAIGN BRIEF ================= */}
         <div
@@ -28,11 +34,12 @@ export default function CampaignBriefSection() {
         >
           {/* HEADER */}
           <div className="flex justify-between items-center">
-
-          <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-2.5 md:pt-0">
-            <FileText className="w-5 h-5" />
-            <span className="text-base md:text-lg">Campaign Brief</span>
-          </div>
+            <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-4 md:pt-0">
+              <FileText className="w-5 h-5" />
+              <span className="text-base md:text-lg">
+                {t("Campaign Details")}
+              </span>
+            </div>
             <button
               onClick={() => setOpen((prev) => !prev)}
               aria-label="Toggle Campaign Brief"
@@ -47,7 +54,6 @@ export default function CampaignBriefSection() {
             </button>
           </div>
 
-
           {/* COLLAPSIBLE CONTENT */}
           <div
             className={`space-y-5 transition-all duration-300 ease-in-out ${
@@ -58,20 +64,20 @@ export default function CampaignBriefSection() {
           >
             <Section
               icon={Target}
-              title="Campaign Goals"
+              title={t("Campaign Goals")}
               text="Promote our new summer skincare line to Gen Z and Millennial audiences. Focus on natural ingredients and sustainable packaging."
             />
 
             <Section
               icon={Package}
-              title="Product / Service Details"
+              title={t("Product/Service Details")}
               text="Highlight key product benefits, ingredients, and value proposition clearly and authentically."
             />
 
             <div>
               <div className="flex items-center gap-2 text-Primary font-medium mb-1">
                 <ClipboardList className="w-4 h-4" />
-                <h4>Content Requirements</h4>
+                <h4>{t("Content Requirements")}</h4>
               </div>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 ml-1">
                 <li>Minimum 2 Instagram Feed Posts</li>
@@ -92,7 +98,7 @@ export default function CampaignBriefSection() {
             <div className="flex items-center gap-2 text-Primary font-semibold">
               <ScrollText className="w-5 h-5" />
               <span className="text-base md:text-lg">
-                Terms & Conditions
+                {t("Terms & Conditions")}
               </span>
             </div>
 
@@ -121,13 +127,13 @@ export default function CampaignBriefSection() {
             <div className="space-y-5">
               <Section
                 icon={BarChart3}
-                title="Reporting Requirements"
+                title={t("Reporting Requirements")}
                 text="Provide analytics screenshots 7 days post-publication including reach, engagement, and CTR."
               />
 
               <Section
                 icon={ScrollText}
-                title="Usage Rights"
+                title={t("Usage Rights")}
                 text="Brand may reuse submitted content on official channels with proper attribution."
               />
             </div>
@@ -161,12 +167,13 @@ function Section({
 }
 
 function DoDont() {
+  const t = useTranslations("influencer.campaign-details");
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-green-200 bg-green-50 p-4">
         <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
-          <span>Do’s</span>
+          <span>{t("Do’s")}</span>
         </div>
         <ul className="text-sm text-green-700 space-y-1">
           <li>• Show authentic usage</li>
@@ -179,7 +186,7 @@ function DoDont() {
       <div className="rounded-xl border border-red-200 bg-red-50 p-4">
         <div className="flex items-center gap-2 text-red-600 font-medium mb-2">
           <XCircle className="w-4 h-4" />
-          <span>Don’ts</span>
+          <span>{t("Don’ts")}</span>
         </div>
         <ul className="text-sm text-red-600 space-y-1">
           <li>• Misrepresent product claims</li>

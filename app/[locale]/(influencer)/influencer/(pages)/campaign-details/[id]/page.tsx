@@ -1,35 +1,32 @@
-import { Card } from "@/components/ui/card";
 import CampaignDetailsCard from "../_components/campaign-details-card";
 import DeadlineCard from "../_components/deadline-card";
 import ContentAssetCard from "../_components/content-asset-card";
 import DeliveryLocation from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/delivery-location";
 import CampaignBriefSection from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/campaign-brief-card";
 import MilestoneClient from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/[id]/milestone-client";
+import OfferedCard from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/offered.card";
 
 const page = async () => {
   const isAccepted = true;
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4">
       {/* campaign details, deadline and offered amount */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <CampaignDetailsCard />
-        <div className="space-y-1.5">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-1/2">
+          <CampaignDetailsCard />
+        </div>
+        <div className="space-y-3 lg:w-1/2">
           <DeadlineCard />
-          <Card className=" border-light-gray rounded-lg p-4 shadow-md">
-            <h2 className="text-Primary font-semibold ">Offered</h2>
-            <h1 className="text-light-green text-2xl md:w-3xl font-semibold">
-              ৳ 11,000
-            </h1>
-          </Card>
+          <OfferedCard/>
         </div>
       </div>
 
       {/* assets and delivery location */}
-      <div className="sm:grid grid-cols-12 gap-4 space-y-2">
-        <div className="col-span-8">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="lg:w-3/5">
           <ContentAssetCard />
         </div>
-        <div className=" col-span-4">
+        <div className="lg:w-2/5">
           <DeliveryLocation />
         </div>
       </div>
@@ -41,6 +38,6 @@ const page = async () => {
       <MilestoneClient isAccepted={isAccepted} />
     </div>
   );
-};
+};  
 
 export default page;

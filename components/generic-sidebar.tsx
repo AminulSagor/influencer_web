@@ -21,7 +21,7 @@ export type SidebarItem = {
   icon: LucideIcon;
 };
 
-export function AppSidebar({ items }: { items: SidebarItem[] }) {
+export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();
   const router = useRouter();
 

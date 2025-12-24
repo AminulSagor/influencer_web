@@ -7,15 +7,17 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
+import { useTranslations } from "next-intl";
 import { BsDownload, BsFileEarmarkText } from "react-icons/bs";
 import { PiImageLight, PiVideoLight } from "react-icons/pi";
 
 const ContentAssetCard = () => {
+  const t = useTranslations("influencer.campaign-details")
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle className="text-Primary flex items-center gap-2">
-          <BsDownload /> Content Assets
+          <BsDownload /> {t("Content Assets")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">

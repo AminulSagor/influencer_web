@@ -3,11 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { AiFillTikTok } from "react-icons/ai";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 const CampaignDetailsCard = () => {
+  const t = useTranslations("influencer.campaign-details");
   return (
     <Card className="gap-2 h-full">
       <CardHeader>
@@ -19,7 +21,7 @@ const CampaignDetailsCard = () => {
           >
             <Link href="/influencer/jobs">
               <BiSolidLeftArrow />
-              Back to Campaigns
+              {t("Campaign Details")}
             </Link>
           </Button>
         </div>
@@ -44,7 +46,9 @@ const CampaignDetailsCard = () => {
         </div>
 
         <div className="flex items-center gap-6 pb-4">
-          <p className="text-muted-foreground text-sm font-medium">Platforms</p>
+          <p className="text-muted-foreground text-sm font-medium">
+            {t("Platforms")}
+          </p>
           <div className="flex gap-2">
             <span>
               <RiInstagramFill size={30} className="fill-light-green" />
@@ -72,36 +76,18 @@ const CampaignDetailsCard = () => {
               className="data-[state=checked]:bg-light-green data-[state=checked]:border-light-green"
               id="terms"
             />
-            <p className="text-sm text-dark-gray select-none">
-              You accept the&nbsp;
-              <span className="text-light-green font-medium">
-                <Link
-                  href="/influencer/user-license-agreement"
-                  className="hover:underline"
-                >
-                  user license agreement
-                </Link>
-                &nbsp;
-              </span>
-              &&nbsp;
-              <span className="text-light-green font-medium">
-                <Link
-                  href="/influencer/terms-and-conditions"
-                  className="hover:underline"
-                >
-                  Terms and condition
-                </Link>
-              </span>
-              &nbsp;of our app.
+            <p className="text-sm text-light-green select-none">
+              You accept the user license agreement & Terms and condition of our
+              app
             </p>
           </label>
         </div>
         <div className="flex items-center justify-between gap-4">
           <Button className="flex-1 rounded-full bg-light-green hover:bg-light-green/90">
-            Accept
+            {t("Accept")}
           </Button>
           <Button className="flex-1 rounded-full" variant={"outline"}>
-            Decline
+            {t("Decline")}
           </Button>
         </div>
       </CardContent>

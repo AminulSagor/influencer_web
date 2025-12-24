@@ -19,7 +19,7 @@ const InfluencerJobsLayout = ({
   const t = useTranslations("influencer.jobs.jobMarketplace");
 
   return (
-    <div className="md:p-4">
+    <div>
       <Card>
         {/* Header */}
         <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-center sm:justify-between">

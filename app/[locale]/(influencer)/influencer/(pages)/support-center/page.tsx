@@ -1,7 +1,6 @@
 "use client";
-
-import React from "react";
 import { Phone, Mail } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type HelpLine = {
   label: string;
@@ -24,21 +23,25 @@ const emails = [
 ];
 
 const SupportCenter = () => {
+  const t = useTranslations("influencer.support-center");
   return (
-    <section className="w-full">
+    <section className="">
       <div className="w-full rounded-2xl border border-[#E6E7EA] bg-white shadow-sm overflow-hidden">
         {/* Top title bar */}
         <div className="px-6 py-4 border-b border-[#ECEDEF]">
-          <p className="text-sm font-semibold text-[#617C50]">Support Center</p>
+          <p className="text-sm font-semibold text-[#617C50]">
+            {" "}
+            {t("Support Center")}
+          </p>
         </div>
 
         {/* Content */}
         <div className="px-6 py-6 md:px-8 md:py-7">
           <h1 className="text-2xl md:text-3xl  font-semibold tracking-tight text-[#7A9B57]">
-            Need any assistance?
+            {t("Need any assistance?")}
           </h1>
           <p className="mt-1 text-base md:text-lg font-medium text-[#D79552]">
-            Call us or email us your query
+            {t("Call us or email us your query")}
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">

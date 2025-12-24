@@ -162,8 +162,8 @@ const ReportPage = () => {
   }, [totalPages]);
 
   return (
-    <section className="w-full">
-      <div className="w-full">
+    <section className="w-full p-4 bg-white rounded-lg">
+      <div className="w-full h-full">
         <div>
           <h1 className="text-sm font-semibold text-[#2F3B2E]">
             {t("Report Log")}

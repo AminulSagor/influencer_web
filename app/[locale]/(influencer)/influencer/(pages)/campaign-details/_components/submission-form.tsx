@@ -1,13 +1,12 @@
 "use client";
+
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-
 import {
   Accordion,
   AccordionContent,
@@ -18,29 +17,61 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { RiMoneyDollarBoxLine } from "react-icons/ri";
 import { FaUserEdit } from "react-icons/fa";
 import { TrashIcon } from "lucide-react";
-import { useFieldArray } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useState } from "react";
-import SubmissionText from "./submission-form";
-import { useForm } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import SubmissionProofs from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/submission-proof";
 
-const formSchema = z.object({
+/* =======================
+   TYPES (KEEP AS YOU WROTE)
+======================= */
+export type PerformanceMetric = {
+  reach?: number;
+  views?: number;
+  likes?: number;
+  comments?: number;
+};
+
+export type Proof = {
+  liveLink: string;
+  performanceMetric: PerformanceMetric;
+  attachment?: any;
+};
+
+export type Submission = {
+  description?: string;
+  paymentAmount?: string;
+  proofs: Proof[];
+};
+
+export type FormType = {
+  submissions: Submission[];
+};
+
+/* =======================
+   ZOD SCHEMA (FIXED INPUT TYPE)
+   ✅ output = FormType
+   ✅ input  = FormType   (IMPORTANT)
+======================= */
+const formSchema: z.ZodType<FormType, z.ZodTypeDef, FormType> = z.object({
   submissions: z.array(
     z.object({
       description: z.string().optional(),
-      paymentAmount: z.string().min(1, "Payment amount required"),
+      paymentAmount: z.string().optional(),
       proofs: z.array(
         z.object({
           liveLink: z.string().url("Invalid link"),
-          performanceMetric: z.string().min(1),
+          performanceMetric: z.object({
+            reach: z.number().optional(),
+            views: z.number().optional(),
+            likes: z.number().optional(),
+            comments: z.number().optional(),
+          }),
           attachment: z.any().optional(),
         })
       ),
@@ -48,27 +79,33 @@ const formSchema = z.object({
   ),
 });
 
-export type FormType = z.infer<typeof formSchema>;
-
-const SubmissionForm = () => {
-  const [status, setStatus] = useState("");
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      submissions: [
+const defaultValues: FormType = {
+  submissions: [
+    {
+      description: "",
+      paymentAmount: "",
+      proofs: [
         {
-          description: "",
-          paymentAmount: "",
-          proofs: [
-            {
-              attachment: "",
-              liveLink: "",
-              performanceMetric: "",
-            },
-          ],
+          liveLink: "",
+          attachment: undefined,
+          performanceMetric: {
+            reach: undefined,
+            views: undefined,
+            likes: undefined,
+            comments: undefined,
+          },
         },
       ],
     },
+  ],
+};
+
+const SubmissionForm = () => {
+  const [status, setStatus] = useState("");
+
+  const form = useForm<FormType>({
+    resolver: zodResolver(formSchema),
+    defaultValues,
   });
 
   const {
@@ -84,6 +121,7 @@ const SubmissionForm = () => {
     setStatus("In Review");
     console.log(values, "values");
   };
+
   return (
     <>
       <div className="space-y-2">
@@ -94,7 +132,7 @@ const SubmissionForm = () => {
                 <AccordionTrigger className="flex justify-between hover:no-underline cursor-pointer">
                   <div className="flex items-center gap-4">
                     <p className="text-lg font-semibold text-Primary">
-                      Submission {index + 1}
+                      Your Submission
                     </p>
                     {status && (
                       <Badge className="bg-orange/30 text-orange">
@@ -103,13 +141,13 @@ const SubmissionForm = () => {
                     )}
                   </div>
                 </AccordionTrigger>
+
                 <AccordionContent>
                   <Form {...form}>
                     <form
                       onSubmit={form.handleSubmit(onSubmit)}
                       className="px-2 space-y-4"
                     >
-                      {/* Description */}
                       <FormField
                         control={form.control}
                         name={`submissions.${index}.description`}
@@ -120,6 +158,7 @@ const SubmissionForm = () => {
                                 <FaUserEdit size={20} />
                                 Description / Update (Optional)
                               </FormLabel>
+
                               {submissionFields.length > 1 && (
                                 <Button
                                   type="button"
@@ -133,6 +172,7 @@ const SubmissionForm = () => {
                                 </Button>
                               )}
                             </div>
+
                             <FormControl>
                               <Textarea
                                 placeholder="Write Description"
@@ -143,25 +183,6 @@ const SubmissionForm = () => {
                         )}
                       />
 
-                      {/* Payment Amount */}
-                      <FormField
-                        control={form.control}
-                        name={`submissions.${index}.paymentAmount`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-lg flex items-center gap-2">
-                              <RiMoneyDollarBoxLine size={20} />
-                              Request Payment Amount
-                            </FormLabel>
-                            <FormControl>
-                              <Input placeholder="৳3,000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Proofs (dynamic, already correct) */}
                       <SubmissionProofs
                         control={form.control}
                         submissionIndex={index}
@@ -173,6 +194,7 @@ const SubmissionForm = () => {
                           Confirm you own all the submitted assets & links{" "}
                         </Label>
                       </div>
+
                       <div className="flex items-center gap-2">
                         <Checkbox id="terms" />
                         <Label htmlFor="terms" className="text-gray-400">
@@ -183,7 +205,7 @@ const SubmissionForm = () => {
                           >
                             user license agreement
                           </Link>
-                          &
+                          &{" "}
                           <Link
                             href={"/"}
                             className="text-light-green hover:underline"
@@ -193,6 +215,7 @@ const SubmissionForm = () => {
                           of our platform
                         </Label>
                       </div>
+
                       <Button
                         type="submit"
                         className="bg-light-green hover:bg-light-green/90 w-full"
@@ -207,6 +230,7 @@ const SubmissionForm = () => {
           </div>
         ))}
       </div>
+
       <button
         type="button"
         onClick={() =>
@@ -216,8 +240,13 @@ const SubmissionForm = () => {
             proofs: [
               {
                 liveLink: "",
-                performanceMetric: "",
-                attachment: "",
+                attachment: undefined,
+                performanceMetric: {
+                  reach: undefined,
+                  views: undefined,
+                  likes: undefined,
+                  comments: undefined,
+                },
               },
             ],
           })
@@ -231,3 +260,4 @@ const SubmissionForm = () => {
 };
 
 export default SubmissionForm;
+export { formSchema };

@@ -13,12 +13,12 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 import {
-    DECLINED,
+  DECLINED,
   IN_REVIEW,
   PAID,
   PaymanetMilestoneDataType,
   TODO,
-} from "../[id]/consts";
+} from "../[id]/data";
 
 interface PaymentMilestoneProps {
   paid?: number;
@@ -74,9 +74,9 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
       <CardContent>
         <div></div>
         <Carousel className="overflow-visible">
-          <CarouselContent className=" p-2 -ml-4 pr-24 ">
+          <CarouselContent className="p-2">
             {paymentMilestoneData.map((item) => (
-              <CarouselItem key={item.id} className="basis-full md:basis-[34%]">
+              <CarouselItem key={item.id} className="basis-full lg:basis-[44%] xl:basis-[28%]">
                 <div
                   onClick={() => onSelectMilestone(item)}
                   className={cn(
@@ -89,7 +89,8 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                       "border-light-green bg-linear-to-r from-Secondary to-white",
                     item.status === IN_REVIEW &&
                       "border-orange-400 bg-linear-to-r from-orange/20 to-white",
-                      item.status === DECLINED && 'border-red-500 bg-linear-to-r from-red-100/70 to-white'
+                    item.status === DECLINED &&
+                      "border-red-500 bg-linear-to-r from-red-100/70 to-white"
                   )}
                 >
                   <div className="flex justify-between">

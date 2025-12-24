@@ -10,7 +10,7 @@ import {
   PAID,
   PaymanetMilestoneDataType,
   TODO,
-} from "../[id]/consts";
+} from "../[id]/data";
 import { cn } from "@/lib/utils";
 import SubmissionForm from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/submission-form";
 import SubmissionHistory from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/submission-history";
@@ -24,7 +24,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between">
           <div className="flex items-center gap-4 flex-1">
             <div>
               <Image
@@ -64,7 +64,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
       </CardHeader>
       <CardContent className="space-y-2">
         <div className="border border-light-green rounded-lg p-4 bg-linear-to-r bg-Secondary to-white  items-center ">
-          <div className="flex  justify-between items-center">
+          <div className="flex flex-col gap-2 md:flex-row justify-between md:items-center">
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-Primary">
                 Content Requirement

@@ -1,6 +1,6 @@
 "use client";
 import MileStoneCard from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/milestone-card";
-import { PaymanetMilestoneDataType, paymentMileStoneData } from "./consts";
+import { PaymanetMilestoneDataType, paymentMileStoneData } from "./data";
 import { useState } from "react";
 import PaymentMilestone from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/payment-milestone-card";
 
