@@ -37,7 +37,7 @@ const CampaignSearchBar = ({
             />
             <Input
               placeholder={placeholder}
-              className="pl-10 lg:w-94 focus-visible:border-Primary focus-visible:ring-Primary/50 focus-visible:ring-2"
+              className="pl-10 w-full lg:w-94 focus-visible:border-Primary focus-visible:ring-Primary/50 focus-visible:ring-2"
               onChange={(e) => onSearch?.(e.target.value)}
             />
           </div>

@@ -49,7 +49,7 @@ export default function Layout({
 
           {/* Page content scrolls */}
           <div className="flex-1 min-w-0 overflow-y-auto">
-            <div className="w-full">{children}</div>
+            <div className="w-full p-4">{children}</div>
           </div>
         </div>
       </div>
