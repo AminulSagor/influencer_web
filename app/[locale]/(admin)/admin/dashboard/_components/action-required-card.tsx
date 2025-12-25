@@ -19,50 +19,49 @@ const ActionRequiredCard = () => {
             <TfiMenuAlt />
             Action Required
           </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <div className="flex border items-center gap-4 px-4 py-2 rounded-lg bg-white">
-              <div className="rounded-lg flex items-center text-xs">All</div>
+              <div className="rounded-lg flex items-center text-xs whitespace-nowrap">
+                All
+              </div>
             </div>
 
             <div className="flex border items-center gap-4 px-4 py-2 rounded-lg bg-white">
-              <div className="rounded-lg flex items-center text-xs">
+              <div className="rounded-lg flex items-center text-xs whitespace-nowrap">
                 New Campaign Requests
               </div>
-
               {/* Badge */}
-              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold  py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
+              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
                 20
               </div>
             </div>
+
             <div className="flex border items-center gap-4 px-4 py-2 rounded-lg bg-white">
-              <div className="rounded-lg flex items-center text-xs">
+              <div className="rounded-lg flex items-center text-xs whitespace-nowrap">
                 Pending Verification
               </div>
-
               {/* Badge */}
-              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold  py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
+              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
                 12
               </div>
             </div>
 
             <div className="flex border items-center gap-4 px-4 py-2 rounded-lg bg-white">
-              <div className="rounded-lg flex items-center text-xs">
+              <div className="rounded-lg flex items-center text-xs whitespace-nowrap">
                 Milestone Reviews
               </div>
-
               {/* Badge */}
-              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold  py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
+              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
                 45
               </div>
             </div>
 
             <div className="flex border items-center gap-4 px-4 py-2 rounded-lg bg-white">
-              <div className="rounded-lg flex items-center text-xs">
+              <div className="rounded-lg flex items-center text-xs whitespace-nowrap">
                 Payout Requests
               </div>
-
               {/* Badge */}
-              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold  py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
+              <div className="top-1 right-2 bg-red-600 text-white text-xs font-semibold py-0.5 rounded-full w-5 h-5 flex items-center justify-center">
                 58
               </div>
             </div>
