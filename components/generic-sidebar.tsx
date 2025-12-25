@@ -29,7 +29,7 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const normalizedPath = pathname.replace(/^\/(en|bn)/, "");
 
   // show logout on all influencer routes
-  const showLogout = normalizedPath.startsWith("/influencer");
+  const showLogout = normalizedPath.startsWith("/influencer") || normalizedPath.startsWith("/brand");
 
   const handleLogout = () => {
     // clear auth here

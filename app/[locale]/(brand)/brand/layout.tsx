@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar, SidebarItem } from "@/components/generic-sidebar";
+import {  GenericAppSidebar, SidebarItem } from "@/components/generic-sidebar";
 import TopBar from "@/app/[locale]/(brand)/brand/_components/top-bar";
 
 import {
@@ -38,7 +38,7 @@ export default function Layout({
       {/* Full viewport height + proper scroll behavior */}
       <div className="flex h-dvh w-full bg-[#F4F5F7]">
         {/* Sidebar */}
-        <AppSidebar items={items} />
+        <GenericAppSidebar items={items} />
 
         {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col">
@@ -49,7 +49,7 @@ export default function Layout({
 
           {/* Page content scrolls */}
           <div className="flex-1 min-w-0 overflow-y-auto">
-            <div className="w-full p-4">{children}</div>
+            <div className="w-full">{children}</div>
           </div>
         </div>
       </div>

@@ -6,8 +6,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
+type issuesType = {
+  id: number;
+  reason: string;
+  date: string;
+};
 const ActionRequiredCard = () => {
   const t = useTranslations("influencer.dashboard.actionRequired");
+  const issues: issuesType[] = [
+    {
+      id: 1,
+      reason: "Trade License Rejected",
+      date: "25 Dec 2025, 4:30pm",
+    },
+    {
+      id: 2,
+      reason: "NID Rejected",
+      date: "25 Dec 2025, 4:30pm",
+    },
+  ];
 
   return (
     <Card>
@@ -15,50 +32,24 @@ const ActionRequiredCard = () => {
         <CardTitle className="text-[#2d5016]">{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {/* Card 1 */}
-        <div className="bg-rose-50 px-2 py-4 rounded-md border border-rose-200 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <IoMdCloseCircle className="fill-rose-600" size={30} />
+        {/* Card */}
+        {issues.map((issue) => (
+          <div
+            key={issue.id}
+            className="bg-[#FFF4EE] rounded-lg p-3 lg:p-4 flex justify-between items-center overflow-x-scroll no-scrollbar"
+          >
+            <div className="flex items-center justify-center gap-4">
+              <span>
+                <FaExclamationTriangle className="fill-amber-500" size={34}/>
+              </span>
               <div>
-                <h3 className="font-semibold text-sm">{t("card1Title")}</h3>
-                <p className="text-rose-600 text-xs font-medium">
-                  {t("card1Description")}
-                </p>
-                <span className="text-muted-foreground text-xs">
-                  {t("card1Time")}
-                </span>
+                <h1 className="font-semibold text-black">{issue.reason}</h1>
+                <p className="text-dark-gray text-sm">{issue.date}</p>
               </div>
             </div>
-            <Button
-              size="sm"
-              className="bg-rose-600 hover:bg-rose-700 cursor-pointer"
-            >
-              {t("card1Button")}
-            </Button>
+            <button className="bg-[#F09A30] rounded-md px-7 py-1.5 text-white text-sm">Fix</button>
           </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-yellow-50 px-2 py-4 rounded-md border border-yellow-300 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <FaExclamationTriangle className="fill-yellow-600" size={30} />
-              <div>
-                <h3 className="font-semibold text-sm">{t("card2Title")}</h3>
-                <span className="text-muted-foreground text-xs">
-                  {t("card2Time")}
-                </span>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              className="bg-yellow-600 hover:bg-yellow-700 cursor-pointer"
-            >
-              {t("card2Button")}
-            </Button>
-          </div>
-        </div>
+        ))}
       </CardContent>
     </Card>
   );
