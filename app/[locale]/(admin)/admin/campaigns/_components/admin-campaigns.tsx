@@ -17,6 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const AdminCampaigns = () => {
   return (
@@ -33,7 +43,7 @@ const AdminCampaigns = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* search bar */}
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex justify-between items-center gap-4 mx-2">
           <div className="flex-1">
             <div className="relative w-full">
               <Search
@@ -54,7 +64,7 @@ const AdminCampaigns = () => {
           </div>
         </div>
 
-        <div className="border border-light-green bg-Secondary p-2 rounded-md">
+        <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div>
@@ -92,6 +102,80 @@ const AdminCampaigns = () => {
               </Select>
             </div>
           </div>
+        </div>
+
+        <div className="rounded-md overflow-hidden border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-light-green hover:bg-light-green">
+                <TableHead className="w-[40px]">
+                  <Checkbox />
+                </TableHead>
+                <TableHead className="text-white">Campaign Info</TableHead>
+                <TableHead className="text-white">Client</TableHead>
+                <TableHead className="text-white">Timeline</TableHead>
+                <TableHead className="text-white">Financials</TableHead>
+                <TableHead className="text-white">Assigned Personals</TableHead>
+                <TableHead className="text-white">Status</TableHead>
+                <TableHead className="text-white text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="w-[40px]">
+                  <Checkbox />
+                </TableCell>
+                <TableCell className="space-y-1">
+                  <p className="font-medium text-lg">Summer Sale Fashion</p>
+                  <p className="text-sm text-gray-500">Influencer Promotion</p>
+                  <p className="text-xs font-light text-gray-500">
+                    Niches: Fashion
+                  </p>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage
+                        src={"https://github.com/ninjastorm24.png"}
+                      />
+                      <AvatarFallback>SC</AvatarFallback>
+                    </Avatar>
+                    <p className="text-xs">StyleCo.</p>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-2">
+                    <div>
+                      <p className="font-semibold">Start Date</p>
+                      <p className="text-gray-500">20 Mar, 2025</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">End Date</p>
+                      <p className="text-gray-500">31 Mar, 2025</p>
+                    </div>
+                  </div>
+                </TableCell>
+                {/* start here */}
+                <TableCell>Financials</TableCell>
+                <TableCell>Assigned Personals</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell className="text-right">Actions</TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell className="w-[40px]">
+                  <Checkbox />
+                </TableCell>
+                <TableCell className="font-medium">Campaign Name</TableCell>
+                <TableCell>Client Name</TableCell>
+                <TableCell>Timeline</TableCell>
+                <TableCell>Financials</TableCell>
+                <TableCell>Assigned Personals</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell className="text-right">Actions</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
