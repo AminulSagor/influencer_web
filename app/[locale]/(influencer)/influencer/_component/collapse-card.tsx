@@ -21,7 +21,7 @@ const CollapseCard = ({
   const [open, setOpen] = useState<boolean>(true);
 
   return (
-    <Card>
+    <Card className="border-none">
       <Collapsible open={open} onOpenChange={setOpen}>
         <CardHeader className="flex flex-row items-center justify-between">
           {title && (
