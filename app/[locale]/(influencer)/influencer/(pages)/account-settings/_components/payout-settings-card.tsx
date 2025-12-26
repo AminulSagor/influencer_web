@@ -1,154 +1,224 @@
 "use client";
-
-import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
 import {
-  ChevronUp,
-  Landmark,
-  Wallet,
-  Check,
-  X,
-  Pencil,
-  SquarePen,
-} from "lucide-react";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import React from "react";
+import { TiTick } from "react-icons/ti";
+import { ImCross } from "react-icons/im";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-export default function PayoutSettingsCard() {
+const PayoutSettingsCard = () => {
+  const [payoutMethod, setPayoutMethod] = React.useState<string | undefined>();
+
   return (
-    <div>
-      <CollapseCard
-        title="Payout Settings"
-        icon={<SquarePen size={15} className="text-dark-gray" />}
-      >
-        <div className="">
-          {/* Existing payout methods */}
-          <div className="space-y-3 mb-5">
-            {/* Approved bank */}
-            <div className="flex items-center justify-between rounded-xl border border-[#9DB47B] bg-[#F7FAEC] p-4  overflow-y-scroll no-scrollbar">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#6E8F4A] flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-white" />
+    <Card className="border-none">
+      <div className="px-4">
+        <Accordion type="single" collapsible defaultValue="item-1">
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="text-md p-0 hover:cursor-pointer hover:no-underline mb-4 text-Primary font-semibold">
+              Payout Settings
+            </AccordionTrigger>
+            <AccordionContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="border rounded-lg p-2 border-light-green bg-linear-to-r from-white to-Secondary">
+                  <div className="flex items-center gap-2 justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10">
+                        <Image
+                          fill
+                          src={"/icons/bank-icon.svg"}
+                          alt="bank icon"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="font-medium text-Primary text-lg">
+                          Bank Account No 1
+                        </h2>
+                        <p className="text-xs font-light text-gray-400">DBBL</p>
+                        <p className="text-Primary text-sm">
+                          Acount Number: *****-***989
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Button className="bg-light-green hover:bg-light-green/90">
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-sm font-medium text-[#2D5016]">
-                    Bank Account No.1
-                  </p>
-                  <p className="text-xs text-[#6B7A4C]">DBBL</p>
-                  <p className="text-xs text-[#6B7A4C]">
-                    Account No: ****-***-989
-                  </p>
+                <div className="border rounded-lg p-2 border-light-green bg-linear-to-r from-white to-Secondary">
+                  <div className="flex items-center gap-2 justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10">
+                        <Image
+                          fill
+                          src="/icons/bkash-icon.svg"
+                          alt="bkash icon"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="font-medium text-Primary text-lg">
+                          Bank Account No 1
+                        </h2>
+                        <p className="text-xs font-light text-gray-400">
+                          Bkash
+                        </p>
+                        <p className="text-Primary text-sm">Hania Amir</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Button className="bg-light-green hover:bg-light-green/90">
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-2 border-orange bg-linear-to-r from-white to-orange/20">
+                  <div className="flex items-center gap-2 justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10">
+                        <Image
+                          fill
+                          src={"/icons/bank-icon-2.svg"}
+                          alt="bank icon"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="font-medium text-orange text-lg">
+                          Bank Account No 1
+                        </h2>
+                        <p className="text-xs font-light text-gray-400">DBBL</p>
+                        <p className="text-orange text-sm">
+                          Acount Number: *****-***989
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <Button className="bg-orange hover:bg-light-orange/90">
+                        In Review
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <button className="px-4 py-1.5 rounded-full bg-[#6E8F4A] text-white text-xs">
-                Remove
-              </button>
-            </div>
+              <div>
+                <div className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="relative w-10 h-10">
+                      {payoutMethod === "bkash" ? (
+                        <Image
+                          fill
+                          src="/icons/bkash-icon.svg"
+                          alt="bkash icon"
+                        />
+                      ) : (
+                        <Image
+                          fill
+                          src="/icons/bank-icon.svg"
+                          alt="bank icon"
+                        />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <Select
+                        value={payoutMethod}
+                        onValueChange={setPayoutMethod}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select payout method" />
+                        </SelectTrigger>
 
-            {/* Bkash */}
-            <div className="flex items-center justify-between rounded-xl border border-[#9DB47B] bg-[#FBFDF6] p-4  overflow-y-scroll no-scrollbar">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#E2136E] flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-white" />
-                </div>
+                        <SelectContent>
+                          <SelectItem value="bank">Bank</SelectItem>
+                          <SelectItem value="bkash">bKash</SelectItem>
+                          <SelectItem value="nagad">Nagad</SelectItem>
+                          <SelectItem value="rocket">Rocket</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div>
-                  <p className="text-sm font-medium text-[#2D5016]">
-                    +8801234567890
-                  </p>
-                  <p className="text-xs text-[#6B7A4C]">Bkash</p>
-                  <p className="text-xs text-[#6B7A4C]">Hania Amir</p>
+                    <div className="text-light-green hover:cursor-pointer">
+                      <TiTick size={26} />
+                    </div>
+                    <div className="text-light-green hover:cursor-pointer">
+                      <ImCross />
+                    </div>
+                  </div>
+
+                  {payoutMethod === "bank" && (
+                    <>
+                      <div className="space-y-1">
+                        <Label>Bank Name</Label>
+                        <Input placeholder="Enter Bank Name" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>Bank Account Holder Name</Label>
+                        <Input placeholder="Enter Account Holder Name" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>Bank Account No</Label>
+                        <Input placeholder="Enter Bank Account No." />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>Routing Number</Label>
+                        <Input placeholder="Enter Routing Number" />
+                      </div>
+                    </>
+                  )}
+
+                  {payoutMethod === "bkash" && (
+                    <>
+                      <div className="space-y-1">
+                        <Label>bKash No</Label>
+                        <Input placeholder="Enter bKash Number" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>bKash Holder Name</Label>
+                        <Input placeholder="Enter Holder Name" />
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label>bKash Account Type</Label>
+                        <Input placeholder="Enter Account Type" />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <button className="px-4 py-1.5 rounded-full bg-[#6E8F4A] text-white text-xs">
-                Remove
-              </button>
-            </div>
-
-            {/* In review */}
-            <div className="flex items-center justify-between rounded-xl border border-[#FFC48A] bg-[#FFF7ED] p-4  overflow-y-scroll no-scrollbar">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[#E57A1F] flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-white" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-[#C96A1B]">
-                    Bank Account No.1
-                  </p>
-                  <p className="text-xs text-[#C96A1B]">DBBL</p>
-                  <p className="text-xs text-[#C96A1B]">
-                    Account No: ****-***-989
-                  </p>
-                </div>
+              <div>
+                <Button className="w-full bg-transparent border border-dashed border-light-green hover:bg-light-green hover:text-white text-Primary">
+                  + Add another Payout Method
+                </Button>
               </div>
-
-              <span className="px-3 py-1 rounded-full bg-[#FFE5CC] text-[#C96A1B] text-xs">
-                In Review
-              </span>
-            </div>
-          </div>
-
-          {/* Add new payout method */}
-          <div className="rounded-xl border p-4 space-y-4 mb-6  overflow-y-scroll no-scrollbar">
-            {/* Method selector */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#6E8F4A] flex items-center justify-center">
-                  <Landmark className="w-4 h-4 text-white" />
-                </div>
-
-                <select className="border rounded-lg px-3 py-1.5 text-sm outline-none">
-                  <option>Bank</option>
-                  <option>Bkash</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2">
-                <Check className="w-5 h-5 text-[#6E8F4A] cursor-pointer" />
-                <X className="w-5 h-5 text-[#C96A1B] cursor-pointer" />
-              </div>
-            </div>
-
-            {/* Form fields */}
-            <div className="space-y-3">
-              <Input label="Bank Name" placeholder="Enter Bank Name" />
-              <Input
-                label="Bank Account Holder Name"
-                placeholder="Enter Account Holder Name"
-              />
-              <Input
-                label="Bank Account No"
-                placeholder="Enter Bank Account No."
-              />
-              <Input
-                label="Routing Number"
-                placeholder="Enter Routing Number"
-              />
-            </div>
-          </div>
-
-          {/* Add another */}
-          <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-            + Add Another Payout Method
-          </button>
-        </div>
-      </CollapseCard>
-    </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </Card>
   );
-}
+};
 
-/* Reusable input */
-function Input({ label, placeholder }: { label: string; placeholder: string }) {
-  return (
-    <div>
-      <label className="block text-sm text-[#6B7A4C] mb-1  overflow-y-scroll no-scrollbar">
-        {label}
-      </label>
-      <input
-        placeholder={placeholder}
-        className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6E8F4A]"
-      />
-    </div>
-  );
-}
+export default PayoutSettingsCard;
