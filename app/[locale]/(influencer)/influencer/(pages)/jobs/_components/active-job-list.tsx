@@ -17,6 +17,7 @@ import { FaClock } from "react-icons/fa";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import PercentageBar from "../../../(pages)/jobs/_components/percentage-bar";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -176,7 +177,9 @@ const ActiveJobList = () => {
               </div>
               {/* Actions */}
               <Button variant="outline" className="w-full cursor-pointer">
-                {t("View Campaign Details")}
+                <Link href={`/influencer/campaign-details/${offer.id}`}>
+                  {t("View Campaign Details")}
+                </Link>
               </Button>
             </CardContent>
           </CardHeader>
