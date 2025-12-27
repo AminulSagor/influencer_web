@@ -5,7 +5,7 @@ import { FaInstagram, FaYoutube } from "react-icons/fa6";
 
 export default function InfoCard({status} : {status : boolean}) {
   return (
-    <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green text-white flex sm:items-center sm:justify-center p-4 ">
+    <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green text-white flex sm:items-center sm:justify-center p-4">
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between xl:px-4 w-full xl:max-w-xl px-3 md:px-4 overflow-y-scroll no-scrollbar">
         {/* Left: Avatar + Info */}
         <div className="flex items-center gap-4 w-full">

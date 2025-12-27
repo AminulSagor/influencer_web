@@ -14,12 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
+import { useTranslations } from "next-intl";
 
 const PayoutSettingsCard = () => {
   const [payoutMethod, setPayoutMethod] = React.useState<string | undefined>();
+  const t = useTranslations("influencer.account-setting");
 
   return (
-    <CollapseCard title="Payout settigns">
+    <CollapseCard title={t("Payout Settings")}>
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="border rounded-lg p-2 border-light-green bg-linear-to-r from-white to-Secondary">
@@ -173,7 +175,7 @@ const PayoutSettingsCard = () => {
 
         <div>
           <Button className="w-full bg-transparent border border-dashed border-light-green hover:bg-light-green hover:text-white text-Primary">
-            + Add another Payout Method
+            {t("Add another Payout Method")}
           </Button>
         </div>
       </div>

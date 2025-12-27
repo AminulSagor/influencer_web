@@ -1,15 +1,18 @@
+("");
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CheckCircle, SquarePen } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 export default function ProfileCompletionCard() {
+  const t = useTranslations("influencer.account-setting");
   return (
     <Card className="border-none">
       <CardHeader>
         <div className="flex items-center gap-2">
           <CheckCircle className="w-5 h-5 text-[#2D5016]" />
           <h3 className="text-lg font-semibold text-[#2D5016]">
-            Profile Completion
+            {t("Profile Completion")}
           </h3>
         </div>
         {/* Progress bar */}
@@ -23,7 +26,7 @@ export default function ProfileCompletionCard() {
         <Link href={"/influencer/account-settings/verification-checklist"}>
           <div className="rounded-xl border p-4 flex-1 space-y-2">
             <div className="flex gap-2 items-center">
-              <p className="font-medium text-[#2D5016]">Bio</p>
+              <p className="font-medium text-[#2D5016]">{t("Bio")}</p>
               <SquarePen className="cursor-pointer text-dark-gray" size={14} />
             </div>
 

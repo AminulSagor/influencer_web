@@ -1,5 +1,6 @@
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
 import { SquarePen } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const skills = [
   "Public Speaking",
@@ -10,10 +11,11 @@ const skills = [
 ];
 
 export default function SkillsCard() {
+  const t = useTranslations("influencer.account-setting");
   return (
     <div>
       <CollapseCard
-        title="Skills"
+        title={t("Skills")}
         icon={<SquarePen size={15} className="text-dark-gray" />}
       >
         {/* Tags */}
@@ -30,7 +32,7 @@ export default function SkillsCard() {
 
         {/* Action */}
         <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-          + Add Another Skills
+          {t("Add another Skills")}
         </button>
       </CollapseCard>
     </div>

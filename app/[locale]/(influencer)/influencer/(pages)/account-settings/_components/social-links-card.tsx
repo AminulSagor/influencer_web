@@ -1,5 +1,6 @@
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
-import { ChevronUp, SquarePen, Instagram, Youtube, Music2 } from "lucide-react";
+import { SquarePen, Instagram, Youtube, Music2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const socials = [
   {
@@ -17,9 +18,11 @@ const socials = [
 ];
 
 export default function SocialLinksCard() {
+  const t = useTranslations("influencer.account-setting");
+
   return (
     <div>
-      <CollapseCard title="Social Links">
+      <CollapseCard title={t("Social Links")}>
         {/* Social inputs */}
         <div className="space-y-3 mb-6">
           {socials.map((item, index) => {
@@ -51,7 +54,7 @@ export default function SocialLinksCard() {
 
         {/* Add button */}
         <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-          + Add Another Social Link
+          {t("Add another social link")}
         </button>
       </CollapseCard>
     </div>

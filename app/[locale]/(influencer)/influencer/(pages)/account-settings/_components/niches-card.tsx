@@ -1,13 +1,15 @@
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
 import { Check, SquarePen } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const niches = ["Lifestyle", "Skincare", "Vlogging"];
 
 export default function NichesCard() {
+  const t = useTranslations("influencer.account-setting");
   return (
     <div>
       <CollapseCard
-        title="Niches"
+        title={t("Niches")}
         icon={<SquarePen size={15} className="text-dark-gray" />}
       >
         <div className="flex flex-wrap gap-2 mb-6">
@@ -24,7 +26,7 @@ export default function NichesCard() {
 
         {/* Action */}
         <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-          + Add Another Niche
+          {t("Add another Niche")}
         </button>
       </CollapseCard>
     </div>

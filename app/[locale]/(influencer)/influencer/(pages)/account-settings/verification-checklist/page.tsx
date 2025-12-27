@@ -56,18 +56,18 @@ const page = () => {
   return (
     <div className="p-4 space-y-4">
       {/* row 1 */}
-      <div className="grid grid-cols-12 gap-4 items-center">
+      <div>
         {!verfiedStatus ? (
-          <>
-            <div className="col-span-8">
+          <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+            <div className="lg:w-2/3">
               <InfoCard status={verfiedStatus} />
             </div>
-            <div className="col-span-4">
+            <div className="lg:w-1/3">
               <VerificationInProgress />
             </div>
-          </>
+          </div>
         ) : (
-          <div className="col-span-12">
+          <div>
             <InfoCard status={verfiedStatus} />
           </div>
         )}

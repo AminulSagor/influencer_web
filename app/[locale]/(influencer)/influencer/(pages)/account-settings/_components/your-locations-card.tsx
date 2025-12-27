@@ -2,11 +2,12 @@
 
 import AddAddressModal from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/address-drawer";
 import { MapPin, Pencil, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export default function YourLocationsCard() {
   const [open, setOpen] = useState(false);
-
+  const t = useTranslations("influencer.account-setting");
   return (
     <>
       <div className="rounded-2xl border bg-white p-6">
@@ -37,7 +38,7 @@ export default function YourLocationsCard() {
         {/* Add address */}
         <button
           onClick={() => setOpen(true)}
-          className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]"
+          className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016]"
         >
           + Add Another Address
         </button>

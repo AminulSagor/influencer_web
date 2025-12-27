@@ -2,8 +2,11 @@
 
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
 import { MapPin, Mail, Phone, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function ProfileEditCard() {
+  const t = useTranslations("influencer.account-setting");
+
   return (
     <div>
       <CollapseCard title="Profile">
@@ -17,9 +20,9 @@ export default function ProfileEditCard() {
                   <Upload className="w-6 h-6 text-[#6B7A4C]" />
                 </div>
 
-                <div className="flex flex-row gap-2">
+                <div className="flex flex-col gap-2">
                   <button className="px-4 py-1.5 rounded-lg border text-sm">
-                    Remove
+                    {t("Remove")}
                   </button>
                   <button className="px-4 py-1.5 rounded-lg bg-[#6E8F4A] text-white text-sm">
                     Upload Photo
@@ -69,7 +72,7 @@ export default function ProfileEditCard() {
             {/* First Name */}
             <div>
               <label className="block text-sm text-[#6B7A4C] mb-1">
-                First Name *
+                {t("First Name *")}
               </label>
               <input
                 placeholder="Enter First Name"
@@ -80,7 +83,7 @@ export default function ProfileEditCard() {
             {/* Email */}
             <div>
               <label className="block text-sm text-[#6B7A4C] mb-1">
-                Email Address *
+                {t("Email Address *")}
               </label>
               <input
                 value="grow_big@gmail.com"
@@ -92,7 +95,7 @@ export default function ProfileEditCard() {
             {/* Last Name */}
             <div>
               <label className="block text-sm text-[#6B7A4C] mb-1">
-                Last Name *
+                {t("Last Name *")}
               </label>
               <input
                 placeholder="Enter Last Name"
@@ -103,7 +106,7 @@ export default function ProfileEditCard() {
             {/* Phone */}
             <div>
               <label className="block text-sm text-[#6B7A4C] mb-1">
-                Phone Number *
+                {t("Phone Number *")}
               </label>
               <input
                 value="+8801234567890"
