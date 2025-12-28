@@ -30,6 +30,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import AssigneeTooltip from "./asignee-tooltip";
 
 type CampaignStatus =
   | "needs-quote"
@@ -52,6 +59,20 @@ type Campaign = {
   quote: number;
   status: CampaignStatus;
 };
+
+export type Assignee = {
+  id: number;
+  name: string;
+  avatar: string;
+};
+
+const assignees: Assignee[] = [
+  { id: 1, name: "John Doe", avatar: "/avatars/john.png" },
+  { id: 2, name: "Sarah Ali", avatar: "/avatars/sarah.png" },
+  { id: 3, name: "Rahim Uddin", avatar: "/avatars/rahim.png" },
+  { id: 4, name: "Nusrat Jahan", avatar: "/avatars/nusrat.png" },
+  { id: 5, name: "Tanvir Hasan", avatar: "/avatars/tanvir.png" },
+];
 
 const initialCampaigns: Campaign[] = [
   {
@@ -250,9 +271,12 @@ const AdminCampaigns = () => {
                         ৳{campaign.quote}
                       </p>
                     </TableCell>
-
                     <TableCell>
-                      <p className="text-light-green">None Assigned</p>
+                      {assignees.length === 0 ? (
+                        <p className="text-light-green">None Assigned</p>
+                      ) : (
+                        <AssigneeTooltip assignees={assignees} />
+                      )}
                     </TableCell>
 
                     {/* STATUS + PROGRESS */}
