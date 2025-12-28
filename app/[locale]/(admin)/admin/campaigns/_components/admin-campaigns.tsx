@@ -1,4 +1,6 @@
 "use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,11 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React, { useState } from "react";
-import CampaignLinks from "./campaign-links";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -18,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -27,16 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
+import { useState } from "react";
 import { FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import AssigneeTooltip from "./asignee-tooltip";
+import CampaignLinks from "./campaign-links";
 
 type CampaignStatus =
   | "needs-quote"
@@ -105,10 +100,7 @@ const initialCampaigns: Campaign[] = [
 
 const AdminCampaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
-
-  const [status, setStatus] = useState<
-    "needs-quote" | "active" | "pending" | "completed" | "paid" | "canceled"
-  >("active");
+  const [view, setView] = useState<"list" | "grid">("list");
 
   const progressMap: Record<CampaignStatus, number> = {
     "needs-quote": 0,
@@ -126,6 +118,11 @@ const AdminCampaigns = () => {
       )
     );
   };
+
+  const baseBtn =
+    "bg-Secondary text-light-green border border-light-green hover:bg-Secondary/90 hover:text-light-green";
+  const activeBtn =
+    "bg-light-green text-white hover:bg-light-green/90 hover:text-white";
   return (
     <Card>
       <CardHeader className="flex items-center justify-between border-b">
@@ -152,10 +149,17 @@ const AdminCampaigns = () => {
           </div>
 
           <div className="space-x-2">
-            <Button className="bg-light-green hover:bg-light-green/90">
+            <Button
+              className={cn(baseBtn, view === "list" && activeBtn)}
+              onClick={() => setView("list")}
+            >
               List View
             </Button>
-            <Button className="bg-Secondary text-light-green border-light-green border hover:bg-Secondary/90 hover:text-light-green">
+
+            <Button
+              className={cn(baseBtn, view === "grid" && activeBtn)}
+              onClick={() => setView("grid")}
+            >
               Grid View
             </Button>
           </div>
@@ -201,141 +205,158 @@ const AdminCampaigns = () => {
           </div>
         </div>
 
-        <div className="rounded-md overflow-hidden border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-light-green hover:bg-light-green">
-                <TableHead className="w-[40px]">
-                  <Checkbox />
-                </TableHead>
-                <TableHead className="text-white">Campaign Info</TableHead>
-                <TableHead className="text-white">Client</TableHead>
-                <TableHead className="text-white">Timeline</TableHead>
-                <TableHead className="text-white">Financials</TableHead>
-                <TableHead className="text-white">Assigned Personals</TableHead>
-                <TableHead className="text-white">Status</TableHead>
-                <TableHead className="text-white text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {campaigns.map((campaign) => {
-                const progress = progressMap[campaign.status];
-                const shouldShowProgress = [
-                  "active",
-                  "completed",
-                  "paid",
-                ].includes(campaign.status);
+        {view === "list" ? (
+          <div className="rounded-md overflow-hidden border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-light-green hover:bg-light-green">
+                  <TableHead className="w-[40px]">
+                    <Checkbox />
+                  </TableHead>
+                  <TableHead className="text-white">Campaign Info</TableHead>
+                  <TableHead className="text-white">Client</TableHead>
+                  <TableHead className="text-white">Timeline</TableHead>
+                  <TableHead className="text-white">Financials</TableHead>
+                  <TableHead className="text-white">
+                    Assigned Personals
+                  </TableHead>
+                  <TableHead className="text-white">Status</TableHead>
+                  <TableHead className="text-white text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campaigns.map((campaign) => {
+                  const progress = progressMap[campaign.status];
+                  const shouldShowProgress = [
+                    "active",
+                    "completed",
+                    "paid",
+                  ].includes(campaign.status);
 
-                return (
-                  <TableRow key={campaign.id}>
-                    <TableCell className="w-[40px]">
-                      <Checkbox />
-                    </TableCell>
+                  return (
+                    <TableRow key={campaign.id}>
+                      <TableCell className="w-[40px]">
+                        <Checkbox />
+                      </TableCell>
 
-                    <TableCell className="space-y-1">
-                      <p className="font-medium text-lg">{campaign.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {campaign.category}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Niches: {campaign.niches}
-                      </p>
-                    </TableCell>
+                      <TableCell className="space-y-1">
+                        <p className="font-medium text-lg">{campaign.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {campaign.category}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Niches: {campaign.niches}
+                        </p>
+                      </TableCell>
 
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar>
-                          <AvatarImage src={campaign.avatar} />
-                          <AvatarFallback>{campaign.client[0]}</AvatarFallback>
-                        </Avatar>
-                        <p className="text-xs">{campaign.client}</p>
-                      </div>
-                    </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar>
+                            <AvatarImage src={campaign.avatar} />
+                            <AvatarFallback>
+                              {campaign.client[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-xs">{campaign.client}</p>
+                        </div>
+                      </TableCell>
 
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-semibold">Start</p>
-                        <p className="text-gray-500">{campaign.startDate}</p>
-                        <p className="font-semibold mt-2">End</p>
-                        <p className="text-gray-500">{campaign.endDate}</p>
-                      </div>
-                    </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-semibold">Start</p>
+                          <p className="text-gray-500">{campaign.startDate}</p>
+                          <p className="font-semibold mt-2">End</p>
+                          <p className="text-gray-500">{campaign.endDate}</p>
+                        </div>
+                      </TableCell>
 
-                    <TableCell>
-                      <p className="font-semibold">Client Budget</p>
-                      <p className="text-light-green font-semibold">
-                        ৳{campaign.budget}
-                      </p>
-                      <p className="font-semibold mt-2">Final Quote</p>
-                      <p className="text-light-green font-semibold">
-                        ৳{campaign.quote}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      {assignees.length === 0 ? (
-                        <p className="text-light-green">None Assigned</p>
-                      ) : (
-                        <AssigneeTooltip assignees={assignees} />
-                      )}
-                    </TableCell>
-
-                    {/* STATUS + PROGRESS */}
-                    <TableCell>
-                      <div className="space-y-2">
-                        {shouldShowProgress && (
-                          <div className="w-[180px] space-y-1">
-                            <div className="flex justify-between text-sm font-semibold">
-                              <span>Progress</span>
-                              <span className="text-Primary">{progress}%</span>
-                            </div>
-                            <div className="h-2 bg-light-green/30 rounded-full">
-                              <div
-                                className="h-full bg-light-green rounded-full transition-all"
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
-                          </div>
+                      <TableCell>
+                        <p className="font-semibold">Client Budget</p>
+                        <p className="text-light-green font-semibold">
+                          ৳{campaign.budget}
+                        </p>
+                        <p className="font-semibold mt-2">Final Quote</p>
+                        <p className="text-light-green font-semibold">
+                          ৳{campaign.quote}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        {assignees.length === 0 ? (
+                          <p className="text-light-green">None Assigned</p>
+                        ) : (
+                          <AssigneeTooltip assignees={assignees} />
                         )}
+                      </TableCell>
 
-                        <Select
-                          value={campaign.status}
-                          onValueChange={(v) =>
-                            handleStatusChange(campaign.id, v as CampaignStatus)
-                          }
-                        >
-                          <SelectTrigger className="w-[180px] border border-light-green cursor-pointer">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="needs-quote">
-                              Needs Quote
-                            </SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                            <SelectItem value="canceled">Canceled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </TableCell>
+                      {/* STATUS + PROGRESS */}
+                      <TableCell>
+                        <div className="space-y-2">
+                          {shouldShowProgress && (
+                            <div className="w-[180px] space-y-1">
+                              <div className="flex justify-between text-sm font-semibold">
+                                <span>Progress</span>
+                                <span className="text-Primary">
+                                  {progress}%
+                                </span>
+                              </div>
+                              <div className="h-2 bg-light-green/30 rounded-full">
+                                <div
+                                  className="h-full bg-light-green rounded-full transition-all"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
 
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button variant="outline">
-                          <FaEye />
-                        </Button>
-                        <Button variant="outline">
-                          <FaRegTrashCan />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                          <Select
+                            value={campaign.status}
+                            onValueChange={(v) =>
+                              handleStatusChange(
+                                campaign.id,
+                                v as CampaignStatus
+                              )
+                            }
+                          >
+                            <SelectTrigger className="w-[180px] border border-light-green cursor-pointer">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="needs-quote">
+                                Needs Quote
+                              </SelectItem>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="completed">
+                                Completed
+                              </SelectItem>
+                              <SelectItem value="paid">Paid</SelectItem>
+                              <SelectItem value="canceled">Canceled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="outline">
+                            <FaEye />
+                          </Button>
+                          <Button variant="outline">
+                            <FaRegTrashCan />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p> Grid</p>
+        )}
       </CardContent>
     </Card>
   );

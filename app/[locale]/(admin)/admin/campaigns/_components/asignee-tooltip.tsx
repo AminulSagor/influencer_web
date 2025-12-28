@@ -34,7 +34,7 @@ const AssigneeTooltip = ({ assignees }: Props) => {
               </div>
             </TooltipTrigger>
 
-            <TooltipContent className="p-4 bg-gradient-to-br from-white to-Secondary border border-light-green">
+            <TooltipContent className="p-4 bg-linear-to-br from-white to-Secondary border border-light-green">
               {/* tooltip content unchanged */}
 
               <div className="space-y-2 ">
