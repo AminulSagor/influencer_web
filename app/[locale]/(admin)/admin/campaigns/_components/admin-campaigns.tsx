@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -5,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import React from "react";
+import React, { useState } from "react";
 import CampaignLinks from "./campaign-links";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -27,8 +28,83 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FaEye } from "react-icons/fa";
+import { FaRegTrashCan } from "react-icons/fa6";
+
+type CampaignStatus =
+  | "needs-quote"
+  | "active"
+  | "pending"
+  | "completed"
+  | "paid"
+  | "canceled";
+
+type Campaign = {
+  id: number;
+  name: string;
+  category: string;
+  niches: string;
+  client: string;
+  avatar: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  quote: number;
+  status: CampaignStatus;
+};
+
+const initialCampaigns: Campaign[] = [
+  {
+    id: 1,
+    name: "Summer Sale Fashion",
+    category: "Influencer Promotion",
+    niches: "Fashion",
+    client: "StyleCo.",
+    avatar: "https://github.com/ninjastorm24.png",
+    startDate: "20 Mar, 2025",
+    endDate: "31 Mar, 2025",
+    budget: 100000,
+    quote: 100,
+    status: "active",
+  },
+  {
+    id: 2,
+    name: "Winter Drop",
+    category: "Influencer Promotion",
+    niches: "Lifestyle",
+    client: "UrbanX",
+    avatar: "https://github.com/shadcn.png",
+    startDate: "01 Apr, 2025",
+    endDate: "15 Apr, 2025",
+    budget: 80000,
+    quote: 80000,
+    status: "paid",
+  },
+];
 
 const AdminCampaigns = () => {
+  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+
+  const [status, setStatus] = useState<
+    "needs-quote" | "active" | "pending" | "completed" | "paid" | "canceled"
+  >("active");
+
+  const progressMap: Record<CampaignStatus, number> = {
+    "needs-quote": 0,
+    pending: 0,
+    canceled: 0,
+    active: 70,
+    completed: 100,
+    paid: 100,
+  };
+
+  const handleStatusChange = (id: number, status: CampaignStatus) => {
+    setCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === id ? { ...campaign, status } : campaign
+      )
+    );
+  };
   return (
     <Card>
       <CardHeader className="flex items-center justify-between border-b">
@@ -66,7 +142,7 @@ const AdminCampaigns = () => {
 
         <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4">
               <div>
                 <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
                   1 selected
@@ -74,7 +150,7 @@ const AdminCampaigns = () => {
               </div>
               <div>
                 <Select>
-                  <SelectTrigger className="bg-white border border-light-green text-sm">
+                  <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
                     <SelectValue placeholder="Bulk Actions" />
                   </SelectTrigger>
                   <SelectContent>
@@ -121,59 +197,118 @@ const AdminCampaigns = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell className="w-[40px]">
-                  <Checkbox />
-                </TableCell>
-                <TableCell className="space-y-1">
-                  <p className="font-medium text-lg">Summer Sale Fashion</p>
-                  <p className="text-sm text-gray-500">Influencer Promotion</p>
-                  <p className="text-xs font-light text-gray-500">
-                    Niches: Fashion
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Avatar>
-                      <AvatarImage
-                        src={"https://github.com/ninjastorm24.png"}
-                      />
-                      <AvatarFallback>SC</AvatarFallback>
-                    </Avatar>
-                    <p className="text-xs">StyleCo.</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="font-semibold">Start Date</p>
-                      <p className="text-gray-500">20 Mar, 2025</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">End Date</p>
-                      <p className="text-gray-500">31 Mar, 2025</p>
-                    </div>
-                  </div>
-                </TableCell>
-                {/* start here */}
-                <TableCell>Financials</TableCell>
-                <TableCell>Assigned Personals</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell className="text-right">Actions</TableCell>
-              </TableRow>
+              {campaigns.map((campaign) => {
+                const progress = progressMap[campaign.status];
+                const shouldShowProgress = [
+                  "active",
+                  "completed",
+                  "paid",
+                ].includes(campaign.status);
 
-              <TableRow>
-                <TableCell className="w-[40px]">
-                  <Checkbox />
-                </TableCell>
-                <TableCell className="font-medium">Campaign Name</TableCell>
-                <TableCell>Client Name</TableCell>
-                <TableCell>Timeline</TableCell>
-                <TableCell>Financials</TableCell>
-                <TableCell>Assigned Personals</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell className="text-right">Actions</TableCell>
-              </TableRow>
+                return (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="w-[40px]">
+                      <Checkbox />
+                    </TableCell>
+
+                    <TableCell className="space-y-1">
+                      <p className="font-medium text-lg">{campaign.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {campaign.category}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Niches: {campaign.niches}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar>
+                          <AvatarImage src={campaign.avatar} />
+                          <AvatarFallback>{campaign.client[0]}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-xs">{campaign.client}</p>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="font-semibold">Start</p>
+                        <p className="text-gray-500">{campaign.startDate}</p>
+                        <p className="font-semibold mt-2">End</p>
+                        <p className="text-gray-500">{campaign.endDate}</p>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <p className="font-semibold">Client Budget</p>
+                      <p className="text-light-green font-semibold">
+                        ৳{campaign.budget}
+                      </p>
+                      <p className="font-semibold mt-2">Final Quote</p>
+                      <p className="text-light-green font-semibold">
+                        ৳{campaign.quote}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      <p className="text-light-green">None Assigned</p>
+                    </TableCell>
+
+                    {/* STATUS + PROGRESS */}
+                    <TableCell>
+                      <div className="space-y-2">
+                        {shouldShowProgress && (
+                          <div className="w-[180px] space-y-1">
+                            <div className="flex justify-between text-sm font-semibold">
+                              <span>Progress</span>
+                              <span className="text-Primary">{progress}%</span>
+                            </div>
+                            <div className="h-2 bg-light-green/30 rounded-full">
+                              <div
+                                className="h-full bg-light-green rounded-full transition-all"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <Select
+                          value={campaign.status}
+                          onValueChange={(v) =>
+                            handleStatusChange(campaign.id, v as CampaignStatus)
+                          }
+                        >
+                          <SelectTrigger className="w-[180px] border border-light-green cursor-pointer">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="needs-quote">
+                              Needs Quote
+                            </SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="canceled">Canceled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline">
+                          <FaEye />
+                        </Button>
+                        <Button variant="outline">
+                          <FaRegTrashCan />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
