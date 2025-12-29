@@ -4,11 +4,11 @@ import { Check } from "lucide-react";
 import clsx from "clsx";
 
 const STEPS = [
-  { id: 1, title: "Campaign Creation", subtitle: "Step 1" },
-  { id: 2, title: "Campaign Quotes", subtitle: "Step 2" },
-  { id: 3, title: "Placement Budget", subtitle: "Step 3" },
-  { id: 4, title: "Upload Your Content", subtitle: "Step 4" },
-  { id: 5, title: "Review Your Campaign", subtitle: "Step 5" },
+  { id: 1, title: "Let’s Get Started", subtitle: "Step 1" },
+  { id: 2, title: "Your Preferences", subtitle: "Step 2" },
+  { id: 3, title: "Campaign Details", subtitle: "Step 3" },
+  { id: 4, title: "Placement & Budget", subtitle: "Step 4" },
+  { id: 5, title: "Upload Your Content", subtitle: "Step 5" },
   { id: 6, title: "Review Your Campaign", subtitle: "Step 6" },
 ];
 
@@ -20,13 +20,13 @@ const Stepper = ({ currentStep }: StepperProps) => {
   // Calculate width from first circle center to current circle center
   const getProgressWidth = () => {
     if (STEPS.length <= 1 || currentStep < 1) return "0%";
-    
+
     // Each step takes 100% / (total steps - 1) of the progress bar
     const stepWidthPercentage = 100 / (STEPS.length - 1);
-    
+
     // Progress goes from center of first to center of current step
     const width = (currentStep - 1) * stepWidthPercentage;
-    
+
     return `${width}%`;
   };
 
@@ -37,7 +37,7 @@ const Stepper = ({ currentStep }: StepperProps) => {
       {/* Single responsive design for all screens */}
       <div className="relative">
         {/* Background line - starts after first circle, ends before last circle */}
-        <div 
+        <div
           className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-gray-200"
           style={{
             left: `calc(${100 / STEPS.length}% / 2)`, // Start from center of first circle

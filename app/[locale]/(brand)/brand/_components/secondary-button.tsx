@@ -9,7 +9,7 @@ type Props = {
 const SecondaryButton = ({
   children,
   onClick,
-  className = "text-sm",
+  className,
   type = "button",
   disabled = false,
 }: Props) => {
@@ -29,6 +29,7 @@ const SecondaryButton = ({
         border
         border-light-gray
         text-black
+        text-sm w-full
         rounded-md 
         px-4 py-2 
         active:scale-[0.98]

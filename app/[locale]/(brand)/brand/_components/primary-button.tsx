@@ -11,7 +11,7 @@ type Props = {
 const PrimaryButton = ({
   children,
   onClick,
-  className = "text-sm",
+  className,
   type = "button",
   disabled = false,
 }: Props) => {
@@ -29,7 +29,8 @@ const PrimaryButton = ({
       className={`
         bg-light-green
         text-white 
-        rounded-md 
+        rounded-md
+        text-sm w-full 
         px-4 py-2 
         hover:bg-[#6a8a4a] 
         active:scale-[0.98]

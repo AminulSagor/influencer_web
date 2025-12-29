@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Link from "next/link";
 
 type Props = Readonly<{
   children: React.ReactNode;
@@ -48,12 +49,14 @@ export default function InfluencerJobsLayout({
                   className="sm:w-auto bg-light-green hover:bg-light-green/85"
                   onClick={onCreateCampaign}
                 >
+                  <Link href={'/brand/create-campaign'}>
                   + Create Campaign
+                  </Link>
                 </Button>
               </div>
 
               {/* Right links */}
-              <div className="overflow-y-scroll pb-4 md:pb-0">
+              <div className="overflow-y-scroll pb-4 md:pb-0 no-scrollbar">
                 <CampaignsLink />
               </div>
             </div>
