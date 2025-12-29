@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -27,9 +28,11 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import { useState } from "react";
-import { FaEye } from "react-icons/fa";
+import { JSX, useState } from "react";
+import { AiFillTikTok } from "react-icons/ai";
+import { FaClock, FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import AssigneeTooltip from "./asignee-tooltip";
 import CampaignLinks from "./campaign-links";
 
@@ -98,9 +101,14 @@ const initialCampaigns: Campaign[] = [
   },
 ];
 
+const platformIcons: Record<string, JSX.Element> = {
+  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
+  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
+  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
+};
 const AdminCampaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
-  const [view, setView] = useState<"list" | "grid">("list");
+  const [view, setView] = useState<"list" | "grid">("grid");
 
   const progressMap: Record<CampaignStatus, number> = {
     "needs-quote": 0,
@@ -355,7 +363,142 @@ const AdminCampaigns = () => {
             </Table>
           </div>
         ) : (
-          <p> Grid</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {campaigns.map((campaign) => {
+              const progress = progressMap[campaign.status];
+
+              return (
+                <Card key={campaign.id} className="relative overflow-hidden">
+                  <CardHeader className="space-y-3">
+                    {/* Header */}
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <CardTitle className="text-Primary">
+                          {campaign.name}
+                        </CardTitle>
+                        <p className="text-sm text-gray-400">
+                          {campaign.category}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Niches: {campaign.niches}
+                        </p>
+                      </div>
+                      <Checkbox />
+                    </div>
+
+                    {/* Client */}
+                    <div className="border rounded-md px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar>
+                          <AvatarImage src={campaign.avatar} />
+                          <AvatarFallback>{campaign.client[0]}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-sm text-Primary">
+                          {campaign.client}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Assignees */}
+                    <div className="border rounded-md px-4 py-2">
+                      <AssigneeTooltip assignees={assignees} view={view} />
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {/* Budget */}
+                    <div className="border border-light-green rounded-lg bg-linear-to-r from-Secondary to-white px-4 py-3 space-y-2">
+                      <div>
+                        <p className="text-xs font-semibold text-Primary">
+                          Client Budget
+                        </p>
+                        <p className="text-2xl font-semibold text-light-green">
+                          ৳{campaign.budget.toLocaleString()}
+                        </p>
+                      </div>
+
+                      <Separator className="bg-light-green/60" />
+
+                      <div>
+                        <p className="text-xs font-semibold text-Primary">
+                          Final Quote
+                        </p>
+                        <p className="text-2xl font-semibold text-light-green">
+                          ৳{campaign.quote.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Timeline */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm text-yellow-600">
+                        <span className="flex items-center gap-1">
+                          <FaClock /> Start
+                        </span>
+                        <span>{campaign.startDate}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-yellow-600">
+                        <span className="flex items-center gap-1">
+                          <FaClock /> End
+                        </span>
+                        <span>{campaign.endDate}</span>
+                      </div>
+                    </div>
+
+                    {/* Status + Progress */}
+                    <div className="space-y-2">
+                      <Select
+                        value={campaign.status}
+                        onValueChange={(v) =>
+                          handleStatusChange(campaign.id, v as CampaignStatus)
+                        }
+                      >
+                        <SelectTrigger className="w-full border border-light-green">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="needs-quote">
+                            Needs Quote
+                          </SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="canceled">Canceled</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {(campaign.status === "active" ||
+                        campaign.status === "completed" ||
+                        campaign.status === "paid") && (
+                        <div className="space-y-1">
+                          <div className="h-2 bg-light-green/30 rounded-full">
+                            <div
+                              className="h-full bg-light-green rounded-full transition-all"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <p className="text-sm text-Primary font-medium">
+                            {progress}% Completed
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button variant="lightGreen" className="flex-1">
+                        View Details
+                      </Button>
+                      <Button variant="outline">
+                        <FaRegTrashCan />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

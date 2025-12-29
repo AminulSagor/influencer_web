@@ -7,14 +7,21 @@ import {
 } from "@/components/ui/tooltip";
 import React from "react";
 import { Assignee } from "./admin-campaigns";
+import { cn } from "@/lib/utils";
 
 type Props = {
   assignees: Assignee[];
+  view?: "grid" | "list";
 };
-const AssigneeTooltip = ({ assignees }: Props) => {
+const AssigneeTooltip = ({ assignees, view }: Props) => {
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-1">
+      <div
+        className={cn(
+          "flex flex-col gap-1",
+          view === "grid" && "flex-row items-center"
+        )}
+      >
         {/* avatars row */}
         <div className="flex items-center -space-x-2">
           {assignees.slice(0, 3).map((user) => (
