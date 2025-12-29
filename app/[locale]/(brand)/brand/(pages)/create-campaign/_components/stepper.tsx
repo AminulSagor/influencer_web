@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import clsx from "clsx";
 
 const STEPS = [
-  { id: 1, title: "Let’s Get Started", subtitle: "Step 1" },
+  { id: 1, title: "Let's Get Started", subtitle: "Step 1" },
   { id: 2, title: "Your Preferences", subtitle: "Step 2" },
   { id: 3, title: "Campaign Details", subtitle: "Step 3" },
   { id: 4, title: "Placement & Budget", subtitle: "Step 4" },
@@ -17,9 +17,12 @@ interface StepperProps {
 }
 
 const Stepper = ({ currentStep }: StepperProps) => {
+  const isLastStep = currentStep === STEPS.length;
+  
   // Calculate width from first circle center to current circle center
   const getProgressWidth = () => {
     if (STEPS.length <= 1 || currentStep < 1) return "0%";
+    if (isLastStep) return "0%"; // Hide progress line on last step
 
     // Each step takes 100% / (total steps - 1) of the progress bar
     const stepWidthPercentage = 100 / (STEPS.length - 1);
@@ -34,26 +37,28 @@ const Stepper = ({ currentStep }: StepperProps) => {
 
   return (
     <div className="w-full overflow-x-scroll no-scrollbar overflow-y-scroll">
-      {/* Single responsive design for all screens */}
       <div className="relative">
-        {/* Background line - starts after first circle, ends before last circle */}
+        {/* Background line - always visible */}
         <div
           className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-gray-200"
           style={{
-            left: `calc(${100 / STEPS.length}% / 2)`, // Start from center of first circle
-            width: `calc(100% - ${100 / STEPS.length}%)`, // End before center of last circle
+            left: `calc(${100 / STEPS.length}% / 2)`,
+            width: `calc(100% - ${100 / STEPS.length}%)`,
           }}
         />
 
-        {/* Progress line - starts from first circle center, ends at current circle center */}
-        <div
-          className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-light-green transition-all duration-300 ease-in-out"
-          style={{
-            left: `calc(${100 / STEPS.length}% / 2)`, // Start from center of first circle
-            width: progressWidth,
-          }}
-        />
+        {/* Progress line - hidden on last step */}
+        {!isLastStep && (
+          <div
+            className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-light-green transition-all duration-300 ease-in-out"
+            style={{
+              left: `calc(${100 / STEPS.length}% / 2)`,
+              width: progressWidth,
+            }}
+          />
+        )}
 
+        {/* Rest of the code remains the same... */}
         <div className="relative flex justify-between">
           {STEPS.map((step) => {
             const isCompleted = step.id < currentStep;
@@ -66,10 +71,9 @@ const Stepper = ({ currentStep }: StepperProps) => {
                 className="flex flex-col items-center"
                 style={{
                   width: `${100 / STEPS.length}%`,
-                  minWidth: "60px", // Prevent collapsing on mobile
+                  minWidth: "60px",
                 }}
               >
-                {/* Circle - Responsive sizes */}
                 <div
                   className={clsx(
                     "w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7 md:w-8 md:h-8",
@@ -95,9 +99,7 @@ const Stepper = ({ currentStep }: StepperProps) => {
                   )}
                 </div>
 
-                {/* Text container */}
                 <div className="text-center w-full px-0.5 xs:px-1">
-                  {/* Title - Responsive with line clamp */}
                   <p
                     className={clsx(
                       "text-[9px] xs:text-[10px] sm:text-xs font-semibold",
@@ -114,7 +116,6 @@ const Stepper = ({ currentStep }: StepperProps) => {
                     {step.title}
                   </p>
 
-                  {/* Subtitle - Hide on very small screens, show on xs+ */}
                   <p
                     className={clsx(
                       "hidden xs:block text-[9px] xs:text-[10px] sm:text-xs font-medium",

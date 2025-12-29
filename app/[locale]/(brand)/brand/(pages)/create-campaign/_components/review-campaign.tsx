@@ -2,7 +2,7 @@ import AssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_co
 import CampaignMilestone from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/campaign-milestone";
 import DeadlineCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/deadline-card";
 import ReviewInfoCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/review-info-card";
-import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/terms-and-condition-card";
+import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/_components/terms-and-condition-card";
 
 const ReviewCampaign = () => {
   return (

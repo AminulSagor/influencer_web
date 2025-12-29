@@ -25,8 +25,8 @@ const CollapseCard = ({ title, children, icon, titleColor }: Props) => {
               className={`text-Primary cursor-pointer font-semibold text-base py-0 ${titleColor}`}
             >
               <h1 className="flex items-center gap-2">
-                {title}
                 {icon && icon}
+                {title}
               </h1>
             </AccordionTrigger>
             <AccordionContent className="pt-4">{children}</AccordionContent>
