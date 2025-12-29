@@ -369,7 +369,7 @@ const AdminCampaigns = () => {
 
               return (
                 <Card key={campaign.id} className="relative overflow-hidden">
-                  <CardHeader className="space-y-3">
+                  <CardHeader>
                     {/* Header */}
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
@@ -468,9 +468,7 @@ const AdminCampaigns = () => {
                         </SelectContent>
                       </Select>
 
-                      {(campaign.status === "active" ||
-                        campaign.status === "completed" ||
-                        campaign.status === "paid") && (
+                      {
                         <div className="space-y-1">
                           <div className="h-2 bg-light-green/30 rounded-full">
                             <div
@@ -478,11 +476,11 @@ const AdminCampaigns = () => {
                               style={{ width: `${progress}%` }}
                             />
                           </div>
-                          <p className="text-sm text-Primary font-medium">
+                          <p className="text-sm text-orange font-medium">
                             {progress}% Completed
                           </p>
                         </div>
-                      )}
+                      }
                     </div>
 
                     {/* Actions */}
