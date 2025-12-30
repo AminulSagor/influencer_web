@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BiChevronLeftCircle } from "react-icons/bi";
-import { IconType } from "react-icons";
+
+export type PlatformKey = "instagram" | "youtube" | "tiktok";
 export type Platform = {
   name: string;
   url: string;
-  icon: IconType;
+  key: PlatformKey;
 };
-
 export type Influencer = {
   name: string;
   imageUrl: string;
@@ -38,7 +38,9 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import IconText from "./icon-text";
 import { FaClock } from "react-icons/fa";
-import { formatDate } from "./format-date";
+import { formatDate } from "../../../_components/format-date";
+import { PiInstagramLogoFill, PiYoutubeLogoFill } from "react-icons/pi";
+import { AiFillTikTok } from "react-icons/ai";
 
 const CampaignDetailsCard = ({
   title,
@@ -52,6 +54,12 @@ const CampaignDetailsCard = ({
   clientAvatar,
   influencers,
 }: Props) => {
+  const ICON_MAP = {
+    instagram: PiInstagramLogoFill,
+    youtube: PiYoutubeLogoFill,
+    tiktok: AiFillTikTok,
+  };
+
   return (
     <div className="bg-linear-to-r from-Primary to-light-green p-4 rounded-lg text-off-white ">
       <div className="flex items-center justify-between">
@@ -86,7 +94,7 @@ const CampaignDetailsCard = ({
           <div>
             <div className="flex items-center gap-1">
               {influencers.map((i) => (
-                <Avatar>
+                <Avatar key={i.name}>
                   <AvatarImage src={i.imageUrl} alt={i.name} />
                   <AvatarFallback>{i.name.charAt(0)}</AvatarFallback>
                 </Avatar>
@@ -115,10 +123,11 @@ const CampaignDetailsCard = ({
         <div className="flex items-center gap-2 text-white-two">
           Platforms:
           <div className="flex">
-            {platform.map((plat) => {
+            {platform.map((plat, index) => {
+              const Icon = ICON_MAP[plat.key];
               return (
-                <div className="text-white-two">
-                  <plat.icon />
+                <div key={index}>
+                  <Icon size={24} />
                 </div>
               );
             })}
@@ -144,7 +153,6 @@ const CampaignDetailsCard = ({
           icon={<FaClock />}
           text={`Start Date: ${formatDate(startDate)}`}
         />
-
         <IconText
           className="text-white-two"
           icon={<FaClock />}
