@@ -11,8 +11,7 @@ type Step = {
 };
 
 type ProgressStepperProps = {
-  /** 0..4 (index of current step). If you want “2 progress”, pass 1 (Submitted done, Quoted current) */
-  currentStep?: number;
+  currentStep?: number; // 0..4
 };
 
 const steps: Step[] = [
@@ -63,18 +62,15 @@ const StepIcon = ({
 }) => {
   const base =
     "h-10 w-10 rounded-full flex items-center justify-center border transition-colors";
-  if (status === "done")
+
+  if (status === "done" || status === "current") {
     return (
       <div className={`${base} bg-Primary border-Primary text-white`}>
         {children}
       </div>
     );
-  if (status === "current")
-    return (
-      <div className={`${base} bg-Primary border-Primary text-white`}>
-        {children}
-      </div>
-    );
+  }
+
   return (
     <div className={`${base} bg-white border-black/15 text-black/35`}>
       {children}
@@ -83,22 +79,30 @@ const StepIcon = ({
 };
 
 const ProgressStepper = ({ currentStep = 1 }: ProgressStepperProps) => {
-  return (
-    <div className="w-full">
-      <div className="relative">
-        {/* Track */}
-        <div className="absolute left-0 right-0 top-5 h-[2px] bg-black/10" />
+  const stepsCount = steps.length;
+  const progressPct =
+    stepsCount <= 1 ? 0 : (currentStep / (stepsCount - 1)) * 100;
 
-        {/* Progress (up to current step) */}
+  // start line from center of first column and end at center of last column
+  const edgeOffsetPct = 100 / (stepsCount * 2); // 5 steps => 10%
+
+  return (
+    <div className="w-full overflow-x-auto no-scrollbar">
+      <div className="relative min-w-[720px]">
+        {/* Track: exactly from first circle center to last circle center */}
         <div
-          className="absolute left-0 top-5 h-[2px] bg-Primary transition-all"
+          className="absolute top-5 h-[2px] bg-black/10"
           style={{
-            width:
-              steps.length === 1
-                ? "0%"
-                : `${(currentStep / (steps.length - 1)) * 100}%`,
+            left: `${edgeOffsetPct}%`,
+            right: `${edgeOffsetPct}%`,
           }}
-        />
+        >
+          {/* Progress inside track */}
+          <div
+            className="h-full bg-Primary transition-all"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
 
         {/* Steps */}
         <div className="relative grid grid-cols-5">
@@ -117,7 +121,9 @@ const ProgressStepper = ({ currentStep = 1 }: ProgressStepperProps) => {
                   >
                     {s.title}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-black/40">{s.subtitle}</p>
+                  <p className="mt-0.5 text-[11px] text-black/40">
+                    {s.subtitle}
+                  </p>
                 </div>
               </div>
             );

@@ -13,6 +13,7 @@ import { FaClock } from "react-icons/fa";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import { useTranslations } from "next-intl";
 import PercentageBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/percentage-bar";
+import Link from "next/link";
 
 // data/new-offers.ts
 export const newOffers = [
@@ -173,7 +174,9 @@ const ActiveCampaignsList = () => {
               </div>
               {/* Actions */}
               <Button variant="outline" className="w-full cursor-pointer">
-                {t("View Campaign Details")}
+                <Link href={`/brand/campaign-details-influencer/${offer.id}`}>
+                  {t("View Campaign Details")}
+                </Link>
               </Button>
             </CardContent>
           </CardHeader>
