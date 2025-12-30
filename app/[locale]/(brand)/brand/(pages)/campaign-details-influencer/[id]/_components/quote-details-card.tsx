@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import {
@@ -11,28 +12,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React from "react";
+
+import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
+
+type CampaignDetails = (typeof campaignMocksData)[number];
 
 type QuoteDetailsCardProps = {
-  // state
-  pending: boolean;
+  campaign: CampaignDetails;
 
-  // common amounts
-  baseBudget?: number;
-  vatPercent?: number; // e.g. 15
-  vatAmount?: number;
-  totalCost?: number;
+  // optional overrides / actions
+  pending?: boolean;
 
-  // pending-only
-  revisedTimes?: number;
-  onRequote?: () => void;
+  revisedTimes?: number; // if you have it later in API
+  onRequote?: (newBaseBudget: number) => void;
   onAccept?: () => void;
 
-  // not-pending-only
-  paidAmount?: number;
-  dueAmount?: number;
-  onPayDue?: (amount: number) => void; // called when user confirms pay
-  campaignTitle?: string;
+  onPayDue?: (amount: number) => void;
 };
 
 const formatBDT = (n: number) => `৳${n.toLocaleString("en-US")}`;
@@ -60,31 +55,43 @@ const PercentChip = ({
 );
 
 const QuoteDetailsCard = ({
-  pending,
-
-  baseBudget = 100000,
-  vatPercent = 15,
-  vatAmount = 10000,
-  totalCost = 110000,
-
+  campaign,
+  pending: pendingProp,
   revisedTimes = 0,
   onRequote,
   onAccept,
-
-  paidAmount = 1200,
-  dueAmount = 4500,
   onPayDue,
-  campaignTitle = "Summer Fashion Campaign",
 }: QuoteDetailsCardProps) => {
-  const [payAmount, setPayAmount] = React.useState<number>(
-    Math.min(paidAmount, dueAmount) || 0
-  );
+  const quote = campaign.quote;
+
+  const baseBudget = quote?.baseBudget?.amount ?? 0;
+  const vatPercent = quote?.vatPercent ?? 0;
+  const vatAmount = quote?.vatAmount?.amount ?? 0;
+  const totalCost = quote?.totalCost?.amount ?? 0;
+
+  const paidAmount = quote?.paidAmount?.amount ?? 0;
+  const dueAmount = quote?.dueAmount?.amount ?? 0;
+
+  const tabStatus = campaign.tabStatus ?? "";
+  const stage = campaign.stage ?? "";
+  const quoteStatus = quote?.statusLabel ?? "";
+
+  // ✅ auto pending rules (same logic style as Summary)
+  const isPendingAuto =
+    tabStatus.toLowerCase() === "pending" ||
+    stage.toLowerCase() === "quoted" ||
+    quoteStatus === "PENDING";
+
+  const pending = pendingProp ?? isPendingAuto;
+
+  // ------- Pay Due dialog states -------
+  const [payAmount, setPayAmount] = React.useState<number>(0);
   const [activePreset, setActivePreset] = React.useState<null | "full" | "min">(
     null
   );
 
   React.useEffect(() => {
-    // default: show the paid amount like your screenshot (৳1,200) but clamp to due
+    // default to paidAmount (like your screenshot) but clamp into [0..due]
     const initial = Math.min(Math.max(paidAmount, 0), Math.max(dueAmount, 0));
     setPayAmount(initial);
   }, [paidAmount, dueAmount]);
@@ -113,12 +120,24 @@ const QuoteDetailsCard = ({
     setPayAmount(clamp(val));
   };
 
+  // ------- Requote dialog states -------
+  const [requoteAmount, setRequoteAmount] = React.useState<number>(baseBudget);
+
+  React.useEffect(() => {
+    setRequoteAmount(baseBudget);
+  }, [baseBudget]);
+
+  const nextVatAmount = Math.round((requoteAmount * vatPercent) / 100);
+  const nextTotalCost = requoteAmount + nextVatAmount;
+
+  const canPayDue = !pending && dueAmount > 0;
+
   return (
     <Card>
       <CardContent>
         <h2 className="font-semibold text-Primary">Quote Details</h2>
 
-        <div className="mt-2 rounded-lg border border-Primary bg-linear-to-r from-light-green/40 to-white p-4 overflow-x-scroll no-scrollbar">
+        <div className="mt-2 rounded-lg border border-Primary bg-linear-to-r from-light-green/40 to-white p-4 overflow-x-auto no-scrollbar">
           <div className="text-sm">
             <div className="flex gap-4">
               <div className="space-y-2 flex-1">
@@ -143,7 +162,6 @@ const QuoteDetailsCard = ({
                 {pending ? (
                   <>
                     <div className="my-3 h-px w-full bg-black/15" />
-
                     <div className="flex justify-between items-center">
                       <p>Total Campaign Cost</p>
                       <p className="text-2xl font-semibold tracking-tight text-light-green">
@@ -181,22 +199,20 @@ const QuoteDetailsCard = ({
                 )}
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-light-green/30">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-light-green/30 shrink-0">
                 <span className="text-xl font-semibold text-Primary">৳</span>
               </div>
             </div>
 
+            {/* Pending actions */}
             {pending ? (
               <>
-                <p className="text-sm">Revised: {revisedTimes} Times</p>
+                <p className="mt-3 text-sm">Revised: {revisedTimes} Times</p>
 
                 <div className="mt-4 flex flex-col md:flex-row items-center gap-4">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <button
-                        onClick={onRequote}
-                        className="bg-[#F8F8F8] border border-light-gray text-black text-sm w-full rounded-md py-2 cursor-pointer"
-                      >
+                      <button className="bg-[#F8F8F8] border border-light-gray text-black text-sm w-full rounded-md py-2 cursor-pointer">
                         Requote
                       </button>
                     </DialogTrigger>
@@ -216,7 +232,13 @@ const QuoteDetailsCard = ({
                           <Input
                             className="border-light-green mt-2 focus-visible:ring-1"
                             type="text"
+                            value={requoteAmount ? requoteAmount.toLocaleString("en-US") : ""}
+                            onChange={(e) => {
+                              const digits = e.target.value.replace(/[^\d]/g, "");
+                              setRequoteAmount(digits ? Number(digits) : 0);
+                            }}
                             placeholder="Enter Amount"
+                            inputMode="numeric"
                           />
                         </div>
 
@@ -224,143 +246,150 @@ const QuoteDetailsCard = ({
                           <p className="text-base font-semibold">
                             New Requote Overview
                           </p>
+
                           <div className="border border-light-green p-3 lg:p-5 rounded-md bg-linear-to-r from-light-green/30 to-white text-sm mt-1">
                             <div className="pb-4 border-b border-dark-gray">
                               <div className="flex items-center justify-between">
-                                <p>New Requote Overview</p>
-                                <p>{formatBDT(baseBudget)}</p>
+                                <p>Base Campaign Budget</p>
+                                <p>{formatBDT(requoteAmount)}</p>
                               </div>
                               <div className="flex items-center justify-between mt-1">
-                                <p>vAT/Tax ({vatPercent}%)</p>
-                                <p>{formatBDT(vatAmount)}</p>
+                                <p>VAT/Tax ({vatPercent}%)</p>
+                                <p>{formatBDT(nextVatAmount)}</p>
                               </div>
                             </div>
 
                             <div className="flex items-center justify-between mt-4">
                               <p>Total Campaign Cost</p>
-                              <p>{formatBDT(totalCost)}</p>
+                              <p>{formatBDT(nextTotalCost)}</p>
                             </div>
                           </div>
                         </div>
 
-                        <PrimaryButton className="mt-2">
+                        <PrimaryButton
+                          className="mt-2 w-full"
+                          onClick={() => onRequote?.(requoteAmount)}
+                        >
                           Requote to Admin
                         </PrimaryButton>
                       </div>
                     </DialogContent>
                   </Dialog>
 
-                  <PrimaryButton onClick={onAccept}>Accept Quote</PrimaryButton>
+                  <PrimaryButton className="w-full" onClick={onAccept}>
+                    Accept Quote
+                  </PrimaryButton>
                 </div>
               </>
             ) : (
+              // Not pending actions
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="bg-light-green text-white border border-light-gray mt-3 text-sm w-full rounded-md py-2 cursor-pointer">
-                    Pay Due
+                  <button
+                    disabled={!canPayDue}
+                    className={[
+                      "mt-3 text-sm w-full rounded-md py-2 cursor-pointer border border-light-gray",
+                      canPayDue ? "bg-light-green text-white" : "bg-[#EFEFEF] text-black/60 cursor-not-allowed",
+                    ].join(" ")}
+                  >
+                    {canPayDue ? "Pay Due" : "No Due"}
                   </button>
                 </DialogTrigger>
 
-                <DialogContent className="sm:max-w-md p-0">
-                  {/* Outer white card look like screenshot */}
-                  <div className="p-6 sm:p-7">
-                    <DialogHeader>
-                      <DialogTitle className="text-center text-Primary text-xl sm:text-2xl font-semibold">
-                        Fund Your Campaign
-                      </DialogTitle>
-                    </DialogHeader>
+                {canPayDue && (
+                  <DialogContent className="sm:max-w-md p-0">
+                    <div className="p-6 sm:p-7">
+                      <DialogHeader>
+                        <DialogTitle className="text-center text-Primary text-xl sm:text-2xl font-semibold">
+                          Fund Your Campaign
+                        </DialogTitle>
+                      </DialogHeader>
 
-                    {/* Top green mini card */}
-                    <div className="mt-5 rounded-xl bg-linear-to-r from-Primary to-light-green px-5 py-4 text-white">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center">
-                          <span className="text-lg font-semibold">🗂️</span>
+                      <div className="mt-5 rounded-xl bg-linear-to-r from-Primary to-light-green px-5 py-4 text-white">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center">
+                            <span className="text-lg font-semibold">🗂️</span>
+                          </div>
+
+                          <p className="text-sm sm:text-base font-medium truncate">
+                            {campaign.title}
+                          </p>
                         </div>
 
-                        <p className="text-sm sm:text-base font-medium truncate">
-                          {campaignTitle}
-                        </p>
+                        <div className="mt-4 text-center">
+                          <p className="text-sm text-white/90">Total Due</p>
+                          <p className="mt-1 text-3xl sm:text-4xl font-semibold tracking-tight">
+                            {formatBDT(dueAmount)}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="mt-4 text-center">
-                        <p className="text-sm text-white/90">Total Due</p>
-                        <p className="mt-1 text-3xl sm:text-4xl font-semibold tracking-tight">
-                          {formatBDT(dueAmount)}
-                        </p>
+                      <div className="mt-6">
+                        <Input
+                          value={payAmount ? payAmount.toLocaleString("en-US") : ""}
+                          onChange={(e) => onAmountInput(e.target.value)}
+                          inputMode="numeric"
+                          placeholder="0"
+                          className="h-12 text-center text-lg sm:text-xl border-light-gray focus-visible:ring-1"
+                        />
                       </div>
-                    </div>
 
-                    {/* Amount input */}
-                    <div className="mt-6">
-                      <Input
-                        value={
-                          payAmount ? payAmount.toLocaleString("en-US") : ""
-                        }
-                        onChange={(e) => onAmountInput(e.target.value)}
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-12 text-center text-lg sm:text-xl border-light-gray focus-visible:ring-1"
-                      />
-                    </div>
+                      <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+                        <PercentChip
+                          label="Pay In Full (100%)"
+                          active={activePreset === "full"}
+                          onClick={() => {
+                            setActivePreset("full");
+                            setPercent(100);
+                          }}
+                        />
+                        <PercentChip
+                          label="Pay Minimum (50%)"
+                          active={activePreset === "min"}
+                          onClick={() => {
+                            setActivePreset("min");
+                            setPercent(50);
+                          }}
+                        />
+                      </div>
 
-                    {/* quick actions */}
-                    <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-                      <PercentChip
-                        label="Pay In Full (100%)"
-                        active={activePreset === "full"}
-                        onClick={() => {
-                          setActivePreset("full");
-                          setPercent(100);
-                        }}
-                      />
-                      <PercentChip
-                        label="Pay Minimum (50%)"
-                        active={activePreset === "min"}
-                        onClick={() => {
-                          setActivePreset("min");
-                          setPercent(50);
-                        }}
-                      />
-                    </div>
+                      <div className="mt-4 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setPercent(percent || 75)}
+                          className="rounded-full bg-light-green px-10 py-2 text-sm font-medium text-white"
+                          title="Quick fill"
+                        >
+                          Pay ({percent || 75}%)
+                        </button>
+                      </div>
 
-                    {/* Pay % button */}
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => setPercent(percent || 75)}
-                        className="rounded-full bg-light-green px-10 py-2 text-sm font-medium text-white"
-                        title="Quick fill"
+                      <div className="mt-8">
+                        <p className="text-Primary font-semibold text-sm sm:text-base">
+                          Payment Method
+                        </p>
+
+                        <button
+                          type="button"
+                          className="mt-3 w-full rounded-md border border-light-gray bg-white px-4 py-3 flex items-center justify-between"
+                        >
+                          <span className="text-Primary text-sm sm:text-base">
+                            Credit / Debit Card
+                          </span>
+                          <span className="text-black/80">▾</span>
+                        </button>
+                      </div>
+
+                      <PrimaryButton
+                        className="mt-6 w-full"
+                        onClick={() => onPayDue?.(payAmount)}
+                        disabled={payAmount <= 0}
                       >
-                        Pay ({percent || 75}%)
-                      </button>
+                        Pay Now ৳ {payAmount.toLocaleString("en-US")}
+                      </PrimaryButton>
                     </div>
-
-                    {/* Payment method */}
-                    <div className="mt-8">
-                      <p className="text-Primary font-semibold text-sm sm:text-base">
-                        Payment Method
-                      </p>
-
-                      <button
-                        type="button"
-                        className="mt-3 w-full rounded-md border border-light-gray bg-white px-4 py-3 flex items-center justify-between"
-                      >
-                        <span className="text-Primary text-sm sm:text-base">
-                          Credit / Debit Card
-                        </span>
-                        <span className="text-black/80">▾</span>
-                      </button>
-                    </div>
-
-                    {/* CTA */}
-                    <PrimaryButton
-                      className="mt-6 w-full"
-                      onClick={() => onPayDue?.(payAmount)}
-                    >
-                      Pay Now ৳ {payAmount.toLocaleString("en-US")}
-                    </PrimaryButton>
-                  </div>
-                </DialogContent>
+                  </DialogContent>
+                )}
               </Dialog>
             )}
           </div>

@@ -1,7 +1,7 @@
 import { CampaignDetails } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/types";
 
 export const campaignMocksData: CampaignDetails[] = [
-      {
+  {
     id: "cmp_a1b2c3",
     title: "Winter Wellness Campaign",
     brand: { id: "br_wellnest", name: "WellNest", logoUrl: "/avatar/avatar.png" },
@@ -111,8 +111,8 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_wr_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/wellnest/reel.png",
-                  previewUrl: "https://cdn.example.com/proofs/wellnest/reel_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Reel Screenshot",
                 },
               ],
@@ -377,8 +377,8 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_sp_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/spicebay/1.png",
-                  previewUrl: "https://cdn.example.com/proofs/spicebay/1_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Reel Screenshot",
                 },
               ],
@@ -517,8 +517,8 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_fit_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/fitfuel/1.png",
-                  previewUrl: "https://cdn.example.com/proofs/fitfuel/1_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Reel Screenshot",
                 },
               ],
@@ -775,8 +775,8 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_learn_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/learnly/1.png",
-                  previewUrl: "https://cdn.example.com/proofs/learnly/1_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Post Screenshot",
                 },
               ],
@@ -912,8 +912,8 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_game_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/arcadia/1.png",
-                  previewUrl: "https://cdn.example.com/proofs/arcadia/1_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "TikTok Screenshot",
                 },
               ],
@@ -1269,17 +1269,17 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_ic_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/initial/1.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/initial/1_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Post Screenshot",
                 },
                 {
                   id: "proof_ic_2",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/initial/2.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/initial/2_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Story Screenshot",
                 },
               ],
@@ -1344,17 +1344,17 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_yt_1",
                   type: "video",
-                  url: "https://cdn.example.com/proofs/youtube/short.mp4",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/youtube/short_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Uploaded Video File",
                 },
                 {
                   id: "proof_yt_2",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/youtube/analytics.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/youtube/analytics_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Analytics Screenshot",
                 },
               ],
@@ -1432,25 +1432,25 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_tt_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/tiktok/1.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/tiktok/1_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Proof 1",
                 },
                 {
                   id: "proof_tt_2",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/tiktok/2.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/tiktok/2_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Proof 2",
                 },
                 {
                   id: "proof_tt_3",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/tiktok/3.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/tiktok/3_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Proof 3",
                 },
               ],
@@ -1724,15 +1724,15 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_tg_ig_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/tg/ig1.png",
-                  previewUrl: "https://cdn.example.com/proofs/tg/ig1_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Post 1",
                 },
                 {
                   id: "proof_tg_ig_2",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/tg/ig2.png",
-                  previewUrl: "https://cdn.example.com/proofs/tg/ig2_thumb.png",
+                  url: "/avatar/avatar.png",
+                  previewUrl: "/avatar/avatar.png",
                   label: "Post 2",
                 },
               ],
@@ -2107,9 +2107,9 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_winter_ig_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/winter/ig1.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/winter/ig1_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Post Screenshot",
                 },
               ],
@@ -2164,17 +2164,17 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_winter_story_1",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/winter/story1.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/winter/story1_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Story 1",
                 },
                 {
                   id: "proof_winter_story_2",
                   type: "image",
-                  url: "https://cdn.example.com/proofs/winter/story2.png",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/winter/story2_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Story 2",
                 },
               ],
@@ -2228,9 +2228,9 @@ export const campaignMocksData: CampaignDetails[] = [
                 {
                   id: "proof_winter_yt_1",
                   type: "video",
-                  url: "https://cdn.example.com/proofs/winter/yt_short.mp4",
+                  url: "/avatar/avatar.png",
                   previewUrl:
-                    "https://cdn.example.com/proofs/winter/yt_thumb.png",
+                    "/avatar/avatar.png",
                   label: "Video File",
                 },
               ],
