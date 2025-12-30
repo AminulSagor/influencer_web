@@ -1,186 +1,202 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { JSX } from "react";
+"use client";
+
+import Link from "next/link";
+import { JSX, useMemo } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { FaClock } from "react-icons/fa";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
-import { useTranslations } from "next-intl";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 import PercentageBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/percentage-bar";
-import Link from "next/link";
 
-// data/new-offers.ts
-export const newOffers = [
-  {
-    id: 1,
-    title: "Summer Fashion Campaign",
-    clientName: "StyleCo",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram", "youtube"],
-    totalBudget: 115000,
-    profit: 11000,
-    deadline: "Dec 15, 2025",
-    duration: "14 days",
-    timeLeft: "12H : 00M",
-    requoteText: "Request to requote within 12 Dec, 2025, 12:00pm",
-    completePercentage: 80,
-  },
-  {
-    id: 2,
-    title: "Winter Jacket Launch",
-    clientName: "NorthWear",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram", "tiktok"],
-    totalBudget: 85000,
-    profit: 12750,
-    deadline: "Jan 05, 2026",
-    duration: "10 days",
-    timeLeft: "18H : 45M",
-    requoteText: "Request to requote within 02 Jan, 2026, 9:00am",
-    completePercentage: 45,
-  },
-  {
-    id: 3,
-    title: "Smartphone Review Series",
-    clientName: "TechNova",
-    avatar: "/avatar/avatar.png",
-    isNew: false,
-    platforms: ["youtube"],
-    totalBudget: 240000,
-    profit: 36000,
-    deadline: "Dec 28, 2025",
-    duration: "21 days",
-    timeLeft: "2D : 6H",
-    requoteText: "Request to requote within 26 Dec, 2025, 6:00pm",
-    completePercentage: 40,
-  },
-  {
-    id: 4,
-    title: "Organic Skincare Promotion",
-    clientName: "GlowPure",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram"],
-    totalBudget: 67000,
-    profit: 10050,
-    deadline: "Dec 20, 2025",
-    duration: "7 days",
-    timeLeft: "6H : 30M",
-    requoteText: "Request to requote within 19 Dec, 2025, 3:00pm",
-    completePercentage: 90,
-  },
-  {
-    id: 5,
-    title: "Fitness App Growth Campaign",
-    clientName: "FitTrack",
-    avatar: "/avatar/avatar.png",
-    isNew: false,
-    platforms: ["instagram", "youtube", "tiktok"],
-    totalBudget: 190000,
-    profit: 28500,
-    deadline: "Jan 12, 2026",
-    duration: "30 days",
-    timeLeft: "3D : 12H",
-    requoteText: "Request to requote within 08 Jan, 2026, 10:00am",
-    completePercentage: 20,
-  },
-  {
-    id: 6,
-    title: "Luxury Watch Brand Awareness",
-    clientName: "ChronoLux",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["youtube", "instagram"],
-    totalBudget: 320000,
-    profit: 48000,
-    deadline: "Feb 01, 2026",
-    duration: "20 days",
-    timeLeft: "5D : 4H",
-    requoteText: "Request to requote within 28 Jan, 2026, 11:00am",
-    completePercentage: 30,
-  },
-];
+import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
+import { CampaignDetails } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/types";
 
-const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
-  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
-  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
+type Platform = "instagram" | "youtube" | "tiktok";
+
+const platformIcons: Record<Platform, JSX.Element> = {
+  instagram: <RiInstagramFill size={26} className="fill-light-green" />,
+  youtube: <RiYoutubeFill size={26} className="fill-light-green" />,
+  tiktok: <AiFillTikTok size={26} className="fill-light-green" />,
 };
 
+const formatBDT = (amount: number) => `৳${amount.toLocaleString("en-US")}`;
+
+function formatDateLabel(iso?: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Matches your Figma list card feeling (Paid ≈ 75%)
+function stageToPercent(stage: CampaignDetails["stage"]): number {
+  switch (stage) {
+    case "Submitted":
+      return 25;
+    case "Quoted":
+      return 50;
+    case "Paid":
+      return 75;
+    case "Promoting":
+      return 90;
+    case "Completed":
+      return 100;
+    default:
+      return 0;
+  }
+}
+
+function buildDueLabel(daysRemainingLabel?: string) {
+  if (!daysRemainingLabel) return "Due: —";
+
+  const m = daysRemainingLabel.match(/(\d+)\s*Days/i);
+  if (m?.[1]) return `Due: ${m[1]} Days`;
+
+  if (/completed/i.test(daysRemainingLabel)) return "Completed";
+  if (/cancelled|canceled/i.test(daysRemainingLabel)) return "Cancelled";
+  if (/draft/i.test(daysRemainingLabel)) return "Draft";
+
+  return daysRemainingLabel;
+}
+
+function AvatarStack({ avatars }: { avatars: Array<string | undefined> }) {
+  const a1 = avatars[0];
+  const a2 = avatars[1];
+
+  return (
+    <div className="flex items-center -space-x-2">
+      <Avatar className="h-7 w-7 border-2 border-white">
+        <AvatarImage src={a1 ?? ""} />
+        <AvatarFallback className="text-[10px] bg-muted">IN</AvatarFallback>
+      </Avatar>
+
+      <Avatar className="h-7 w-7 border-2 border-white">
+        <AvatarImage src={a2 ?? ""} />
+        <AvatarFallback className="text-[10px] bg-muted">IN</AvatarFallback>
+      </Avatar>
+    </div>
+  );
+}
+
+function getPreviewInfluencer(c: CampaignDetails) {
+  const selected =
+    c.influencerCampaigns.find(
+      (x) => x.influencer.id === c.selectedInfluencerId
+    ) ?? c.influencerCampaigns[0];
+
+  const name = selected?.influencer.name ?? "Influencer";
+  const avatars = c.influencerCampaigns
+    .map((x) => x.influencer.avatarUrl)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const extraCount = Math.max(0, c.influencerCampaigns.length - 1);
+
+  return { name, avatars, extraCount };
+}
+
+function ActiveCampaignCard({ campaign }: { campaign: CampaignDetails }) {
+  const preview = getPreviewInfluencer(campaign);
+
+  const offeredAmount = campaign.quote?.baseBudget?.amount ?? 0;
+  const deadlineLabel = formatDateLabel(campaign.deadline?.date);
+  const dueLabel = buildDueLabel(campaign.deadline?.daysRemainingLabel);
+  const progressPercent = stageToPercent(campaign.stage);
+
+  return (
+    <Card className="rounded-2xl border border-border/70 bg-white shadow-sm">
+      <CardContent className="p-5 space-y-4">
+        {/* Title */}
+        <div className="space-y-1">
+          <h3 className="text-Primary font-semibold leading-tight">
+            {campaign.title}
+          </h3>
+          <p className="text-dark-gray text-xs">Influencer Promotion</p>
+        </div>
+
+        {/* Influencer */}
+        <div className="flex items-center gap-3">
+          <AvatarStack
+            avatars={preview.avatars.length ? preview.avatars : ["", ""]}
+          />
+          <p className="text-orange text-sm font-medium truncate">
+            {preview.name}
+            {preview.extraCount > 0 ? `, +${preview.extraCount}` : ""}
+          </p>
+        </div>
+
+        {/* Platforms */}
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground text-sm">Platforms</p>
+          <div className="flex items-center gap-2">
+            {campaign.platforms.map((p) => (
+              <span key={p} className="leading-none">
+                {platformIcons[p as Platform]}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Offered box */}
+        <div className="rounded-xl border border-light-green/25 bg-light-green/10 px-4 py-4 space-y-1">
+          <p className="text-Primary text-xs font-semibold">Offered</p>
+          <p className="text-light-green text-3xl font-semibold">
+            {formatBDT(offeredAmount)}
+          </p>
+        </div>
+
+        {/* Deadline */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-2 text-sm text-orange">
+              <FaClock className="text-orange" />
+              Deadline
+            </p>
+            <p className="text-orange text-sm">{deadlineLabel}</p>
+          </div>
+
+          <div className="w-full rounded-lg border border-orange bg-orange/10 px-4 py-2 text-center text-sm font-medium text-orange">
+            {dueLabel}
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <p className="text-orange text-sm font-medium">
+            {Math.round(progressPercent)}% Complete
+          </p>
+          <PercentageBar value={progressPercent} />
+        </div>
+
+        {/* CTA */}
+        <Button asChild variant="outline" className="w-full rounded-xl">
+          <Link href={`/brand/campaign-details-influencer/${campaign.id}`}>
+            View Campaign Details
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 const ActiveCampaignsList = () => {
-  const t = useTranslations("brand.campaigns");
+  const activeCampaigns = useMemo(
+    () => campaignMocksData.filter((c) => c.tabStatus === "Active"),
+    []
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4">
-      {newOffers.map((offer) => (
-        <Card key={offer.id} className="relative overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-Primary">{offer.title}</CardTitle>
-            <p className="text-dark-gray text-xs">Influencer Promotion</p>
-            <CardDescription className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={offer.avatar} />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <p className="text-yellow-600 text-sm font-medium">
-                {offer.clientName}
-              </p>
-            </CardDescription>
-
-            <CardContent className="p-0 space-y-4">
-              {/* Platforms */}
-              <div className="flex items-center gap-6">
-                <p className="text-muted-foreground text-sm font-medium">
-                  {t("Platforms")}
-                </p>
-                <div className="flex gap-2">
-                  {offer.platforms.map((p) => (
-                    <span key={p}>{platformIcons[p]}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Budget */}
-              <div className="border border-border bg-secondary  rounded-lg  px-4 py-5 space-y-2">
-                <p className="text-Primary text-xs font-semibold">Offered</p>
-                <p className="text-light-green text-2xl font-semibold">
-                  ৳{offer.totalBudget.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> {t("Deadline")}
-                  </p>
-                  <p className="text-yellow-600 text-sm">{offer.deadline}</p>
-                </div>
-                <div className="mt-4">
-                  <div className="w-full bg-orange/20 border text-orange border-orange rounded-lg px-4 py-2  text-sm font-medium text-center">
-                    Due: 3 Days
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <PercentageBar value={offer.completePercentage} />
-              </div>
-              {/* Actions */}
-              <Button variant="outline" className="w-full cursor-pointer">
-                <Link href={`/brand/campaign-details-influencer/${offer.id}`}>
-                  {t("View Campaign Details")}
-                </Link>
-              </Button>
-            </CardContent>
-          </CardHeader>
-        </Card>
+      {activeCampaigns.map((c) => (
+        <ActiveCampaignCard key={c.id} campaign={c} />
       ))}
     </div>
   );

@@ -1,210 +1,141 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useTranslations } from "next-intl";
-import { JSX } from "react";
-import { AiFillTikTok } from "react-icons/ai";
-import { BsFillCalendarDateFill } from "react-icons/bs";
-import { FaClock } from "react-icons/fa";
-import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
-// data/new-offers.ts
-export const newOffers = [
-  {
-    id: 1,
-    title: "Summer Fashion Campaign",
-    clientName: "StyleCo",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram", "youtube"],
-    totalBudget: 115000,
-    profit: 11000,
-    deadline: "Dec 15, 2025",
-    duration: "14 days",
-    timeLeft: "12H : 00M",
-  },
-  {
-    id: 2,
-    title: "Winter Jacket Launch",
-    clientName: "NorthWear",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram", "tiktok"],
-    totalBudget: 85000,
-    profit: 12750,
-    deadline: "Jan 05, 2026",
-    duration: "10 days",
-    timeLeft: "18H : 45M",
-  },
-  {
-    id: 3,
-    title: "Smartphone Review Series",
-    clientName: "TechNova",
-    avatar: "/avatar/avatar.png",
-    isNew: false,
-    platforms: ["youtube"],
-    totalBudget: 240000,
-    profit: 36000,
-    deadline: "Dec 28, 2025",
-    duration: "21 days",
-    timeLeft: "2D : 6H",
-  },
-  {
-    id: 4,
-    title: "Organic Skincare Promotion",
-    clientName: "GlowPure",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram"],
-    totalBudget: 67000,
-    profit: 10050,
-    deadline: "Dec 20, 2025",
-    duration: "7 days",
-    timeLeft: "6H : 30M",
-  },
-  {
-    id: 5,
-    title: "Fitness App Growth Campaign",
-    clientName: "FitTrack",
-    avatar: "/avatar/avatar.png",
-    isNew: false,
-    platforms: ["instagram", "youtube", "tiktok"],
-    totalBudget: 190000,
-    profit: 28500,
-    deadline: "Jan 12, 2026",
-    duration: "30 days",
-    timeLeft: "3D : 12H",
-  },
-  {
-    id: 6,
-    title: "Luxury Watch Brand Awareness",
-    clientName: "ChronoLux",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["youtube", "instagram"],
-    totalBudget: 320000,
-    profit: 48000,
-    deadline: "Feb 01, 2026",
-    duration: "20 days",
-    timeLeft: "5D : 4H",
-  },
-  {
-    id: 7,
-    title: "Travel Vlog Sponsorship",
-    clientName: "Wanderly",
-    avatar: "/avatar/avatar.png",
-    isNew: false,
-    platforms: ["youtube"],
-    totalBudget: 150000,
-    profit: 22500,
-    deadline: "Jan 18, 2026",
-    duration: "15 days",
-    timeLeft: "1D : 20H",
-  },
-  {
-    id: 8,
-    title: "Food Delivery App Promo",
-    clientName: "QuickBite",
-    avatar: "/avatar/avatar.png",
-    isNew: true,
-    platforms: ["instagram", "tiktok"],
-    totalBudget: 72000,
-    profit: 10800,
-    deadline: "Dec 22, 2025",
-    duration: "5 days",
-    timeLeft: "9H : 10M",
-  },
-];
+"use client";
 
-const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
-  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
-  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
+import Link from "next/link";
+import { JSX, useMemo } from "react";
+import { FaClock } from "react-icons/fa";
+import { AiFillTikTok } from "react-icons/ai";
+import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+import type { CampaignDetails } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/types";
+import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
+
+type Platform = "instagram" | "youtube" | "tiktok";
+
+const platformIcons: Record<Platform, JSX.Element> = {
+  instagram: <RiInstagramFill size={26} className="fill-light-green" />,
+  youtube: <RiYoutubeFill size={26} className="fill-light-green" />,
+  tiktok: <AiFillTikTok size={26} className="fill-light-green" />,
 };
 
-const BudgetQuoting = () => {
-  const t = useTranslations("influencer.jobs");
+const formatBDT = (amount: number) => `৳${amount.toLocaleString("en-US")}`;
+
+function formatDateLabel(iso?: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
+/**
+ * Matches your screenshot logic:
+ * - Before quote -> "Budget Pending"
+ * - After quote -> "Quotation Received"
+ */
+function getBudgetCardStatus(c: CampaignDetails) {
+  if (c.stage === "Submitted") return "Budget Pending";
+  if (c.stage === "Quoted") return "Quotation Received";
+  return "Budget Pending";
+}
+
+/**
+ * You don't have revisedTimes in your CampaignDetails type yet,
+ * so we safely default to 0.
+ * Later you can add: revisedTimes?: number on CampaignDetails.
+ */
+function getRevisedTimes(c: CampaignDetails) {
+  return (c as any).revisedTimes ?? 0;
+}
+
+const BudgetingAndQuotingList = () => {
+  const campaigns = useMemo(
+    () =>
+      campaignMocksData.filter((c) => c.tabStatus === "BudgetingAndQuoting"),
+    []
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {newOffers.map((offer) => (
-        <Card key={offer.id} className="relative overflow-hidden">
-          {offer.isNew && (
-            <Badge className="absolute top-0 right-0 rounded-bl-lg rounded-tr-none rounded-tl-none rounded-br-none bg-light-green text-white px-3 py-1 text-xs">
-              New
-            </Badge>
-          )}
+      {campaigns.map((campaign) => {
+        const statusText = getBudgetCardStatus(campaign);
+        const amount = campaign.quote?.baseBudget?.amount ?? 0;
+        const revisedTimes = getRevisedTimes(campaign);
+        const deadlineLabel = formatDateLabel(campaign.deadline?.date);
 
-          <CardHeader>
-            <CardTitle className="text-Primary">{offer.title}</CardTitle>
+        return (
+          <Card
+            key={campaign.id}
+            className="rounded-2xl border border-border/70 bg-white shadow-sm"
+          >
+            <CardContent className="p-5 space-y-4">
+              {/* Title */}
+              <div className="space-y-1">
+                <h3 className="text-Primary font-semibold leading-tight">
+                  {campaign.title}
+                </h3>
+                <p className="text-dark-gray text-xs">Influencer Promotion</p>
+              </div>
 
-            <CardDescription className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={offer.avatar} />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <p className="text-yellow-600 text-sm font-medium">
-                {offer.clientName}
-              </p>
-            </CardDescription>
-
-            <CardContent className="p-0 space-y-4">
               {/* Platforms */}
-              <div className="flex items-center gap-6">
-                <p className="text-muted-foreground text-sm font-medium">
-                  {t("Platforms")}
-                </p>
-                <div className="flex gap-2">
-                  {offer.platforms.map((p) => (
-                    <span key={p}>{platformIcons[p]}</span>
+              <div className="flex items-center gap-4">
+                <p className="text-muted-foreground text-sm">Platforms</p>
+                <div className="flex items-center gap-2">
+                  {campaign.platforms.map((p) => (
+                    <span key={p} className="leading-none">
+                      {platformIcons[p as Platform]}
+                    </span>
                   ))}
                 </div>
               </div>
 
-              {/* Budget */}
-              <div className="border border-light-green rounded-lg bg-linear-to-r from-Secondary to-white px-4 py-7 space-y-2 ">
-                <p className="text-Primary text-xs font-semibold">Offered</p>
-                <p className="text-light-green text-2xl font-semibold">
-                  ৳{offer.totalBudget.toLocaleString()}
-                </p>
+              {/* Budget Pending / Quotation Received Box */}
+              <div className="rounded-xl border border-border bg-muted/40 px-4 py-5">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="space-y-2">
+                    <p className="text-Primary text-base font-medium">
+                      {statusText}
+                    </p>
+
+                    <p className="text-light-green text-4xl font-semibold leading-none">
+                      {formatBDT(amount)}
+                    </p>
+                  </div>
+
+                  <p className="text-muted-foreground text-xs whitespace-nowrap">
+                    Revised: {revisedTimes} Times
+                  </p>
+                </div>
               </div>
 
               {/* Deadline */}
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> {t("Deadline")}
-                  </p>
-                  <p className="text-yellow-600 text-sm">{offer.deadline}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <BsFillCalendarDateFill /> {t("Duration")}
-                  </p>
-                  <p className="text-yellow-600 text-sm">{offer.duration}</p>
-                </div>
+              <div className="flex items-center justify-between">
+                <p className="flex items-center gap-2 text-orange text-sm">
+                  <FaClock className="text-orange" />
+                  Deadline
+                </p>
+                <p className="text-orange text-sm">{deadlineLabel}</p>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button className="flex-1 bg-light-green text-white">
-                  {t("Accept")}
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  {t("Decline")}
-                </Button>
-              </div>
+              {/* CTA */}
+              <Button asChild variant="outline" className="w-full rounded-xl">
+                <Link
+                  href={`/brand/campaign-details-influencer/${campaign.id}`}
+                >
+                  View Campaign Details
+                </Link>
+              </Button>
             </CardContent>
-          </CardHeader>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 };
 
-export default BudgetQuoting;
+export default BudgetingAndQuotingList;

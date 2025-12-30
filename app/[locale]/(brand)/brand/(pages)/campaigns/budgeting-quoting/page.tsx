@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import CampaignSearchBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/campaign-search-bar";
-import BudgetQuoting from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/budget-quoting";
+import BudgetingAndQuotingList from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/budget-quoting";
 
 const Page = () => {
   const t = useTranslations("influencer.jobs");
@@ -10,7 +10,7 @@ const Page = () => {
         title={t("active.title")}
         resultText="Showing 6 of 20 results"
       />
-      <BudgetQuoting />
+      <BudgetingAndQuotingList />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
-import DeclinedJobList from "../_components/cancel-campaign-list";
 import CampaignSearchBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/campaign-search-bar";
+import CancelCampaignList from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/cancel-campaign-list";
 
 const Page = () => {
   const t = useTranslations("brand.campaigns");
@@ -11,7 +11,7 @@ const Page = () => {
         title={t("Cancelled.title")}
         resultText="Showing 2 of 10 results"
       />
-      <DeclinedJobList />
+      <CancelCampaignList />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
-import PendingJobList from "../_components/campaign-draft-list";
 import JobSearchBar from "@/app/[locale]/(influencer)/influencer/(pages)/jobs/_components/job-search-bar";
+import CampaignDraftList from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/campaign-draft-list";
 
 const Page = () => {
   const t = useTranslations("influencer.jobs");
@@ -11,7 +11,7 @@ const Page = () => {
         title={t("pending.title")}
         resultText="Showing 3 of 8 results"
       />
-      <PendingJobList />
+      <CampaignDraftList />
     </div>
   );
 };
