@@ -35,6 +35,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import AssigneeTooltip from "./asignee-tooltip";
 import CampaignLinks from "./campaign-links";
+import Link from "next/link";
 
 type CampaignStatus =
   | "needs-quote"
@@ -486,7 +487,13 @@ const AdminCampaigns = () => {
                     {/* Actions */}
                     <div className="flex gap-2">
                       <Button variant="lightGreen" className="flex-1">
-                        View Details
+                        <Link
+                          href={
+                            "/admin/campaigns/campaign-details/" + campaign.id
+                          }
+                        >
+                          View Details
+                        </Link>
                       </Button>
                       <Button variant="outline">
                         <FaRegTrashCan />
