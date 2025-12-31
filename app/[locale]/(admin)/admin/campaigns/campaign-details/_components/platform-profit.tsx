@@ -218,7 +218,11 @@ export default function PlatformProfit({
                 <h2 className="text-Primary mb-2 font-semibold">
                   Assign Influencers
                 </h2>
-                <p className="text-sm text-orange">Invite Influencers First</p>
+                <p className="text-sm text-orange">
+                  {invitationStatus === "accepted"
+                    ? "Campaign Ongoing"
+                    : "Invite Influencers First"}
+                </p>
               </div>
 
               <MultiSelect values={selectedNames} onValuesChange={handleSelect}>
