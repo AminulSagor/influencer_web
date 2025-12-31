@@ -2,11 +2,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { BiChevronLeftCircle } from "react-icons/bi";
 
-export type PlatformKey = "instagram" | "youtube" | "tiktok";
 export type Platform = {
   name: string;
   url: string;
-  key: PlatformKey;
+  key: string;
 };
 export type Influencer = {
   name: string;
@@ -54,7 +53,7 @@ const CampaignDetailsCard = ({
   clientAvatar,
   influencers,
 }: Props) => {
-  const ICON_MAP = {
+  const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
     instagram: PiInstagramLogoFill,
     youtube: PiYoutubeLogoFill,
     tiktok: AiFillTikTok,

@@ -1,5 +1,7 @@
 import CampaignDetailsCard from "../_components/campaign-details-card";
+import CampaignStepper from "../_components/campaign-stepper";
 import CampaignQuoteDetails from "../_components/campaing-quote-details";
+import PlatformProfit from "../_components/platform-profit";
 
 const platform = [
   { name: "Instagram", url: "https://instagram.com", key: "instagram" },
@@ -13,9 +15,24 @@ const influencers = [
   { imageUrl: "/", name: "Virat Kohli" },
 ];
 
+const stats = [
+  {
+    label: "Final Quote Budget",
+    value: 0,
+  },
+  {
+    label: "Target Profit / Platform Fee",
+    value: 0,
+  },
+  {
+    label: "Available For Influencers",
+    value: 0,
+  },
+];
+
 const page = () => {
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-4">
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-6">
           <CampaignDetailsCard
@@ -38,6 +55,13 @@ const page = () => {
             platform={platform}
           />
         </div>
+      </div>
+      <div>
+        <CampaignStepper currentStep={4} />
+      </div>
+      {/* 3rd row */}
+      <div>
+        <PlatformProfit campaignStatus="active" stats={stats} />
       </div>
     </div>
   );

@@ -28,14 +28,12 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
-import { JSX, useState } from "react";
-import { AiFillTikTok } from "react-icons/ai";
+import Link from "next/link";
+import { useState } from "react";
 import { FaClock, FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
-import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import AssigneeTooltip from "./asignee-tooltip";
 import CampaignLinks from "./campaign-links";
-import Link from "next/link";
 
 type CampaignStatus =
   | "needs-quote"
@@ -102,11 +100,6 @@ const initialCampaigns: Campaign[] = [
   },
 ];
 
-const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
-  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
-  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
-};
 const AdminCampaigns = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [view, setView] = useState<"list" | "grid">("grid");
