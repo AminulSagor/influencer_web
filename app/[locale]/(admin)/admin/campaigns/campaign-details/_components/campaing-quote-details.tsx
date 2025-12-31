@@ -37,7 +37,10 @@ const CampaignQuoteDetails = ({
     setIsDialogOpen(true);
   };
 
-  const PLATFORM_ICON_MAP: Record<PlatformKey, React.ElementType> = {
+  const PLATFORM_ICON_MAP: Record<
+    string,
+    React.ComponentType<{ size?: number }>
+  > = {
     instagram: PiInstagramLogoFill,
     youtube: PiYoutubeLogoFill,
     tiktok: AiFillTikTok,

@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import CollapsibleCard from "./collapsible-card";
 import { useState } from "react";
-import { Pencil } from "lucide-react";
+import InfluencerBadges from "./influencers-badge";
 
 type Statistics = {
   label: string;
@@ -18,6 +18,23 @@ type Props = {
     | "paid";
   stats: Statistics[];
 };
+
+const prefferedInfluencers = [
+  { name: "Hania Amir", platform: "Instagram", profileUrl: "#" },
+  { name: "Shakib Al Hasan", platform: "YouTube", profileUrl: "#" },
+  { name: "Virat Kohli", platform: "TikTok", profileUrl: "#" },
+  { name: "Nusrat Faria", platform: "Instagram", profileUrl: "#" },
+  { name: "Tamim Iqbal", platform: "Facebook", profileUrl: "#" },
+  { name: "Alia Bhatt", platform: "Instagram", profileUrl: "#" },
+  { name: "MrBeast", platform: "YouTube", profileUrl: "#" },
+  { name: "Addison Rae", platform: "TikTok", profileUrl: "#" },
+  { name: "Ayman Sadiq", platform: "YouTube", profileUrl: "#" },
+  { name: "Irfan Junejo", platform: "Instagram", profileUrl: "#" },
+];
+const notPrefferedInfluencers = [
+  { name: "Ali Zafar", platform: "Instagram", profileUrl: "#" },
+  { name: "Mahira Khan", platform: "YouTube", profileUrl: "#" },
+];
 
 const PlatformProfit = ({ campaignStatus, stats }: Props) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -109,6 +126,28 @@ const PlatformProfit = ({ campaignStatus, stats }: Props) => {
             <p className="text-center text-gray-400">
               Client needs to confirm the quote first
             </p>
+          </div>
+        )}
+
+        {campaignStatus !== "needs-quote" && (
+          <div className="grid grid-cols-12 gap-4 mt-6">
+            <div className="col-span-4">
+              <div className="space-y-4">
+                <InfluencerBadges
+                  title="Preffered"
+                influencers={prefferedInfluencers}
+                />
+                <InfluencerBadges
+                  title="Not Preffered"
+                  influencers={notPrefferedInfluencers}
+                />
+              </div>
+            </div>
+            <div className="col-span-8">
+              <h2 className="text-Primary mb-2 font-semibold">
+                {"Assign Influencers"}
+              </h2>
+            </div>
           </div>
         )}
       </div>
