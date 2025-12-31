@@ -41,7 +41,7 @@ const CampaignCreatePage = () => {
               </p>
             </div>
 
-            <div className="gap-4 flex ">
+            <div className="gap-4 flex items-start min-w-72">
               <PrimaryButton className="text-sm">Save As Draft</PrimaryButton>
               {step === 1 && (
                 <SecondaryButton className="text-sm">Cencel</SecondaryButton>
