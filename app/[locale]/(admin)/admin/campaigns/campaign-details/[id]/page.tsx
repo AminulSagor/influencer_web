@@ -33,6 +33,7 @@ const stats = [
 const page = () => {
   return (
     <div className="p-4 space-y-4">
+      {/* 1st row */}
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-6">
           <CampaignDetailsCard
@@ -56,12 +57,17 @@ const page = () => {
           />
         </div>
       </div>
+      {/* 2nd row */}
       <div>
         <CampaignStepper currentStep={4} />
       </div>
       {/* 3rd row */}
       <div>
-        <PlatformProfit campaignStatus="active" stats={stats} />
+        <PlatformProfit
+          campaignStatus="active"
+          stats={stats}
+          invitationStatus={"accepted"}
+        />
       </div>
     </div>
   );
