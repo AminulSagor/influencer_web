@@ -69,14 +69,22 @@ const influencersData: Influencer[] = [
   },
 ];
 
+type CampaignStatus =
+  | "needs-quote"
+  | "pending-invitations"
+  | "active"
+  | "completed"
+  | "paid";
 const InfluencerPaymentMethod = ({
   invitationStatus,
+  campaignStatus,
 }: {
   invitationStatus: "sent" | "accepted";
+  campaignStatus: CampaignStatus;
 }) => {
   const [selectedInfluencer, setSelectedInfluencer] =
     useState<Influencer | null>(null);
-  if (invitationStatus !== "accepted") {
+  if (invitationStatus !== "accepted" || campaignStatus == "needs-quote") {
     return null;
   }
   return (

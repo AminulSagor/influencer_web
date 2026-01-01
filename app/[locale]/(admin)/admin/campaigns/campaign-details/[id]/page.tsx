@@ -1,5 +1,8 @@
+import CampaignBrief from "../_components/campaign-brief";
 import CampaignDetailsCard from "../_components/campaign-details-card";
+import CampaignMilestone from "../_components/campaign-milestone";
 import CampaignStepper from "../_components/campaign-stepper";
+import CampaignTermsCard from "../_components/campaign-terms";
 import CampaignQuoteDetails from "../_components/campaing-quote-details";
 import InfluencerPaymentMethod from "../_components/influencer-payment-method";
 import PlatformProfit from "../_components/platform-profit";
@@ -33,7 +36,7 @@ const stats = [
 type InvitationStatusType = "sent" | "accepted";
 
 const page = () => {
-  const invitationStatus: InvitationStatusType = "sent";
+  const invitationStatus: InvitationStatusType = "accepted";
   return (
     <div className="p-4 space-y-4">
       {/* 1st row */}
@@ -74,8 +77,20 @@ const page = () => {
       </div>
       {/* 4th row */}
 
+      {/* needs quote - dont show */}
       <div>
-        <InfluencerPaymentMethod invitationStatus={invitationStatus} />
+        <InfluencerPaymentMethod
+          campaignStatus="needs-quote"
+          invitationStatus={invitationStatus}
+        />
+      </div>
+      {/* 5th row */}
+      <div>
+        <CampaignMilestone />
+      </div>
+      {/* brief */}
+      <div>
+        <CampaignTermsCard />
       </div>
     </div>
   );
