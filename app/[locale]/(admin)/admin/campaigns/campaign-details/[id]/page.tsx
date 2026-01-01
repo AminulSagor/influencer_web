@@ -6,6 +6,7 @@ import CampaignTermsCard from "../_components/campaign-terms";
 import CampaignQuoteDetails from "../_components/campaing-quote-details";
 import ContentAssetCard from "../_components/content-asset-card";
 import InfluencerPaymentMethod from "../_components/influencer-payment-method";
+import InfluencerRatingCard from "../_components/influencer-rating-card";
 import PlatformProfit from "../_components/platform-profit";
 
 const platform = [
@@ -96,6 +97,10 @@ const page = () => {
       {/* assets */}
       <div>
         <ContentAssetCard />
+      </div>
+      {/* rating the influencer */}
+      <div>
+        <InfluencerRatingCard />
       </div>
     </div>
   );
