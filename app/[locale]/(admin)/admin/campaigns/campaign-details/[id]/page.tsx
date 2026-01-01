@@ -4,6 +4,7 @@ import CampaignMilestone from "../_components/campaign-milestone";
 import CampaignStepper from "../_components/campaign-stepper";
 import CampaignTermsCard from "../_components/campaign-terms";
 import CampaignQuoteDetails from "../_components/campaing-quote-details";
+import ContentAssetCard from "../_components/content-asset-card";
 import InfluencerPaymentMethod from "../_components/influencer-payment-method";
 import PlatformProfit from "../_components/platform-profit";
 
@@ -91,6 +92,10 @@ const page = () => {
       {/* brief */}
       <div>
         <CampaignTermsCard />
+      </div>
+      {/* assets */}
+      <div>
+        <ContentAssetCard />
       </div>
     </div>
   );
