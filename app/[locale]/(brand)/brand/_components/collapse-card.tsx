@@ -17,7 +17,7 @@ type Props = {
 
 const CollapseCard = ({ title, children, icon, titleColor }: Props) => {
   return (
-    <Card className="border-none">
+    <Card>
       <CardContent className="py-0">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1">

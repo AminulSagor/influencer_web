@@ -30,7 +30,7 @@ const PrimaryButton = ({
         bg-light-green
         text-white 
         rounded-md
-        text-sm w-full 
+        text-sm
         px-4 py-2 
         hover:bg-[#6a8a4a] 
         active:scale-[0.98]

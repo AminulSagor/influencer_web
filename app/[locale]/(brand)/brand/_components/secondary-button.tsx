@@ -29,7 +29,7 @@ const SecondaryButton = ({
         border
         border-light-gray
         text-black
-        text-sm w-full
+        text-sm
         rounded-md 
         px-4 py-2 
         active:scale-[0.98]
