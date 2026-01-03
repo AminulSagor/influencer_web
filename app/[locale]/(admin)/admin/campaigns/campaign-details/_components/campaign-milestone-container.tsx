@@ -1,9 +1,14 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartColumnIncreasing } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import { FaClock, FaEye } from "react-icons/fa";
+import Link from "next/link";
+import { CgWebsite } from "react-icons/cg";
+import { FaClock } from "react-icons/fa";
 import { FaUserPen } from "react-icons/fa6";
+import { HiMiniIdentification } from "react-icons/hi2";
 import {
   CampaignStatusType,
   Influencer,
@@ -12,13 +17,8 @@ import {
 import CampaignMilestone from "./campaign-milestone";
 import CollapsibleCard from "./collapsible-card";
 import IconText from "./icon-text";
-import MilestoneTarget from "./milestone-target";
-import { CgWebsite } from "react-icons/cg";
-import { HiMiniIdentification } from "react-icons/hi2";
-import Link from "next/link";
-import { ChartColumnIncreasing } from "lucide-react";
 import MilestonePerformanceStats from "./milestone-performance-stat";
-import dynamic from "next/dynamic";
+import MilestoneTarget from "./milestone-target";
 const CircularProgressChart = dynamic(() => import("./circular-progress"), {
   ssr: false,
 });

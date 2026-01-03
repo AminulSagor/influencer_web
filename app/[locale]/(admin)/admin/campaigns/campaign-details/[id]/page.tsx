@@ -109,7 +109,10 @@ const page = () => {
         <ContentAssetCard />
       </div>
       <div>
-        <InfluencerRatingCard />
+        <InfluencerRatingCard
+          campaignStatus={campaignStatus}
+          invitationStatus={invitationStatus}
+        />
       </div>
     </div>
   );
