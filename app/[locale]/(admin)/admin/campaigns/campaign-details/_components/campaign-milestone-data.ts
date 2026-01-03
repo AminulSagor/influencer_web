@@ -1,27 +1,33 @@
 export const TODO = "To Do";
 export const PAID = "Paid";
 export const PARTIAL_PAID = "Partial Paid";
+
+export const DECLINED = "Declined";
 export const IN_REVIEW = "In Review";
+export const COMPLETED = "Completed";
+
+export type CampaignStatusType =
+  | typeof DECLINED
+  | typeof IN_REVIEW
+  | typeof COMPLETED
+  | typeof TODO
+  | typeof PAID
+  | typeof PARTIAL_PAID;
 
 export interface CampaignMilestoneDataType {
   id: number;
   title: string;
   contentRequirement: string[];
-  //   promotionTarget: string;
-  //   payout: number;
-  //   status: string;
+  status?: CampaignStatusType;
   day: number;
-  //   promotionalGoal: string;
 }
 export const campaignMilestoneData: CampaignMilestoneDataType[] = [
   {
     id: 1,
     title: "Initial Content Creation",
     contentRequirement: ["2 instagram posts", "3 stories"],
-    // promotionalGoal: "Gain page like as much as possible",
-    // promotionTarget: "300k",
-    // payout: 3000,
-    // status: TODO,
+
+    status: "Completed",
     day: 1,
   },
   {
@@ -31,7 +37,7 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     // promotionalGoal: "Gain page like as much as possible",
     // promotionTarget: "300k",
     // payout: 5000,
-    // status: PAID,
+    status: "Declined",
     day: 2,
   },
   {
@@ -41,7 +47,7 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     // promotionalGoal: "Gain page like as much as possible",
     // promotionTarget: "300k",
     // payout: 5000,
-    // status: IN_REVIEW,
+    status: IN_REVIEW,
     day: 3,
   },
   {
@@ -51,7 +57,7 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     // promotionalGoal: "Gain page like as much as possible",
     // promotionTarget: "300k",
     // payout: 5000,
-    // status: TODO,
+    status: "Completed",
     day: 4,
   },
 ];

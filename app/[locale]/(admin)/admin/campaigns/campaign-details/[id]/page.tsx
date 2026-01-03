@@ -1,6 +1,7 @@
 import CampaignBrief from "../_components/campaign-brief";
 import CampaignDetailsCard from "../_components/campaign-details-card";
 import CampaignMilestone from "../_components/campaign-milestone";
+import CampaignMilestoneContainer from "../_components/campaign-milestone-container";
 import CampaignStepper from "../_components/campaign-stepper";
 import CampaignTermsCard from "../_components/campaign-terms";
 import CampaignQuoteDetails from "../_components/campaing-quote-details";
@@ -9,13 +10,25 @@ import InfluencerPaymentMethod from "../_components/influencer-payment-method";
 import InfluencerRatingCard from "../_components/influencer-rating-card";
 import PlatformProfit from "../_components/platform-profit";
 
+export type InvitationStatusType = "sent" | "accepted";
+export type CampaignStatusType =
+  | "needs-quote"
+  | "pending-invitations"
+  | "active"
+  | "completed"
+  | "paid";
+export type Influencer = {
+  imageUrl: string;
+  name: string;
+};
+
 const platform = [
   { name: "Instagram", url: "https://instagram.com", key: "instagram" },
   { name: "Youtube", url: "https://youtube.com", key: "youtube" },
   { name: "Tiktok", url: "https://tiktok.com", key: "tiktok" },
 ];
 
-const influencers = [
+const influencers: Influencer[] = [
   { imageUrl: "/", name: "Hania Amir" },
   { imageUrl: "/", name: "Shakib Al Hasan" },
   { imageUrl: "/", name: "Virat Kohli" },
@@ -35,13 +48,12 @@ const stats = [
     value: 0,
   },
 ];
-type InvitationStatusType = "sent" | "accepted";
 
 const page = () => {
   const invitationStatus: InvitationStatusType = "accepted";
+  const campaignStatus: CampaignStatusType = "active";
   return (
     <div className="p-4 space-y-4">
-      {/* 1st row */}
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-6">
           <CampaignDetailsCard
@@ -65,40 +77,37 @@ const page = () => {
           />
         </div>
       </div>
-      {/* 2nd row */}
       <div>
         <CampaignStepper currentStep={4} />
       </div>
-      {/* 3rd row */}
       <div>
         <PlatformProfit
-          campaignStatus="needs-quote"
+          campaignStatus="active"
           stats={stats}
           invitationStatus={invitationStatus}
         />
       </div>
-      {/* 4th row */}
 
-      {/* needs quote - dont show */}
+      {/* when accepted */}
       <div>
         <InfluencerPaymentMethod
-          campaignStatus="needs-quote"
+          campaignStatus="active"
           invitationStatus={invitationStatus}
         />
       </div>
-      {/* 5th row */}
       <div>
-        <CampaignMilestone />
+        <CampaignMilestoneContainer
+          campaignStatus={campaignStatus}
+          invitationStatus={invitationStatus}
+          influencers={influencers}
+        />
       </div>
-      {/* brief */}
       <div>
         <CampaignTermsCard />
       </div>
-      {/* assets */}
       <div>
         <ContentAssetCard />
       </div>
-      {/* rating the influencer */}
       <div>
         <InfluencerRatingCard />
       </div>
