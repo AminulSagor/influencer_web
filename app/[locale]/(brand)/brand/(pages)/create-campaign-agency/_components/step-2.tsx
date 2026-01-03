@@ -13,6 +13,7 @@ import clsx from "clsx";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
+import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
 
 type Agency = {
   id: string;
@@ -36,17 +37,20 @@ const dummyAgencies: Agency[] = [
 ];
 
 export default function Step2() {
-  const [niche, setNiche] = React.useState<string>("");
-  const increaseStep = useCampaignStore((s) => s.increaseStep);
-  const decreaseStep = useCampaignStore((s) => s.decreaseStep);
+  const { increaseStep, decreaseStep } = useCampaignStore();
+  const { stepTwo, setStepTwo } = useFormStore();
 
+  console.log(stepTwo);
   return (
     <Card className="border-none">
       <CardContent className="p-4 space-y-5">
         <div>
           <h1 className="text-Primary font-semibold pb-2">Campaign Niche</h1>
 
-          <Select value={niche} onValueChange={setNiche}>
+          <Select
+            value={stepTwo.nicheType}
+            onValueChange={(value) => setStepTwo({ nicheType: value })}
+          >
             <SelectTrigger className="w-full h-12">
               <SelectValue placeholder="Select Niche type" />
             </SelectTrigger>
@@ -91,7 +95,9 @@ export default function Step2() {
               Previous
             </SecondaryButton>
 
-            <PrimaryButton className="px-8" onClick={() => increaseStep()}>Next</PrimaryButton>
+            <PrimaryButton className="px-8" onClick={() => increaseStep()}>
+              Next
+            </PrimaryButton>
           </div>
         </div>
       </CardContent>
