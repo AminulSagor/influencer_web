@@ -1,6 +1,4 @@
-import CampaignBrief from "../_components/campaign-brief";
 import CampaignDetailsCard from "../_components/campaign-details-card";
-import CampaignMilestone from "../_components/campaign-milestone";
 import CampaignMilestoneContainer from "../_components/campaign-milestone-container";
 import CampaignStepper from "../_components/campaign-stepper";
 import CampaignTermsCard from "../_components/campaign-terms";
@@ -11,12 +9,14 @@ import InfluencerRatingCard from "../_components/influencer-rating-card";
 import PlatformProfit from "../_components/platform-profit";
 
 export type InvitationStatusType = "sent" | "accepted";
+
 export type CampaignStatusType =
   | "needs-quote"
   | "pending-invitations"
   | "active"
   | "completed"
   | "paid";
+
 export type Influencer = {
   imageUrl: string;
   name: string;
@@ -50,7 +50,7 @@ const stats = [
 ];
 
 const page = () => {
-  const invitationStatus: InvitationStatusType = "accepted";
+  const invitationStatus: InvitationStatusType = "sent";
   const campaignStatus: CampaignStatusType = "active";
   return (
     <div className="p-4 space-y-4">
@@ -82,7 +82,7 @@ const page = () => {
       </div>
       <div>
         <PlatformProfit
-          campaignStatus="active"
+          campaignStatus={campaignStatus}
           stats={stats}
           invitationStatus={invitationStatus}
         />
@@ -91,7 +91,7 @@ const page = () => {
       {/* when accepted */}
       <div>
         <InfluencerPaymentMethod
-          campaignStatus="active"
+          campaignStatus={campaignStatus}
           invitationStatus={invitationStatus}
         />
       </div>

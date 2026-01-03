@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import {
   campaignMilestoneData,
+  CampaignMilestoneDataType,
   COMPLETED,
   DECLINED,
   IN_REVIEW,
@@ -58,6 +59,7 @@ const milestoneStatusStyles: Record<
     title: string;
     badge: string;
     amount: string;
+    ring: string;
   }
 > = {
   [TODO]: {
@@ -66,6 +68,7 @@ const milestoneStatusStyles: Record<
     title: "text-dark-gray",
     badge: "bg-dark-gray",
     amount: "text-gray-600",
+    ring: "ring-gray-300",
   },
   [IN_REVIEW]: {
     card: "border-orange-400 bg-linear-to-r from-orange/20 to-white",
@@ -73,6 +76,7 @@ const milestoneStatusStyles: Record<
     title: "text-orange",
     badge: "bg-orange",
     amount: "text-orange",
+    ring: "ring-orange",
   },
   [DECLINED]: {
     card: "border-red-400 bg-linear-to-r from-red-200 to-white",
@@ -80,6 +84,7 @@ const milestoneStatusStyles: Record<
     title: "text-red-600",
     badge: "bg-red-600",
     amount: "text-red-600",
+    ring: "ring-red-600",
   },
   [PAID]: {
     card: "border-light-green bg-linear-to-r from-Secondary to-white",
@@ -87,6 +92,7 @@ const milestoneStatusStyles: Record<
     title: "text-Primary",
     badge: "bg-light-green",
     amount: "text-light-green",
+    ring: "ring-light-green",
   },
   [COMPLETED]: {
     card: "border-light-green bg-linear-to-r from-Secondary to-white",
@@ -94,6 +100,7 @@ const milestoneStatusStyles: Record<
     title: "text-Primary",
     badge: "bg-light-green",
     amount: "text-light-green",
+    ring: "ring-light-green",
   },
 };
 
@@ -103,6 +110,10 @@ const CampaignMilestone = ({
   influencers,
 }: Props) => {
   const [disabled, setDisabled] = useState(true);
+
+  const [selectedCampaignMilestone, setSelectedCampaignMilestone] =
+    useState<CampaignMilestoneDataType | null>(null);
+
   const isActiveAccepted =
     campaignStatus === "active" && invitationStatus === "accepted";
   const isActiveSent =
@@ -255,7 +266,7 @@ const CampaignMilestone = ({
         )}
 
         <Carousel className="overflow-visible">
-          <CarouselContent className="p-2 -ml-4 pr-24 ">
+          <CarouselContent className="p-2 mr-1 -ml-4 pr-24">
             {campaignMilestoneData.map((item) => {
               const styles =
                 milestoneStatusStyles[item.status as MilestoneStatus];
@@ -265,9 +276,19 @@ const CampaignMilestone = ({
                   className="basis-full md:basis-[34%]"
                 >
                   <div
+                    onClick={() => {
+                      if (campaignStatus !== "needs-quote") {
+                        setSelectedCampaignMilestone(item);
+                      }
+                    }}
                     className={cn(
                       "border border-light-green p-4 rounded-md space-y-2 cursor-pointer transition",
-                      isActiveAccepted && styles?.card
+                      isActiveAccepted && styles?.card,
+                      selectedCampaignMilestone?.id === item.id &&
+                        cn(
+                          "ring-2 ring-offset-1 ring-light-green",
+                          isActiveAccepted && styles?.ring
+                        )
                     )}
                   >
                     {/* HEADER */}

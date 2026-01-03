@@ -11,7 +11,7 @@ const ProgressBar = ({ maxPaid, minPaid, progressPercent, title }: Props) => {
       <div className=" flex-1 space-y-2">
         <div className="flex justify-between items-center">
           <p className="text-sm font-semibold">{title}</p>
-          <p className="text-sm font-semibold text-Primary"> ch
+          <p className="text-sm font-semibold text-Primary">
             {minPaid} of {maxPaid} Paid
           </p>
         </div>

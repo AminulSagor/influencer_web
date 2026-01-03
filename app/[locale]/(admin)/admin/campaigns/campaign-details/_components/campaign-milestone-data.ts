@@ -1,7 +1,6 @@
 export const TODO = "To Do";
 export const PAID = "Paid";
 export const PARTIAL_PAID = "Partial Paid";
-
 export const DECLINED = "Declined";
 export const IN_REVIEW = "In Review";
 export const COMPLETED = "Completed";
@@ -34,9 +33,6 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     id: 2,
     title: "YouTube Video Upload",
     contentRequirement: ["1 Sponsored video (60 Sec)"],
-    // promotionalGoal: "Gain page like as much as possible",
-    // promotionTarget: "300k",
-    // payout: 5000,
     status: "Declined",
     day: 2,
   },
@@ -44,9 +40,6 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     id: 3,
     title: "TikTok Campaign",
     contentRequirement: ["1 Sponsored video (60 Sec)"],
-    // promotionalGoal: "Gain page like as much as possible",
-    // promotionTarget: "300k",
-    // payout: 5000,
     status: IN_REVIEW,
     day: 3,
   },
@@ -54,9 +47,6 @@ export const campaignMilestoneData: CampaignMilestoneDataType[] = [
     id: 4,
     title: "Campaing Wrapup",
     contentRequirement: ["Final Report"],
-    // promotionalGoal: "Gain page like as much as possible",
-    // promotionTarget: "300k",
-    // payout: 5000,
     status: "Completed",
     day: 4,
   },
