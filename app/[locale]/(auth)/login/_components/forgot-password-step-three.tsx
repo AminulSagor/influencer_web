@@ -34,7 +34,6 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("Reset password data:", data);
     nextStep();
   };
 

@@ -31,7 +31,6 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
   });
 
   const onSubmit = (data: ForgotPasswordFormValues) => {
-    console.log(data);
     nextStep();
   };
 

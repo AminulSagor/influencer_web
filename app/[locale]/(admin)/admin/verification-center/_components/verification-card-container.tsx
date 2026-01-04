@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FaEye } from "react-icons/fa";
 import NicheCell from "./niche-cell";
+import Link from "next/link";
 
 const VerificationCardsContainer = () => {
   const [selectedId, setSelectedId] = useState<number | null>(1);
@@ -34,8 +35,6 @@ const VerificationCardsContainer = () => {
   const rows: VerificationTableRow[] = selectedCard
     ? verificationTableData[selectedCard.label]
     : [];
-
-  console.log(rows);
 
   return (
     <>
@@ -137,9 +136,15 @@ const VerificationCardsContainer = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant={"outline"}>
-                        <FaEye />
-                      </Button>
+                      <Link
+                        href={`/admin/verification-center/${selectedCard?.label.toLowerCase()}/${
+                          row.id
+                        }`}
+                      >
+                        <Button variant={"outline"}>
+                          <FaEye />
+                        </Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}

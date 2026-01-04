@@ -65,7 +65,6 @@ const SignUpStepThree = ({ nextStep }: Props) => {
   const handleContinue = () => {
     const code = codes.join("");
     if (code.length === 4) {
-      console.log("Verification code:", code);
     }
     nextStep();
   };

@@ -82,7 +82,6 @@ const SubmissionForm = () => {
 
   const onSubmit = (values: FormType) => {
     setStatus("In Review");
-    console.log(values, "values");
   };
   return (
     <>
