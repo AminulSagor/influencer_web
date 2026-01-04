@@ -1,4 +1,6 @@
 import { verificationTableData } from "../../_components/verification-data";
+import BioCard from "./_components/bio-card";
+import InfoCard from "./_components/info-card";
 
 interface Props {
   params: Promise<{ type: string; id: string }>;
@@ -15,12 +17,23 @@ const page = async ({ params }: Props) => {
     return <p>Verification data not found</p>;
   }
 
+  const profile = detail.details?.profile;
+
   return (
     <div className="p-4">
-      <h1>Verification Detail for {typeKey}</h1>
-      <p>Name: {detail.name}</p>
-      <p>Pending Items: {detail.pendingItems}</p>
-      <p>Approval Progress: {detail.approvalProgress}%</p>
+      <div className="grid grid-cols-12">
+        <div className="col-span-6">
+          <InfoCard
+            name={profile?.name ?? "N/A"}
+            location={profile?.location ?? "N/A"}
+            verifiedStatus="Unverified"
+            socialHandles={profile?.socialHandles}
+          />
+        </div>
+        <div className="col-span-6">
+          <BioCard />
+        </div>
+      </div>
     </div>
   );
 };
