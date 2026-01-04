@@ -40,7 +40,6 @@ export default function Step2() {
   const { increaseStep, decreaseStep } = useCampaignStore();
   const { stepTwo, setStepTwo } = useFormStore();
 
-  console.log(stepTwo);
   return (
     <Card className="border-none">
       <CardContent className="p-4 space-y-5">

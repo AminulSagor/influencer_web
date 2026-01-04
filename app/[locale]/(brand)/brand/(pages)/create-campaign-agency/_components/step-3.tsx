@@ -31,8 +31,6 @@ const Step3 = () => {
   } = useFormStore();
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
-  console.log(stepThree);
-
   // Validate all required fields
   const validateStep = () => {
     const errors: Record<string, string> = {};
@@ -187,22 +185,12 @@ const Step3 = () => {
           <CardContent>
             <div className="space-y-6">
               {/* Terms & Conditions */}
-              <Section
-                icon={<ShieldCheck className="w-4 h-4 text-Primary" />}
-                title="Terms & Conditions"
-                error={getError("termsConditions")}
-              >
-                <Textarea
-                  value={stepThree.termsConditions}
-                  onChange={(e) =>
-                    handleInputChange("termsConditions", e.target.value)
-                  }
-                  placeholder="Enter Terms & Conditions in details"
-                  className={`min-h-[120px] placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("termsConditions") ? "border-red-500" : ""
-                  }`}
-                />
-              </Section>
+              <div className="text-Primary font-semibold flex gap-2 items-center">
+                <span>
+                  <ShieldCheck className="w-5 h-5 text-Primary" />
+                </span>
+                <span>Terms And Conditions</span>
+              </div>
 
               {/* Reporting Requirements */}
               <Section

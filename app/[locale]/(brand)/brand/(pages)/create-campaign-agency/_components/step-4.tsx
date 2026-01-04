@@ -4,19 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DottedButton from "@/app/[locale]/(brand)/brand/_components/dotted-button";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
-
-import {
-  Target,
-  Eye,
-  MessageCircle,
-  X,
-  Heart,
-  ChevronDown,
-  Check,
-  ChevronUp,
-} from "lucide-react";
-
-import { ImCheckmark } from "react-icons/im";
+import { X, Check, ChevronUp } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -27,12 +15,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { BarChart3, Target as TargetIcon } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { BsEye } from "react-icons/bs";
-import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
+import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
 
 const Step4 = () => {
   return (
@@ -45,9 +33,7 @@ const Step4 = () => {
 
 export default Step4;
 
-{
-  /* row */
-}
+/*========= row ===========*/
 const Row = ({
   label,
   value,
@@ -63,8 +49,12 @@ const Row = ({
   </div>
 );
 
+/*========= budgetCalulation ==========*/
 const BudgetCalculatorSection = () => {
-  const [budget, setBudget] = useState<string>("");
+  const { stepFour, setStepFour } = useFormStore();
+  const initialBudget =
+    stepFour.budget > 0 ? stepFour.budget.toLocaleString("en-US") : "";
+  const [budget, setBudget] = useState<string>(initialBudget);
   const [submittedBudget, setSubmittedBudget] = useState<number | null>(null);
   const [error, setError] = useState<string>("");
 
@@ -106,6 +96,25 @@ const BudgetCalculatorSection = () => {
 
     setSubmittedBudget(numericBudget);
     setError("");
+
+    // Calculate all values
+    const vatAmount = numericBudget * (VAT_PERCENTAGE / 100);
+    const totalWithVAT = numericBudget + vatAmount;
+    const agencyFeeMin = totalWithVAT * (AGENCY_FEE_MIN / 100);
+    const agencyFeeMax = totalWithVAT * (AGENCY_FEE_MAX / 100);
+    const campaignBudgetMin = totalWithVAT - agencyFeeMin;
+    const campaignBudgetMax = totalWithVAT - agencyFeeMax;
+
+    // Save to Zustand store
+    setStepFour({
+      budget: numericBudget,
+      vatAmount,
+      totalWithVAT,
+      agencyFeeMin,
+      agencyFeeMax,
+      campaignBudgetMin,
+      campaignBudgetMax,
+    });
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -114,16 +123,28 @@ const BudgetCalculatorSection = () => {
     }
   };
 
-  // Calculate all values based on submitted budget
+  // Use store values for calculations if available
   const calculateValues = () => {
+    if (stepFour.budget > 0) {
+      return {
+        baseBudget: stepFour.budget,
+        vatAmount: stepFour.vatAmount,
+        totalWithVAT: stepFour.totalWithVAT,
+        agencyFeeMin: stepFour.agencyFeeMin,
+        agencyFeeMax: stepFour.agencyFeeMax,
+        campaignBudgetMin: stepFour.campaignBudgetMin,
+        campaignBudgetMax: stepFour.campaignBudgetMax,
+        inDollarsMin: stepFour.campaignBudgetMin / EXCHANGE_RATE,
+        inDollarsMax: stepFour.campaignBudgetMax / EXCHANGE_RATE,
+      };
+    }
+
     if (!submittedBudget) return null;
 
     const vatAmount = submittedBudget * (VAT_PERCENTAGE / 100);
     const totalWithVAT = submittedBudget + vatAmount;
-
     const agencyFeeMin = totalWithVAT * (AGENCY_FEE_MIN / 100);
     const agencyFeeMax = totalWithVAT * (AGENCY_FEE_MAX / 100);
-
     const campaignBudgetMin = totalWithVAT - agencyFeeMin;
     const campaignBudgetMax = totalWithVAT - agencyFeeMax;
 
@@ -198,13 +219,6 @@ const BudgetCalculatorSection = () => {
                   className="border-none shadow-none focus-visible:ring-0 pr-16"
                   placeholder="Enter Budget here..."
                 />
-                {/* <PrimaryButton
-                  type="button"
-                  onClick={handleSubmit}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2"
-                >
-                  Calculate
-                </PrimaryButton> */}
               </div>
 
               {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
@@ -289,22 +303,7 @@ const BudgetCalculatorSection = () => {
   );
 };
 
-{
-  /* selection */
-}
-interface Milestone {
-  id: number;
-  title: string;
-  subtitle: string;
-  day: string;
-  platform: string;
-  promotionTarget?: {
-    title: string;
-    amount: string;
-  };
-  promotionGoal?: string;
-}
-
+/* ============= selection ==============*/
 interface NewMilestoneForm {
   title: string;
   subtitle: string;
@@ -318,11 +317,9 @@ interface NewMilestoneForm {
 }
 
 const CampaignMilestonesSection = () => {
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const { stepFour, addMilestone, removeMilestone } = useFormStore();
   const [openId, setOpenId] = useState<number | null>(null);
-  const increaseStep = useCampaignStore((s) => s.increaseStep);
-  const decreaseStep = useCampaignStore((s) => s.decreaseStep);
-
+  const { increaseStep, decreaseStep } = useCampaignStore();
   const [showNewMilestoneForm, setShowNewMilestoneForm] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newMilestone, setNewMilestone] = useState<NewMilestoneForm>({
@@ -412,8 +409,8 @@ const CampaignMilestonesSection = () => {
       return;
     }
 
-    const newMilestoneData: Milestone = {
-      id: milestones.length + 1,
+    const newMilestoneData = {
+      id: stepFour.milestones.length + 1,
       title: newMilestone.title,
       subtitle: newMilestone.subtitle,
       day: newMilestone.day,
@@ -425,7 +422,8 @@ const CampaignMilestonesSection = () => {
       promotionGoal: newMilestone.promotionGoal,
     };
 
-    setMilestones((prev) => [...prev, newMilestoneData]);
+    // Save to Zustand store
+    addMilestone(newMilestoneData);
 
     // Reset form
     setNewMilestone({
@@ -456,12 +454,29 @@ const CampaignMilestonesSection = () => {
       },
       promotionGoal: "",
     });
-    setShowNewMilestoneForm(false);
     setErrors({});
   };
 
   const handleRemoveMilestone = (id: number) => {
-    setMilestones((prev) => prev.filter((m) => m.id !== id));
+    // Remove from Zustand store
+    removeMilestone(id);
+  };
+
+  const handleNextStep = () => {
+    // Check if we have at least one milestone
+    if (stepFour.milestones.length === 0) {
+      alert("Please add at least one campaign milestone");
+      return;
+    }
+
+    // Check if we have a budget
+    if (stepFour.budget === 0) {
+      alert("Please enter and calculate your budget");
+      return;
+    }
+
+    // Proceed to next step
+    increaseStep();
   };
 
   return (
@@ -493,7 +508,7 @@ const CampaignMilestonesSection = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <p className="bg-light-green flex justify-center p-3 text-sm text-white items-center w-5 h-5 rounded-full">
-                      {milestones.length + 1}
+                      {stepFour.milestones.length + 1}
                     </p>
                     <p className="flex items-center gap-4 text-Primary">
                       <button
@@ -697,7 +712,7 @@ const CampaignMilestonesSection = () => {
           {/* RIGHT: Milestone List */}
           <div className="w-full items-stretch">
             <div className="space-y-4 min-h-[200px]">
-              {milestones.length === 0 ? (
+              {stepFour.milestones.length === 0 ? (
                 // Empty state - centered message
                 <div className="flex flex-col items-center justify-center  border border-dashed border-light-gray rounded-xl py-10">
                   <div className="text-center">
@@ -715,7 +730,7 @@ const CampaignMilestonesSection = () => {
               ) : (
                 // Milestones list
                 <div className="space-y-4">
-                  {milestones.map((m) => (
+                  {stepFour.milestones.map((m) => (
                     <div
                       key={m.id}
                       className={`border border-light-green p-3 md:px-5 rounded-lg ${
@@ -804,13 +819,7 @@ const CampaignMilestonesSection = () => {
 
                 <PrimaryButton
                   className="px-8"
-                  onClick={() => {
-                    if (!validateForm()) {
-                      return;
-                    } else {
-                      increaseStep();
-                    }
-                  }}
+                  onClick={handleNextStep}
                   type="submit"
                 >
                   Next

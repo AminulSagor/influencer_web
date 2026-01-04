@@ -10,7 +10,7 @@ type campaignStoreType = {
   // create campaign data agency
 };
 export const useCampaignStore = create<campaignStoreType>((set) => ({
-  step: 5,
+  step: 6,
   increaseStep: () =>
     set((state) => ({
       step: state.step + 1,

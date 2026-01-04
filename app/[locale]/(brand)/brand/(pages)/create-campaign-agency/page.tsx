@@ -4,20 +4,19 @@ import Step2 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_
 import Step3 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-3";
 import Step4 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-4";
 import Step5 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-5";
-import Step6 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-6";
 import Stepper from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/stepper";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MoveLeft, Trash } from "lucide-react";
+import { MoveLeft } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import FinalStep from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/final-step";
+import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/placement-confirm-card";
 
 const CreateCampaingAgencyPage = () => {
   const step = useCampaignStore((s) => s.step);
-  const [enabled, setEnabled] = useState<boolean>(false);
-  // const toggleOpen = useCampaignStore((s) => s.toggleOpen);
+  const open = useCampaignStore((s) => s.open);
   // const open = useCampaignStore((s) => s.open);
 
   return (
@@ -83,17 +82,17 @@ const CreateCampaingAgencyPage = () => {
         ) : step === 5 ? (
           <Step5 />
         ) : (
-          <Step6 />
+          <FinalStep />
         )}
       </div>
 
-      {/*============= footer ==================*/}
+      {/* ============= footer ==================*/}
 
-      {/* {open && (
+      {open && (
         <div className="absolute top-30 z-50 left-1/2 -translate-x-1/2">
           <PlacementConfirmCard />
         </div>
-      )} */}
+      )}
     </div>
   );
 };
