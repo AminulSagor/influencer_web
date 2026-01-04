@@ -1,6 +1,4 @@
 "use client";
-
-import { useState } from "react";
 import VerificationCard from "./verification-card";
 
 type VerificationCardDataType = {
@@ -12,8 +10,8 @@ type VerificationCardDataType = {
 
 interface Props {
   data: VerificationCardDataType[];
-  selectedId: number | null; // add this
-  onSelect: (id: number) => void; // add this
+  selectedId: number | null;
+  onSelect: (id: number) => void;
 }
 
 const VerificationCardGrid = ({ data, selectedId, onSelect }: Props) => {
