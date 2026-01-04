@@ -56,12 +56,12 @@ function getRevisedTimes(c: CampaignDetails) {
 const BudgetingAndQuotingList = () => {
   const campaigns = useMemo(
     () =>
-      campaignMocksData.filter((c) => c.tabStatus === "BudgetingAndQuoting"),
+      campaignMocksData.filter((c) => c.tabStatus === "BudgetingAndQuoting" || c.tabStatus === "Pending"),
     []
   );
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {campaigns.map((campaign) => {
         const statusText = getBudgetCardStatus(campaign);
         const amount = campaign.quote?.baseBudget?.amount ?? 0;

@@ -22,14 +22,14 @@ const CampaignSearchBar = ({
   onSort,
 }: CampaignSearchBarProps) => {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="flex justify-between">
       {/* Left */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 lg:gap-10">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
         <h3 className="text-sm font-semibold text-Primary whitespace-nowrap">
           {title}
         </h3>
 
-        <div className="flex sm:items-center gap-4 flex-col sm:flex-row">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 md:items-center">
           <div className="relative w-full sm:max-w-sm lg:max-w-md">
             <Search
               size={18}

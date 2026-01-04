@@ -7,7 +7,7 @@ const Page = () => {
   return (
     <div className="space-y-8">
       <CampaignSearchBar
-        title={t("active.title")}
+        title={"Budgeting & Quoting"}
         resultText="Showing 6 of 20 results"
       />
       <BudgetingAndQuotingList />

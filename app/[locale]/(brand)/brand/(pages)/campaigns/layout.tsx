@@ -26,45 +26,41 @@ export default function InfluencerJobsLayout({
   const t = useTranslations("brand.campaigns.campaignsList");
 
   return (
-    <div>
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <div className="border-b pb-4">
-            {/* Desktop: 3 columns | Mobile: stacked */}
-            <div className="grid lg:grid-cols-3 gap-4">
-              {/* Left */}
-              <div className="">
-                <CardTitle className="truncate text-lg font-bold text-Primary">
-                  {t("title")}
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  {t("description")}
-                </CardDescription>
-              </div>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-0 pt-0">
+        <div className="grid lg:grid-cols-2 gap-4">
+          {/* Left */}
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="truncate text-lg font-bold text-Primary">
+                {t("title")}
+              </CardTitle>
+              <CardDescription className="text-sm">
+                {t("description")}
+              </CardDescription>
+            </div>
 
-              {/* Center button */}
-              <div className="">
-                <Button
-                  type="button"
-                  className="sm:w-auto bg-light-green hover:bg-light-green/85"
-                  onClick={onCreateCampaign}
-                >
-                  <Link href={'/brand/create-campaign'}>
-                  + Create Campaign
-                  </Link>
-                </Button>
-              </div>
+            <Button
+              type="button"
+              className="sm:w-auto bg-light-green hover:bg-light-green/85"
+              onClick={onCreateCampaign}
+            >
+              <Link href={"/brand/create-campaign"}>+ Create Campaign</Link>
+            </Button>
+          </div>
 
-              {/* Right links */}
-              <div className="overflow-y-scroll pb-4 md:pb-0 no-scrollbar">
-                <CampaignsLink />
-              </div>
+          {/* Right links */}
+          <div className="overflow-x-scroll lg:overflow-auto pb-2 md:pb-0 flex lg:justify-end">
+            <div>
+              <CampaignsLink />
             </div>
           </div>
-        </CardHeader>
+        </div>
+      </CardHeader>
 
-        <CardContent className="p-4">{children}</CardContent>
-      </Card>
-    </div>
+      <div className="border w-full" />
+
+      <CardContent className="p-4">{children}</CardContent>
+    </Card>
   );
 }
