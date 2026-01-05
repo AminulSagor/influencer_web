@@ -6,7 +6,6 @@ import MilestoneDetailsPanel from "./milestone-details-panel";
 import DangerZoneCard from "./danger-zone-card";
 import { CampaignDetails } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/types";
 
-
 export default function CampaignMilestonesSection({
   campaign,
 }: {
@@ -27,17 +26,11 @@ export default function CampaignMilestonesSection({
   }, [influencers, selectedInfluencerId]);
 
   const milestones = selectedInfluencerCampaign?.milestones ?? [];
-  const [expandedMilestoneId, setExpandedMilestoneId] = React.useState(
-    campaign.expandedMilestoneId ?? milestones?.[0]?.id ?? ""
-  );
+  const [expandedMilestoneId, setExpandedMilestoneId] = React.useState("");
 
-  React.useEffect(() => {
-    // when influencer changes, expand first milestone
-    setExpandedMilestoneId(milestones?.[0]?.id ?? "");
-  }, [selectedInfluencerId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const expandedMilestone = milestones.find((m) => m.id === expandedMilestoneId);
-
+  const expandedMilestone = expandedMilestoneId
+    ? milestones.find((m) => m.id === expandedMilestoneId)
+    : undefined;
   return (
     <div className="space-y-4">
       <CampaignMilestonesOverview
@@ -48,8 +41,10 @@ export default function CampaignMilestonesSection({
         onSelectMilestone={setExpandedMilestoneId}
       />
 
-      {/*OUTSIDE the milestones card, UNDER it */}
-      <MilestoneDetailsPanel milestone={expandedMilestone} />
+      {/* Show MilestoneDetailsPanel if milestone is NOT "Pending" AND an ID is selected */}
+      {expandedMilestone && expandedMilestone.status !== "Pending" && (
+        <MilestoneDetailsPanel milestone={expandedMilestone} />
+      )}
 
       <DangerZoneCard />
     </div>
