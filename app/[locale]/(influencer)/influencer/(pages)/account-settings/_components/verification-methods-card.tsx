@@ -4,7 +4,6 @@ import React from "react";
 import {
   AlertTriangle,
   SquarePen,
-  ExternalLink,
   Upload,
   XCircle,
   FileText,
@@ -102,7 +101,7 @@ export default function VerificationMethodsCard() {
   };
 
   return (
-    <Card className="py-0 relative bg-white border border-black/5 rounded-xl">
+    <Card className="py-0 relative">
       <CardContent className="py-4 px-6">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
