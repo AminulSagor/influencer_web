@@ -1,6 +1,7 @@
 import { verificationTableData } from "../../_components/verification-data";
 import InfoCard from "./_components/info-card";
 import NicheCard from "./_components/niche-card";
+import PayoutSettings from "./_components/payout-setting";
 import ProfileCompletionCard from "./_components/profile-completion-card";
 import SkillsCard from "./_components/skills-card";
 import SocialLinksCard from "./_components/social-links-card";
@@ -24,6 +25,7 @@ const page = async ({ params }: Props) => {
   const niches = detail.details?.niches;
   const socialLinks = detail.details?.socialLinks;
   const skills = detail.details?.skills;
+  const payoutSettings = detail.details?.payoutSettings || [];
 
   return (
     <div className="p-4 space-y-4">
@@ -56,6 +58,14 @@ const page = async ({ params }: Props) => {
         <div className="col-span-12 md:col-span-4">
           <SkillsCard skills={skills ?? []} />
         </div>
+      </div>
+
+      {/* row 4 */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 md:col-span-4">
+          <PayoutSettings payoutSettings={payoutSettings} />
+        </div>
+        <div className="col-span-12 md:col-span-8"></div>
       </div>
     </div>
   );

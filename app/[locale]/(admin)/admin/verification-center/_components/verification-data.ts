@@ -163,12 +163,18 @@ export const verificationTableData: Record<
           {
             id: 2,
             type: "Bkash",
+            accountHolder: "Hania amir",
             phoneNumber: "+8801234567890",
             status: "Approved",
           },
           {
             id: 3,
             type: "Bank Account",
+            bankName: "Brac Bank Pvt Ltd",
+            accountHolder: "Hania amir 2",
+            accountNumber: "32788 798779 7987789",
+            routingNumber: "4895697",
+            branchName: "Banarose",
             status: "Pending",
           },
         ],
