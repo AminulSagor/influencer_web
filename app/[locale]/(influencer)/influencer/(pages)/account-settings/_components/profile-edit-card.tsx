@@ -1,122 +1,166 @@
 "use client";
 
-import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
-import { MapPin, Mail, Phone, Upload } from "lucide-react";
-import { useTranslations } from "next-intl";
+import React from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Mail, MapPin, Phone, Upload } from "lucide-react";
 
-export default function ProfileEditCard() {
-  const t = useTranslations("influencer.account-setting");
-
+const ProfileEditCard = () => {
   return (
-    <div>
-      <CollapseCard title="Profile">
-        <div className="space-y-7">
-          {/* Header */}
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col lg:flex-row gap-10 lg:gap-20">
-              {/* Avatar upload */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-28 h-28 rounded-full border border-dashed border-[#9DB47B] bg-[#F7FAEC] flex items-center justify-center">
-                  <Upload className="w-6 h-6 text-[#6B7A4C]" />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <button className="px-4 py-1.5 rounded-lg border text-sm">
-                    {t("Remove")}
-                  </button>
-                  <button className="px-4 py-1.5 rounded-lg bg-[#6E8F4A] text-white text-sm">
-                    Upload Photo
-                  </button>
-                </div>
+    <Card className="py-0 relative">
+      <CardContent className="py-4 px-6">
+        <Accordion type="single" collapsible defaultValue="item-1">
+          <AccordionItem value="item-1" className="border-none">
+            {/* Header */}
+            <AccordionTrigger className="py-0 hover:no-underline">
+              <div className="flex items-center justify-between w-full pr-28">
+                <h1 className="font-semibold text-base text-Primary">Profile</h1>
               </div>
+            </AccordionTrigger>
 
-              {/* Name + info */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-[#2D5016]">
-                  Hania Amir
-                </h3>
-                <p className="text-sm text-[#6B7A4C]">Influencer</p>
+            {/* Edit button */}
+            <Button
+              type="button"
+              className="rounded-full text-xs px-8 bg-light-green text-white hover:bg-light-green/90 absolute top-4 right-14 h-7"
+            >
+              Edit Profile
+            </Button>
 
-                <div className="space-y-1 text-sm text-[#6B7A4C]">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-0.5" />
-                    <div>
-                      <p>Bangladesh</p>
-                      <p className="text-xs text-gray-400">
-                        Swarupkathi, Dhaka
-                      </p>
+            <AccordionContent className="pb-6 pt-4">
+              <div className="space-y-7">
+                {/* Top section */}
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
+                  <div className="flex flex-col lg:flex-row gap-10 lg:gap-20">
+                    {/* Avatar upload */}
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-28 h-28 rounded-full border border-dashed border-light-green/60 bg-light-green/15 flex items-center justify-center">
+                        <Upload className="w-6 h-6 text-Primary/70" />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-7 px-10 rounded-full text-xs border-light-green/40 text-Primary hover:bg-light-green/10"
+                        >
+                          Remove
+                        </Button>
+                        <Button
+                          type="button"
+                          className="h-7 px-10 rounded-full text-xs bg-light-green text-white hover:bg-light-green/90"
+                        >
+                          Upload Photo
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Name + info */}
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-semibold text-Primary">
+                        Hania Amir
+                      </h3>
+                      <p className="text-sm text-Primary/60">Influencer</p>
+
+                      <div className="mt-4 space-y-3 text-sm">
+                        <div className="flex items-start gap-3">
+                          <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
+                            <MapPin className="w-4 h-4 text-light-green" />
+                          </span>
+                          <div>
+                            <p className="text-light-green font-medium">
+                              Bangladesh
+                            </p>
+                            <p className="text-Primary/50 text-xs">
+                              Swarupkathi, Dhaka
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
+                            <Mail className="w-4 h-4 text-light-green" />
+                          </span>
+                          <p className="text-Primary/70 text-sm">
+                            haniaamir@email.com
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
+                            <Phone className="w-4 h-4 text-light-green" />
+                          </span>
+                          <p className="text-Primary/70 text-sm">
+                            +8801234567890
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    <span>haniaamir@email.com</span>
-                  </div>
+                {/* Form */}
+                <div className="mt-10 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <Field label="First Name *">
+                      <Input
+                        placeholder="Enter First Name"
+                        className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
+                      />
+                    </Field>
 
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    <span>+8801234567890</span>
+                    <Field label="Email Address *">
+                      <Input
+                        defaultValue="grow_big@gmail.com"
+                        disabled
+                        className="h-10 border-light-green/20 bg-light-green/10 text-Primary/60"
+                      />
+                    </Field>
+
+                    <Field label="Last Name *">
+                      <Input
+                        placeholder="Enter Last Name"
+                        className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
+                      />
+                    </Field>
+
+                    <Field label="Phone Number *">
+                      <Input
+                        defaultValue="+8801234567890"
+                        disabled
+                        className="h-10 border-light-green/20 bg-light-green/10 text-Primary/60"
+                      />
+                    </Field>
                   </div>
                 </div>
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+};
 
-            {/* Edit + collapse */}
-            <button className="px-5 py-2 rounded-full bg-[#6E8F4A] text-white text-sm">
-              Edit Profile
-            </button>
-          </div>
+export default ProfileEditCard;
 
-          {/* Form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* First Name */}
-            <div>
-              <label className="block text-sm text-[#6B7A4C] mb-1">
-                {t("First Name *")}
-              </label>
-              <input
-                placeholder="Enter First Name"
-                className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6E8F4A]"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm text-[#6B7A4C] mb-1">
-                {t("Email Address *")}
-              </label>
-              <input
-                value="grow_big@gmail.com"
-                disabled
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-600"
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <label className="block text-sm text-[#6B7A4C] mb-1">
-                {t("Last Name *")}
-              </label>
-              <input
-                placeholder="Enter Last Name"
-                className="w-full border rounded-lg px-3 py-2 text-sm outline-none focus:border-[#6E8F4A]"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm text-[#6B7A4C] mb-1">
-                {t("Phone Number *")}
-              </label>
-              <input
-                value="+8801234567890"
-                disabled
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-600"
-              />
-            </div>
-          </div>
-        </div>
-      </CollapseCard>
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium text-light-green">{label}</p>
+      {children}
     </div>
   );
 }
