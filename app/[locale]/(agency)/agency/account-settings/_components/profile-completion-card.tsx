@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import React from "react";
 import { BiSolidEdit } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
 

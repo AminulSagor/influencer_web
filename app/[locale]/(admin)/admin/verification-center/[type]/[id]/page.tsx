@@ -1,6 +1,9 @@
 import { verificationTableData } from "../../_components/verification-data";
-import BioCard from "./_components/bio-card";
 import InfoCard from "./_components/info-card";
+import NicheCard from "./_components/niche-card";
+import ProfileCompletionCard from "./_components/profile-completion-card";
+import SkillsCard from "./_components/skills-card";
+import SocialLinksCard from "./_components/social-links-card";
 
 interface Props {
   params: Promise<{ type: string; id: string }>;
@@ -18,11 +21,15 @@ const page = async ({ params }: Props) => {
   }
 
   const profile = detail.details?.profile;
+  const niches = detail.details?.niches;
+  const socialLinks = detail.details?.socialLinks;
+  const skills = detail.details?.skills;
 
   return (
-    <div className="p-4">
-      <div className="grid grid-cols-12">
-        <div className="col-span-6">
+    <div className="p-4 space-y-4">
+      {/* row 1 */}
+      <div className="grid grid-cols-12 gap-4 items-stretch">
+        <div className="col-span-12 md:col-span-6 h-full">
           <InfoCard
             name={profile?.name ?? "N/A"}
             location={profile?.location ?? "N/A"}
@@ -30,8 +37,24 @@ const page = async ({ params }: Props) => {
             socialHandles={profile?.socialHandles}
           />
         </div>
-        <div className="col-span-6">
-          <BioCard />
+        <div className="col-span-12 md:col-span-6 h-full">
+          <ProfileCompletionCard
+            bioText={profile?.bio ?? "N/A"}
+            progress={profile?.profileCompletionPercent ?? 0}
+          />
+        </div>
+      </div>
+
+      {/* row 3 */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 md:col-span-4">
+          <NicheCard niches={niches ?? []} />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <SocialLinksCard socialLinks={socialLinks ?? []} />
+        </div>
+        <div className="col-span-12 md:col-span-4">
+          <SkillsCard skills={skills ?? []} />
         </div>
       </div>
     </div>

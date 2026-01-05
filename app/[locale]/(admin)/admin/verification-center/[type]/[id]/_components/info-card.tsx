@@ -32,7 +32,7 @@ const SOCIAL_CONFIG = {
 
 const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
   return (
-    <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green text-white">
+    <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green text-white h-full flex  flex-col">
       <div className="flex items-center justify-between gap-6">
         {/* Left */}
         <div className="flex items-center gap-4">
