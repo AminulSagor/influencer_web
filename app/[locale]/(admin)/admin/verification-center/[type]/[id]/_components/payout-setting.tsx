@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface PayoutSettings {
   id: number;
@@ -173,12 +174,14 @@ const PayoutSettings = ({ payoutSettings }: Props) => {
                       <ItemTitle className={textClass}>
                         Bank Account no. {bankAccountCount}
                       </ItemTitle>
-                      <ItemDescription>
-                        <p className="text-xs">{payout.bankName}</p>
-                        <p className={textClass}>
+                      <div>
+                        <p className="text-xs text-gray-400">
+                          {payout.bankName}
+                        </p>
+                        <p className={cn(textClass, "line-clamp-1")}>
                           Account No. {payout.accountNumber}
                         </p>
-                      </ItemDescription>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -197,12 +200,12 @@ const PayoutSettings = ({ payoutSettings }: Props) => {
                       <ItemTitle className="text-light-green">
                         {payout.phoneNumber}
                       </ItemTitle>
-                      <ItemDescription>
-                        <p className="text-xs">Bkash</p>
+                      <div>
+                        <p className="text-xs text-gray-400">Bkash</p>
                         <p className="text-light-green">
                           {payout.accountHolder}
                         </p>
-                      </ItemDescription>
+                      </div>
                     </div>
                   </div>
                 )}

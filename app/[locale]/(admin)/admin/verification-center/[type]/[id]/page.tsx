@@ -1,8 +1,11 @@
 import { verificationTableData } from "../../_components/verification-data";
+import DeliveryLocationCard from "./_components/delivery-location-card";
 import InfoCard from "./_components/info-card";
 import NicheCard from "./_components/niche-card";
+import NidInfoCard from "./_components/nid-info-card";
 import PayoutSettings from "./_components/payout-setting";
 import ProfileCompletionCard from "./_components/profile-completion-card";
+import ProfileDetailsCard from "./_components/profile-details-card";
 import SkillsCard from "./_components/skills-card";
 import SocialLinksCard from "./_components/social-links-card";
 
@@ -26,6 +29,8 @@ const page = async ({ params }: Props) => {
   const socialLinks = detail.details?.socialLinks;
   const skills = detail.details?.skills;
   const payoutSettings = detail.details?.payoutSettings || [];
+  const nidInfo = detail.details?.nidInfo;
+  const personalInfo = detail.details?.personalInfo;
 
   return (
     <div className="p-4 space-y-4">
@@ -65,7 +70,42 @@ const page = async ({ params }: Props) => {
         <div className="col-span-12 md:col-span-4">
           <PayoutSettings payoutSettings={payoutSettings} />
         </div>
-        <div className="col-span-12 md:col-span-8"></div>
+        <div className="col-span-12 md:col-span-8">
+          <div className="space-y-4">
+            <div>
+              <NidInfoCard
+                nidInfo={
+                  nidInfo ?? {
+                    nidNumber: "N/A",
+                    backSideImageUrl: "",
+                    frontSideImageUrl: "",
+                  }
+                }
+              />
+            </div>
+            <div>
+              <ProfileDetailsCard
+                type={typeKey}
+                personalInfo={
+                  personalInfo ?? {
+                    email: "N/A",
+                    firstName: "N/A",
+                    lastName: "N/A",
+                    location: "N/A",
+                    phoneNumber: "N/A",
+                  }
+                }
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* row 5 */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12">
+          <DeliveryLocationCard />
+        </div>
       </div>
     </div>
   );
