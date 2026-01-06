@@ -37,9 +37,9 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import IconText from "./icon-text";
 import { FaClock } from "react-icons/fa";
-import { formatDate } from "../../../_components/format-date";
 import { PiInstagramLogoFill, PiYoutubeLogoFill } from "react-icons/pi";
 import { AiFillTikTok } from "react-icons/ai";
+import { formatDate } from "../../../../_components/format-date";
 
 const CampaignDetailsCard = ({
   title,
