@@ -1,7 +1,6 @@
-import React from "react";
-import VerificationBreadcrumb from "../_components/verification-breadcrumb";
-import VariantLinksCard from "../_components/variants-links-card";
-import UserCard from "../_components/user-card";
+import VerificationBreadcrumb from "../../_components/verification-breadcrumb";
+import VariantLinksCard from "../../_components/variants-links-card";
+import UserCard from "../../_components/user-card";
 
 const page = () => {
   return (
