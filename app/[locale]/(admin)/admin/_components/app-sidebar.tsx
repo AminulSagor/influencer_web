@@ -50,8 +50,8 @@ const items = [
     icon: HiOutlineUsers,
     children: [
       { title: "Influencer", url: "/admin/users/influencer" },
-      { title: "Agency", url: "/agency/users/agency" },
-      { title: "Brands", url: "/agency/users/brands" },
+      { title: "Agency", url: "/admin/users/agency" },
+      { title: "Brands", url: "/admin/users/brands" },
     ],
   },
   {

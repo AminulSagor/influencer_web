@@ -1,4 +1,6 @@
+import { cn } from "@/lib/utils";
 import { verificationTableData } from "../../_components/verification-data";
+import ApprovalProgress from "./_components/approval-progress";
 import DeliveryLocationCard from "./_components/delivery-location-card";
 import InfoCard from "./_components/info-card";
 import NicheCard from "./_components/niche-card";
@@ -52,17 +54,35 @@ const page = async ({ params }: Props) => {
         </div>
       </div>
 
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12">
+          <ApprovalProgress />
+        </div>
+      </div>
+
       {/* row 3 */}
       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-4">
+        <div
+          className={cn(
+            "col-span-12 md:col-span-4",
+            typeKey !== "Influencer" && "md:col-span-6"
+          )}
+        >
           <NicheCard niches={niches ?? []} />
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div
+          className={cn(
+            "col-span-12 md:col-span-4",
+            typeKey !== "Influencer" && "md:col-span-6"
+          )}
+        >
           <SocialLinksCard socialLinks={socialLinks ?? []} />
         </div>
-        <div className="col-span-12 md:col-span-4">
-          <SkillsCard skills={skills ?? []} />
-        </div>
+        {typeKey === "Influencer" && (
+          <div className="col-span-12 md:col-span-4">
+            <SkillsCard skills={skills ?? []} />
+          </div>
+        )}
       </div>
 
       {/* row 4 */}
