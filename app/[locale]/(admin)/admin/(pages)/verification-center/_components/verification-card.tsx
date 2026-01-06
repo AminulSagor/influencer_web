@@ -25,7 +25,6 @@ const VerificationCard = ({
       )}
     >
       <h2 className="text-xl font-semibold">{label}</h2>
-
       <div className="flex items-center justify-between">
         <p>{count}</p>
         <p>{status}</p>
