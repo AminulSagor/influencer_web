@@ -11,15 +11,12 @@ import {
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { SidebarItem } from "@/types/app-sidebar-types";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LucideIcon, LogOut } from "lucide-react";
 
-export type SidebarItem = {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-};
+
 
 export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();

@@ -1,9 +1,8 @@
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import {  GenericAppSidebar, SidebarItem } from "@/components/generic-sidebar";
+import { GenericAppSidebar } from "@/components/generic-sidebar";
 import TopBar from "@/app/[locale]/(brand)/brand/_components/top-bar";
-
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -12,14 +11,18 @@ import {
   FileText,
   LifeBuoy,
   Settings,
+  ShieldOff,
 } from "lucide-react";
+import { SidebarItem } from "@/types/app-sidebar-types";
 
-export default function Layout({
+export default function BrandUsersLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const items: SidebarItem[] = [
+  const isVerified: boolean = true;
+
+  const verifiedSidebarItems: SidebarItem[] = [
     { title: "Dashboard", url: "/brand/dashboard", icon: LayoutDashboard },
     { title: "Campaigns", url: "/brand/campaigns", icon: BriefcaseBusiness },
     { title: "Analytics", url: "/brand/analytics", icon: BarChart3 },
@@ -33,12 +36,27 @@ export default function Layout({
     },
   ];
 
+  const unVerifiedSidebarItems: SidebarItem[] = [
+    {
+      title: "Unverified",
+      url: "/brand/unverified",
+      icon: ShieldOff,
+    },
+    {
+      title: "Account Settings",
+      url: "/brand/account-settings",
+      icon: Settings,
+    },
+  ];
+
   return (
     <SidebarProvider>
       {/* Full viewport height + proper scroll behavior */}
       <div className="flex h-dvh w-full bg-[#F4F5F7]">
         {/* Sidebar */}
-        <GenericAppSidebar items={items} />
+        <GenericAppSidebar
+          items={isVerified ? verifiedSidebarItems : unVerifiedSidebarItems}
+        />
 
         {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col">
@@ -56,4 +74,3 @@ export default function Layout({
     </SidebarProvider>
   );
 }
-
