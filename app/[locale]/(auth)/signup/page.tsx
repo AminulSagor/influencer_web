@@ -11,16 +11,35 @@ import SignUpStepSeven from "@/app/[locale]/(auth)/signup/_components/signup-ste
 import SignUpStepEight from "@/app/[locale]/(auth)/signup/_components/signup-step-eight";
 import SignUpStepNine from "@/app/[locale]/(auth)/signup/_components/signup-step-nine";
 import FinalStep from "@/app/[locale]/(auth)/signup/_components/final-step";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import AgencyExtraSignUpStep from "@/app/[locale]/(auth)/signup/_components/agency-extra-signup-step";
 
 const SignUpPage = () => {
   const [step, setStep] = useState<number>(1);
+  const userType = useAuthStore((s) => s.userType);
 
   const increaseStep = () => {
-    setStep(step + 1);
+    if (userType === "influencer" && step === 7) {
+      setStep(10);
+    } else if (userType === "agency" && step === 5) {
+      setStep(5.5);
+    } else if (userType === "agency" && step === 5.5) {
+      setStep(6);
+    } else {
+      setStep(step + 1);
+    }
   };
 
   const decreaseStep = () => {
-    setStep(step - 1);
+    if (userType === "influencer" && step === 10) {
+    }
+    if (userType === "agency" && step === 6) {
+      setStep(5.5);
+    } else if (userType === "agency" && step === 5.5) {
+      setStep(5);
+    } else {
+      setStep(step - 1);
+    }
   };
 
   return (
@@ -30,13 +49,14 @@ const SignUpPage = () => {
         <div className="bg-white max-w-255 rounded-md shadow-md p-4 md:p-6 lg:px-9 min-h-205.5 h-full mx-auto">
           {/* Header with back button and stepper */}
           <div className="flex items-center">
-            <button
-              className="text-Primary cursor-pointer"
-              onClick={decreaseStep}
-              disabled={step === 1}
-            >
-              <GoArrowLeft size={23} />
-            </button>
+            {step > 1 && step < 10 && (
+              <button
+                className="text-Primary cursor-pointer"
+                onClick={decreaseStep}
+              >
+                <GoArrowLeft size={23} />
+              </button>
+            )}
 
             {/* stepper */}
             <div className="w-full flex justify-end md:justify-center">
@@ -71,6 +91,8 @@ const SignUpPage = () => {
               <SignUpStepFour nextStep={increaseStep} />
             ) : step === 5 ? (
               <SignUpStepFive nextStep={increaseStep} />
+            ) : step === 5.5 ? (
+              <AgencyExtraSignUpStep nextStep={increaseStep} />
             ) : step === 6 ? (
               <SignUpStepSix nextStep={increaseStep} />
             ) : step === 7 ? (

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 type Props = {
   nextStep: () => void;
@@ -27,6 +28,7 @@ type AddressFormValues = {
 
 const SignUpStepFive = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step5");
+  const userType = useAuthStore((s) => s.userType);
 
   const methods = useForm<AddressFormValues>({
     defaultValues: {
@@ -51,7 +53,9 @@ const SignUpStepFive = ({ nextStep }: Props) => {
               {t("title")}
             </h1>
             <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
-              {t("subtitle")}
+              {userType === "influencer"
+                ? "Where should we sent the good stuff?"
+                : "Establish Your Business Presence"}
             </p>
             <p className="text-[18px] text-Primary">{t("description")}</p>
           </div>
@@ -76,7 +80,13 @@ const SignUpStepFive = ({ nextStep }: Props) => {
             alt="logo-images"
             className="h-8"
           />
-          <p>{t("customizeExperience")}</p>
+          <p>
+            {userType === "agency"
+              ? "You can always change or update your location on your profile."
+              : userType === "influencer"
+              ? "You can always change the product drop off point before accepting any deals!"
+              : "This helps us customize your experience"}
+          </p>
         </div>
 
         <div className="flex gap-2 text-Primary mt-10 items-center pb-4">

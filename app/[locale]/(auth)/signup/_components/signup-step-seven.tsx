@@ -15,6 +15,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 type Props = {
   nextStep: () => void;
@@ -28,6 +29,7 @@ type SocialFormValues = {
 
 const SignUpStepSeven = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step7");
+  const userType = useAuthStore((s) => s.userType);
 
   const methods = useForm<SocialFormValues>({
     defaultValues: {
@@ -50,13 +52,17 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
         <div className="flex flex-col text-center lg:text-start lg:px-4">
           <div className="space-y-5 md:space-y-10">
             <h1 className="text-Primary text-4xl md:text-[45px] font-semibold">
-              {t("title")}
+              {userType === "brand" ? "Build Your Trust" : "Unlock Payout!"}
             </h1>
             <p className="text-2xl md:text-[23px] text-light-green font-semibold">
-              {t("subtitle")}
+              {userType === "brand"
+                ? "Let's get you ready to grow!"
+                : "Let's get you ready to earn!"}
             </p>
             <p className="text-md md:text-[16px] text-Primary text-justify">
-              {t("description")}
+              {userType === "brand"
+                ? "Just a quick check to make sure you're the real you! This ensures your money goes to the right place. We keep your info 100% private."
+                : "This is a onetime security check to ensure payments are sent to the correct person. Your data is safe with us."}
             </p>
           </div>
 

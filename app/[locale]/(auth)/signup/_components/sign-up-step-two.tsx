@@ -31,14 +31,23 @@ type SignUpFormValues = {
 
 const SignUpStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step2");
-  const { userType, stepTwoData, setStepTwoData } = useAuthStore();
+  const userType = useAuthStore((s) => s.userType);
+
+  const signUpDefaultValue: SignUpFormValues = {
+    brandName: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+  };
 
   const methods = useForm<SignUpFormValues>({
-    defaultValues: stepTwoData, // load from Zustand if exists
+    defaultValues: signUpDefaultValue,
   });
 
   const onSubmit = (data: SignUpFormValues) => {
-    setStepTwoData(data); // save in Zustand
+    console.log(data);
     nextStep();
   };
 
