@@ -21,7 +21,7 @@ export default function BrandUsersLayout({
   children: React.ReactNode;
 }>) {
   const isVerified: boolean = true;
-
+ 
   const verifiedSidebarItems: SidebarItem[] = [
     { title: "Dashboard", url: "/brand/dashboard", icon: LayoutDashboard },
     { title: "Campaigns", url: "/brand/campaigns", icon: BriefcaseBusiness },

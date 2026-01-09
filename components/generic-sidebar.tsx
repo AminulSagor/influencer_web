@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/spin-loader";
 import {
   Sidebar,
   SidebarContent,
@@ -10,28 +11,24 @@ import {
   SidebarMenuItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
+import { useLogout } from "@/hooks/useLogout";
 import { cn } from "@/lib/utils";
 import { SidebarItem } from "@/types/app-sidebar-types";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-
-
+import { usePathname } from "next/navigation";
 
 export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();
-  const router = useRouter();
+  const { logout, loading } = useLogout();
 
   // remove locale (/en | /bn)
   const normalizedPath = pathname.replace(/^\/(en|bn)/, "");
 
   // show logout on all influencer routes
-  const showLogout = normalizedPath.startsWith("/influencer") || normalizedPath.startsWith("/brand");
-
-  const handleLogout = () => {
-    // clear auth here
-    router.push("/login");
-  };
+  const showLogout =
+    normalizedPath.startsWith("/influencer") ||
+    normalizedPath.startsWith("/brand");
 
   return (
     <Sidebar>
@@ -73,13 +70,16 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                 {showLogout && (
                   <div className="">
                     <button
-                      onClick={handleLogout}
+                      onClick={logout}
                       className="flex w-full items-center gap-2 rounded-md border px-2 py-3
                          text-[#2D5016] hover:bg-red-50 hover:text-red-600
                          transition"
+                      disabled={loading}
                     >
                       <LogOut className="w-5 h-5" />
-                      <span className="font-medium">Logout</span>
+                      <span className="font-medium">
+                        {loading ? <Loader /> : "Logout"}
+                      </span>
                     </button>
                   </div>
                 )}
