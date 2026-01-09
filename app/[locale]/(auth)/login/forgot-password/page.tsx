@@ -18,7 +18,7 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="md:flex items-center justify-center">
+    <div className="md:flex items-center justify-center min-h-screen bg-Secondary p-2 sm:p-4 md:p-6">
       <div className="bg-white max-w-255 md:min-w-2xl rounded-md shadow-md p-4 md:p-6 lg:px-9 min-h-190 h-full mx-auto flex flex-col items-center justify-center">
         <div>
           {step === 1 ? (

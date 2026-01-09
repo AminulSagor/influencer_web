@@ -1,31 +1,20 @@
+import { UserType } from "@/types/auth-types";
 import { create } from "zustand";
-
-export type UserType = "brand" | "influencer" | "agency" | null;
-
-type SignUpStepTwoData = {
-  brandName?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-};
 
 type AuthStore = {
   userType: UserType;
+  phone: string;
   setUserType: (type: UserType) => void;
-
-  stepTwoData: SignUpStepTwoData;
-  setStepTwoData: (data: Partial<SignUpStepTwoData>) => void;
-  resetStepTwoData: () => void;
+  setPhone: (phone: string) => void;
+  clearAuth: () => void;
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
   userType: null,
-  setUserType: (type) => set({ userType: type }),
+  phone: "",
 
-  stepTwoData: {},
-  setStepTwoData: (data) =>
-    set((state) => ({ stepTwoData: { ...state.stepTwoData, ...data } })),
-  resetStepTwoData: () => set({ stepTwoData: {} }),
+  setUserType: (type) => set({ userType: type }),
+  setPhone: (phone) => set({ phone }),
+
+  clearAuth: () => set({ userType: null, phone: "" }),
 }));

@@ -52,15 +52,15 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
         <div className="flex flex-col text-center lg:text-start lg:px-4">
           <div className="space-y-5 md:space-y-10">
             <h1 className="text-Primary text-4xl md:text-[45px] font-semibold">
-              {userType === "brand" ? "Build Your Trust" : "Unlock Payout!"}
+              {userType === "client" ? "Build Your Trust" : "Unlock Payout!"}
             </h1>
             <p className="text-2xl md:text-[23px] text-light-green font-semibold">
-              {userType === "brand"
+              {userType === "client"
                 ? "Let's get you ready to grow!"
                 : "Let's get you ready to earn!"}
             </p>
             <p className="text-md md:text-[16px] text-Primary text-justify">
-              {userType === "brand"
+              {userType === "client"
                 ? "Just a quick check to make sure you're the real you! This ensures your money goes to the right place. We keep your info 100% private."
                 : "This is a onetime security check to ensure payments are sent to the correct person. Your data is safe with us."}
             </p>

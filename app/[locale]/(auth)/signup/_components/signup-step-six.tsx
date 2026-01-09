@@ -63,7 +63,7 @@ const SignUpStepSix = ({ nextStep }: Props) => {
               Let shine your social presence!
             </p>
             <p className=" text-md md:text-[18px] text-Primary">
-              {userType === "brand"
+              {userType === "client"
                 ? "Help creators understand your brand's voice and aesthetic by linking your active social channels."
                 : "Think of this as your digital resume for every campaign offer. The more you add, the better!"}
             </p>

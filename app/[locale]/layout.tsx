@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import { getMessages } from "next-intl/server";
 import "@/app/globals.css";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,6 +36,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className={`${poppins.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           {children}
+          <Toaster position="top-center" reverseOrder={false} />
         </NextIntlClientProvider>
       </body>
     </html>

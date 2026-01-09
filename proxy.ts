@@ -9,16 +9,19 @@ const intlMiddleware = createMiddleware({
   defaultLocale: routing.defaultLocale,
 });
 
-
 const roleRoot: Record<UserRole, "brand" | "influencer" | "agency"> = {
   client: "brand",
   influencer: "influencer",
   agency: "agency",
 };
 
-function getLocaleFromPath(pathname: string) {
-  const seg = pathname.split("/")[1];
-  return routing.locales.includes(seg as any) ? seg : routing.defaultLocale;
+type Locale = (typeof routing.locales)[number];
+const isLocale = (v: string): v is Locale =>
+  (routing.locales as readonly string[]).includes(v);
+
+function getLocaleFromPath(pathname: string): Locale {
+  const seg = pathname.split("/")[1] ?? "";
+  return isLocale(seg) ? seg : routing.defaultLocale;
 }
 
 function isExpired(exp?: number) {
@@ -43,11 +46,16 @@ export default function middleware(req: NextRequest) {
   const LOGIN = `/${locale}/login`;
 
   // Protected roots:
-  const protectedRoots = [`/${locale}/brand`, `/${locale}/influencer`, `/${locale}/agency`];
+  const protectedRoots = [
+    `/${locale}/brand`,
+    `/${locale}/influencer`,
+    `/${locale}/agency`,
+  ];
   const isProtectedArea = protectedRoots.some((p) => pathname.startsWith(p));
 
   const isAuthPage =
-    pathname.startsWith(`/${locale}/login`) || pathname.startsWith(`/${locale}/signup`);
+    pathname.startsWith(`/${locale}/login`) ||
+    pathname.startsWith(`/${locale}/signup`);
 
   // A) No token -> block protected areas
   if (!isAuthed && isProtectedArea) {
@@ -64,11 +72,18 @@ export default function middleware(req: NextRequest) {
   const DASHBOARD = root ? `/${locale}/${root}/dashboard` : LOGIN;
   const UNVERIFIED = root ? `/${locale}/${root}/unverified` : LOGIN;
 
-  // B) Unverified -> force /{root}/unverified
-  if (isAuthed && !isVerified) {
-    if (pathname !== UNVERIFIED) {
+  // allow these pages even when unverified
+  const ACCOUNT_SETTINGS = root ? `/${locale}/${root}/account-settings` : LOGIN;
+
+  // B) Unverified -> allow only /unverified and /account-settings (+ nested)
+  if (isAuthed && root && !isVerified) {
+    const isAllowed =
+      pathname === UNVERIFIED || pathname.startsWith(ACCOUNT_SETTINGS);
+
+    if (!isAllowed) {
       return NextResponse.redirect(new URL(UNVERIFIED, req.url));
     }
+
     return intlRes;
   }
 

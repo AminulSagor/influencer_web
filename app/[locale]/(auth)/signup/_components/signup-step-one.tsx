@@ -7,10 +7,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 import { useTranslations } from "next-intl";
-import {
-  useAuthStore,
-  UserType,
-} from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import { notifyError } from "@/helpers/helper";
+import { UserType } from "@/types/auth-types";
 
 type Props = {
   nextStep: () => void;
@@ -31,7 +30,7 @@ const SignUpStepOne = ({ nextStep }: Props) => {
 
   const users: User[] = [
     {
-      key: "brand",
+      key: "client",
       title: t("users.brand.title"),
       role: t("users.brand.role"),
     },
@@ -111,7 +110,7 @@ const SignUpStepOne = ({ nextStep }: Props) => {
             className="text-white hover hover:bg-Primary cursor-pointer bg-light-green h-16 w-full md:w-78.5 text-[18px] mt-10"
             onClick={() => {
               if (!selected) {
-                alert("Please select a user type to continue.");
+                notifyError("Please select a user to continue.");
                 return;
               }
               nextStep();
@@ -137,6 +136,7 @@ const SignUpStepOne = ({ nextStep }: Props) => {
           height={428}
           width={428}
           alt="brand-image"
+          loading="eager"
         />
         <div className="text-Primary text-[30px] font-semibold flex flex-col items-center justify-center">
           <h1 className="text-center">{t("rightTitle1")}</h1>

@@ -1,76 +1,26 @@
-"use client";
+import { cookies } from "next/headers";
 
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { GenericAppSidebar } from "@/components/generic-sidebar";
-import TopBar from "@/app/[locale]/(brand)/brand/_components/top-bar";
-import {
-  LayoutDashboard,
-  BriefcaseBusiness,
-  BarChart3,
-  Compass,
-  FileText,
-  LifeBuoy,
-  Settings,
-  ShieldOff,
-} from "lucide-react";
-import { SidebarItem } from "@/types/app-sidebar-types";
+import BrandShell from "./_components/brand-shell";
+import { decodeJwtPayload } from "@/helpers/helper";
 
-export default function BrandUsersLayout({
+export default async function Layout({
   children,
-}: Readonly<{
+  params,
+}: {
   children: React.ReactNode;
-}>) {
-  const isVerified: boolean = true;
- 
-  const verifiedSidebarItems: SidebarItem[] = [
-    { title: "Dashboard", url: "/brand/dashboard", icon: LayoutDashboard },
-    { title: "Campaigns", url: "/brand/campaigns", icon: BriefcaseBusiness },
-    { title: "Analytics", url: "/brand/analytics", icon: BarChart3 },
-    { title: "Explore", url: "/brand/explore", icon: Compass },
-    { title: "Reports", url: "/brand/reports", icon: FileText },
-    { title: "Support Center", url: "/brand/support-center", icon: LifeBuoy },
-    {
-      title: "Account Settings",
-      url: "/brand/account-settings",
-      icon: Settings,
-    },
-  ];
+  params: { locale: string };
+}) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value ?? "";
+  const payload = token ? decodeJwtPayload(token) : null;
 
-  const unVerifiedSidebarItems: SidebarItem[] = [
-    {
-      title: "Unverified",
-      url: "/brand/unverified",
-      icon: ShieldOff,
-    },
-    {
-      title: "Account Settings",
-      url: "/brand/account-settings",
-      icon: Settings,
-    },
-  ];
+  const isVerified = Boolean(payload?.isVerified);
+
+  const { locale } = await params;
 
   return (
-    <SidebarProvider>
-      {/* Full viewport height + proper scroll behavior */}
-      <div className="flex h-dvh w-full bg-[#F4F5F7]">
-        {/* Sidebar */}
-        <GenericAppSidebar
-          items={isVerified ? verifiedSidebarItems : unVerifiedSidebarItems}
-        />
-
-        {/* Main */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          {/* Top bar (sticky instead of fixed) */}
-          <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur">
-            <TopBar />
-          </header>
-
-          {/* Page content scrolls */}
-          <div className="flex-1 min-w-0 overflow-y-auto">
-            <div className="w-full p-4">{children}</div>
-          </div>
-        </div>
-      </div>
-    </SidebarProvider>
+    <BrandShell locale={locale} isVerified={isVerified}>
+      {children}
+    </BrandShell>
   );
 }

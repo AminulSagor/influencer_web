@@ -9,12 +9,20 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { BD_LOCATIONS } from "@/location-data/bd-location";
 
 type Props = {
   nextStep: () => void;
@@ -36,7 +44,21 @@ const SignUpStepFive = ({ nextStep }: Props) => {
       zila: "",
       fullAddress: "",
     },
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
+
+  const selectedZila = methods.watch("zila");
+
+  const zilaOptions = useMemo(
+    () => BD_LOCATIONS.map((x) => x.zila).sort((a, b) => a.localeCompare(b)),
+    []
+  );
+
+  const thanaOptions = useMemo(() => {
+    const found = BD_LOCATIONS.find((x) => x.zila === selectedZila);
+    return (found?.thanas ?? []).slice().sort((a, b) => a.localeCompare(b));
+  }, [selectedZila]);
 
   const onSubmit = (data: AddressFormValues) => {
     console.log(data);
@@ -106,27 +128,7 @@ const SignUpStepFive = ({ nextStep }: Props) => {
             onSubmit={methods.handleSubmit(onSubmit)}
             className="space-y-4 mt-4"
           >
-            <FormField
-              control={methods.control}
-              name="thana"
-              rules={{ required: `${t("thanaLabel")} is required` }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-light-green">
-                    {t("thanaLabel")}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t("thanaPlaceholder")}
-                      {...field}
-                      className="bg-white border py-3 font-normal focus-visible:ring-1"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Zila Select */}
             <FormField
               control={methods.control}
               name="zila"
@@ -137,17 +139,73 @@ const SignUpStepFive = ({ nextStep }: Props) => {
                     {t("zilaLabel")}
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder={t("zilaPlaceholder")}
-                      {...field}
-                      className="bg-white border py-3 font-normal focus-visible:ring-1"
-                    />
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v);
+                        methods.setValue("thana", "", {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
+                        <SelectValue placeholder={t("zilaPlaceholder")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {zilaOptions.map((z) => (
+                          <SelectItem key={z} value={z}>
+                            {z}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Thana Select (depends on Zila) */}
+            <FormField
+              control={methods.control}
+              name="thana"
+              rules={{ required: `${t("thanaLabel")} is required` }}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-light-green">
+                    {t("thanaLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!selectedZila}
+                    >
+                      <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
+                        <SelectValue
+                          placeholder={
+                            selectedZila
+                              ? t("thanaPlaceholder")
+                              : "Select Zila first"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {thanaOptions.map((th) => (
+                          <SelectItem key={th} value={th}>
+                            {th}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Full address */}
             <FormField
               control={methods.control}
               name="fullAddress"
@@ -177,6 +235,15 @@ const SignUpStepFive = ({ nextStep }: Props) => {
             </Button>
           </form>
         </Form>
+
+        <div className="flex justify-end">
+          <span
+            className="text-light-green text-lg text-end mt-3 font-semibold cursor-pointer"
+            onClick={nextStep}
+          >
+            Skip
+          </span>
+        </div>
       </div>
     </div>
   );
