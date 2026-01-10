@@ -198,7 +198,7 @@
     },
      "stepTwo": {
       "title": "Verification Code Sent!",
-      "subtitle": "Enter the 4 digit code sent to your email",
+      "subtitle": "Enter the 4 digit code sent to your email/phone",
       "continue": "Continue",
       "resendText": "Didn’t receive the code?",
       "resendAction": "Click to Resend"

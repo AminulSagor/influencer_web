@@ -12,9 +12,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import axiosInstance from "@/lib/axios";
+import {
+  handlePhoneFormat,
+  notifyError,
+  notifySuccess,
+} from "@/helpers/helper";
+import Loader from "@/components/spin-loader";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 type ForgotPasswordFormValues = {
-  email: string;
+  identifier: string;
 };
 
 type Props = {
@@ -23,16 +32,34 @@ type Props = {
 
 const ForgotPasswordForm = ({ nextStep }: Props) => {
   const t = useTranslations("forgotPassword");
+  const [loading, setLoading] = useState(false);
+  const setPhone = useAuthStore((s) => s.setPhone);
 
   const methods = useForm<ForgotPasswordFormValues>({
     defaultValues: {
-      email: "",
+      identifier: "",
     },
   });
 
-  const onSubmit = (data: ForgotPasswordFormValues) => {
-    console.log(data);
-    nextStep();
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    setLoading(true);
+    const formatPhone = handlePhoneFormat(data.identifier);
+    setPhone(formatPhone);
+    try {
+      const res = axiosInstance.post("/influencer/auth/forgot-password", {
+        identifier: formatPhone,
+      });
+      if ((await res).status === 200) {
+        notifySuccess((await res).data?.message);
+        nextStep();
+      }
+    } catch (error: unknown) {
+      if (error) {
+        notifyError("Server Error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,8 +70,8 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
       >
         <FormField
           control={methods.control}
-          name="email"
-          rules={{ required: t("validation.emailRequired") }}
+          name="identifier"
+          rules={{ required: "Email or Phone required" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-light-green">
@@ -53,7 +80,7 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
               <FormControl>
                 <div className="relative">
                   <Input
-                    type="email"
+                    type="text"
                     placeholder={t("stepOne.placeholder")}
                     className="pl-10 py-6 font-normal focus-visible:ring-1 w-full"
                     {...field}
@@ -68,8 +95,9 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
         <Button
           type="submit"
           className="w-full h-12 mt-2 text-lg bg-light-green text-white hover:bg-Primary"
+          disabled={loading}
         >
-          {t("stepOne.button")}
+          {loading ? <Loader /> : t("stepOne.button")}
         </Button>
       </form>
     </Form>

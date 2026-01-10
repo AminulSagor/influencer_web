@@ -3,6 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
+import axiosInstance from "@/lib/axios";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import Loader from "@/components/spin-loader";
 
 type Props = {
   nextStep: () => void;
@@ -10,6 +13,8 @@ type Props = {
 
 const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("forgotPassword.stepTwo");
+  const [loading, setLoading] = useState(false);
+  const phoneNumber = useAuthStore((s) => s.phone);
 
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -61,6 +66,16 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
     nextStep();
   };
 
+  //resend otp
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      axiosInstance.post("/influencer/auth/resend-otp", { phone: phoneNumber });
+    } catch (error: unknown) {
+    } finally {
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row gap-6 lg:gap-8 justify-between max-w-112.5">
       <div className="flex-col items-center justify-center">
@@ -101,12 +116,15 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
           className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6"
           onClick={handleContinue}
         >
-          {t("continue")}
+          {loading ? <Loader /> : t("continue")}
         </Button>
 
         <p className="text-sm mt-4 text-center text-light-green">
           {t("resendText")}{" "}
-          <button className="cursor-pointer text-Primary font-semibold hover:underline ">
+          <button
+            className="cursor-pointer text-Primary font-semibold hover:underline "
+            onClick={handleResendOtp}
+          >
             {t("resendAction")}
           </button>
         </p>
