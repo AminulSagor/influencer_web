@@ -173,7 +173,7 @@
     "subtitle": "Good to see you back!",
     "fields": {
       "email": {
-        "placeholder": "Phone Number or Email",
+        "placeholder": "Phone Number",
         "required": "Email is required"
       },
       "password": {
@@ -193,7 +193,7 @@
       "title": "Forgotten Password?",
       "subtitle": "No worries, we’ll send you reset instructions",
       "label": "Phone Number / Email",
-      "placeholder": "Enter your email",
+      "placeholder": "Enter your email / phone",
       "button": "Continue"
     },
      "stepTwo": {

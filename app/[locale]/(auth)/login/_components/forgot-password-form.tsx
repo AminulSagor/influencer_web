@@ -21,6 +21,7 @@ import {
 } from "@/helpers/helper";
 import Loader from "@/components/spin-loader";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import axios from "axios";
 
 type ForgotPasswordFormValues = {
   identifier: string;
@@ -43,18 +44,21 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setLoading(true);
+
     const formatPhone = handlePhoneFormat(data.identifier);
     setPhone(formatPhone);
+
     try {
-      const res = axiosInstance.post("/influencer/auth/forgot-password", {
+      const res = await axiosInstance.post("/influencer/auth/forgot-password", {
         identifier: formatPhone,
       });
-      if ((await res).status === 200) {
-        notifySuccess((await res).data?.message);
-        nextStep();
-      }
+
+      notifySuccess(res.data?.message);
+      nextStep();
     } catch (error: unknown) {
-      if (error) {
+      if (axios.isAxiosError(error)) {
+        notifyError(error.response?.data?.message || "Request failed");
+      } else {
         notifyError("Server Error");
       }
     } finally {

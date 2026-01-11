@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,11 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import axiosInstance from "@/lib/axios";
+import { notifyError, notifySuccess } from "@/helpers/helper";
+import axios from "axios";
+import Loader from "@/components/spin-loader";
 
 type Props = {
   nextStep: () => void;
@@ -25,6 +30,8 @@ type FormValues = {
 
 const ForgotPasswordStepThree = ({ nextStep }: Props) => {
   const t = useTranslations("forgotPassword.step3");
+  const phoneNumber = useAuthStore((s) => s.phone);
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -33,9 +40,27 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log("Reset password data:", data);
-    nextStep();
+  const onSubmit = async (data: FormValues) => {
+    const payload = {
+      newPassword: data.confirmPassword,
+      identifier: phoneNumber,
+    };
+    try {
+      const res = await axiosInstance.post(
+        "/influencer/auth/reset-password",
+        payload
+      );
+      notifySuccess(res.data?.message);
+      nextStep();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        notifyError(error.response?.data?.message || "Request failed");
+      } else {
+        notifyError("Server Error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,8 +139,9 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
             <Button
               type="submit"
               className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px]"
+              disabled={loading}
             >
-              {t("submit")}
+              {loading ? <Loader /> : t("submit")}
             </Button>
           </form>
         </Form>

@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import axiosInstance from "@/lib/axios";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import Loader from "@/components/spin-loader";
+import { notifyError, notifySuccess } from "@/helpers/helper";
+import axios from "axios";
 
 type Props = {
   nextStep: () => void;
@@ -15,6 +17,7 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("forgotPassword.stepTwo");
   const [loading, setLoading] = useState(false);
   const phoneNumber = useAuthStore((s) => s.phone);
+  const [loading2, setLoading2] = useState(false);
 
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -60,19 +63,44 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    setLoading(true);
     const code = codes.join("");
-    console.log("Reset code:", code);
-    nextStep();
+    const payload = { identifier: phoneNumber, otp: code };
+    try {
+      const res = await axiosInstance.post(
+        "/influencer/auth/forgot-password/verify-otp",
+        payload
+      );
+      notifySuccess(res.data?.message);
+      nextStep();
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        notifyError(error.response?.data?.message || "Request failed");
+      } else {
+        notifyError("Server Error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   //resend otp
   const handleResendOtp = async () => {
-    setLoading(true);
+    setLoading2(true);
     try {
-      axiosInstance.post("/influencer/auth/resend-otp", { phone: phoneNumber });
+      const res = await axiosInstance.post("/influencer/auth/resend-otp", {
+        phone: phoneNumber,
+      });
+      notifySuccess(res.data?.message);
     } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        notifyError(error.response?.data?.message || "Request failed");
+      } else {
+        notifyError("Server Error");
+      }
     } finally {
+      setLoading2(false);
     }
   };
 
@@ -125,7 +153,7 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
             className="cursor-pointer text-Primary font-semibold hover:underline "
             onClick={handleResendOtp}
           >
-            {t("resendAction")}
+            {loading2 ? "Sending...." : t("resendAction")}
           </button>
         </p>
       </div>
