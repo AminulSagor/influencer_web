@@ -1,11 +1,11 @@
-// Define the type for platforms
+// Type for social platforms
 type Platform = {
   title: string;
   nickName: string;
   link: string;
 };
 
-// Payout settings can be bank or mobile (Bkash)
+// Payout settings (either Bank Account or Bkash)
 type PayoutSetting =
   | {
       id: number;
@@ -30,7 +30,7 @@ type PayoutSetting =
       branchName?: undefined;
     };
 
-// Profile types
+// Profile type
 type Profile = {
   basicInfo: {
     profileCompletionPercentage: number;
@@ -69,8 +69,8 @@ type Campaign = {
   status: string;
 };
 
-// Full User type
-export type User = {
+// User type (influencer)
+export type Influencer = {
   id: number;
   name: string;
   niche: string[];
@@ -84,7 +84,9 @@ export type User = {
   campaigns: Campaign[];
 };
 
-// Props for your component
-export type UserCardProps = {
-  user: User;
+// Full userData type
+export type UserData = {
+  influencer: Influencer[];
+  agency: never[]; // empty array, can update later if you add agency objects
+  brand: never[]; // empty array, can update later if you add brand objects
 };

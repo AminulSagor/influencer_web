@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import {
@@ -21,15 +20,20 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import UserCardItem from "./user-card-item";
-import { userData } from "./user-data";
-import { UserCardProps } from "./user-type";
+import { Influencer } from "./user-type";
+import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function capitalizeFirstLetter(text?: string): string {
   if (!text) return "";
   return text[0].toUpperCase() + text.slice(1);
 }
 
-const UserCard = ({ user }: UserCardProps) => {
+interface Props {
+  users: Influencer[];
+}
+
+const UserCard = ({ users }: Props) => {
   const [view, setView] = useState<"list" | "grid">("grid");
   const pathname = usePathname();
   const url = pathname.split("/").pop();
@@ -144,15 +148,33 @@ const UserCard = ({ user }: UserCardProps) => {
           </div>
         </div>
         {view === "list" ? (
-          <div>list</div>
+          <div>
+            <div className="rounded-md overflow-hidden border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-light-green hover:bg-light-green">
+                    <TableHead className="w-[40px]">
+                      <Checkbox />
+                    </TableHead>
+                    <TableHead className="text-white">Name</TableHead>
+                    <TableHead className="text-white">Niche</TableHead>
+                    <TableHead className="text-white">Pending Items</TableHead>
+                    <TableHead className="text-white">
+                      Approval Progress
+                    </TableHead>
+                    <TableHead className="text-white text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+              </Table>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-12 gap-2">
-            <UserCardItem />
-            <UserCardItem />
-            <UserCardItem />
-            <UserCardItem />
-            <UserCardItem />
-            <UserCardItem />
+            {users.map((user) => (
+              <UserCardItem influencer={user} key={user.id} />
+            ))}
           </div>
         )}
       </CardContent>

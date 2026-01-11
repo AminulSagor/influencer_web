@@ -14,13 +14,12 @@ const page = async () => {
   ) as UserType;
 
   const data = userData[userType];
-  console.log(data, "data");
 
   return (
     <div className="p-4 space-y-4">
       <VerificationBreadcrumb type="influencer" name="Hania amir" />
       <VariantLinksCard />
-      <UserCard user={data} />
+      <UserCard users={data} />
     </div>
   );
 };

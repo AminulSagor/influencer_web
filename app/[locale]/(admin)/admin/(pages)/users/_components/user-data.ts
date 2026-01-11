@@ -1,4 +1,6 @@
-export const userData = {
+import { UserData } from "./user-type";
+
+export const userData: UserData = {
   influencer: [
     {
       id: 1,
