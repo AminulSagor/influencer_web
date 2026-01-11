@@ -32,7 +32,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const res = NextResponse.json({ message: "OTP verified" }, { status: 200 });
+    const res = NextResponse.json(
+      { message: "OTP verified", token: accessToken },
+      { status: 200 }
+    );
 
     res.cookies.set("access_token", accessToken, {
       httpOnly: true,

@@ -3,9 +3,34 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 const FinalStep = () => {
   const t = useTranslations("Signup.finalStep");
+  const router = useRouter();
+  const { userType, clearAuth } = useAuthStore();
+
+  const getDashboardPath = () => {
+    const locale = window.location.pathname.split("/")[1];
+
+    switch (userType) {
+      case "client":
+        return `/${locale}/brand/dashboard`;
+      case "influencer":
+        return `/${locale}/influencer/dashboard`;
+      case "agency":
+        return `/${locale}/agency/dashboard`;
+      default:
+        return `/${locale}/login`;
+    }
+  };
+
+  const handleGoToDashboard = () => {
+    clearAuth();
+    const dashboardPath = getDashboardPath();
+    router.push(dashboardPath);
+  };
 
   return (
     <div className="lg:px-2">
@@ -59,7 +84,7 @@ const FinalStep = () => {
 
       <div className="flex items-center justify-center mt-10 lg:mt-16">
         <Button
-          type="submit"
+          onClick={handleGoToDashboard}
           className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 px-10 text-[18px] mt-10"
         >
           {t("cta")}

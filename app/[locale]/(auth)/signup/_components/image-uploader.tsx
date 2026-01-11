@@ -1,74 +1,102 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useMemo } from "react";
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { IoArrowUp } from "react-icons/io5";
-import { useTranslations } from "next-intl";
+  Control,
+  Controller,
+  FieldValues,
+  Path,
+  RegisterOptions,
+} from "react-hook-form";
+import { ArrowUp } from "lucide-react";
 
-type ImageUploaderProps = {
+type Props<T extends FieldValues> = {
   label: string;
-  name: "nidFront" | "nidBack" | "tradeLicenseFile" | "tinCertificate";
-  control: any;
+  name: Path<T>;
+  control: Control<T>;
+  rules?: RegisterOptions<T, Path<T>>;
 };
 
-const ImageUploader = ({ label, name, control }: ImageUploaderProps) => {
-  const t = useTranslations("Signup.step7");
+function FilePreview({ file }: { file?: File }) {
+  const url = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+
+  useEffect(() => {
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [url]);
+
+  if (!url) return null;
 
   return (
-    <FormField
+    <div className="absolute inset-0 rounded-xl overflow-hidden">
+      <Image src={url} alt="preview" fill className="object-cover" />
+    </div>
+  );
+}
+
+export default function ImageUploader<T extends FieldValues>({
+  label,
+  name,
+  control,
+  rules,
+}: Props<T>) {
+  return (
+    <Controller
       control={control}
       name={name}
-      rules={{
-        required: t("required"),
-        validate: {
-          fileSize: (files: FileList) =>
-            !files || files[0]?.size <= 2 * 1024 * 1024 || t("fileSizeError"),
-          fileType: (files: FileList) =>
-            !files ||
-            ["image/png", "image/jpeg", "application/pdf"].includes(
-              files[0]?.type
-            ) ||
-            t("fileTypeError"),
-        },
-      }}
-      render={({ field }) => (
-        <FormItem className="mt-4">
-          <FormLabel className="text-light-green">{label}</FormLabel>
+      rules={rules}
+      render={({ field, fieldState }) => {
+        const file = (field.value as FileList | undefined)?.[0];
 
-          <FormControl>
-            <label className="flex flex-col items-center justify-center gap-2 border border-dashed border-light-green bg-[#F8F8F8] rounded-lg h-36 cursor-pointer hover:bg-[#f0f0e9] transition">
-              <span className="bg-gray-400 p-3 rounded-full text-white">
-                <IoArrowUp size={20} />
-              </span>
+        return (
+          <div className="space-y-2">
+            {/* Label (keep same style like your screenshot context) */}
+            <p className="text-light-green text-sm font-medium">{label}</p>
 
-              <p className="text-sm text-Primary">{t("uploadHint")}</p>
-
+            <div className="relative">
               <input
+                id={`${String(name)}-file`}
                 type="file"
-                className="hidden"
                 accept="image/png,image/jpeg,application/pdf"
+                className="hidden"
                 onChange={(e) => field.onChange(e.target.files)}
               />
-            </label>
-          </FormControl>
 
-          {/* Preview */}
-          {field.value && field.value[0] && (
-            <p className="text-sm text-green-600 mt-1">
-              {t("selectedFile")} {field.value[0].name}
-            </p>
-          )}
+              <label
+                htmlFor={`${String(name)}-file`}
+                className="relative w-full h-[120px] md:h-[130px] rounded-xl border border-dashed border-[#D4D4D4] bg-white flex flex-col items-center justify-center gap-3 cursor-pointer overflow-hidden"
+              >
+                {/* Preview overlay (does not change layout) */}
+                <FilePreview file={file} />
 
-          <FormMessage />
-        </FormItem>
-      )}
+                {/* Center content (hidden when preview exists) */}
+                <div
+                  className={
+                    file
+                      ? "relative z-10 opacity-0"
+                      : "relative z-10 flex flex-col items-center justify-center"
+                  }
+                >
+                  <div className="w-11 h-11 rounded-full bg-[#E6E6E6] flex items-center justify-center">
+                    <ArrowUp className="w-6 h-6 text-[#7A7A7A]" />
+                  </div>
+
+                  <p className="text-sm text-[#7A7A7A]">
+                    PNG, JPEG, PDF (Max 2MB)
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* Error */}
+            {fieldState.error?.message ? (
+              <p className="text-red-500 text-sm">{fieldState.error.message}</p>
+            ) : null}
+          </div>
+        );
+      }}
     />
   );
-};
-
-export default ImageUploader;
+}

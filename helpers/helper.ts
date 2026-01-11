@@ -45,8 +45,15 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
   }
 }
 
-//setting locale path 
-// function getLocaleFromPath(pathname: string) {
-//   const seg = pathname.split("/")[1];
-//   return routing.locales.includes(seg as any) ? seg : routing.defaultLocale;
-// }
+//url validator
+const normalizeUrl = (raw: string) => raw.trim();
+export const isValidHttpUrl = (value: string) => {
+  const v = normalizeUrl(value ?? "");
+  if (!v) return true;
+  try {
+    const url = new URL(v);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};

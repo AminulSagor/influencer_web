@@ -14,7 +14,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -23,6 +23,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BD_LOCATIONS } from "@/location-data/bd-location";
+import axiosInstance from "@/lib/axios";
+import Loader from "@/components/spin-loader";
+import { notifyError, notifySuccess } from "@/helpers/helper";
 
 type Props = {
   nextStep: () => void;
@@ -36,7 +39,9 @@ type AddressFormValues = {
 
 const SignUpStepFive = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step5");
+  const token = useAuthStore((s) => s.token);
   const userType = useAuthStore((s) => s.userType);
+  const [loading, setLoading] = useState(false);
 
   const methods = useForm<AddressFormValues>({
     defaultValues: {
@@ -60,9 +65,20 @@ const SignUpStepFive = ({ nextStep }: Props) => {
     return (found?.thanas ?? []).slice().sort((a, b) => a.localeCompare(b));
   }, [selectedZila]);
 
-  const onSubmit = (data: AddressFormValues) => {
-    console.log(data);
-    nextStep();
+  const onSubmit = async (data: AddressFormValues) => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.patch(
+        `/${userType}/profile/onboarding`,
+        data,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.status === 200) {
+        nextStep();
+      }
+    } catch (error: unknown) {
+      notifyError("Try again later");
+    }
   };
 
   return (
@@ -231,19 +247,10 @@ const SignUpStepFive = ({ nextStep }: Props) => {
               type="submit"
               className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-4"
             >
-              {t("continue")}
+              {loading ? <Loader /> : t("continue")}
             </Button>
           </form>
         </Form>
-
-        <div className="flex justify-end">
-          <span
-            className="text-light-green text-lg text-end mt-3 font-semibold cursor-pointer"
-            onClick={nextStep}
-          >
-            Skip
-          </span>
-        </div>
       </div>
     </div>
   );

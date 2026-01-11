@@ -19,10 +19,11 @@ type Props = {
 const SignUpStepThree = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step3");
   const phoneFromStore = useAuthStore((s) => s.phone);
+  const setToken = useAuthStore((s) => s.setToken);
 
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
-
+  const [loading2, setLoading2] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const otp = useMemo(() => codes.join(""), [codes]);
@@ -95,6 +96,7 @@ const SignUpStepThree = ({ nextStep }: Props) => {
     }
 
     setLoading(true);
+
     try {
       const payload = { phone: formattedPhone, otp };
       const res = await fetch("/api/auth/verify-otp", {
@@ -105,9 +107,15 @@ const SignUpStepThree = ({ nextStep }: Props) => {
         credentials: "include",
         body: JSON.stringify(payload),
       });
+      const d = await res.json();
+
       if (res.status === 200) {
         notifySuccess("OTP verified successfully");
+        setToken(d.token);
         nextStep();
+      }
+      if (res.status === 400) {
+        notifyError(`${d.message}`);
       }
       return;
     } catch (error: unknown) {
@@ -127,6 +135,7 @@ const SignUpStepThree = ({ nextStep }: Props) => {
 
   //rest otp
   const handleResetOtp = async () => {
+    setLoading2(true);
     const formattedPhone = formatBdPhone(phoneFromStore || "");
 
     if (!formattedPhone) {
@@ -155,6 +164,8 @@ const SignUpStepThree = ({ nextStep }: Props) => {
       }
 
       notifyError("Failed to resend OTP");
+    } finally {
+      setLoading2(false);
     }
   };
 
@@ -202,9 +213,9 @@ const SignUpStepThree = ({ nextStep }: Props) => {
               type="button"
               className="text-black cursor-pointer font-medium hover:underline"
               onClick={handleResetOtp}
-              disabled={loading}
+              disabled={loading2}
             >
-              {t("resend")}
+              {loading2 ? "ReSending..." : t("resend")}
             </button>
           </p>
         </div>

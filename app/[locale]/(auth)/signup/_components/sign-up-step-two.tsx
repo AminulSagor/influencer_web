@@ -34,6 +34,10 @@ type Props = {
   nextStep: () => void;
 };
 
+type Response = {
+  status?: number;
+};
+
 const SignUpStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step2");
   const userType = useAuthStore((s) => s.userType) as UserRole;
@@ -80,7 +84,7 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
       password: "",
     },
 
-    //realtime validation (without changing UI)
+    //realtime validation
     mode: "onChange",
     reValidateMode: "onChange",
     criteriaMode: "firstError",
@@ -106,12 +110,12 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
     }
 
     try {
-      await api.post("/influencer/auth/signup", payload);
-      // success toast (optional)
-      notifySuccess(`Verification Conde Sent on ${formattedPhone}`);
-      nextStep();
+      const res: Response = await api.post("/influencer/auth/signup", payload);
+      if (res.status === 201) {
+        notifySuccess(`Verification Conde Sent on ${formattedPhone}`);
+        nextStep();
+      }
     } catch (error: unknown) {
-      // Axios error handling (409 conflict -> show backend message)
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         const apiMsg =
@@ -119,7 +123,7 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
           "Something went wrong";
 
         if (status === 409) {
-          notifyError(apiMsg); // "Email or Phone already exists"
+          notifyError(apiMsg);
           return;
         }
 
