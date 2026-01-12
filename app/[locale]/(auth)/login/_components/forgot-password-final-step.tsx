@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -7,7 +8,7 @@ import Link from "next/link";
 
 const FinalStep = () => {
   const t = useTranslations("forgotPassword.finalStep");
-
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   return (
     <div className="flex flex-col items-center justify-center gap-1">
       {/* Checkmark with circle */}
@@ -28,7 +29,10 @@ const FinalStep = () => {
 
       {/* Login Button */}
 
-      <Button className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6">
+      <Button
+        className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6"
+        onClick={clearAuth}
+      >
         <Link href={"/login"}> {t("button")}</Link>
       </Button>
     </div>
