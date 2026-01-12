@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,7 +38,7 @@ type UserRole = "agency" | "influencer" | "brand";
 type PayeeInfo = {
   id: string;
   name: string;
-  role: "Agency" | "Influencer" | "Brand";
+  role: "Agency" | "Influencer";
   avatar?: string;
 };
 
@@ -48,22 +49,32 @@ type CampaignInfo = {
   dateTime: string;
 };
 
-type PendingPayment = {
+type CompletedTalentPayment = {
   id: string;
-  tab: UserRole;
-  payee?: PayeeInfo;
-  brandName?: string;
-  lastPaid?: string;
-  paymentType?: string;
+  tab: "agency" | "influencer";
+  payee: PayeeInfo;
   campaign: CampaignInfo;
-  amount?: number;
-  paid?: number;
-  due?: number;
+  agreedAmount: number;
+  totalPaid: number;
+  status: "full_paid";
 };
+
+type CompletedBrandPayment = {
+  id: string;
+  tab: "brand";
+  brandName: string;
+  campaign: CampaignInfo;
+  campaignBudget: number;
+  paidByBrand: number;
+  talentFee: number;
+  profit: number;
+};
+
+type CompletedPayment = CompletedTalentPayment | CompletedBrandPayment;
 
 /* ================= MOCK DATA ================= */
 
-const pendingPayments: PendingPayment[] = [
+const completedPayments: CompletedPayment[] = [
   {
     id: "1",
     tab: "influencer",
@@ -72,14 +83,15 @@ const pendingPayments: PendingPayment[] = [
       name: "Rafsan the chotobhai",
       role: "Influencer",
     },
-    paymentType: "Partial Payment",
     campaign: {
       id: "c1",
       title: "Summer Sale Fashion",
-      milestone: "Milestone Reached",
+      milestone: "Campaign Completed",
       dateTime: "13-05-25 at 2:30 PM",
     },
-    amount: 25000,
+    agreedAmount: 25000,
+    totalPaid: 25000,
+    status: "full_paid",
   },
   {
     id: "2",
@@ -89,28 +101,30 @@ const pendingPayments: PendingPayment[] = [
       name: "Growthify Agency",
       role: "Agency",
     },
-    paymentType: "Final Payment",
     campaign: {
       id: "c2",
       title: "Tech Launch 2025",
-      milestone: "Campaign Completed",
+      milestone: "Final Invoice Settled",
       dateTime: "15-05-25 at 6:00 PM",
     },
-    amount: 60000,
+    agreedAmount: 60000,
+    totalPaid: 60000,
+    status: "full_paid",
   },
   {
     id: "3",
     tab: "brand",
     brandName: "Venus Fashion Ltd",
-    lastPaid: "13-April-25",
     campaign: {
       id: "c3",
       title: "Eid Special Campaign",
-      milestone: "Invoice Generated",
+      milestone: "Campaign Closed",
       dateTime: "12-05-25 at 11:15 AM",
     },
-    paid: 50000,
-    due: 25000,
+    campaignBudget: 100000,
+    paidByBrand: 100000,
+    talentFee: 75000,
+    profit: 25000,
   },
   {
     id: "4",
@@ -120,48 +134,50 @@ const pendingPayments: PendingPayment[] = [
       name: "Nafisa Rahman",
       role: "Influencer",
     },
-    paymentType: "Milestone Payment",
     campaign: {
       id: "c4",
       title: "Skincare Awareness",
-      milestone: "50% Engagement Target",
+      milestone: "Deliverables Approved",
       dateTime: "14-05-25 at 9:45 PM",
     },
-    amount: 18000,
+    agreedAmount: 18000,
+    totalPaid: 18000,
+    status: "full_paid",
   },
   {
     id: "5",
     tab: "brand",
     brandName: "TechNova BD",
-    lastPaid: "02-May-25",
     campaign: {
       id: "c5",
       title: "Gadget Review Blast",
-      milestone: "Pending Clearance",
+      milestone: "Accounts Closed",
       dateTime: "16-05-25 at 4:10 PM",
     },
-    paid: 70000,
-    due: 30000,
+    campaignBudget: 120000,
+    paidByBrand: 120000,
+    talentFee: 90000,
+    profit: 30000,
   },
 ];
 
 /* ================= COMPONENT ================= */
 
-const PendingTab = () => {
+const CompletedTab = () => {
   const [activeTab, setActiveTab] = useState<UserRole>("agency");
 
-  const filteredData = pendingPayments.filter((item) => item.tab === activeTab);
+  const filteredData = completedPayments.filter(
+    (item) => item.tab === activeTab
+  );
 
   return (
-    <TabsContent value="pending" className="space-y-4">
+    <TabsContent value="completed" className="space-y-4">
       <Card>
         <CardHeader className="border-b flex items-center justify-between">
           <div className="space-y-2">
-            <CardTitle className="text-Primary">
-              Pending Payment Approval
-            </CardTitle>
+            <CardTitle className="text-Primary">Completed Payments</CardTitle>
             <CardDescription>
-              Process different types of payment
+              View completed and settled payments
             </CardDescription>
           </div>
 
@@ -207,7 +223,7 @@ const PendingTab = () => {
                   <SelectValue placeholder="Bulk Actions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="delete">Delete</SelectItem>
+                  <SelectItem value="export">Export</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -232,60 +248,68 @@ const PendingTab = () => {
                       <Checkbox />
                     </TableHead>
                     <TableHead className="text-white">Payee Info</TableHead>
-                    <TableHead className="text-white">Payment Type</TableHead>
                     <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">Amount</TableHead>
+                    <TableHead className="text-white">Agreed Amount</TableHead>
+                    <TableHead className="text-white">Total Paid</TableHead>
                     <TableHead className="text-white text-right">
-                      Actions
+                      Status
                     </TableHead>
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
+                  {filteredData.map((item) => {
+                    if (item.tab === "brand") return null;
 
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={item.payee?.avatar || "/"} />
-                            <AvatarFallback>
-                              {item.payee?.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p>{item.payee?.name}</p>
-                            <p className="text-xs text-gray-400">
-                              {item.payee?.role}
-                            </p>
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Checkbox />
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar>
+                              <AvatarImage src={item.payee.avatar || "/"} />
+                              <AvatarFallback>
+                                {item.payee.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p>{item.payee.name}</p>
+                              <p className="text-xs text-gray-400">
+                                {item.payee.role}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
+                        </TableCell>
 
-                      <TableCell>{item.paymentType}</TableCell>
+                        <TableCell>
+                          <p className="font-semibold">{item.campaign.title}</p>
+                          <p className="text-xs text-gray-400">
+                            {item.campaign.milestone}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {item.campaign.dateTime}
+                          </p>
+                        </TableCell>
 
-                      <TableCell>
-                        <p className="font-semibold">{item.campaign.title}</p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.milestone}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.dateTime}
-                        </p>
-                      </TableCell>
+                        <TableCell className="text-light-green font-semibold">
+                          ৳{item.agreedAmount.toLocaleString()}
+                        </TableCell>
 
-                      <TableCell className="text-light-green font-semibold">
-                        ৳{item.amount?.toLocaleString()}
-                      </TableCell>
+                        <TableCell className="text-light-green font-semibold">
+                          ৳{item.totalPaid.toLocaleString()}
+                        </TableCell>
 
-                      <TableCell className="text-right">
-                        <Button variant="lightGreen">Process Payment</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableCell className="text-right">
+                          <Badge className="border border-Primary px-6 py-2 rounded-md bg-Secondary text-light-green">
+                            Full Paid
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -297,50 +321,59 @@ const PendingTab = () => {
                     <TableHead className="w-[40px]">
                       <Checkbox />
                     </TableHead>
-                    <TableHead className="text-white">Brand Name</TableHead>
-                    <TableHead className="text-white">Last Paid</TableHead>
+                    <TableHead className="text-white">Payee Info</TableHead>
                     <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">Paid</TableHead>
-                    <TableHead className="text-white">Due Amount</TableHead>
+                    <TableHead className="text-white">
+                      Campaign Budget
+                    </TableHead>
+                    <TableHead className="text-white">Paid By Brand</TableHead>
+                    <TableHead className="text-white">Talent Fee</TableHead>
                     <TableHead className="text-white text-right">
-                      Actions
+                      Profit
                     </TableHead>
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
+                  {filteredData.map((item) => {
+                    if (item.tab !== "brand") return null;
 
-                      <TableCell>{item.brandName}</TableCell>
-                      <TableCell>{item.lastPaid}</TableCell>
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Checkbox />
+                        </TableCell>
 
-                      <TableCell>
-                        <p className="font-semibold">{item.campaign.title}</p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.milestone}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.dateTime}
-                        </p>
-                      </TableCell>
+                        <TableCell>{item.brandName}</TableCell>
 
-                      <TableCell className="text-light-green font-semibold">
-                        ৳{item.paid?.toLocaleString()}
-                      </TableCell>
+                        <TableCell>
+                          <p className="font-semibold">{item.campaign.title}</p>
+                          <p className="text-xs text-gray-400">
+                            {item.campaign.milestone}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {item.campaign.dateTime}
+                          </p>
+                        </TableCell>
 
-                      <TableCell className="text-orange font-semibold">
-                        ৳{item.due?.toLocaleString()}
-                      </TableCell>
+                        <TableCell className="text-light-green font-semibold">
+                          ৳{item.campaignBudget.toLocaleString()}
+                        </TableCell>
 
-                      <TableCell className="text-right">
-                        <Button variant="orange">Notify</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        <TableCell className="text-light-green font-semibold">
+                          ৳{item.paidByBrand.toLocaleString()}
+                        </TableCell>
+
+                        <TableCell className="text-light-green font-semibold">
+                          ৳{item.talentFee.toLocaleString()}
+                        </TableCell>
+
+                        <TableCell className="text-light-green font-semibold text-right">
+                          ৳{item.profit.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -351,4 +384,4 @@ const PendingTab = () => {
   );
 };
 
-export default PendingTab;
+export default CompletedTab;

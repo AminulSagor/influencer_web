@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PendingTab from "./pending-tab";
+import CompletedTab from "./completed-tab";
 
 const RowTwo = () => {
   return (
@@ -28,9 +29,7 @@ const RowTwo = () => {
           </TabsTrigger>
         </TabsList>
         <PendingTab />
-        <TabsContent value="completed" className="space-y-4">
-          hello completed
-        </TabsContent>
+        <CompletedTab />
       </Tabs>
     </div>
   );
