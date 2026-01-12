@@ -1,8 +1,4 @@
 "use client";
-import Step1 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-1";
-import Step2 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2";
-import Step3 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-3";
-import Step4 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-4";
 import Step5 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-5";
 import Stepper from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/stepper";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
@@ -13,10 +9,17 @@ import { MoveLeft } from "lucide-react";
 import Link from "next/link";
 import FinalStep from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/final-step";
 import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/placement-confirm-card";
+import StepOne from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-1";
+import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2";
+import StepTwoInfluencer from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2-influencer";
+import StepThree from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-3";
+import StepFour from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-4";
 
 const CreateCampaingAgencyPage = () => {
   const step = useCampaignStore((s) => s.step);
   const open = useCampaignStore((s) => s.open);
+  const campaignType = useCampaignStore((s) => s.campaignType);
+
   // const open = useCampaignStore((s) => s.open);
 
   return (
@@ -72,13 +75,17 @@ const CreateCampaingAgencyPage = () => {
       {/*============= rendering compo based on steps ==================*/}
       <div>
         {step === 1 ? (
-          <Step1 />
+          <StepOne />
         ) : step === 2 ? (
-          <Step2 />
+          campaignType === "influencer_promotion" ? (
+            <StepTwoInfluencer />
+          ) : (
+            <StepTwoAgency />
+          )
         ) : step === 3 ? (
-          <Step3 />
+          <StepThree />
         ) : step === 4 ? (
-          <Step4 />
+          <StepFour />
         ) : step === 5 ? (
           <Step5 />
         ) : (

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   CheckCircle,
   CircleSlash,
   FileText,
@@ -19,9 +19,26 @@ import {
   StepThreeData,
   useFormStore,
 } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
+import axiosInstance from "@/lib/axios";
+import axios from "axios";
+import Loader from "@/components/spin-loader";
+import { notifyError } from "@/helpers/helper";
+import { useToken } from "@/hooks/useGetToken";
 
-const Step3 = () => {
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import clsx from "clsx";
+
+const StepThree = () => {
   const { decreaseStep, increaseStep } = useCampaignStore();
+  const campaignId = useCampaignStore((s) => s.campaignId);
+  const { token } = useToken();
+
   const {
     stepThree,
     setStepThree,
@@ -29,19 +46,31 @@ const Step3 = () => {
     setValidationErrors,
     clearValidationErrors,
   } = useFormStore();
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
-  // Validate all required fields
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const selectedDate = useMemo(() => {
+    const v = stepThree.startingDate?.trim();
+    if (!v) return undefined;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }, [stepThree.startingDate]);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
   const validateStep = () => {
     const errors: Record<string, string> = {};
 
-    // List of required fields
-    const requiredFields = [
+    const requiredFields: Array<{ key: keyof StepThreeData; label: string }> = [
       { key: "campaignGoals", label: "Campaign Goals" },
       { key: "productDetails", label: "Product/Service Details" },
       { key: "dos", label: "Do's" },
       { key: "donts", label: "Don'ts" },
-      { key: "termsConditions", label: "Terms & Conditions" },
       { key: "reportingRequirements", label: "Reporting Requirements" },
       { key: "usageRights", label: "Usage Rights" },
       { key: "startingDate", label: "Starting Date" },
@@ -49,42 +78,95 @@ const Step3 = () => {
     ];
 
     requiredFields.forEach(({ key, label }) => {
-      if (!stepThree[key as keyof StepThreeData]?.trim()) {
+      if (!stepThree[key]?.trim()) {
         errors[key] = `${label} is required`;
       }
     });
 
-    // Set errors in store and local state
+    if (stepThree.duration?.trim()) {
+      const n = Number(stepThree.duration);
+      if (!Number.isFinite(n) || n <= 0) {
+        errors.duration = "Duration must be a positive number";
+      }
+    }
+
+    if (stepThree.startingDate?.trim()) {
+      const d = new Date(stepThree.startingDate);
+      if (Number.isNaN(d.getTime())) {
+        errors.startingDate = "Please select a valid starting date";
+      } else {
+        const dd = new Date(d);
+        dd.setHours(0, 0, 0, 0);
+        if (dd < today) errors.startingDate = "Starting date can't be past";
+      }
+    }
+
     setValidationErrors(errors);
     setLocalErrors(errors);
 
     return Object.keys(errors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     clearValidationErrors();
     setLocalErrors({});
 
-    if (validateStep()) {
-      increaseStep();
+    if (!validateStep()) return;
+
+    setLoading(true);
+    try {
+      const payload = {
+        campaignGoals: stepThree.campaignGoals.trim(),
+        productServiceDetails: stepThree.productDetails.trim(),
+        reportingRequirements: stepThree.reportingRequirements.trim(),
+        usageRights: stepThree.usageRights.trim(),
+        dos: stepThree.dos.trim(),
+        donts: stepThree.donts.trim(),
+        startingDate: stepThree.startingDate.trim(),
+        duration: Number(stepThree.duration),
+      };
+
+      const res = await axiosInstance.patch(
+        `/campaign/${campaignId}/step-3`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.status === 200 || res.status === 201) {
+        increaseStep();
+      }
+    } catch (err: unknown) {
+      console.log(err);
+      if (axios.isAxiosError(err)) {
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          "Something went wrong. Please try again.";
+        notifyError(message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleInputChange = (field: keyof StepThreeData, value: string) => {
     setStepThree({ [field]: value });
 
-    // Clear error for this field when user starts typing
     if (localErrors[field]) {
-      const newErrors = { ...localErrors };
-      delete newErrors[field];
-      setLocalErrors(newErrors);
-      setValidationErrors(newErrors);
+      const next = { ...localErrors };
+      delete next[field];
+      setLocalErrors(next);
+      setValidationErrors(next);
     }
   };
 
-  const getError = (field: string) => {
-    return localErrors[field] || validationErrors[field];
-  };
+  const getError = (field: string) =>
+    localErrors[field] || validationErrors[field];
+
+  const inputErrCls = (field: string) =>
+    clsx("focus-visible:ring-1", getError(field) && "border-red-500");
 
   return (
     <div className="space-y-3">
@@ -93,7 +175,6 @@ const Step3 = () => {
         <Card>
           <CardContent>
             <div className="space-y-6">
-              {/* Campaign Goals */}
               <Section
                 icon={<ClipboardList className="w-4 h-4 text-Primary" />}
                 title="Campaign Goals"
@@ -105,13 +186,13 @@ const Step3 = () => {
                     handleInputChange("campaignGoals", e.target.value)
                   }
                   placeholder="Enter Brief Description About Your Campaign Goals"
-                  className={`min-h-[120px] placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("campaignGoals") ? "border-red-500" : ""
-                  }`}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("campaignGoals")
+                  )}
                 />
               </Section>
 
-              {/* Product / Service Details */}
               <Section
                 icon={<FileText className="w-4 h-4 text-Primary" />}
                 title="Product / Service Details"
@@ -123,53 +204,53 @@ const Step3 = () => {
                     handleInputChange("productDetails", e.target.value)
                   }
                   placeholder="Enter Brief Description About Your Product / Service Details"
-                  className={`min-h-[120px] placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("productDetails") ? "border-red-500" : ""
-                  }`}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("productDetails")
+                  )}
                 />
               </Section>
 
-              {/* Do's & Don'ts */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <CircleSlash className="w-4 h-4 text-Primary" />
                   <h2 className="text-base font-semibold text-Primary">
-                    Do&apo;s & Don&apo;ts
+                    Do&apos;s & Don&apos;ts
                   </h2>
                 </div>
 
-                {/* Do's */}
                 <div className="rounded-xl border border-light-green bg-[#BBF7D0] p-4 space-y-2">
                   <div className="flex items-center gap-2 text-Primary font-semibold">
                     <CheckCircle className="w-4 h-4" />
-                    Do&apo;s
+                    Do&apos;s
                   </div>
                   <Textarea
                     value={stepThree.dos}
                     onChange={(e) => handleInputChange("dos", e.target.value)}
                     placeholder={`Ex:\n• Show Authentic Usage, Mention Eco-Friendly Aspects\n• Tag @StyleCo in All Posts\n• Show Products in Natural Lighting\n• Include Discount Code in Captions`}
-                    className={`bg-white min-h-[100px] placeholder:text-light-gray focus-visible:ring-1 ${
-                      getError("dos") ? "border-red-500" : ""
-                    }`}
+                    className={clsx(
+                      "bg-white min-h-[100px] placeholder:text-light-gray",
+                      inputErrCls("dos")
+                    )}
                   />
                   {getError("dos") && (
                     <p className="text-red-500 text-sm">{getError("dos")}</p>
                   )}
                 </div>
 
-                {/* Don'ts */}
                 <div className="rounded-xl border border-red-400 bg-[#FECACA] p-4 space-y-2">
                   <div className="flex items-center gap-2 text-red-500 font-semibold">
                     <CircleSlash className="w-4 h-4" />
-                    Don&apo;ts
+                    Don&apos;ts
                   </div>
                   <Textarea
                     value={stepThree.donts}
                     onChange={(e) => handleInputChange("donts", e.target.value)}
                     placeholder={`Ex:\n• Misleading Claims\n• Use Competitor Branding\n• Excessive Filters\n• Offensive Language`}
-                    className={`bg-white min-h-[100px] placeholder:text-light-gray focus-visible:ring-1 ${
-                      getError("donts") ? "border-red-500" : ""
-                    }`}
+                    className={clsx(
+                      "bg-white min-h-[100px] placeholder:text-light-gray",
+                      inputErrCls("donts")
+                    )}
                   />
                   {getError("donts") && (
                     <p className="text-red-500 text-sm">{getError("donts")}</p>
@@ -184,7 +265,6 @@ const Step3 = () => {
         <Card>
           <CardContent>
             <div className="space-y-6">
-              {/* Terms & Conditions */}
               <div className="text-Primary font-semibold flex gap-2 items-center">
                 <span>
                   <ShieldCheck className="w-5 h-5 text-Primary" />
@@ -192,7 +272,6 @@ const Step3 = () => {
                 <span>Terms And Conditions</span>
               </div>
 
-              {/* Reporting Requirements */}
               <Section
                 icon={<ClipboardList className="w-4 h-4 text-Primary" />}
                 title="Reporting Requirements"
@@ -204,13 +283,13 @@ const Step3 = () => {
                     handleInputChange("reportingRequirements", e.target.value)
                   }
                   placeholder="Enter Reporting Requirements in details"
-                  className={`min-h-[120px] placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("reportingRequirements") ? "border-red-500" : ""
-                  }`}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("reportingRequirements")
+                  )}
                 />
               </Section>
 
-              {/* Usage Rights */}
               <Section
                 icon={<ShieldCheck className="w-4 h-4 text-Primary" />}
                 title="Usage Rights"
@@ -222,40 +301,77 @@ const Step3 = () => {
                     handleInputChange("usageRights", e.target.value)
                   }
                   placeholder="Enter Usage Rights in details"
-                  className={`min-h-[120px] placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("usageRights") ? "border-red-500" : ""
-                  }`}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("usageRights")
+                  )}
                 />
               </Section>
 
-              {/* Starting Date */}
               <Section title="Starting Date" error={getError("startingDate")}>
-                <div className="relative">
-                  <Input
-                    value={stepThree.startingDate}
-                    onChange={(e) =>
-                      handleInputChange("startingDate", e.target.value)
-                    }
-                    placeholder="12 December 2025"
-                    className={`h-12 pr-10 placeholder:text-light-gray focus-visible:ring-1 ${
-                      getError("startingDate") ? "border-red-500" : ""
-                    }`}
-                  />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange" />
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className="w-full">
+                      <div className="relative">
+                        <Input
+                          readOnly
+                          value={
+                            selectedDate
+                              ? format(selectedDate, "dd MMMM yyyy")
+                              : ""
+                          }
+                          placeholder="12 December 2025"
+                          className={clsx(
+                            "h-12 pr-10 placeholder:text-light-gray cursor-pointer",
+                            inputErrCls("startingDate")
+                          )}
+                        />
+                        <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange" />
+                      </div>
+                    </button>
+                  </PopoverTrigger>
+
+                  <PopoverContent className="w-auto p-2" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        const dd = new Date(d);
+                        dd.setHours(0, 0, 0, 0);
+                        if (dd < today) return;
+
+                        const yyyy = dd.getFullYear();
+                        const mm = String(dd.getMonth() + 1).padStart(2, "0");
+                        const day = String(dd.getDate()).padStart(2, "0");
+                        handleInputChange(
+                          "startingDate",
+                          `${yyyy}-${mm}-${day}`
+                        );
+                      }}
+                      disabled={(date) => {
+                        const dd = new Date(date);
+                        dd.setHours(0, 0, 0, 0);
+                        return dd < today;
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </Section>
 
-              {/* Duration */}
               <Section title="Duration" error={getError("duration")}>
                 <Input
                   value={stepThree.duration}
                   onChange={(e) =>
                     handleInputChange("duration", e.target.value)
                   }
-                  placeholder="5 Days"
-                  className={`h-12 placeholder:text-light-gray focus-visible:ring-1 ${
-                    getError("duration") ? "border-red-500" : ""
-                  }`}
+                  placeholder="30"
+                  inputMode="numeric"
+                  className={clsx(
+                    "h-12 placeholder:text-light-gray",
+                    inputErrCls("duration")
+                  )}
                 />
               </Section>
             </div>
@@ -263,7 +379,6 @@ const Step3 = () => {
         </Card>
       </div>
 
-      {/* Validation Summary */}
       {Object.keys(localErrors).length > 0 && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-4">
@@ -283,7 +398,6 @@ const Step3 = () => {
         </Card>
       )}
 
-      {/* footer */}
       <Card>
         <CardContent>
           <div className="flex justify-end">
@@ -292,8 +406,12 @@ const Step3 = () => {
                 Previous
               </SecondaryButton>
 
-              <PrimaryButton className="px-8" onClick={handleNext}>
-                Next
+              <PrimaryButton
+                className="px-8"
+                onClick={handleNext}
+                disabled={loading}
+              >
+                {loading ? <Loader className="h-4 w-4" /> : "Next"}
               </PrimaryButton>
             </div>
           </div>
@@ -303,9 +421,8 @@ const Step3 = () => {
   );
 };
 
-export default Step3;
+export default StepThree;
 
-/* ================= Updated Section Component ================= */
 const Section = ({
   title,
   icon,

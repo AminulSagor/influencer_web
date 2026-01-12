@@ -36,7 +36,7 @@ const dummyAgencies: Agency[] = [
   { id: "a12", name: "MediaHive", subtitle: "Campaign Specialist" },
 ];
 
-export default function Step2() {
+export default function StepTwoAgency() {
   const { increaseStep, decreaseStep } = useCampaignStore();
   const { stepTwo, setStepTwo } = useFormStore();
 

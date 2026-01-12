@@ -5,24 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Info } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
+import type { CampaignType } from "@/app/[locale]/(brand)/brand/types/client-types";
+import axiosInstance from "@/lib/axios";
+import axios from "axios";
+import Loader from "@/components/spin-loader";
+import { notifyError } from "@/helpers/helper";
+import { useToken } from "@/hooks/useGetToken";
 
-type CampaignType = "paid-ad" | "influencer";
-
-const Step1 = () => {
+const StepOne = () => {
   const increaseStep = useCampaignStore((s) => s.increaseStep);
-  const { stepOne, setStepOne } = useFormStore();
+  const setCampaignTypeInStore = useCampaignStore((s) => s.setCampaignType);
+  const setCampaignId = useCampaignStore((s) => s.setCampaignId);
+  const { token } = useToken();
+
+  // local form state (default select paid-ad)
+  const [campaignName, setCampaignName] = useState("");
+  const [campaignType, setCampaignType] = useState<CampaignType>("paid_ad");
 
   // errors
   const [nameError, setNameError] = useState<string | null>(null);
   const [typeError, setTypeError] = useState<string | null>(null);
 
-  const isPaid = stepOne.campaignType === "paid-ad";
-  const isInfluencer = stepOne.campaignType === "influencer";
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // keep store in sync with default selection
+    setCampaignTypeInStore("paid_ad");
+  }, [setCampaignTypeInStore]);
+
+  const isPaid = campaignType === "paid_ad";
+  const isInfluencer = campaignType === "influencer_promotion";
 
   const cardBase =
     "flex items-center justify-between rounded-xl border p-5 cursor-pointer transition";
@@ -32,14 +48,15 @@ const Step1 = () => {
   const validate = () => {
     let ok = true;
 
-    if (!stepOne.campaignName.trim()) {
+    if (!campaignName.trim()) {
       setNameError("Campaign name is required.");
       ok = false;
     } else {
       setNameError(null);
     }
 
-    if (!stepOne.campaignType) {
+    // default selected, kept for safety
+    if (!campaignType) {
       setTypeError("Please select a campaign type.");
       ok = false;
     } else {
@@ -47,6 +64,43 @@ const Step1 = () => {
     }
 
     return ok;
+  };
+
+  //api calling
+  const handleNext = async () => {
+    if (!validate()) return;
+    setLoading(true);
+
+    try {
+      const payload = {
+        campaignName: campaignName.trim(),
+        campaignType,
+      };
+
+      console.log(payload)
+
+      const res = await axiosInstance.post("/campaign", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.status === 201) {
+        setCampaignId(res.data?.data?.id);
+      }
+
+      // save campaign type in z-store for later usage
+      setCampaignTypeInStore(payload.campaignType);
+
+      increaseStep();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          "Something went wrong. Please try again.";
+        notifyError(message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,16 +117,13 @@ const Step1 = () => {
 
           <Input
             placeholder="Enter Campaign Name"
-            value={stepOne.campaignName}
+            value={campaignName}
             onChange={(e) => {
-              setStepOne({
-                campaignName: e.target.value,
-                campaignType: stepOne.campaignType,
-              });
+              setCampaignName(e.target.value);
               if (nameError) setNameError(null);
             }}
             onBlur={() => {
-              if (!stepOne.campaignName.trim())
+              if (!campaignName.trim())
                 setNameError("Campaign name is required.");
             }}
             className={clsx(
@@ -94,19 +145,19 @@ const Step1 = () => {
           </div>
 
           <RadioGroup
-            value={stepOne.campaignType}
+            value={campaignType}
             onValueChange={(v) => {
-              setStepOne({
-                campaignName: stepOne.campaignName,
-                campaignType: v as CampaignType,
-              });
+              const nextType = v as CampaignType;
+              setCampaignType(nextType);
+
               if (typeError) setTypeError(null);
+              setCampaignTypeInStore(nextType);
             }}
             className="space-y-4"
           >
             {/* Paid Ad */}
             <Label
-              htmlFor="paid-ad"
+              htmlFor="paid_ad"
               className={clsx(cardBase, isPaid ? activeCard : inactiveCard)}
             >
               <div className="space-y-1 text-Primary">
@@ -115,8 +166,8 @@ const Step1 = () => {
               </div>
 
               <RadioGroupItem
-                id="paid-ad"
-                value="paid-ad"
+                id="paid_ad"
+                value="paid_ad"
                 className="sr-only"
               />
               <RadioVisual checked={isPaid} />
@@ -124,7 +175,7 @@ const Step1 = () => {
 
             {/* Influencer */}
             <Label
-              htmlFor="influencer"
+              htmlFor="influencer_promotion"
               className={clsx(
                 cardBase,
                 isInfluencer ? activeCard : inactiveCard
@@ -136,8 +187,8 @@ const Step1 = () => {
               </div>
 
               <RadioGroupItem
-                id="influencer"
-                value="influencer"
+                id="influencer_promotion"
+                value="influencer_promotion"
                 className="sr-only"
               />
               <RadioVisual checked={isInfluencer} />
@@ -150,13 +201,11 @@ const Step1 = () => {
         {/* Submit / Next button */}
         <div className="flex justify-end w-full">
           <PrimaryButton
-            onClick={() => {
-              if (!validate()) return;
-              increaseStep();
-            }}
-            className="max-w-24"
+            onClick={handleNext}
+            className="max-w-24 px-8"
+            disabled={loading}
           >
-            Next
+            {loading ? <Loader className="h-4 w-4"/> : "Next"}
           </PrimaryButton>
         </div>
       </CardContent>
@@ -164,9 +213,9 @@ const Step1 = () => {
   );
 };
 
-export default Step1;
+export default StepOne;
 
-//======= radio visual=========
+// radio visual
 function RadioVisual({ checked }: { checked: boolean }) {
   return (
     <div

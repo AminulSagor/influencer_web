@@ -2,10 +2,10 @@ import React from "react";
 type Props = {
   className?: string;
 };
-const Loader = ({ className }: Props) => {
+const Loader = ({ className = "w-6 h-6" }: Props) => {
   return (
     <div
-      className={`w-6 h-6 border-4 border-Primary border-t-transparent rounded-full animate-spin ${className}`}
+      className={`border-4 border-Primary border-t-transparent rounded-full animate-spin ${className}`}
     />
   );
 };

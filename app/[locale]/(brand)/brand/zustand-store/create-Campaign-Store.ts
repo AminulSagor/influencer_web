@@ -1,16 +1,12 @@
+import { campaignStoreType } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { create } from "zustand";
 
-type campaignStoreType = {
-  step: number;
-  increaseStep: () => void;
-  decreaseStep: () => void;
-  open: boolean;
-  toggleOpen: () => void;
-
-  // create campaign data agency
-};
 export const useCampaignStore = create<campaignStoreType>((set) => ({
-  step: 6,
+  step: 4,
+  campaignType: "paid_ad",
+  campaignId: "",
+  setCampaignType: (campaignType) => set({ campaignType }),
+  setCampaignId: (id) => set({ campaignId: id }),
   increaseStep: () =>
     set((state) => ({
       step: state.step + 1,
@@ -19,6 +15,7 @@ export const useCampaignStore = create<campaignStoreType>((set) => ({
     set((state) => ({
       step: state.step - 1,
     })),
+
   open: false,
   toggleOpen: () => set((state) => ({ open: !state.open })),
 }));
