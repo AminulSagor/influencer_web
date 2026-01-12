@@ -13,16 +13,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { BarChart3 } from "lucide-react";
 import { BsEye } from "react-icons/bs";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
+import axiosInstance from "@/lib/axios";
+import axios from "axios";
+import Loader from "@/components/spin-loader";
+import { notifyError } from "@/helpers/helper";
+import { useToken } from "@/hooks/useGetToken";
 
-const Step4 = () => {
+const StepFour = () => {
   return (
     <div className="space-y-4">
       <BudgetCalculatorSection />
@@ -31,9 +35,8 @@ const Step4 = () => {
   );
 };
 
-export default Step4;
+export default StepFour;
 
-/*========= row ===========*/
 const Row = ({
   label,
   value,
@@ -49,102 +52,41 @@ const Row = ({
   </div>
 );
 
-/*========= budgetCalulation ==========*/
 const BudgetCalculatorSection = () => {
-  const { stepFour, setStepFour } = useFormStore();
-  const initialBudget =
-    stepFour.budget > 0 ? stepFour.budget.toLocaleString("en-US") : "";
-  const [budget, setBudget] = useState<string>(initialBudget);
-  const [submittedBudget, setSubmittedBudget] = useState<number | null>(null);
+  const campaignType = useCampaignStore((s) => s.campaignType);
+
+  const [budget, setBudget] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   const MIN_BUDGET = 25000;
   const VAT_PERCENTAGE = 15;
   const AGENCY_FEE_MIN = 5;
   const AGENCY_FEE_MAX = 15;
-  const EXCHANGE_RATE = 122.37; // BDT to USD
+  const EXCHANGE_RATE = 122.37;
 
   const suggestions = [30000, 50000, 80000, 100000];
 
-  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Allow only numbers and commas
-    const numericValue = value.replace(/[^0-9,]/g, "");
-    setBudget(numericValue);
-    setError("");
-  };
+  const numericBudget = useMemo(() => {
+    const n = parseInt((budget || "").replace(/,/g, ""), 10);
+    return Number.isFinite(n) ? n : 0;
+  }, [budget]);
 
-  const handleSuggestionClick = (amount: number) => {
-    const formattedAmount = amount.toLocaleString("en-US");
-    setBudget(formattedAmount);
-    setError("");
-  };
+  const isValidBudget = useMemo(() => {
+    if (!budget.trim()) return false;
+    if (!numericBudget) return false;
+    if (numericBudget < MIN_BUDGET) return false;
+    return true;
+  }, [budget, numericBudget, MIN_BUDGET]);
 
-  const handleSubmit = () => {
-    // Remove commas and convert to number
-    const numericBudget = parseInt(budget.replace(/,/g, ""));
+  const calculated = useMemo(() => {
+    if (!isValidBudget) return null;
 
-    if (!budget || isNaN(numericBudget)) {
-      setError("Please enter a valid budget amount");
-      return;
-    }
-
-    if (numericBudget < MIN_BUDGET) {
-      setError(`Minimum budget is ৳${MIN_BUDGET.toLocaleString("en-US")}`);
-      return;
-    }
-
-    setSubmittedBudget(numericBudget);
-    setError("");
-
-    // Calculate all values
     const vatAmount = numericBudget * (VAT_PERCENTAGE / 100);
     const totalWithVAT = numericBudget + vatAmount;
+
     const agencyFeeMin = totalWithVAT * (AGENCY_FEE_MIN / 100);
     const agencyFeeMax = totalWithVAT * (AGENCY_FEE_MAX / 100);
-    const campaignBudgetMin = totalWithVAT - agencyFeeMin;
-    const campaignBudgetMax = totalWithVAT - agencyFeeMax;
 
-    // Save to Zustand store
-    setStepFour({
-      budget: numericBudget,
-      vatAmount,
-      totalWithVAT,
-      agencyFeeMin,
-      agencyFeeMax,
-      campaignBudgetMin,
-      campaignBudgetMax,
-    });
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSubmit();
-    }
-  };
-
-  // Use store values for calculations if available
-  const calculateValues = () => {
-    if (stepFour.budget > 0) {
-      return {
-        baseBudget: stepFour.budget,
-        vatAmount: stepFour.vatAmount,
-        totalWithVAT: stepFour.totalWithVAT,
-        agencyFeeMin: stepFour.agencyFeeMin,
-        agencyFeeMax: stepFour.agencyFeeMax,
-        campaignBudgetMin: stepFour.campaignBudgetMin,
-        campaignBudgetMax: stepFour.campaignBudgetMax,
-        inDollarsMin: stepFour.campaignBudgetMin / EXCHANGE_RATE,
-        inDollarsMax: stepFour.campaignBudgetMax / EXCHANGE_RATE,
-      };
-    }
-
-    if (!submittedBudget) return null;
-
-    const vatAmount = submittedBudget * (VAT_PERCENTAGE / 100);
-    const totalWithVAT = submittedBudget + vatAmount;
-    const agencyFeeMin = totalWithVAT * (AGENCY_FEE_MIN / 100);
-    const agencyFeeMax = totalWithVAT * (AGENCY_FEE_MAX / 100);
     const campaignBudgetMin = totalWithVAT - agencyFeeMin;
     const campaignBudgetMax = totalWithVAT - agencyFeeMax;
 
@@ -152,7 +94,7 @@ const BudgetCalculatorSection = () => {
     const inDollarsMax = campaignBudgetMax / EXCHANGE_RATE;
 
     return {
-      baseBudget: submittedBudget,
+      baseBudget: numericBudget,
       vatAmount,
       totalWithVAT,
       agencyFeeMin,
@@ -162,30 +104,56 @@ const BudgetCalculatorSection = () => {
       inDollarsMin,
       inDollarsMax,
     };
-  };
+  }, [
+    isValidBudget,
+    numericBudget,
+    VAT_PERCENTAGE,
+    AGENCY_FEE_MIN,
+    AGENCY_FEE_MAX,
+    EXCHANGE_RATE,
+  ]);
 
-  const calculated = calculateValues();
-
-  // Format currency in BDT
-  const formatBDT = (amount: number) => {
-    return `৳${amount.toLocaleString("en-US", {
+  const formatBDT = (amount: number) =>
+    `৳${amount.toLocaleString("en-US", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     })}`;
-  };
 
-  // Format currency in USD
-  const formatUSD = (amount: number) => {
-    return `$${amount.toLocaleString("en-US", {
+  const formatUSD = (amount: number) =>
+    `$${amount.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
+
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const numericValue = value.replace(/[^0-9,]/g, "");
+    setBudget(numericValue);
+
+    const n = parseInt(numericValue.replace(/,/g, ""), 10);
+    if (!numericValue.trim() || !Number.isFinite(n)) {
+      setError("");
+      return;
+    }
+    if (n < MIN_BUDGET) {
+      setError(`Minimum budget is ৳${MIN_BUDGET.toLocaleString("en-US")}`);
+      return;
+    }
+    setError("");
+  };
+
+  const handleSuggestionClick = (amount: number) => {
+    setBudget(amount.toLocaleString("en-US"));
+    if (amount < MIN_BUDGET) {
+      setError(`Minimum budget is ৳${MIN_BUDGET.toLocaleString("en-US")}`);
+    } else {
+      setError("");
+    }
   };
 
   return (
     <Card>
       <CardContent className="space-y-6">
-        {/* Suggestions */}
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-Primary">Suggestions</h3>
           <div className="flex gap-2 flex-wrap">
@@ -194,7 +162,7 @@ const BudgetCalculatorSection = () => {
                 key={amount}
                 type="button"
                 onClick={() => handleSuggestionClick(amount)}
-                className="rounded-full bg-light-green/30 px-3 py-1 text-sm text-Primary cursor-pointer hover:bg-light-green/50 transition-colors"
+                className="rounded-full bg-Secondary px-3 py-1 text-sm text-Primary cursor-pointer hover:bg-light-green/50 transition-colors"
               >
                 {formatBDT(amount)}
               </button>
@@ -202,9 +170,7 @@ const BudgetCalculatorSection = () => {
           </div>
         </div>
 
-        {/* Budget + Quote */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 lg:gap-12 xl:gap-24">
-          {/* Enter Budget */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 lg:gap-12">
           <div className="space-y-2 md:col-span-2">
             <h3 className="text-sm font-semibold text-Primary">
               Enter Budget Amount
@@ -212,11 +178,10 @@ const BudgetCalculatorSection = () => {
 
             <div className="rounded-xl border border-light-gray bg-white p-4">
               <div className="relative">
-                <Input
+                <input
                   value={budget}
                   onChange={handleBudgetChange}
-                  onKeyDown={handleKeyPress}
-                  className="border-none shadow-none focus-visible:ring-0 pr-16"
+                  className="w-full shadow-none pr-16 text-2xl text-light-green border border-white outline-none placeholder:text-sm placeholder:text-dark-gray"
                   placeholder="Enter Budget here..."
                 />
               </div>
@@ -228,24 +193,24 @@ const BudgetCalculatorSection = () => {
               </p>
             </div>
 
-            {/* Net Payable */}
-            <div className="pt-4">
-              <p className="font-semibold text-Primary">
-                Net Payable Budget Amount (Inc. Tax)
-              </p>
-              <h1 className="text-2xl font-semibold text-light-green mt-1">
-                {calculated ? formatBDT(calculated.totalWithVAT) : "৳ 0"}
-              </h1>
-            </div>
+            {campaignType === "paid_ad" && (
+              <div className="pt-4">
+                <p className="font-semibold text-Primary">
+                  Net Payable Budget Amount (Inc. Tax)
+                </p>
+                <h1 className="text-2xl font-semibold text-light-green mt-1">
+                  {calculated ? formatBDT(calculated.totalWithVAT) : "৳ 0"}
+                </h1>
+              </div>
+            )}
           </div>
 
-          {/* Quote */}
-          <div className="space-y-2 md:col-span-4">
+          <div className="space-y-2 md:col-span-3">
             <h3 className="text-sm font-semibold text-Primary">
               Quote (Budget Breakdown)
             </h3>
 
-            <div className="rounded-xl border border-light-green bg-linear-to-r from-light-green/20 to-white p-4 space-y-2 text-sm">
+            <div className="rounded-xl border border-light-green bg-linear-to-r from-Secondary to-white p-4 space-y-2 text-sm">
               <Row
                 label="Base Campaign Budget"
                 value={calculated ? formatBDT(calculated.baseBudget) : "৳0"}
@@ -262,40 +227,53 @@ const BudgetCalculatorSection = () => {
               />
             </div>
 
-            <div className="rounded-xl border border-light-green bg-linear-to-r from-light-green/20 to-white p-4 space-y-2 text-sm">
-              <Row
-                label={`Agency Fee (${AGENCY_FEE_MIN} - ${AGENCY_FEE_MAX}%)`}
-                value={
-                  calculated
-                    ? `${formatBDT(calculated.agencyFeeMin)} - ${formatBDT(
-                        calculated.agencyFeeMax
-                      )}`
-                    : "৳0 - ৳0"
-                }
-              />
-              <div className="border border-light-gray" />
-              <Row
-                label="Campaign Budget Excluding Agency Fee"
-                value={
-                  calculated
-                    ? `${formatBDT(calculated.campaignBudgetMin)} - ${formatBDT(
-                        calculated.campaignBudgetMax
-                      )}`
-                    : "৳0 - ৳0"
-                }
-              />
-              <Row
-                label={`In Dollars ( based on avg. ${EXCHANGE_RATE} BDT/$)`}
-                value={
-                  calculated
-                    ? `${formatUSD(calculated.inDollarsMin)} - ${formatUSD(
-                        calculated.inDollarsMax
-                      )}`
-                    : "$0.00 - $0.00"
-                }
-                bold
-              />
-            </div>
+            {campaignType === "influencer_promotion" && (
+              <div className="pt-4 flex justify-between items-center">
+                <p className="font-semibold text-Primary">
+                  Net Payable Budget Amount (Inc. Tax)
+                </p>
+                <h1 className="text-2xl font-semibold text-light-green mt-1">
+                  {calculated ? formatBDT(calculated.totalWithVAT) : "৳ 0"}
+                </h1>
+              </div>
+            )}
+
+            {campaignType === "paid_ad" && (
+              <div className="rounded-xl border border-light-green bg-linear-to-r from-Secondary to-white p-4 space-y-2 text-sm">
+                <Row
+                  label={`Agency Fee (${AGENCY_FEE_MIN} - ${AGENCY_FEE_MAX}%)`}
+                  value={
+                    calculated
+                      ? `${formatBDT(calculated.agencyFeeMin)} - ${formatBDT(
+                          calculated.agencyFeeMax
+                        )}`
+                      : "৳0 - ৳0"
+                  }
+                />
+                <div className="border border-light-gray" />
+                <Row
+                  label="Campaign Budget Excluding Agency Fee"
+                  value={
+                    calculated
+                      ? `${formatBDT(
+                          calculated.campaignBudgetMin
+                        )} - ${formatBDT(calculated.campaignBudgetMax)}`
+                      : "৳0 - ৳0"
+                  }
+                />
+                <Row
+                  label={`In Dollars ( based on avg. ${EXCHANGE_RATE} BDT/$)`}
+                  value={
+                    calculated
+                      ? `${formatUSD(calculated.inDollarsMin)} - ${formatUSD(
+                          calculated.inDollarsMax
+                        )}`
+                      : "$0.00 - $0.00"
+                  }
+                  bold
+                />
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -303,7 +281,6 @@ const BudgetCalculatorSection = () => {
   );
 };
 
-/* ============= selection ==============*/
 interface NewMilestoneForm {
   title: string;
   subtitle: string;
@@ -316,12 +293,66 @@ interface NewMilestoneForm {
   promotionGoal: string;
 }
 
+type ApiMilestone = {
+  contentTitle: string;
+  platform: string;
+  contentQuantity: string;
+  deliveryDays: number;
+  expectedReach: number;
+  expectedViews: number;
+  expectedLikes: number;
+  expectedComments: number;
+};
+
+const toPlatformEnum = (platform: string) => {
+  const p = platform.trim().toLowerCase();
+  if (p === "facebook") return "facebook";
+  if (p === "instagram") return "instagram";
+  if (p === "youtube") return "youtube";
+  if (p === "tiktok") return "tiktok";
+  if (p === "twitter") return "twitter";
+  if (p === "linkedin") return "linkedin";
+  return p || "instagram";
+};
+
+const extractNumber = (value: string) => {
+  const cleaned = value.replace(/[^0-9]/g, "");
+  const n = parseInt(cleaned, 10);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const CampaignMilestonesSection = () => {
-  const { stepFour, addMilestone, removeMilestone } = useFormStore();
-  const [openId, setOpenId] = useState<number | null>(null);
+  const campaignId = useCampaignStore((s) => s.campaignId);
+  const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
+
+  const [openId, setOpenId] = useState<number | null>(null);
   const [showNewMilestoneForm, setShowNewMilestoneForm] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
+  const [budget, setBudget] = useState<string>("");
+
+  const [milestones, setMilestones] = useState<
+    Array<NewMilestoneForm & { id: number }>
+  >([]);
+
+  const MIN_BUDGET = 25000;
+
+  const numericBudget = useMemo(() => {
+    const n = parseInt((budget || "").replace(/,/g, ""), 10);
+    return Number.isFinite(n) ? n : 0;
+  }, [budget]);
+
+  const platforms = [
+    "Facebook",
+    "YouTube",
+    "Instagram",
+    "TikTok",
+    "Twitter",
+    "LinkedIn",
+  ];
+
   const [newMilestone, setNewMilestone] = useState<NewMilestoneForm>({
     title: "",
     subtitle: "",
@@ -334,28 +365,14 @@ const CampaignMilestonesSection = () => {
     promotionGoal: "",
   });
 
-  const platforms = [
-    "Facebook",
-    "YouTube",
-    "Instagram",
-    "TikTok",
-    "Twitter",
-    "LinkedIn",
-  ];
-
-  const handleAddMilestoneClick = () => {
-    setShowNewMilestoneForm(true);
-  };
+  const handleAddMilestoneClick = () => setShowNewMilestoneForm(true);
 
   const handleInputChange = (field: string, value: string) => {
     setNewMilestone((prev) => ({
       ...prev,
       [field]: value,
     }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handlePromotionTargetChange = (
@@ -369,75 +386,60 @@ const CampaignMilestonesSection = () => {
         [field]: value,
       },
     }));
-    if (errors[`promotionTarget.${field}`]) {
-      setErrors((prev) => ({ ...prev, [`promotionTarget.${field}`]: "" }));
-    }
+    const key = `promotionTarget.${field}`;
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!newMilestone.title.trim()) {
-      newErrors.title = "Title is required";
-    }
-    if (!newMilestone.subtitle.trim()) {
+    if (!newMilestone.title.trim()) newErrors.title = "Title is required";
+    if (!newMilestone.subtitle.trim())
       newErrors.subtitle = "Subtitle is required";
-    }
-    if (!newMilestone.day.trim()) {
-      newErrors.day = "Day is required";
-    }
-    if (!newMilestone.platform.trim()) {
+    if (!newMilestone.day.trim()) newErrors.day = "Day is required";
+    if (!newMilestone.platform.trim())
       newErrors.platform = "Platform is required";
-    }
-    if (!newMilestone.promotionTarget.title.trim()) {
+    if (!newMilestone.promotionTarget.title.trim())
       newErrors["promotionTarget.title"] = "Promotion target title is required";
-    }
-    if (!newMilestone.promotionTarget.amount.trim()) {
+    if (!newMilestone.promotionTarget.amount.trim())
       newErrors["promotionTarget.amount"] =
         "Promotion target amount is required";
-    }
-    if (!newMilestone.promotionGoal.trim()) {
+    if (!newMilestone.promotionGoal.trim())
       newErrors.promotionGoal = "Promotion goal is required";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSaveMilestone = () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    const newMilestoneData = {
-      id: stepFour.milestones.length + 1,
-      title: newMilestone.title,
-      subtitle: newMilestone.subtitle,
-      day: newMilestone.day,
-      platform: newMilestone.platform,
-      promotionTarget: {
-        title: newMilestone.promotionTarget.title,
-        amount: newMilestone.promotionTarget.amount,
+    const id = milestones.length + 1;
+
+    setMilestones((prev) => [
+      ...prev,
+      {
+        id,
+        title: newMilestone.title,
+        subtitle: newMilestone.subtitle,
+        day: newMilestone.day,
+        platform: newMilestone.platform,
+        promotionTarget: {
+          title: newMilestone.promotionTarget.title,
+          amount: newMilestone.promotionTarget.amount,
+        },
+        promotionGoal: newMilestone.promotionGoal,
       },
-      promotionGoal: newMilestone.promotionGoal,
-    };
+    ]);
 
-    // Save to Zustand store
-    addMilestone(newMilestoneData);
-
-    // Reset form
     setNewMilestone({
       title: "",
       subtitle: "",
       day: "",
       platform: "",
-      promotionTarget: {
-        title: "",
-        amount: "",
-      },
+      promotionTarget: { title: "", amount: "" },
       promotionGoal: "",
     });
-
     setErrors({});
   };
 
@@ -448,35 +450,81 @@ const CampaignMilestonesSection = () => {
       subtitle: "",
       day: "",
       platform: "",
-      promotionTarget: {
-        title: "",
-        amount: "",
-      },
+      promotionTarget: { title: "", amount: "" },
       promotionGoal: "",
     });
     setErrors({});
   };
 
   const handleRemoveMilestone = (id: number) => {
-    // Remove from Zustand store
-    removeMilestone(id);
+    setMilestones((prev) => prev.filter((m) => m.id !== id));
+    setOpenId((prev) => (prev === id ? null : prev));
   };
 
-  const handleNextStep = () => {
-    // Check if we have at least one milestone
-    if (stepFour.milestones.length === 0) {
-      alert("Please add at least one campaign milestone");
+  const buildApiMilestones = (): ApiMilestone[] => {
+    return milestones.map((m) => {
+      const deliveryDays = extractNumber(m.day) || 0;
+
+      const expectedReach = extractNumber(m.promotionTarget.amount);
+      const expectedViews = extractNumber(m.promotionTarget.amount);
+      const expectedLikes = extractNumber(m.promotionTarget.amount);
+      const expectedComments = extractNumber(m.promotionTarget.amount);
+
+      return {
+        contentTitle: m.title.trim(),
+        platform: toPlatformEnum(m.platform),
+        contentQuantity: m.subtitle.trim(),
+        deliveryDays,
+        expectedReach,
+        expectedViews,
+        expectedLikes,
+        expectedComments,
+      };
+    });
+  };
+
+  const validateBeforeSubmit = () => {
+    if (milestones.length === 0)
+      return "Please add at least one campaign milestone";
+    return "";
+  };
+
+  const handleNextStep = async () => {
+    const msg = validateBeforeSubmit();
+    if (msg) {
+      notifyError(msg);
       return;
     }
 
-    // Check if we have a budget
-    if (stepFour.budget === 0) {
-      alert("Please enter and calculate your budget");
-      return;
-    }
+    setLoading(true);
+    try {
+      const payload = {
+        baseBudget: numericBudget,
+        milestones: buildApiMilestones(),
+      };
 
-    // Proceed to next step
-    increaseStep();
+      const res = await axiosInstance.patch(
+        `/campaign/${campaignId}/step-4`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.status === 200 || res.status === 201) {
+        increaseStep();
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          "Something went wrong. Please try again.";
+        notifyError(message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -494,21 +542,20 @@ const CampaignMilestonesSection = () => {
           </h3>
         </div>
       </CardHeader>
+
       <CardContent>
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-          {/* LEFT: Create Milestone */}
           <div className="space-y-4 w-full">
             <DottedButton onClick={handleAddMilestoneClick}>
               Add another Milestone
             </DottedButton>
 
-            {/* New Milestone Form */}
             {showNewMilestoneForm && (
               <Card className="rounded-xl border border-light-green shadow-none">
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <p className="bg-light-green flex justify-center p-3 text-sm text-white items-center w-5 h-5 rounded-full">
-                      {stepFour.milestones.length + 1}
+                      {milestones.length + 1}
                     </p>
                     <p className="flex items-center gap-4 text-Primary">
                       <button
@@ -539,7 +586,9 @@ const CampaignMilestonesSection = () => {
                           handleInputChange("title", e.target.value)
                         }
                         placeholder="Ex: Initial Content Creation"
-                        className={errors.title ? "border-red-500" : ""}
+                        className={`w-full focus-visible:ring-1 ${
+                          errors.title ? "border-red-500" : ""
+                        }`}
                       />
                       {errors.title && (
                         <p className="text-xs text-red-500 mt-1">
@@ -547,7 +596,7 @@ const CampaignMilestonesSection = () => {
                         </p>
                       )}
                     </div>
-                    {/* Platform Selector */}
+
                     <div className="flex-1">
                       <Select
                         value={newMilestone.platform}
@@ -556,7 +605,9 @@ const CampaignMilestonesSection = () => {
                         }
                       >
                         <SelectTrigger
-                          className={errors.platform ? "border-red-500" : ""}
+                          className={`w-full focus-visible:ring-1 ${
+                            errors.platform ? "border-red-500" : ""
+                          }`}
                         >
                           <SelectValue placeholder="Select Platform" />
                         </SelectTrigger>
@@ -585,7 +636,9 @@ const CampaignMilestonesSection = () => {
                           handleInputChange("subtitle", e.target.value)
                         }
                         placeholder="1 Sponsered Video / 1 Post"
-                        className={errors.subtitle ? "border-red-500" : ""}
+                        className={`w-full focus-visible:ring-1 ${
+                          errors.subtitle ? "border-red-500" : ""
+                        }`}
                       />
                       {errors.subtitle && (
                         <p className="text-xs text-red-500 mt-1">
@@ -601,7 +654,9 @@ const CampaignMilestonesSection = () => {
                           handleInputChange("day", e.target.value)
                         }
                         placeholder="DAY 1"
-                        className={errors.day ? "border-red-500" : ""}
+                        className={`w-full focus-visible:ring-1 ${
+                          errors.day ? "border-red-500" : ""
+                        }`}
                       />
                       {errors.day && (
                         <p className="text-xs text-red-500 mt-1">
@@ -612,7 +667,6 @@ const CampaignMilestonesSection = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* LEFT: Promotion Target */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-Primary" />
@@ -634,7 +688,7 @@ const CampaignMilestonesSection = () => {
                             handlePromotionTargetChange("title", e.target.value)
                           }
                           placeholder="Reach"
-                          className={`h-10 ${
+                          className={`w-full h-10 focus-visible:ring-1 ${
                             errors["promotionTarget.title"]
                               ? "border-red-500"
                               : ""
@@ -660,7 +714,7 @@ const CampaignMilestonesSection = () => {
                             )
                           }
                           placeholder="2.5M"
-                          className={`h-10 ${
+                          className={`w-full h-10 focus-visible:ring-1 ${
                             errors["promotionTarget.amount"]
                               ? "border-red-500"
                               : ""
@@ -674,7 +728,6 @@ const CampaignMilestonesSection = () => {
                       </div>
                     </div>
 
-                    {/* RIGHT: Promotion Goal */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-Primary" />
@@ -690,7 +743,7 @@ const CampaignMilestonesSection = () => {
                             handleInputChange("promotionGoal", e.target.value)
                           }
                           placeholder="Describe Your Milestone Goal Here, What You Want To Achieve Specifically"
-                          className={`min-h-[120px] resize-none ${
+                          className={`w-full min-h-[120px] resize-none focus-visible:ring-1 ${
                             errors.promotionGoal ? "border-red-500" : ""
                           }`}
                         />
@@ -707,13 +760,11 @@ const CampaignMilestonesSection = () => {
             )}
           </div>
 
-          <div className="h-auto bg-light-gray w-1 border" />
+          <div className="h-auto bg-light-gray w-1" />
 
-          {/* RIGHT: Milestone List */}
-          <div className="w-full items-stretch">
+          <div className="w-full items-stretch relative">
             <div className="space-y-4 min-h-[200px]">
-              {stepFour.milestones.length === 0 ? (
-                // Empty state - centered message
+              {milestones.length === 0 ? (
                 <div className="flex flex-col items-center justify-center  border border-dashed border-light-gray rounded-xl py-10">
                   <div className="text-center">
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-light-green/10">
@@ -728,9 +779,8 @@ const CampaignMilestonesSection = () => {
                   </div>
                 </div>
               ) : (
-                // Milestones list
                 <div className="space-y-4">
-                  {stepFour.milestones.map((m) => (
+                  {milestones.map((m) => (
                     <div
                       key={m.id}
                       className={`border border-light-green p-3 md:px-5 rounded-lg ${
@@ -760,7 +810,6 @@ const CampaignMilestonesSection = () => {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveMilestone(m.id)}
-                                className=""
                               >
                                 <X className="w-5 h-5" />
                               </button>
@@ -783,7 +832,6 @@ const CampaignMilestonesSection = () => {
                         </div>
 
                         <div className="px-3">
-                          {/* Text */}
                           <div className="space-y-1">
                             <p className="text-sm text-dark-gray">
                               {m.subtitle}
@@ -811,7 +859,7 @@ const CampaignMilestonesSection = () => {
               )}
             </div>
 
-            <div className="flex justify-end mt-10">
+            <div className="flex justify-end mt-10 lg:absolute bottom-0 right-0">
               <div className="flex gap-4">
                 <SecondaryButton onClick={() => decreaseStep()}>
                   Previous
@@ -820,9 +868,10 @@ const CampaignMilestonesSection = () => {
                 <PrimaryButton
                   className="px-8"
                   onClick={handleNextStep}
-                  type="submit"
+                  type="button"
+                  disabled={loading}
                 >
-                  Next
+                  {loading ? <Loader className="h-4 w-4" /> : "Next"}
                 </PrimaryButton>
               </div>
             </div>
