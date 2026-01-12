@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Star } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,8 +21,19 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import UserCardItem from "./user-card-item";
 import { Influencer } from "./user-type";
-import { Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PlatformIcon from "./platform-icon";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 function capitalizeFirstLetter(text?: string): string {
   if (!text) return "";
@@ -34,7 +45,7 @@ interface Props {
 }
 
 const UserCard = ({ users }: Props) => {
-  const [view, setView] = useState<"list" | "grid">("grid");
+  const [view, setView] = useState<"list" | "grid">("list");
   const pathname = usePathname();
   const url = pathname.split("/").pop();
   const cardTitle = capitalizeFirstLetter(url);
@@ -136,14 +147,6 @@ const UserCard = ({ users }: Props) => {
                   <SelectItem value="delete">Nov 20 - Dec 20</SelectItem>
                 </SelectContent>
               </Select>
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm">
-                  <SelectValue placeholder="Influencer Promotion" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="delete">Influencer Promotion</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </div>
@@ -158,15 +161,93 @@ const UserCard = ({ users }: Props) => {
                     </TableHead>
                     <TableHead className="text-white">Name</TableHead>
                     <TableHead className="text-white">Niche</TableHead>
-                    <TableHead className="text-white">Pending Items</TableHead>
-                    <TableHead className="text-white">
-                      Approval Progress
+                    <TableHead className="text-white">Ratings</TableHead>
+                    <TableHead className="text-white">Platforms</TableHead>
+                    <TableHead className="text-white text-center">
+                      Active Jobs
                     </TableHead>
-                    <TableHead className="text-white text-right">
-                      Actions
+                    <TableHead className="text-white text-center">
+                      Job Done
+                    </TableHead>
+                    <TableHead className="text-white text-center">
+                      Revenue
+                    </TableHead>
+                    <TableHead className="text-white text-center">
+                      Status
                     </TableHead>
                   </TableRow>
                 </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <Checkbox />
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={"/admin/users/influencer/" + user.id}
+                          className="flex items-center gap-2"
+                        >
+                          <Avatar>
+                            <AvatarImage src={"/img"} />
+                            <AvatarFallback>{user.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <p>{user.name}</p>
+                        </Link>
+                      </TableCell>
+                      <TableCell>{user.niche.join(", ")}</TableCell>
+                      <TableCell className="flex items-center gap-2">
+                        <span>
+                          <Star
+                            size={20}
+                            className="fill-yellow-500 text-yellow-500"
+                          />
+                        </span>
+                        <span className="font-semibold">{user.rating}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex">
+                          {user.platforms.map((platform) => {
+                            return (
+                              <PlatformIcon
+                                className="text-light-green"
+                                key={platform.link}
+                                size={20}
+                                platform={platform}
+                              />
+                            );
+                          })}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-center font-semibold">
+                          {user.activeJobs}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-center font-semibold">
+                          {user.jobDone}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-center font-semibold">
+                          {user.revenue}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={
+                            user.status === "Approved"
+                              ? "lightGreen"
+                              : "destructive"
+                          }
+                        >
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
               </Table>
             </div>
           </div>

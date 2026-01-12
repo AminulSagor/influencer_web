@@ -1,15 +1,13 @@
-import CollapsibleCard from "./collapsible-card";
-import { VerificationStatus } from "../../../_components/verification-data";
 import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import CollapsibleCard from "../../../../campaigns/campaign-details/_components/collapsible-card";
 
 interface PayoutSettings {
   id: number;
@@ -20,7 +18,7 @@ interface PayoutSettings {
   routingNumber?: string;
   branchName?: string;
   phoneNumber?: string;
-  status: VerificationStatus;
+  status: string;
 }
 
 interface Props {
@@ -132,7 +130,7 @@ const PayoutSettings = ({ payoutSettings }: Props) => {
 
               <ItemActions>
                 <Button variant={buttonVariant} size="sm">
-                  {payout.status}
+                  View
                 </Button>
               </ItemActions>
             </Item>
