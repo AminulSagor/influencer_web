@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { userData } from "../../../_components/user-data";
 import InfoCard from "../_components/info-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +8,7 @@ import PayoutSettings from "../_components/payout-setting";
 import ProfileDetailsCard from "../_components/profile-details-card";
 import NidInfoCard from "../_components/nid-info-card";
 import DeliveryLocationCard from "../_components/delivery-location-card";
+import CampaignTable from "../_components/campaign-table";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -80,7 +75,7 @@ const page = async ({ params }: Props) => {
         </div>
       </div>
       <div>
-        <Tabs defaultValue="profile_details">
+        <Tabs defaultValue="campaigns">
           <TabsList className="w-full bg-white">
             <TabsTrigger
               value="profile_details"
@@ -128,7 +123,7 @@ const page = async ({ params }: Props) => {
           </TabsContent>
           <TabsContent value="campaigns" className="space-y-4">
             <div>
-             
+              <CampaignTable />
             </div>
           </TabsContent>
         </Tabs>
