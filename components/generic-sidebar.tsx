@@ -18,17 +18,28 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const stripLocale = (path: string) =>
+  path.replace(/^\/(en|bn)(?=\/|$)/, "") || "/";
+
+const isActiveRoute = (currentPath: string, itemPath: string) => {
+  const current = stripLocale(currentPath);
+  const target = stripLocale(itemPath);
+
+  if (target === "/") return current === "/";
+
+  // exact match or nested routes
+  return current === target || current.startsWith(`${target}/`);
+};
+
 export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();
   const { logout, loading } = useLogout();
 
-  // remove locale (/en | /bn)
-  const normalizedPath = pathname.replace(/^\/(en|bn)/, "");
+  const normalizedPath = stripLocale(pathname);
 
-  // show logout on all influencer routes
+  // show logout on all influencer/brand routes (locale removed)
   const showLogout =
-    normalizedPath.startsWith("/influencer") ||
-    normalizedPath.startsWith("/brand");
+    normalizedPath.startsWith("/influencer") || normalizedPath.startsWith("/brand");
 
   return (
     <Sidebar>
@@ -43,7 +54,7 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {items.map((item) => {
-                  const isActive = normalizedPath.startsWith(item.url);
+                  const active = isActiveRoute(pathname, item.url);
                   const Icon = item.icon;
 
                   return (
@@ -52,13 +63,10 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                         asChild
                         className={cn(
                           "py-5 border transition-all duration-150 hover:bg-[#7A9B57] hover:text-white",
-                          isActive && "bg-[#7A9B57] text-white"
+                          active && "bg-[#7A9B57] text-white"
                         )}
                       >
-                        <Link
-                          href={item.url}
-                          className="flex items-center gap-2"
-                        >
+                        <Link href={item.url} className="flex items-center gap-2">
                           <Icon className="w-5 h-5" />
                           <span>{item.title}</span>
                         </Link>
@@ -66,15 +74,19 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                     </SidebarMenuItem>
                   );
                 })}
+
                 {/* ================= LOGOUT (ACTION, NOT LINK) ================= */}
                 {showLogout && (
-                  <div className="">
+                  <div>
                     <button
                       onClick={logout}
-                      className="flex w-full items-center gap-2 rounded-md border px-2 py-3
-                         text-[#2D5016] hover:bg-red-50 hover:text-red-600
-                         transition"
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-md border px-2 py-3",
+                        "text-[#2D5016] hover:bg-red-50 hover:text-red-600 transition",
+                        loading && "opacity-60 cursor-not-allowed"
+                      )}
                       disabled={loading}
+                      type="button"
                     >
                       <LogOut className="w-5 h-5" />
                       <span className="font-medium">
