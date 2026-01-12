@@ -25,12 +25,22 @@ import axios from "axios";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/helpers/helper";
 import { useToken } from "@/hooks/useGetToken";
+import {
+  ApiMilestone,
+  NewMilestoneForm,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
+
+type BudgetPros = {
+  budget: string;
+  setBudget: (v: string) => void;
+};
 
 const StepFour = () => {
+  const [budget, setBudget] = useState<string>("");
   return (
     <div className="space-y-4">
-      <BudgetCalculatorSection />
-      <CampaignMilestonesSection />
+      <BudgetCalculatorSection budget={budget} setBudget={setBudget} />
+      <CampaignMilestonesSection budget={budget} />
     </div>
   );
 };
@@ -52,10 +62,8 @@ const Row = ({
   </div>
 );
 
-const BudgetCalculatorSection = () => {
+const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
   const campaignType = useCampaignStore((s) => s.campaignType);
-
-  const [budget, setBudget] = useState<string>("");
   const [error, setError] = useState<string>("");
 
   const MIN_BUDGET = 25000;
@@ -281,29 +289,6 @@ const BudgetCalculatorSection = () => {
   );
 };
 
-interface NewMilestoneForm {
-  title: string;
-  subtitle: string;
-  day: string;
-  platform: string;
-  promotionTarget: {
-    title: string;
-    amount: string;
-  };
-  promotionGoal: string;
-}
-
-type ApiMilestone = {
-  contentTitle: string;
-  platform: string;
-  contentQuantity: string;
-  deliveryDays: number;
-  expectedReach: number;
-  expectedViews: number;
-  expectedLikes: number;
-  expectedComments: number;
-};
-
 const toPlatformEnum = (platform: string) => {
   const p = platform.trim().toLowerCase();
   if (p === "facebook") return "facebook";
@@ -321,7 +306,7 @@ const extractNumber = (value: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const CampaignMilestonesSection = () => {
+const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const campaignId = useCampaignStore((s) => s.campaignId);
   const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
@@ -331,18 +316,9 @@ const CampaignMilestonesSection = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const [budget, setBudget] = useState<string>("");
-
   const [milestones, setMilestones] = useState<
     Array<NewMilestoneForm & { id: number }>
   >([]);
-
-  const MIN_BUDGET = 25000;
-
-  const numericBudget = useMemo(() => {
-    const n = parseInt((budget || "").replace(/,/g, ""), 10);
-    return Number.isFinite(n) ? n : 0;
-  }, [budget]);
 
   const platforms = [
     "Facebook",
@@ -486,6 +462,9 @@ const CampaignMilestonesSection = () => {
   const validateBeforeSubmit = () => {
     if (milestones.length === 0)
       return "Please add at least one campaign milestone";
+    else if (!budget) {
+      return "Please enter your budget first";
+    }
     return "";
   };
 
@@ -499,7 +478,7 @@ const CampaignMilestonesSection = () => {
     setLoading(true);
     try {
       const payload = {
-        baseBudget: numericBudget,
+        baseBudget: Number(budget),
         milestones: buildApiMilestones(),
       };
 
@@ -544,7 +523,7 @@ const CampaignMilestonesSection = () => {
       </CardHeader>
 
       <CardContent>
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 xl:gap-9">
           <div className="space-y-4 w-full">
             <DottedButton onClick={handleAddMilestoneClick}>
               Add another Milestone

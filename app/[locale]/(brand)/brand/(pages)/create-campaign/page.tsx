@@ -16,7 +16,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 
 const CampaignCreatePage = () => {
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(5);
   const [enabled, setEnabled] = useState<boolean>(false);
   const toggleOpen = useCampaignStore((s) => s.toggleOpen);
   const open = useCampaignStore((s) => s.open);

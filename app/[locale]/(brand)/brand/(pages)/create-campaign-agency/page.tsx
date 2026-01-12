@@ -1,5 +1,5 @@
 "use client";
-import Step5 from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-5";
+
 import Stepper from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/stepper";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
@@ -14,6 +14,7 @@ import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-
 import StepTwoInfluencer from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2-influencer";
 import StepThree from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-3";
 import StepFour from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-4";
+import StepFive from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-5";
 
 const CreateCampaingAgencyPage = () => {
   const step = useCampaignStore((s) => s.step);
@@ -66,7 +67,11 @@ const CreateCampaingAgencyPage = () => {
         ) : step === 4 ? (
           <p>Provide your budget and set milestones with placements</p>
         ) : step === 5 ? (
-          <p>Upload you campaign Contents for the influencers</p>
+          campaignType === "influencer_promotion" ? (
+            <p>Upload you campaign Contents for the influencers</p>
+          ) : (
+            <p>Upload you campaign Contents for the Agencies</p>
+          )
         ) : (
           <p>REVIEW YOUR CAMPAIGN</p>
         )}
@@ -87,7 +92,7 @@ const CreateCampaingAgencyPage = () => {
         ) : step === 4 ? (
           <StepFour />
         ) : step === 5 ? (
-          <Step5 />
+          <StepFive />
         ) : (
           <FinalStep />
         )}
