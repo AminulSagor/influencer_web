@@ -1,71 +1,50 @@
 import { Card } from "@/components/ui/card";
 import { Check, X } from "lucide-react";
 import { FiInstagram } from "react-icons/fi";
-import {
-  FaYoutube,
-  FaTiktok,
-  FaClapperboard,
-  FaFacebookF,
-  FaTwitter,
-  FaLinkedin,
-} from "react-icons/fa6";
+import { FaClapperboard } from "react-icons/fa6";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
+import type {
+  CampaignApi,
+  SocialPlatform,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
+import { getPlatformIcon } from "@/helpers/platforms";
 
-const PlacementConfirmCard = () => {
+type Props = {
+  campaign: CampaignApi | null;
+};
+
+const PlacementConfirmCard = ({ campaign }: Props) => {
   const toggleOpen = useCampaignStore((s) => s.toggleOpen);
-  const { stepOne, stepFour } = useFormStore();
 
-  // Format budget with commas
-  const formatBudget = (amount: number) => {
-    return amount ? `৳${amount.toLocaleString("en-US")}` : "৳0";
+  const formatBudget = (amount: string | null | undefined) => {
+    const n = Number(amount ?? 0);
+    if (Number.isNaN(n)) return "৳0";
+    return `৳${n.toLocaleString("en-US")}`;
   };
 
-  // Get unique platforms from milestones
-  const getUniquePlatforms = () => {
-    const platforms = stepFour.milestones.map(
-      (milestone) => milestone.platform
-    );
-    return [...new Set(platforms)];
-  };
+  const uniquePlatforms: SocialPlatform[] = Array.from(
+    new Set(
+      [
+        ...(campaign?.client?.platform ?? []),
+        ...(campaign?.milestones?.map((m) => m.platform) ?? []),
+      ].map((p) => p.toLowerCase())
+    )
+  );
 
-  const uniquePlatforms = getUniquePlatforms();
-
-  // Function to get icon for each platform
-  const getPlatformIcon = (platform: string) => {
-    const platformLower = platform.toLowerCase();
-
-    switch (platformLower) {
-      case "instagram":
-        return <FiInstagram className="h-5 w-5 text-white" />;
-      case "youtube":
-        return <FaYoutube className="h-5 w-5 text-white" />;
-      case "tiktok":
-        return <FaTiktok className="h-5 w-5 text-white" />;
-      case "facebook":
-        return <FaFacebookF className="h-5 w-5 text-white" />;
-      case "twitter":
-        return <FaTwitter className="h-5 w-5 text-white" />;
-      case "linkedin":
-        return <FaLinkedin className="h-5 w-5 text-white" />;
-      default:
-        return <FiInstagram className="h-5 w-5 text-white" />; // Default icon
-    }
-  };
+  const campaignName = campaign?.campaignName || "Summer Fashion Campaign";
+  const budget = campaign?.totalBudget ?? campaign?.baseBudget ?? "0";
 
   return (
     <Card className="relative w-[390px] border bg-white rounded-2xl shadow-xl p-6">
-      {/* Close */}
       <button
         type="button"
         aria-label="Close"
         className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-Primary/70 hover:bg-light-green/30 hover:text-Primary transition"
-        onClick={() => toggleOpen()}
+        onClick={toggleOpen}
       >
         <X className="h-5 w-5" />
       </button>
 
-      {/* Top icon */}
       <div className="flex flex-col items-center text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-light-green">
           <Check className="h-8 w-8 text-white" />
@@ -84,7 +63,6 @@ const PlacementConfirmCard = () => {
         </p>
       </div>
 
-      {/* Summary box */}
       <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green p-3 text-white">
         <div className="flex items-start gap-4">
           <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
@@ -92,11 +70,9 @@ const PlacementConfirmCard = () => {
           </div>
 
           <div className="flex-1">
-            <p className="text-sm font-medium text-white/90">
-              {stepOne.campaignName || "Summer Fashion Campaign"}
-            </p>
+            <p className="text-sm font-medium text-white/90">{campaignName}</p>
             <p className="mt-1 text-3xl font-bold tracking-tight">
-              {formatBudget(stepFour.totalWithVAT || stepFour.budget || 0)}
+              {formatBudget(budget)}
             </p>
           </div>
         </div>
@@ -110,7 +86,7 @@ const PlacementConfirmCard = () => {
             {uniquePlatforms.length > 0 ? (
               uniquePlatforms.slice(0, 3).map((platform, index) => (
                 <span
-                  key={index}
+                  key={`${platform}-${index}`}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/15"
                   title={platform}
                 >

@@ -77,8 +77,6 @@ const StepOne = () => {
         campaignType,
       };
 
-      console.log(payload)
-
       const res = await axiosInstance.post("/campaign", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -205,7 +203,7 @@ const StepOne = () => {
             className="max-w-24 px-8"
             disabled={loading}
           >
-            {loading ? <Loader className="h-4 w-4"/> : "Next"}
+            {loading ? <Loader className="h-4 w-4" /> : "Next"}
           </PrimaryButton>
         </div>
       </CardContent>

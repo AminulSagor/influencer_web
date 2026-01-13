@@ -320,14 +320,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     Array<NewMilestoneForm & { id: number }>
   >([]);
 
-  const platforms = [
-    "Facebook",
-    "YouTube",
-    "Instagram",
-    "TikTok",
-    "Twitter",
-    "LinkedIn",
-  ];
+  const platforms = ["Facebook", "YouTube", "Instagram", "TikTok"];
 
   const [newMilestone, setNewMilestone] = useState<NewMilestoneForm>({
     title: "",
@@ -478,7 +471,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     setLoading(true);
     try {
       const payload = {
-        baseBudget: Number(budget),
+        baseBudget: extractNumber(budget),
         milestones: buildApiMilestones(),
       };
 
@@ -500,6 +493,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
           err.message ||
           "Something went wrong. Please try again.";
         notifyError(message);
+        console.log(err);
       }
     } finally {
       setLoading(false);

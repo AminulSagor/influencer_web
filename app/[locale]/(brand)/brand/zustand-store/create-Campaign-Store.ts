@@ -2,7 +2,7 @@ import { campaignStoreType } from "@/app/[locale]/(brand)/brand/types/client-typ
 import { create } from "zustand";
 
 export const useCampaignStore = create<campaignStoreType>((set) => ({
-  step: 1,
+  step: 2,
   campaignType: "paid_ad",
   campaignId: "",
   setCampaignType: (campaignType) => set({ campaignType }),

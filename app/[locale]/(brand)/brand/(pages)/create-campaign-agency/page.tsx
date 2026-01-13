@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MoveLeft } from "lucide-react";
 import Link from "next/link";
 import FinalStep from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/final-step";
-import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/placement-confirm-card";
 import StepOne from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-1";
-import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2";
+import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2-agency";
 import StepTwoInfluencer from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-2-influencer";
 import StepThree from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-3";
 import StepFour from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/step-4";
@@ -18,7 +17,6 @@ import StepFive from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agenc
 
 const CreateCampaingAgencyPage = () => {
   const step = useCampaignStore((s) => s.step);
-  const open = useCampaignStore((s) => s.open);
   const campaignType = useCampaignStore((s) => s.campaignType);
 
   // const open = useCampaignStore((s) => s.open);
@@ -97,14 +95,6 @@ const CreateCampaingAgencyPage = () => {
           <FinalStep />
         )}
       </div>
-
-      {/* ============= footer ==================*/}
-
-      {open && (
-        <div className="absolute top-30 z-50 left-1/2 -translate-x-1/2">
-          <PlacementConfirmCard />
-        </div>
-      )}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/cre
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Info, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -14,6 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axiosInstance from "@/lib/axios";
+import { useToken } from "@/hooks/useGetToken";
+import { notifyError } from "@/helpers/helper";
 import {
   CAMPAIGN_NICHES,
   PRODUCT_TYPES,
@@ -22,9 +25,12 @@ import {
 type FieldErrors = Partial<
   Record<"productType" | "campaignNiche" | "preferred" | "notPreferred", string>
 >;
-
 const StepTwoInfluencer = () => {
   const { increaseStep, decreaseStep } = useCampaignStore();
+  const { token } = useToken();
+
+  const [CAMPAIGN_NICHESS, set_CAMPAIGN_NICHES] = useState<string[]>([]);
+  const [PRODUCT_TYPESS, set_PRODUCT_TYPES] = useState<string[]>([]);
 
   const [productType, setProductType] = useState<string>("");
   const [campaignNiche, setCampaignNiche] = useState<string>("");
@@ -38,6 +44,47 @@ const StepTwoInfluencer = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const normalizeName = (v: string) => v.trim().replace(/\s+/g, " ");
+
+  //fetching product type
+  useEffect(() => {
+    if (!token) return;
+
+    (async () => {
+      try {
+        const res = await axiosInstance.get("/campaign/get/niches", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 200 && Array.isArray(res.data)) {
+          const niches = res.data.map((v: { name: string }) => v.name);
+          set_CAMPAIGN_NICHES(niches);
+        }
+      } catch (error) {
+        if (error) {
+          set_CAMPAIGN_NICHES(CAMPAIGN_NICHES);
+        }
+      }
+    })();
+
+    (async () => {
+      try {
+        const res = await axiosInstance.get("/campaign/get/product-types", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.status === 200 && Array.isArray(res.data)) {
+          const products = res.data.map((v: { name: string }) => v.name);
+          set_PRODUCT_TYPES(products);
+        }
+      } catch (error) {
+        if (error) {
+          notifyError("");
+        }
+      }
+    })();
+  }, [token]);
+
+  //fetching niches
 
   const splitToNames = (raw: string) =>
     raw
@@ -91,8 +138,6 @@ const StepTwoInfluencer = () => {
     if (!productType) nextErrors.productType = "Please select a product type.";
     if (!campaignNiche)
       nextErrors.campaignNiche = "Please select a campaign niche.";
-
-    // you said “add all field validation” → making both required
     if (pref.length === 0)
       nextErrors.preferred = "Please add at least 1 preferred influencer.";
     if (notPref.length === 0)
@@ -153,7 +198,7 @@ const StepTwoInfluencer = () => {
             </SelectTrigger>
 
             <SelectContent className="max-h-64">
-              {PRODUCT_TYPES.map((opt) => (
+              {PRODUCT_TYPESS.map((opt) => (
                 <SelectItem key={opt} value={opt}>
                   {opt}
                 </SelectItem>
@@ -192,7 +237,7 @@ const StepTwoInfluencer = () => {
             </SelectTrigger>
 
             <SelectContent className="max-h-64">
-              {CAMPAIGN_NICHES.map((opt) => (
+              {CAMPAIGN_NICHESS.map((opt) => (
                 <SelectItem key={opt} value={opt}>
                   {opt}
                 </SelectItem>

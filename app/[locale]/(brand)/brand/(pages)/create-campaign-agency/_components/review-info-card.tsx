@@ -1,5 +1,4 @@
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import {
   FaMusic,
@@ -9,62 +8,72 @@ import {
   FaLinkedin,
 } from "react-icons/fa6";
 import { FiInstagram } from "react-icons/fi";
+import type { CampaignApi, SocialPlatform } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-const ReviewInfoCard = () => {
-  const { stepOne, stepFour } = useFormStore();
+type Props = {
+  campaign: CampaignApi | null;
+};
 
-  // Function to get icon based on platform text
+const ReviewInfoCard = ({ campaign }: Props) => {
   const getPlatformIcon = (platform: string) => {
     const platformLower = platform.toLowerCase();
 
     switch (platformLower) {
       case "instagram":
-        return <FiInstagram size={22} />;
+        return <FiInstagram size={16} />;
       case "youtube":
-        return <FaYoutube size={22} />;
+        return <FaYoutube size={16} />;
       case "tiktok":
-        return <FaMusic size={22} />;
+        return <FaMusic size={16} />;
       case "facebook":
-        return <FaFacebookF size={22} />;
+        return <FaFacebookF size={16} />;
       case "twitter":
-        return <FaTwitter size={22} />;
+        return <FaTwitter size={16} />;
       case "linkedin":
-        return <FaLinkedin size={22} />;
+        return <FaLinkedin size={16} />;
       default:
         return null;
     }
   };
 
-  // Get unique platforms from all milestones
-  const getUniquePlatforms = () => {
-    const platforms = stepFour.milestones.map(
-      (milestone) => milestone.platform
-    );
-    return [...new Set(platforms)]; // Remove duplicates
-  };
+  const platformsFromClient: SocialPlatform[] = Array.isArray(campaign?.client?.platform)
+    ? campaign!.client.platform
+    : [];
 
-  const uniquePlatforms = getUniquePlatforms();
+  const platformsFromMilestones: SocialPlatform[] = Array.isArray(campaign?.milestones)
+    ? campaign!.milestones.map((m) => m.platform).filter(Boolean)
+    : [];
+
+  const uniquePlatforms = Array.from(
+    new Set([...platformsFromClient, ...platformsFromMilestones].map((p) => p.toLowerCase()))
+  );
+
+  const totalBudget = campaign?.totalBudget ?? campaign?.baseBudget ?? "0";
+
+  const brandName = campaign?.client?.brandName ?? "StyleCo.";
+  const profileImg = campaign?.client?.profileImg || "/avatar/avatar.png";
 
   return (
     <Card>
       <CardContent className="space-y-3">
         <h1 className="text-Primary font-semibold text-lg">
-          {stepOne.campaignName || "Campaign Name"}
+          {campaign?.campaignName || "Campaign Name"}
         </h1>
-        <div className="bg-linear-to-r from-light-green/10 to-white border-light-green text-light-green rounded-lg border p-4">
+
+        <div className="bg-linear-to-r from-Secondary to-white border-light-green text-light-green rounded-lg border p-4">
           <h3 className="text-xs text-Primary">Your Campaign Budget</h3>
-          <h1 className="text-2xl font-semibold">৳ {stepFour.budget || "0"}</h1>
+          <h1 className="text-2xl font-semibold">৳ {totalBudget}</h1>
         </div>
 
         <div className="flex gap-2 items-center">
           <Image
-            src={"/avatar/avatar.png"}
+            src={profileImg}
             height={26}
             width={26}
             alt="profile-image"
             className="rounded-full"
           />
-          <h2 className="text-orange">StyleCo.</h2>
+          <h2 className="text-orange">{brandName}</h2>
         </div>
 
         <div className="flex gap-10 items-center">
@@ -75,9 +84,9 @@ const ReviewInfoCard = () => {
                 const icon = getPlatformIcon(platform);
                 return icon ? (
                   <span
-                    key={index}
+                    key={`${platform}-${index}`}
                     className="p-1 rounded-sm bg-light-green text-white"
-                    title={platform} // Show platform name on hover
+                    title={platform}
                   >
                     {icon}
                   </span>

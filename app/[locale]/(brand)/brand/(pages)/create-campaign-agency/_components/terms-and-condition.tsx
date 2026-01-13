@@ -1,5 +1,4 @@
 import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card";
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
 import {
   BarChart3,
   CheckCircle2,
@@ -12,14 +11,14 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
+import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-const TermsAndConditionCard = () => {
-  const stepThree = useFormStore((s) => s.stepThree);
+type Props = { campaign: CampaignApi | null };
 
+const TermsAndConditionCard = ({ campaign }: Props) => {
   return (
     <CollapseCard title="Brief and Terms & Conditions">
       <div className="flex flex-col lg:flex-row justify-between gap-12">
-        {/* ================= LEFT : CAMPAIGN BRIEF ================= */}
         <div className="space-y-3 w-full">
           <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-4 md:pt-0">
             <FileText className="w-5 h-5" />
@@ -30,13 +29,15 @@ const TermsAndConditionCard = () => {
             <Section
               icon={Target}
               title="Campaign Goals"
-              text={stepThree.campaignGoals || "No campaign goals provided"}
+              text={campaign?.campaignGoals || "No campaign goals provided"}
             />
 
             <Section
               icon={Package}
               title="Product/Service Details"
-              text={stepThree.productDetails || "No product details provided"}
+              text={
+                campaign?.productServiceDetails || "No product details provided"
+              }
             />
 
             <div>
@@ -44,52 +45,53 @@ const TermsAndConditionCard = () => {
                 <ClipboardList className="w-4 h-4" />
                 <h4>Campaign Timeline</h4>
               </div>
+
               <div className="text-sm text-gray-600 space-y-1 ml-1">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <span>
-                    Starting Date: {stepThree.startingDate || "Not specified"}
+                    Starting Date: {campaign?.startingDate || "Not specified"}
                   </span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  <span>Duration: {stepThree.duration || "Not specified"}</span>
+                  <span>Duration: {campaign?.duration ?? "Not specified"}</span>
                 </div>
               </div>
             </div>
 
-            <DoDont dos={stepThree.dos || ""} donts={stepThree.donts || ""} />
+            <DoDont dos={campaign?.dos || ""} donts={campaign?.donts || ""} />
           </div>
         </div>
 
-        {/* separator */}
         <div className="h-auto w-0.5 bg-dark-gray items-start" />
 
-        {/* ================= RIGHT : TERMS & CONDITIONS ================= */}
         <div className="space-y-3 w-full">
           <div className="flex items-center gap-2 text-Primary font-semibold">
             <ScrollText className="w-5 h-5" />
             <span className="text-base">Terms & Conditions</span>
           </div>
+
           <div className="space-y-3">
             <Section
               icon={BarChart3}
               title="Reporting Requirements"
               text={
-                stepThree.reportingRequirements ||
+                campaign?.reportingRequirements ||
                 "No reporting requirements specified"
               }
             />
             <Section
               icon={ScrollText}
               title="Usage Rights"
-              text={stepThree.usageRights || "No usage rights specified"}
+              text={campaign?.usageRights || "No usage rights specified"}
             />
             <Section
               icon={ScrollText}
               title="Terms & Conditions"
               text={
-                stepThree.termsConditions || "No terms and conditions specified"
+                campaign?.termsConditions || "No terms and conditions specified"
               }
             />
           </div>
@@ -123,21 +125,13 @@ function Section({
   );
 }
 
-interface DoDontProps {
-  dos: string;
-  donts: string;
-}
-
-function DoDont({ dos, donts }: DoDontProps) {
-  // Function to convert text to bullet points
+function DoDont({ dos, donts }: { dos: string; donts: string }) {
   const textToBulletPoints = (text: string): string[] => {
     if (!text.trim()) return ["No items specified"];
-
-    // Split by new lines or bullet points
     return text
       .split(/[\n•]/)
       .map((item) => item.trim())
-      .filter((item) => item.length > 0)
+      .filter(Boolean)
       .map((item) => (item.startsWith("•") ? item.substring(1).trim() : item));
   };
 

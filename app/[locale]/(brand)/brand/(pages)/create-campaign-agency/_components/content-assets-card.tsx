@@ -1,12 +1,14 @@
 "use client";
 
-import { useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Download, Film, FileText, File, Album } from "lucide-react";
-import React from "react";
+import type { CampaignApi, CampaignAssetApi } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-const ContentAssetsCard = () => {
-  const stepFive = useFormStore((s) => s.stepFive);
+type Props = { campaign: CampaignApi | null };
+
+const ContentAssetsCard = ({ campaign }: Props) => {
+  const assets: CampaignAssetApi[] = Array.isArray(campaign?.assets) ? campaign!.assets : [];
+  const contentAssets = assets.filter((a) => (a.category || "").toLowerCase() === "content");
 
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image")) return <Album size={20} />;
@@ -15,11 +17,12 @@ const ContentAssetsCard = () => {
     return <File size={20} />;
   };
 
-  const getFileSize = (size: number) => {
-    if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    }
-    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  const getFileSize = (size: string | null) => {
+    if (!size) return "N/A";
+    const n = Number(size);
+    if (Number.isNaN(n)) return "N/A";
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / 1024 / 1024).toFixed(1)} MB`;
   };
 
   return (
@@ -29,29 +32,30 @@ const ContentAssetsCard = () => {
           <Download size={20} />
           <h2>Content Assets</h2>
           <span className="text-sm text-gray-500 font-normal ml-2">
-            ({stepFive.contentAssets.length} files)
+            ({contentAssets.length} files)
           </span>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
         <div className="space-y-3">
-          {stepFive.contentAssets.length > 0 ? (
-            stepFive.contentAssets.map((asset, index) => {
-              const ext = asset.name.split(".").pop()?.toUpperCase();
+          {contentAssets.length > 0 ? (
+            contentAssets.map((asset, index) => {
+              const name = asset.fileName || "Unnamed file";
+              const mime = asset.mimeType || asset.assetType || "";
+              const ext = name.split(".").pop()?.toUpperCase();
+
               return (
                 <div
                   key={asset.id || index}
                   className="flex justify-between bg-linear-to-r from-white to-light-green/10 items-center rounded-xl py-3 px-4 text-sm border-light-green border"
                 >
                   <div className="flex gap-3 items-center">
-                    <span className="text-light-green">
-                      {getFileIcon(asset.type)}
-                    </span>
+                    <span className="text-light-green">{getFileIcon(mime)}</span>
                     <div className="text-sm">
-                      <p className="text-light-green">{asset.name}</p>
+                      <p className="text-light-green">{name}</p>
                       <p className="text-xs text-light-green">
-                        {ext} - {getFileSize(asset.size)}
+                        {ext} - {getFileSize(asset.fileSize)}
                       </p>
                     </div>
                   </div>

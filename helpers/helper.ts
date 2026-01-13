@@ -27,7 +27,7 @@ export const handlePhoneFormat = (phoneNumber: string) => {
   return formattedPhone;
 };
 
-//decoder 
+//decoder
 export type UserRole = "client" | "influencer" | "agency";
 type JwtPayload = { role?: UserRole; isVerified?: boolean; exp?: number };
 
@@ -37,7 +37,10 @@ export function decodeJwtPayload(token: string): JwtPayload | null {
     if (!payload) return null;
 
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "="
+    );
     const json = Buffer.from(padded, "base64").toString("utf8");
     return JSON.parse(json);
   } catch {
