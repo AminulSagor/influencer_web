@@ -26,7 +26,7 @@ export interface NewMilestoneForm {
   promotionGoal: string;
 }
 
-export type ApiMilestone = {
+export type ApiMilestoneInfluencer = {
   contentTitle: string;
   platform: string;
   contentQuantity: string;
@@ -36,6 +36,24 @@ export type ApiMilestone = {
   expectedLikes: number;
   expectedComments: number;
 };
+
+export type ApiMilestonePaidAd = {
+  contentTitle: string;
+  platform: string;
+  contentQuantity: string;
+  deliveryDays: number;
+  promotionGoal: string;
+  order: number;
+} & Partial<{
+  expectedReach: number;
+  expectedViews: number;
+  expectedLikes: number;
+  expectedComments: number;
+}>;
+
+export type ApiMilestone = ApiMilestoneInfluencer | ApiMilestonePaidAd;
+
+
 
 //respone uplaoad file
 export type SignedUrlResponse = {

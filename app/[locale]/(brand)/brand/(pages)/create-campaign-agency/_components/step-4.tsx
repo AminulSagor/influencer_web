@@ -4,7 +4,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DottedButton from "@/app/[locale]/(brand)/brand/_components/dotted-button";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
-import { X, Check, ChevronUp } from "lucide-react";
+import {
+  X,
+  Check,
+  ChevronUp,
+  Target,
+  Eye,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -310,19 +318,28 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const campaignId = useCampaignStore((s) => s.campaignId);
   const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
+  const campaignType = useCampaignStore((s) => s.campaignType);
 
   const [openId, setOpenId] = useState<number | null>(null);
   const [showNewMilestoneForm, setShowNewMilestoneForm] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
+  // ✅ store extra metric fields (only used when campaignType !== "paid_ad")
+  type MilestoneLocalForm = NewMilestoneForm & {
+    expectedReach?: string;
+    expectedViews?: string;
+    expectedLikes?: string;
+    expectedComments?: string;
+  };
+
   const [milestones, setMilestones] = useState<
-    Array<NewMilestoneForm & { id: number }>
+    Array<MilestoneLocalForm & { id: number }>
   >([]);
 
   const platforms = ["Facebook", "YouTube", "Instagram", "TikTok"];
 
-  const [newMilestone, setNewMilestone] = useState<NewMilestoneForm>({
+  const [newMilestone, setNewMilestone] = useState<MilestoneLocalForm>({
     title: "",
     subtitle: "",
     day: "",
@@ -332,6 +349,10 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
       amount: "",
     },
     promotionGoal: "",
+    expectedReach: "",
+    expectedViews: "",
+    expectedLikes: "",
+    expectedComments: "",
   });
 
   const handleAddMilestoneClick = () => setShowNewMilestoneForm(true);
@@ -359,6 +380,21 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
+  //keep same UI, just bind metric inputs to state
+  const handleMetricChange = (
+    field:
+      | "expectedReach"
+      | "expectedViews"
+      | "expectedLikes"
+      | "expectedComments",
+    value: string
+  ) => {
+    // allow numbers + common suffix chars (k,m,.) for display
+    const cleaned = value.replace(/[^0-9kKmM. ]/g, "");
+    setNewMilestone((prev) => ({ ...prev, [field]: cleaned }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -368,13 +404,26 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     if (!newMilestone.day.trim()) newErrors.day = "Day is required";
     if (!newMilestone.platform.trim())
       newErrors.platform = "Platform is required";
-    if (!newMilestone.promotionTarget.title.trim())
-      newErrors["promotionTarget.title"] = "Promotion target title is required";
-    if (!newMilestone.promotionTarget.amount.trim())
-      newErrors["promotionTarget.amount"] =
-        "Promotion target amount is required";
-    if (!newMilestone.promotionGoal.trim())
-      newErrors.promotionGoal = "Promotion goal is required";
+
+    if (campaignType === "paid_ad") {
+      if (!newMilestone.promotionTarget.title.trim())
+        newErrors["promotionTarget.title"] =
+          "Promotion target title is required";
+      if (!newMilestone.promotionTarget.amount.trim())
+        newErrors["promotionTarget.amount"] =
+          "Promotion target amount is required";
+      if (!newMilestone.promotionGoal.trim())
+        newErrors.promotionGoal = "Promotion goal is required";
+    } else {
+      if (!newMilestone.expectedReach?.trim())
+        newErrors.expectedReach = "Reach is required";
+      if (!newMilestone.expectedViews?.trim())
+        newErrors.expectedViews = "Views is required";
+      if (!newMilestone.expectedLikes?.trim())
+        newErrors.expectedLikes = "Likes is required";
+      if (!newMilestone.expectedComments?.trim())
+        newErrors.expectedComments = "Comments is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -398,6 +447,10 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
           amount: newMilestone.promotionTarget.amount,
         },
         promotionGoal: newMilestone.promotionGoal,
+        expectedReach: newMilestone.expectedReach || "",
+        expectedViews: newMilestone.expectedViews || "",
+        expectedLikes: newMilestone.expectedLikes || "",
+        expectedComments: newMilestone.expectedComments || "",
       },
     ]);
 
@@ -408,6 +461,10 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
       platform: "",
       promotionTarget: { title: "", amount: "" },
       promotionGoal: "",
+      expectedReach: "",
+      expectedViews: "",
+      expectedLikes: "",
+      expectedComments: "",
     });
     setErrors({});
   };
@@ -421,6 +478,10 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
       platform: "",
       promotionTarget: { title: "", amount: "" },
       promotionGoal: "",
+      expectedReach: "",
+      expectedViews: "",
+      expectedLikes: "",
+      expectedComments: "",
     });
     setErrors({});
   };
@@ -434,20 +495,38 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     return milestones.map((m) => {
       const deliveryDays = extractNumber(m.day) || 0;
 
-      const expectedReach = extractNumber(m.promotionTarget.amount);
-      const expectedViews = extractNumber(m.promotionTarget.amount);
-      const expectedLikes = extractNumber(m.promotionTarget.amount);
-      const expectedComments = extractNumber(m.promotionTarget.amount);
+      if (campaignType === "paid_ad") {
+        const metricTitle = (m.promotionTarget?.title || "").toLowerCase();
+        const metricValue = extractNumber(m.promotionTarget?.amount || "");
+
+        const base: ApiMilestone = {
+          contentTitle: m.title.trim(),
+          platform: toPlatformEnum(m.platform),
+          contentQuantity: m.subtitle.trim(),
+          deliveryDays,
+          promotionGoal: (m.promotionGoal || "").trim(),
+          order: m.id,
+        };
+
+        if (metricTitle.includes("reach")) base.expectedReach = metricValue;
+        else if (metricTitle.includes("view")) base.expectedViews = metricValue;
+        else if (metricTitle.includes("like")) base.expectedLikes = metricValue;
+        else if (metricTitle.includes("comment"))
+          base.expectedComments = metricValue;
+        else base.expectedViews = metricValue; // safe default
+
+        return base;
+      }
 
       return {
         contentTitle: m.title.trim(),
         platform: toPlatformEnum(m.platform),
         contentQuantity: m.subtitle.trim(),
         deliveryDays,
-        expectedReach,
-        expectedViews,
-        expectedLikes,
-        expectedComments,
+        expectedReach: extractNumber(m.expectedReach || ""),
+        expectedViews: extractNumber(m.expectedViews || ""),
+        expectedLikes: extractNumber(m.expectedLikes || ""),
+        expectedComments: extractNumber(m.expectedComments || ""),
       };
     });
   };
@@ -455,9 +534,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const validateBeforeSubmit = () => {
     if (milestones.length === 0)
       return "Please add at least one campaign milestone";
-    else if (!budget) {
-      return "Please enter your budget first";
-    }
+    else if (!budget) return "Please enter your budget first";
     return "";
   };
 
@@ -474,7 +551,6 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
         baseBudget: extractNumber(budget),
         milestones: buildApiMilestones(),
       };
-
       const res = await axiosInstance.patch(
         `/campaign/${campaignId}/step-4`,
         payload,
@@ -500,8 +576,35 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     }
   };
 
+  const METRICS = [
+    {
+      key: "expectedReach" as const,
+      label: "Reach",
+      icon: <Target className="w-4 h-4 text-light-green" />,
+      placeholder: "0",
+    },
+    {
+      key: "expectedViews" as const,
+      label: "Views",
+      icon: <Eye className="w-4 h-4 text-light-green" />,
+      placeholder: "0",
+    },
+    {
+      key: "expectedLikes" as const,
+      label: "Likes",
+      icon: <Heart className="w-4 h-4 text-light-green" />,
+      placeholder: "0",
+    },
+    {
+      key: "expectedComments" as const,
+      label: "Comments",
+      icon: <MessageCircle className="w-4 h-4 text-light-green" />,
+      placeholder: "0",
+    },
+  ];
+
   return (
-    <Card className="border-none">
+    <Card>
       <CardHeader>
         <div className="flex items-center gap-1">
           <Image
@@ -517,7 +620,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
       </CardHeader>
 
       <CardContent>
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 xl:gap-9">
+        <div className="flex flex-col xl:flex-row gap-4 lg:gap-6 xl:gap-9">
           <div className="space-y-4 w-full">
             <DottedButton onClick={handleAddMilestoneClick}>
               Add another Milestone
@@ -639,7 +742,100 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {campaignType === "paid_ad" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5 text-Primary" />
+                          <p className="text-base font-semibold text-Primary">
+                            Promotion Target
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <BsEye className="w-4 h-4 text-light-green" />
+                            <Label className="text-xs font-semibold text-Primary">
+                              Target Title (Ex: Reach, Like, Follow, Comments)
+                            </Label>
+                          </div>
+                          <Input
+                            value={newMilestone.promotionTarget.title}
+                            onChange={(e) =>
+                              handlePromotionTargetChange(
+                                "title",
+                                e.target.value
+                              )
+                            }
+                            placeholder="Reach"
+                            className={`w-full h-10 focus-visible:ring-1 ${
+                              errors["promotionTarget.title"]
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors["promotionTarget.title"] && (
+                            <p className="text-xs text-red-500">
+                              {errors["promotionTarget.title"]}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label className="text-xs font-semibold text-Primary">
+                            Target Amount (Ex: 300k, 2.5M)
+                          </Label>
+                          <Input
+                            value={newMilestone.promotionTarget.amount}
+                            onChange={(e) =>
+                              handlePromotionTargetChange(
+                                "amount",
+                                e.target.value
+                              )
+                            }
+                            placeholder="2.5M"
+                            className={`w-full h-10 focus-visible:ring-1 ${
+                              errors["promotionTarget.amount"]
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors["promotionTarget.amount"] && (
+                            <p className="text-xs text-red-500">
+                              {errors["promotionTarget.amount"]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5 text-Primary" />
+                          <p className="text-base font-semibold text-Primary">
+                            Promotion Goal
+                          </p>
+                        </div>
+
+                        <div>
+                          <Textarea
+                            value={newMilestone.promotionGoal}
+                            onChange={(e) =>
+                              handleInputChange("promotionGoal", e.target.value)
+                            }
+                            placeholder="Describe Your Milestone Goal Here, What You Want To Achieve Specifically"
+                            className={`w-full min-h-[120px] placeholder:text-light-gray resize-none focus-visible:ring-1 ${
+                              errors.promotionGoal ? "border-red-500" : ""
+                            }`}
+                          />
+                          {errors.promotionGoal && (
+                            <p className="text-xs text-red-500 mt-1">
+                              {errors.promotionGoal}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-Primary" />
@@ -647,87 +843,35 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
                           Promotion Target
                         </p>
                       </div>
-
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <BsEye className="w-4 h-4 text-light-green" />
-                          <Label className="text-xs font-semibold text-Primary">
-                            Target Title (Ex: Reach, Like, Follow, Comments)
-                          </Label>
-                        </div>
-                        <Input
-                          value={newMilestone.promotionTarget.title}
-                          onChange={(e) =>
-                            handlePromotionTargetChange("title", e.target.value)
-                          }
-                          placeholder="Reach"
-                          className={`w-full h-10 focus-visible:ring-1 ${
-                            errors["promotionTarget.title"]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        />
-                        {errors["promotionTarget.title"] && (
-                          <p className="text-xs text-red-500">
-                            {errors["promotionTarget.title"]}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label className="text-xs font-semibold text-Primary">
-                          Target Amount (Ex: 300k, 2.5M)
-                        </Label>
-                        <Input
-                          value={newMilestone.promotionTarget.amount}
-                          onChange={(e) =>
-                            handlePromotionTargetChange(
-                              "amount",
-                              e.target.value
-                            )
-                          }
-                          placeholder="2.5M"
-                          className={`w-full h-10 focus-visible:ring-1 ${
-                            errors["promotionTarget.amount"]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        />
-                        {errors["promotionTarget.amount"] && (
-                          <p className="text-xs text-red-500">
-                            {errors["promotionTarget.amount"]}
-                          </p>
-                        )}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {METRICS.map(({ key, label, icon, placeholder }) => (
+                          <div key={label} className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              {icon}
+                              <Label className="text-sm font-semibold text-light-green">
+                                {label}
+                              </Label>
+                            </div>
+                            <Input
+                              className={`border rounded-md h-9 px-2 focus:border-light-green placeholder:text-light-gray focus-visible:ring-1 ${
+                                errors[key] ? "border-red-500" : ""
+                              }`}
+                              placeholder={placeholder}
+                              value={(newMilestone[key] as string) || ""}
+                              onChange={(e) =>
+                                handleMetricChange(key, e.target.value)
+                              }
+                            />
+                            {errors[key] && (
+                              <p className="text-xs text-red-500 mt-1">
+                                {errors[key]}
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-Primary" />
-                        <p className="text-base font-semibold text-Primary">
-                          Promotion Goal
-                        </p>
-                      </div>
-
-                      <div>
-                        <Textarea
-                          value={newMilestone.promotionGoal}
-                          onChange={(e) =>
-                            handleInputChange("promotionGoal", e.target.value)
-                          }
-                          placeholder="Describe Your Milestone Goal Here, What You Want To Achieve Specifically"
-                          className={`w-full min-h-[120px] resize-none focus-visible:ring-1 ${
-                            errors.promotionGoal ? "border-red-500" : ""
-                          }`}
-                        />
-                        {errors.promotionGoal && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.promotionGoal}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -812,15 +956,27 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
                             <p className="text-xs text-gray-400">
                               Platform: {m.platform}
                             </p>
-                            {m.promotionTarget && (
+
+                            {campaignType === "paid_ad" ? (
+                              <>
+                                {m.promotionTarget && (
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    Target: {m.promotionTarget.title} -{" "}
+                                    {m.promotionTarget.amount}
+                                  </div>
+                                )}
+                                {m.promotionGoal && (
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    Goal: {m.promotionGoal.substring(0, 50)}...
+                                  </div>
+                                )}
+                              </>
+                            ) : (
                               <div className="text-xs text-gray-400 mt-1">
-                                Target: {m.promotionTarget.title} -{" "}
-                                {m.promotionTarget.amount}
-                              </div>
-                            )}
-                            {m.promotionGoal && (
-                              <div className="text-xs text-gray-400 mt-1">
-                                Goal: {m.promotionGoal.substring(0, 50)}...
+                                Reach: {m.expectedReach || "0"} | Views:{" "}
+                                {m.expectedViews || "0"} | Likes:{" "}
+                                {m.expectedLikes || "0"} | Comments:{" "}
+                                {m.expectedComments || "0"}
                               </div>
                             )}
                           </div>
