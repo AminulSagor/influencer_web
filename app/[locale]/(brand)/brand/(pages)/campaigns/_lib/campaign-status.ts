@@ -7,7 +7,7 @@ export type CampaignTabKey =
 
 export const STATUS_QUERY: Record<CampaignTabKey, string> = {
   active: "active",
-  budgeting_quoting: "budgeting_quoting",
+  budgeting_quoting: "quoting",
   completed: "completed",
   draft: "draft",
   cancelled: "cancelled",

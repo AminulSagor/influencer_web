@@ -9,14 +9,29 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-const TermsAndConditionCard = () => {
-  const t = useTranslations("influencer.campaign-details");
+type Props = {
+  campaign: CampaignApi;
+};
+
+const toBullets = (text?: string | null) => {
+  if (!text) return [];
+  return text
+    .split(/\r?\n/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .map((x) => (x.startsWith("•") ? x.slice(1).trim() : x));
+};
+
+export default function TermsAndConditionCard({ campaign }: Props) {
+  const dos = toBullets(campaign.dos);
+  const donts = toBullets(campaign.donts);
+
   return (
-    <CollapseCard title="Breif and Terms & condition">
+    <CollapseCard title="Brief and Terms & condition">
       <div className="flex flex-col lg:flex-row justify-between gap-12">
-        {/* ================= LEFT : CAMPAIGN BRIEF ================= */}
+        {/* LEFT */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-4 md:pt-0">
             <FileText className="w-5 h-5" />
@@ -27,59 +42,55 @@ const TermsAndConditionCard = () => {
             <Section
               icon={Target}
               title="Campaign Goals"
-              text="Promote our new summer skincare line to Gen Z and Millennial audiences. Focus on natural ingredients and sustainable packaging."
+              text={campaign.campaignGoals || "—"}
             />
 
             <Section
               icon={Package}
               title="Product/Service Details"
-              text="Highlight key product benefits, ingredients, and value proposition clearly and authentically."
+              text={campaign.productServiceDetails || "—"}
             />
 
             <div>
               <div className="flex items-center gap-2 text-Primary font-medium mb-1">
                 <ClipboardList className="w-4 h-4" />
-                <h4>Content Requirements</h4>
+                <h4>Terms & Conditions</h4>
               </div>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 ml-1">
-                <li>Minimum 2 Instagram Feed Posts</li>
-                <li>3 Stories With Swipe Up Links</li>
-                <li>1 YouTube Short (30–60 Seconds)</li>
-                <li>3 TikTok Videos Featuring Trending Sounds</li>
-              </ul>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {campaign.termsConditions || "—"}
+              </p>
             </div>
-            <DoDont />
+
+            <DoDont dos={dos} donts={donts} />
           </div>
         </div>
 
-        {/* separator */}
         <div className="h-auto w-0.5 bg-dark-gray items-start" />
 
-        {/* ================= RIGHT : TERMS & CONDITIONS ================= */}
+        {/* RIGHT */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-Primary font-semibold">
             <ScrollText className="w-5 h-5" />
-            <span className="text-base ">Terms & Conditions</span>
+            <span className="text-base">Terms & Conditions</span>
           </div>
+
           <div className="space-y-3">
             <Section
               icon={BarChart3}
               title="Reporting Requirements"
-              text="Provide analytics screenshots 7 days post-publication including reach, engagement, and CTR."
+              text={campaign.reportingRequirements || "—"}
             />
             <Section
               icon={ScrollText}
-              title={t("Usage Rights")}
-              text="Brand may reuse submitted content on official channels with proper attribution."
+              title="Usage Rights"
+              text={campaign.usageRights || "—"}
             />
           </div>
         </div>
       </div>
     </CollapseCard>
   );
-};
-
-export default TermsAndConditionCard;
+}
 
 function Section({
   icon: Icon,
@@ -101,34 +112,41 @@ function Section({
   );
 }
 
-function DoDont() {
-  const t = useTranslations("influencer.campaign-details");
+function DoDont({ dos, donts }: { dos: string[]; donts: string[] }) {
   return (
     <div className="space-y-3 mt-4">
       <div className="rounded-xl border border-green-200 bg-green-50 p-4">
         <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
-          <span>{t("Do’s")}</span>
+          <span>Do’s</span>
         </div>
-        <ul className="text-sm text-green-700 space-y-1">
-          <li>• Show authentic usage</li>
-          <li>• Tag @StyleCo in all posts</li>
-          <li>• Use natural lighting</li>
-          <li>• Include discount codes</li>
-        </ul>
+
+        {dos.length ? (
+          <ul className="text-sm text-green-700 space-y-1">
+            {dos.map((x, i) => (
+              <li key={i}>• {x}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-green-700/70">—</p>
+        )}
       </div>
 
       <div className="rounded-xl border border-red-200 bg-red-50 p-4">
         <div className="flex items-center gap-2 text-red-600 font-medium mb-2">
           <XCircle className="w-4 h-4" />
-          <span>{t("Don’ts")}</span>
+          <span>Don’ts</span>
         </div>
-        <ul className="text-sm text-red-600 space-y-1">
-          <li>• Misrepresent product claims</li>
-          <li>• Use misleading filters</li>
-          <li>• Post without brand tags</li>
-          <li>• Alter messaging without approval</li>
-        </ul>
+
+        {donts.length ? (
+          <ul className="text-sm text-red-600 space-y-1">
+            {donts.map((x, i) => (
+              <li key={i}>• {x}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-red-600/70">—</p>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  CampaignApi,
+  CampaignMilestoneApi,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaClock } from "react-icons/fa";
@@ -9,11 +12,15 @@ import PercentageBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_compo
 import ListShell from "../list-shell";
 // import { formatBDT, toNumberSafe, formatDateLabel } from "../../_lib/card-helpers";
 import { getPlatformIcon } from "@/helpers/platforms";
-import { formatBDT, formatDateLabel, toNumberSafe } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import {
+  formatBDT,
+  formatDateLabel,
+  toNumberSafe,
+} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 
 function getPlatformsFromCampaign(c: CampaignApi): string[] {
   const raw = (c.milestones ?? [])
-    .map((m: any) => String(m?.platform ?? "").trim())
+    .map((m: CampaignMilestoneApi) => String(m?.platform ?? "").trim())
     .filter(Boolean);
   return Array.from(new Set(raw));
 }
@@ -120,7 +127,7 @@ function ActiveCard({ c }: { c: CampaignApi }) {
 
         {/* CTA */}
         <Button asChild variant="outline" className="w-full rounded-xl">
-          <Link href={`/brand/campaign-details-influencer/${c.id}`}>
+          <Link href={`/brand/campaign-details/${c.id}`}>
             View Campaign Details
           </Link>
         </Button>

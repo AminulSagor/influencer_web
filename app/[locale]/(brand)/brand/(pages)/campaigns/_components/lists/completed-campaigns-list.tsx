@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import type { CampaignApi, CampaignMilestoneApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  CampaignApi,
+  CampaignMilestoneApi,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ListShell from "../list-shell";
-import { formatBDT, formatDateLabel, toNumberSafe } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import {
+  formatBDT,
+  formatDateLabel,
+  toNumberSafe,
+} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import { getPlatformIcon } from "@/helpers/platforms";
-
 
 function getPlatformsFromCampaign(c: CampaignApi): string[] {
   const raw = (c.milestones ?? [])
@@ -72,7 +78,9 @@ function CompletedCard({ c }: { c: CampaignApi }) {
           {Array.from({ length: 5 }).map((_, i) => (
             <span
               key={i}
-              className={i < rating ? "text-yellow-400" : "text-muted-foreground"}
+              className={
+                i < rating ? "text-yellow-400" : "text-muted-foreground"
+              }
             >
               ★
             </span>
@@ -80,7 +88,7 @@ function CompletedCard({ c }: { c: CampaignApi }) {
         </div>
 
         <Button asChild variant="outline" className="w-full rounded-xl">
-          <Link href={`/brand/campaign-details-influencer/${c.id}`}>
+          <Link href={`/brand/campaign-details/${c.id}`}>
             View Campaign Details
           </Link>
         </Button>
