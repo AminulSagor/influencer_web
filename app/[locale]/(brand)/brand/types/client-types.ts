@@ -53,8 +53,6 @@ export type ApiMilestonePaidAd = {
 
 export type ApiMilestone = ApiMilestoneInfluencer | ApiMilestonePaidAd;
 
-
-
 //respone uplaoad file
 export type SignedUrlResponse = {
   signedUrl: string;
@@ -177,6 +175,29 @@ export interface CampaignAssetApi {
 
   campaignId: string;
   createdAt: string;
+}
+
+//assign infos
+interface AssignedMember {
+  id: number,
+  name : string,
+  image : string,
+  type : string
+}
+
+export interface CampaignSummary {
+  id: string;
+  campaignName: string;
+  campaignType: CampaignType;
+  status: string;
+  totalBudget: number;
+  assignedTo: AssignedMember[];
+  platforms: string[];
+  deadline: string;
+  progress: number;
+  budgetPendingAmount: number;
+  negotiationRevisedTimes: number;
+  totalQuotationsReceived: number;
 }
 
 // ===== CAMPAIGN =====
