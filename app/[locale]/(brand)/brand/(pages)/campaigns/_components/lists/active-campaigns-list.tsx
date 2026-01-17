@@ -10,6 +10,7 @@ import ListShell from "../list-shell";
 import { getPlatformIcon } from "@/helpers/platforms";
 import { buildDueLabelFromDeadline, formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
+import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 
 export default function ActiveCampaignsList({
   campaigns,
@@ -42,24 +43,13 @@ function ActiveCard({ c }: { c: CampaignSummary }) {
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
 
-  const isPaid = c.campaignType === "paid_ad";
-  const isInfluencerPromotion = c.campaignType === "influencer_promotion";
-
-  const assignText = (() => {
-    if (isPaid) {
-      return !isAssigned && "No agency assigned";
-    }
-    if (isInfluencerPromotion) {
-      return !isAssigned && "No influencer assigned";
-    }
-    return "";
-  })();
+  const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
 
   const dueLabel = buildDueLabelFromDeadline(c.deadline);
 
   return (
-    <Card className="rounded-2xl border border-border/70 bg-white shadow-sm">
-      <CardContent className="p-5 space-y-4">
+    <Card>
+      <CardContent className="space-y-4">
         {/* Title */}
         <div className="space-y-1">
           <h3 className="text-Primary font-semibold leading-tight">
@@ -69,7 +59,7 @@ function ActiveCard({ c }: { c: CampaignSummary }) {
         </div>
 
         <div className="flex gap-2 items-center">
-          <AvatarStack />
+          <AvatarStack users={c.assignedTo}/>
           {!isAssigned && (
             <p className="text-xs text-dark-gray">{assignText}</p>
           )}

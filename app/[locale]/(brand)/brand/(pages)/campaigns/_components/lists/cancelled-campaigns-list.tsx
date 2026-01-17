@@ -1,89 +1,19 @@
 "use client";
 
-import type {
-  CampaignApi,
-  CampaignMilestoneApi,
-} from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
-import {
-  formatBDT,
-  formatDateLabel,
-  toNumberSafe,
-} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import { getPlatformIcon } from "@/helpers/platforms";
-
-function getPlatformsFromCampaign(c: CampaignApi): string[] {
-  const raw = (c.milestones ?? [])
-    .map((m: CampaignMilestoneApi) => String(m?.platform ?? "").trim())
-    .filter(Boolean);
-  return Array.from(new Set(raw));
-}
-
-function calcDeadlineIso(c: CampaignApi) {
-  if (!c.startingDate || !c.duration) return null;
-  const d = new Date(c.startingDate);
-  d.setDate(d.getDate() + c.duration);
-  return d.toISOString();
-}
-
-function CancelledCard({ c }: { c: CampaignApi }) {
-  const offered = toNumberSafe(c.totalBudget) || toNumberSafe(c.baseBudget);
-  const platforms = getPlatformsFromCampaign(c);
-
-  const deadlineIso = calcDeadlineIso(c);
-  const deadlineText = formatDateLabel(deadlineIso);
-
-  return (
-    <Card className="rounded-2xl border border-border/70 bg-white shadow-sm opacity-60">
-      <CardContent className="p-5 space-y-4">
-        <div className="space-y-1">
-          <h3 className="text-Primary font-semibold leading-tight">
-            {c.campaignName}
-          </h3>
-          <p className="text-dark-gray text-xs">Influencer Promotion</p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
-          <div className="flex items-center gap-2">
-            {platforms.length ? (
-              platforms.map((p) => (
-                <span key={p} className="leading-none">
-                  {getPlatformIcon(p, "h-6 w-6 text-light-green")}
-                </span>
-              ))
-            ) : (
-              <span className="text-muted-foreground text-sm">—</span>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-muted/30 px-4 py-4 space-y-1">
-          <p className="text-Primary text-xs font-semibold">Offered</p>
-          <p className="text-light-green text-3xl font-semibold">
-            {formatBDT(offered)}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between text-muted-foreground">
-          <p className="flex items-center gap-2 text-sm">
-            <FaClock />
-            Deadline
-          </p>
-          <p className="text-sm">{deadlineText}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { formatDeadline } from "@/helpers/helper";
+import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 
 export default function CancelledCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignApi[];
+  campaigns: CampaignSummary[];
   loading?: boolean;
 }) {
   return (
@@ -98,5 +28,66 @@ export default function CancelledCampaignsList({
         ))}
       </div>
     </ListShell>
+  );
+}
+
+function CancelledCard({ c }: { c: CampaignSummary }) {
+  const campaignType =
+    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+
+  const isAssigned = (c.assignedTo?.length ?? 0) > 0;
+
+  const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
+  return (
+    <Card className="bg-white shadow-sm opacity-70 py-8">
+      <CardContent className="space-y-4">
+        <div className="space-y-1">
+          <h3 className="text-dark-gray font-semibold leading-tight">
+            {c.campaignName}
+          </h3>
+          <p className="text-dark-gray text-xs">{campaignType}</p>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <AvatarStack users={c.assignedTo} />
+          {!isAssigned && (
+            <p className="text-xs text-dark-gray">{assignText}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground text-sm">Platforms</p>
+          <div className="flex items-center gap-2">
+            {c.platforms.length ? (
+              c.platforms.map((p) => (
+                <span
+                  key={p}
+                  className="leading-none p-1.5 rounded-md bg-light-green"
+                >
+                  {getPlatformIcon(p, "h-4 w-4 text-white")}
+                </span>
+              ))
+            ) : (
+              <span className="text-muted-foreground text-sm">—</span>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-muted/30 px-4 py-4 space-y-1">
+          <p className="text-dark-gray">Offered</p>
+          <p className="text-light-green text-3xl font-semibold">
+            {c.totalBudget}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between text-muted-foreground">
+          <p className="flex items-center gap-2 text-sm">
+            <FaClock />
+            Deadline
+          </p>
+          <p className="text-sm">{formatDeadline(c.deadline)}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

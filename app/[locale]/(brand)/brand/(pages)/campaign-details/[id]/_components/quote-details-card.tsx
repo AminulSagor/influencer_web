@@ -97,7 +97,7 @@ export default function QuoteDetailsCard({ campaign, onPayDue }: QuoteDetailsCar
       <CardContent>
         <h2 className="font-semibold text-Primary">Quote Details</h2>
 
-        <div className="mt-2 rounded-lg border border-Primary bg-linear-to-r from-light-green/40 to-white p-4 overflow-x-auto no-scrollbar">
+        <div className="mt-2 rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 overflow-x-auto no-scrollbar">
           <div className="text-sm">
             <div className="flex gap-4">
               <div className="space-y-2 flex-1">
@@ -141,7 +141,7 @@ export default function QuoteDetailsCard({ campaign, onPayDue }: QuoteDetailsCar
                 )}
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-light-green/30 shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-Secondary shrink-0">
                 <span className="text-xl font-semibold text-Primary">৳</span>
               </div>
             </div>

@@ -18,25 +18,29 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ users, maxVisible = 3 }) => {
   if (users && users.length > 0) {
     const visibleUsers = users.slice(0, maxVisible);
 
+    {
+      /* Avatar stack */
+    }
     return (
-      <div className="inline-flex items-center space-x-2">
-        {/* Avatar stack */}
-        <div className="inline-flex -space-x-3 items-center">
-          {visibleUsers.map((user, index) => (
-            <Image
-              key={index}
-              src={user.image || "/avatar/avatar.png"}
-              height={28}
-              width={28}
-              alt={user.name || "avatar"}
-              className="h-7 w-7 rounded-full border-2 border-white"
-            />
-          ))}
-          {/* First user name */}
-          <span className="text-sm text-orange">
-            {users[0].name || "User"}, {users.length - 1}
-          </span>{" "}
+      <div className="flex items-center gap-2">
+        <div className="inline-flex items-center space-x-2">
+          <div className="inline-flex -space-x-3 items-center">
+            {visibleUsers.map((user, index) => (
+              <Image
+                key={index}
+                src={user.image || "/avatar/avatar.png"}
+                height={28}
+                width={28}
+                alt={user.name || "avatar"}
+                className="h-8 w-8 rounded-full border-2 border-white"
+              />
+            ))}
+            {/* First user name */}
+          </div>
         </div>
+        <span className="text-sm text-orange">
+          {users[0].name || "User"} , {users.length > 1 && `+ ${users.length - 1}`}
+        </span>{" "}
       </div>
     );
   }

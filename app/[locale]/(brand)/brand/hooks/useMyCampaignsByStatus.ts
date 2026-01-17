@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axiosInstance from "@/lib/axios";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { useToken } from "@/hooks/useGetToken";
 import axios from "axios";
 
@@ -10,14 +10,14 @@ type Meta = { total: number; page: number; limit: number };
 
 type ApiResponse = {
   success: boolean;
-  data: CampaignApi[];
+  data: CampaignSummary[];
   meta: Meta;
 };
 
 export function useMyCampaignsByStatus(status: string) {
   const { token } = useToken();
 
-  const [data, setData] = useState<CampaignApi[]>([]);
+  const [data, setData] = useState<CampaignSummary[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 10 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

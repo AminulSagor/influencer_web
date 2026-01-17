@@ -9,7 +9,7 @@ type Props = {
 const SecondaryButton = ({
   children,
   onClick,
-  className,
+  className = "px-4 py-2 text-black",
   type = "button",
   disabled = false,
 }: Props) => {
@@ -28,10 +28,8 @@ const SecondaryButton = ({
         bg-[#F8F8F8]
         border
         border-light-gray
-        text-black
         text-sm
         rounded-md 
-        px-4 py-2 
         active:scale-[0.98]
         disabled:opacity-50 
         disabled:cursor-not-allowed 

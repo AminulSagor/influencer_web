@@ -1,6 +1,6 @@
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-export function filterBySearch(items: CampaignApi[], q: string) {
+export function filterBySearch(items: CampaignSummary[], q: string) {
   const query = q.trim().toLowerCase();
   if (!query) return items;
 

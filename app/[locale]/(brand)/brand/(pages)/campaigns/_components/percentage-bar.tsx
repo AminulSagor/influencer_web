@@ -1,4 +1,4 @@
-const PercentageBar = ({ value = 70 }) => {
+const PercentageBar = ({ value }: { value: number }) => {
   return (
     <div className="w-full space-y-3">
       <div className="h-2 w-full rounded-full bg-light-green/20 overflow-hidden">

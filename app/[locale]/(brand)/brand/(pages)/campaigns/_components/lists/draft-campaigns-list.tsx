@@ -3,14 +3,13 @@
 import Link from "next/link";
 import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
 
 import { getPlatformIcon } from "@/helpers/platforms";
-import AvatarFallbackStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import { formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
+import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 
 export default function DraftCampaignsList({
   campaigns,
@@ -25,10 +24,10 @@ export default function DraftCampaignsList({
       empty={!loading && campaigns.length === 0}
       emptyTitle="No draft campaigns found."
     >
-      <div className="grid gap-4 mt-6 items-start grid-cols-[repeat(auto-fit,minmax(300px,1fr))] xl:grid-cols-[repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-10 mt-6">
         {campaigns.map((c) => (
-          <div key={c.id} className="w-full max-w-[420px] justify-self-start">
-            <DraftCard c={c} />
+          <div key={c.id}>
+            <DraftCard c={c}/>
           </div>
         ))}
       </div>
@@ -58,7 +57,7 @@ function DraftCard({ c }: { c: CampaignSummary }) {
     return "";
   })();
   return (
-    <Card>
+    <Card className="py-8">
       <CardContent className="space-y-4 lg:px-3 xl:px-6">
         <div className="space-y-1">
           <h3 className="text-Primary font-semibold leading-tight text-lg">
@@ -68,7 +67,7 @@ function DraftCard({ c }: { c: CampaignSummary }) {
         </div>
 
         <div className="text-muted-foreground text-sm flex gap-4 items-center">
-          <AvatarStack users={c.assignedTo}/> {assignmentText}
+          <AvatarStack users={c.assignedTo} /> {assignmentText}
         </div>
 
         <div className="flex items-center gap-4">
@@ -84,7 +83,9 @@ function DraftCard({ c }: { c: CampaignSummary }) {
                 </span>
               ))
             ) : (
-              <span className="text-muted-foreground text-sm">—</span>
+              <span className="text-muted-foreground text-sm">
+                : No platforms added!
+              </span>
             )}
           </div>
         </div>
@@ -104,14 +105,11 @@ function DraftCard({ c }: { c: CampaignSummary }) {
           <p className="text-orange text-sm">{formatDeadline(c.deadline)}</p>
         </div>
 
-        <Button asChild variant="outline" className="w-full rounded-lg">
-          <Link
-            href={`/brand/create-campaign?draftId=${c.id}`}
-            className="text-sm"
-          >
+        <SecondaryButton className="w-full px-2 py-2 text-Primary">
+          <Link href={`/brand/create-campaign?draftId=${c.id}`}>
             Continue Editing Campaign Details
           </Link>
-        </Button>
+        </SecondaryButton>
       </CardContent>
     </Card>
   );
