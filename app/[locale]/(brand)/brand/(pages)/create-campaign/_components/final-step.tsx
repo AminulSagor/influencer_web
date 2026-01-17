@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BrandAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/brand-assets-card";
-import CampaignMilestones from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/campaign-milestones";
-import ContentAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/content-assets-card";
-import DeadlineCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/deadline-card";
-import ReviewInfoCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/review-info-card";
-import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/terms-and-condition";
+import BrandAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/brand-assets-card";
+import CampaignMilestones from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/campaign-milestones";
+import ContentAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/content-assets-card";
+import DeadlineCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/deadline-card";
+import ReviewInfoCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/review-info-card";
+import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/terms-and-condition";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
@@ -19,7 +19,7 @@ import {
 } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { notifyError } from "@/helpers/helper";
 import Loader from "@/components/spin-loader";
-import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign-agency/_components/placement-confirm-card";
+import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/placement-confirm-card";
 import axios from "axios";
 
 const FinalStep = () => {
