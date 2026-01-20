@@ -1,6 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "./_components/app-sidebar";
-import TopBar from "../../(agency)/agency/_component/top-bar";
+import { AppSidebar } from "../_components/app-sidebar";
+import TopBar from "@/app/[locale]/(agency)/agency/_component/top-bar";
 
 export default function layout({
   children,

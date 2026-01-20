@@ -1,0 +1,38 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PendingTab from "./pending-tab";
+import CompletedTab from "./completed-tab";
+
+const RowTwo = () => {
+  return (
+    <div className="col-span-12">
+      <Tabs defaultValue="pending">
+        <TabsList className="w-full bg-white">
+          <TabsTrigger
+            value="pending"
+            className="data-[state=active]:bg-light-green data-[state=active]:text-white"
+          >
+            Pending Clearance
+          </TabsTrigger>
+          <TabsTrigger
+            className="data-[state=active]:bg-light-green data-[state=active]:text-white"
+            value="completed"
+          >
+            Completed
+          </TabsTrigger>
+        </TabsList>
+        <PendingTab />
+        <CompletedTab />
+      </Tabs>
+    </div>
+  );
+};
+
+export default RowTwo;

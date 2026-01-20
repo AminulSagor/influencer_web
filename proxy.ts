@@ -108,6 +108,25 @@ export default function middleware(req: NextRequest) {
   return intlRes;
 }
 
-export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
-};
+// export const config = {
+//   matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+// // Combined middleware
+// export default async function middleware(request: NextRequest) {
+//   // 1️⃣ Run your custom header logic
+//   const headers = new Headers(request.headers);
+//   headers.set("x-current-path", request.nextUrl.pathname);
+
+//   // 2️⃣ Run the next-intl middleware
+//   const response = await intlMiddleware(request);
+
+//   // 3️⃣ Merge the headers into the response
+//   response.headers.set("x-current-path", request.nextUrl.pathname);
+
+//   return response;
+// }
+
+// // Combined matcher: covers both your original paths and next-intl
+// export const config = {
+//   matcher:
+//     "/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+// };

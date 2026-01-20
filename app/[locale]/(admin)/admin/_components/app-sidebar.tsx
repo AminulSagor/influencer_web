@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  LayoutDashboard,
-  BriefcaseBusiness,
-  Wallet,
-  BarChart3,
-  LifeBuoy,
-  Settings,
-  ChevronDown,
-} from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -28,50 +20,59 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { GoVerified } from "react-icons/go";
+import { GrAnalytics } from "react-icons/gr";
+import { HiOutlineUsers } from "react-icons/hi";
+import { RiLogoutCircleRLine } from "react-icons/ri";
+import { MdOutlineReportGmailerrorred } from "react-icons/md";
 
 const items = [
   {
     title: "Dashboard",
-    url: "/agency/dashboard",
+    url: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: "Jobs",
+    title: "Campaigns",
     icon: BriefcaseBusiness,
+    url: "/admin/campaigns",
+  },
+  {
+    title: "Verification Center",
+    url: "/admin/verification-center",
+    icon: GoVerified,
+  },
+  {
+    title: "Users",
+    icon: HiOutlineUsers,
     children: [
-      { title: "All Jobs", url: "/agency/jobs" },
-      { title: "Create Job", url: "/agency/jobs/create" },
-      { title: "Job Requests", url: "/agency/jobs/requests" },
+      { title: "Influencer", url: "/admin/users/influencer" },
+      { title: "Agency", url: "/admin/users/agency" },
+      { title: "Brands", url: "/admin/users/brands" },
     ],
   },
   {
-    title: "Earnings",
-    url: "/agency/earnings",
-    icon: Wallet,
+    title: "Finance & Analytics",
+    url: "/admin/finance-analytics",
+    icon: GrAnalytics,
   },
   {
     title: "Reports",
-    icon: BarChart3,
-    children: [
-      { title: "Monthly Reports", url: "/agency/reports/monthly" },
-      { title: "Yearly Reports", url: "/agency/reports/yearly" },
-    ],
-  },
-  {
-    title: "Support Center",
-    url: "/agency/support-center",
-    icon: LifeBuoy,
+    icon: MdOutlineReportGmailerrorred,
+    url: "/admin/reports",
   },
   {
     title: "Account Settings",
     icon: Settings,
-    children: [
-      { title: "Profile", url: "/agency/account-settings/profile" },
-      { title: "Security", url: "/agency/account-settings/security" },
-    ],
+    url: "/admin/account-settings",
+  },
+  {
+    title: "Logout",
+    icon: RiLogoutCircleRLine,
+    url: "/admin/logout",
   },
 ];
 

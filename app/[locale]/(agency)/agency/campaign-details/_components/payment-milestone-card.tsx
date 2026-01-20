@@ -49,7 +49,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
               alt="svg"
             />
           </div>
-          Payment Milestone
+          Campaign Milestones
         </CardTitle>
 
         {/* Progress section */}
@@ -71,9 +71,8 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <div></div>
         <Carousel className="overflow-visible">
-          <CarouselContent className=" p-2 -ml-4 pr-24 ">
+          <CarouselContent className="p-2 -ml-4 pr-24 ">
             {paymentMilestoneData.map((item) => (
               <CarouselItem key={item.id} className="basis-full md:basis-[34%]">
                 <div
