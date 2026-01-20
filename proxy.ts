@@ -1,14 +1,15 @@
-// middleware.ts
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
 import { decodeJwtPayload, UserRole } from "@/helpers/helper";
 
+// 1) next-intl middleware
 const intlMiddleware = createMiddleware({
   locales: routing.locales,
   defaultLocale: routing.defaultLocale,
 });
 
+// 2) Role mapping
 const roleRoot: Record<UserRole, "brand" | "influencer" | "agency"> = {
   client: "brand",
   influencer: "influencer",
@@ -30,10 +31,34 @@ function isExpired(exp?: number) {
   return exp <= now;
 }
 
+// 3) Combined middleware
 export default function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  /**
+   * Safety guard (extra, even though matcher excludes these)
+   * Prevent locale prefixing on Next.js assets + APIs + public files.
+   */
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/trpc") ||
+    pathname.startsWith("/_vercel") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // Siam header logic
+  const currentPath = pathname;
+
+  // Run next-intl first (it may redirect / rewrite)
   const intlRes = intlMiddleware(req);
 
-  const { pathname } = req.nextUrl;
+  // Attach header to response (keep Siam behavior)
+  intlRes.headers.set("x-current-path", currentPath);
+
+  // ---- Your auth/role guard logic ----
   const locale = getLocaleFromPath(pathname);
 
   const token = req.cookies.get("access_token")?.value || "";
@@ -45,7 +70,6 @@ export default function middleware(req: NextRequest) {
 
   const LOGIN = `/${locale}/login`;
 
-  // Protected roots:
   const protectedRoots = [
     `/${locale}/brand`,
     `/${locale}/influencer`,
@@ -59,21 +83,24 @@ export default function middleware(req: NextRequest) {
 
   // A) No token -> block protected areas
   if (!isAuthed && isProtectedArea) {
-    return NextResponse.redirect(new URL(LOGIN, req.url));
+    const res = NextResponse.redirect(new URL(LOGIN, req.url));
+    res.headers.set("x-current-path", currentPath);
+    return res;
   }
 
   // If token exists but role missing -> go login
   if (isAuthed && !role) {
-    return NextResponse.redirect(new URL(LOGIN, req.url));
+    const res = NextResponse.redirect(new URL(LOGIN, req.url));
+    res.headers.set("x-current-path", currentPath);
+    return res;
   }
 
-  // Compute role paths
   const root = role ? roleRoot[role] : null;
   const DASHBOARD = root ? `/${locale}/${root}/dashboard` : LOGIN;
   const UNVERIFIED = root ? `/${locale}/${root}/unverified` : LOGIN;
-
-  // allow these pages even when unverified
-  const ACCOUNT_SETTINGS = root ? `/${locale}/${root}/account-settings` : LOGIN;
+  const ACCOUNT_SETTINGS = root
+    ? `/${locale}/${root}/account-settings`
+    : LOGIN;
 
   // B) Unverified -> allow only /unverified and /account-settings (+ nested)
   if (isAuthed && root && !isVerified) {
@@ -81,7 +108,9 @@ export default function middleware(req: NextRequest) {
       pathname === UNVERIFIED || pathname.startsWith(ACCOUNT_SETTINGS);
 
     if (!isAllowed) {
-      return NextResponse.redirect(new URL(UNVERIFIED, req.url));
+      const res = NextResponse.redirect(new URL(UNVERIFIED, req.url));
+      res.headers.set("x-current-path", currentPath);
+      return res;
     }
 
     return intlRes;
@@ -89,44 +118,34 @@ export default function middleware(req: NextRequest) {
 
   // C) Verified -> block login/signup
   if (isAuthed && isVerified && isAuthPage) {
-    return NextResponse.redirect(new URL(DASHBOARD, req.url));
+    const res = NextResponse.redirect(new URL(DASHBOARD, req.url));
+    res.headers.set("x-current-path", currentPath);
+    return res;
   }
 
-  // D) Role route enforcement (agency token can't open /brand/* etc.)
+  // D) Role route enforcement
   if (isAuthed && root) {
     const correctRootPrefix = `/${locale}/${root}`;
     if (isProtectedArea && !pathname.startsWith(correctRootPrefix)) {
-      return NextResponse.redirect(new URL(DASHBOARD, req.url));
+      const res = NextResponse.redirect(new URL(DASHBOARD, req.url));
+      res.headers.set("x-current-path", currentPath);
+      return res;
     }
   }
 
   // E) Verified user shouldn't stay on /unverified
   if (isAuthed && isVerified && root && pathname === UNVERIFIED) {
-    return NextResponse.redirect(new URL(DASHBOARD, req.url));
+    const res = NextResponse.redirect(new URL(DASHBOARD, req.url));
+    res.headers.set("x-current-path", currentPath);
+    return res;
   }
 
   return intlRes;
 }
 
-// export const config = {
-//   matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
-// // Combined middleware
-// export default async function middleware(request: NextRequest) {
-//   // 1️⃣ Run your custom header logic
-//   const headers = new Headers(request.headers);
-//   headers.set("x-current-path", request.nextUrl.pathname);
-
-//   // 2️⃣ Run the next-intl middleware
-//   const response = await intlMiddleware(request);
-
-//   // 3️⃣ Merge the headers into the response
-//   response.headers.set("x-current-path", request.nextUrl.pathname);
-
-//   return response;
-// }
-
-// // Combined matcher: covers both your original paths and next-intl
-// export const config = {
-//   matcher:
-//     "/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-// };
+export const config = {
+  matcher: [
+    // Exclude Next.js internals + APIs + any file with extension
+    "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  ],
+};
