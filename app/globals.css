@@ -153,7 +153,6 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-/**/
 
 /* Hide arrows in number inputs for Chrome, Safari, Edge */
 input[type="number"]::-webkit-inner-spin-button,
