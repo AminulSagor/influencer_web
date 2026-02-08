@@ -14,16 +14,16 @@ import {
 } from "lucide-react";
 import { SidebarItem } from "@/types/app-sidebar-types";
 import TopBar from "@/app/[locale]/(influencer)/influencer/_component/top-bar";
+import { useLocale } from "next-intl";
 
 export default function InfluencerShell({
   children,
-  locale,
   isVerified,
 }: {
   children: React.ReactNode;
-  locale: string;
   isVerified: boolean;
 }) {
+  const locale = useLocale();
   const verifiedSidebarItems: SidebarItem[] = [
     {
       title: "Dashboard",

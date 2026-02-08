@@ -4,10 +4,8 @@ import InfluencerShell from "@/app/[locale]/(influencer)/influencer/_component/i
 
 export default async function Layout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
 }) {
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token")?.value ?? "";
@@ -15,11 +13,5 @@ export default async function Layout({
 
   const isVerified = Boolean(payload?.isVerified);
 
-  const { locale } = await params;
-
-  return (
-    <InfluencerShell locale={locale} isVerified={isVerified}>
-      {children}
-    </InfluencerShell>
-  );
+  return <InfluencerShell isVerified={isVerified}>{children}</InfluencerShell>;
 }

@@ -14,14 +14,13 @@ import {
   ShieldOff,
 } from "lucide-react";
 import type { SidebarItem } from "@/types/app-sidebar-types";
+import { useLocale } from "next-intl";
 
 export default function BrandShell({
   children,
-  locale,
   isVerified,
 }: {
   children: React.ReactNode;
-  locale: string;
   isVerified: boolean;
 }) {
   const verifiedSidebarItems: SidebarItem[] = [
@@ -46,6 +45,8 @@ export default function BrandShell({
       icon: Settings,
     },
   ];
+
+  const locale = useLocale();
 
   const items = (
     isVerified ? verifiedSidebarItems : unVerifiedSidebarItems

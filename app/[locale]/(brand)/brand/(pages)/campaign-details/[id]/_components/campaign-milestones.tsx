@@ -26,8 +26,264 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
+/** -------------------------
+ * MOCK DATA
+ * -------------------------- */
+export const campaignMocksData = [
+  {
+    id: "cmp_001",
+    title: "Winter Skincare Launch",
+    selectedInfluencerId: "inf_001",
+    expandedMilestoneId: "ms_001",
+    influencerCampaigns: [
+      {
+        id: "ic_001",
+        influencer: {
+          id: "inf_001",
+          name: "Ayesha Rahman",
+          avatarUrl: "/images/avatar-1.png",
+        },
+        progress: {
+          completedCount: 1,
+          totalCount: 3,
+          percentCompleted: 33,
+        },
+        milestones: [
+          {
+            id: "ms_001",
+            title: "Unboxing Reel",
+            status: "Pending",
+            dayLabel: "DAY 01",
+            dueDate: "2026-02-12T00:00:00.000Z",
+            contentRequirements: [
+              "Reel",
+              "15-30s",
+              "Show packaging",
+              "Voiceover",
+            ],
+            milestoneTargets: [
+              { key: "views", label: "Views", target: 50000 },
+              { key: "likes", label: "Likes", target: 2500 },
+              { key: "comments", label: "Comments", target: 200 },
+              { key: "shares", label: "Shares", target: 150 },
+            ],
+            actions: {
+              canReportAdmin: true,
+              canViewSubmittedReport: false,
+            },
+            submission: {
+              description: "I will submit once posted.",
+              platformLinks: [],
+              proofs: [],
+            },
+            performance: {
+              targetHitThresholdPercent: 70,
+              averagePerformancePercent: 0,
+              metrics: [
+                { key: "views", label: "Views", current: 0, target: 50000 },
+                { key: "likes", label: "Likes", current: 0, target: 2500 },
+                { key: "comments", label: "Comments", current: 0, target: 200 },
+              ],
+            },
+          },
+          {
+            id: "ms_002",
+            title: "Story Sequence (3 Frames)",
+            status: "In Review",
+            dayLabel: "DAY 03",
+            dueDate: "2026-02-15T00:00:00.000Z",
+            contentRequirements: ["Story", "3 frames", "Swipe up link"],
+            milestoneTargets: [
+              { key: "reach", label: "Reach", target: 30000 },
+              { key: "clicks", label: "Link Clicks", target: 600 },
+            ],
+            actions: {
+              canReportAdmin: true,
+              canViewSubmittedReport: true,
+            },
+            submission: {
+              description:
+                "Posted stories with link sticker. Waiting for review.",
+              platformLinks: [
+                {
+                  platform: "Instagram",
+                  url: "https://instagram.com/p/mock_story_1",
+                },
+                {
+                  platform: "Instagram",
+                  url: "https://instagram.com/p/mock_story_2",
+                },
+              ],
+              proofs: [
+                {
+                  id: "pf_001",
+                  label: "Story Screenshot 1",
+                  previewUrl: "/images/proof-1.jpg",
+                },
+                {
+                  id: "pf_002",
+                  label: "Story Screenshot 2",
+                  previewUrl: "/images/proof-2.jpg",
+                },
+                {
+                  id: "pf_003",
+                  label: "Story Screenshot 3",
+                  previewUrl: "/images/proof-3.jpg",
+                },
+              ],
+            },
+            performance: {
+              targetHitThresholdPercent: 70,
+              averagePerformancePercent: 61.2,
+              metrics: [
+                { key: "reach", label: "Reach", current: 18200, target: 30000 },
+                {
+                  key: "clicks",
+                  label: "Link Clicks",
+                  current: 320,
+                  target: 600,
+                },
+              ],
+            },
+          },
+          {
+            id: "ms_003",
+            title: "Review Post (Carousel)",
+            status: "Completed",
+            dayLabel: "DAY 07",
+            dueDate: "2026-02-19T00:00:00.000Z",
+            contentRequirements: ["Carousel", "5 slides", "Tag brand", "CTA"],
+            milestoneTargets: [
+              { key: "views", label: "Views", target: 80000 },
+              { key: "saves", label: "Saves", target: 1200 },
+              { key: "comments", label: "Comments", target: 400 },
+            ],
+            actions: {
+              canReportAdmin: false,
+              canViewSubmittedReport: true,
+            },
+            submission: {
+              description: "Posted carousel review with CTA + tagged brand.",
+              platformLinks: [
+                {
+                  platform: "Instagram",
+                  url: "https://instagram.com/p/mock_post_1",
+                },
+              ],
+              proofs: [
+                {
+                  id: "pf_004",
+                  label: "Post Preview",
+                  previewUrl: "/images/proof-4.jpg",
+                },
+              ],
+            },
+            performance: {
+              targetHitThresholdPercent: 70,
+              averagePerformancePercent: 88.6,
+              metrics: [
+                { key: "views", label: "Views", current: 74500, target: 80000 },
+                { key: "saves", label: "Saves", current: 1360, target: 1200 },
+                {
+                  key: "comments",
+                  label: "Comments",
+                  current: 420,
+                  target: 400,
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        id: "ic_002",
+        influencer: {
+          id: "inf_002",
+          name: "Nayeem Hasan",
+          avatarUrl: "/images/avatar-2.png",
+        },
+        progress: {
+          completedCount: 0,
+          totalCount: 2,
+          percentCompleted: 0,
+        },
+        milestones: [
+          {
+            id: "ms_101",
+            title: "Teaser Story",
+            status: "Pending",
+            dayLabel: "DAY 01",
+            dueDate: "2026-02-11T00:00:00.000Z",
+            contentRequirements: ["Story", "Mention brand", "Poll"],
+            milestoneTargets: [
+              { key: "reach", label: "Reach", target: 20000 },
+              { key: "votes", label: "Poll Votes", target: 800 },
+            ],
+            actions: {
+              canReportAdmin: true,
+              canViewSubmittedReport: false,
+            },
+            submission: {
+              description: "",
+              platformLinks: [],
+              proofs: [],
+            },
+            performance: {
+              targetHitThresholdPercent: 70,
+              averagePerformancePercent: 0,
+              metrics: [
+                { key: "reach", label: "Reach", current: 0, target: 20000 },
+                { key: "votes", label: "Poll Votes", current: 0, target: 800 },
+              ],
+            },
+          },
+          {
+            id: "ms_102",
+            title: "Short Review Reel",
+            status: "Declined",
+            dayLabel: "DAY 04",
+            dueDate: "2026-02-16T00:00:00.000Z",
+            contentRequirements: ["Reel", "Mention features", "CTA"],
+            milestoneTargets: [
+              { key: "views", label: "Views", target: 40000 },
+              { key: "likes", label: "Likes", target: 1800 },
+            ],
+            actions: {
+              canReportAdmin: true,
+              canViewSubmittedReport: true,
+            },
+            submission: {
+              description:
+                "Uploaded reel proof, but waiting on revision due to missing CTA.",
+              platformLinks: [
+                { platform: "TikTok", url: "https://tiktok.com/@mock/reel1" },
+              ],
+              proofs: [
+                {
+                  id: "pf_901",
+                  label: "Reel Screenshot",
+                  previewUrl: "/images/proof-5.jpg",
+                },
+              ],
+            },
+            performance: {
+              targetHitThresholdPercent: 70,
+              averagePerformancePercent: 42.0,
+              metrics: [
+                { key: "views", label: "Views", current: 9800, target: 40000 },
+                { key: "likes", label: "Likes", current: 410, target: 1800 },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  },
+] as const;
 
+/** -------------------------
+ * Types derived from mock
+ * -------------------------- */
 type CampaignDetails = (typeof campaignMocksData)[number];
 type InfluencerCampaign = CampaignDetails["influencerCampaigns"][number];
 type Milestone = InfluencerCampaign["milestones"][number];
@@ -84,7 +340,6 @@ const statusStyle = (status?: string) => {
     };
   }
 
-  // Pending / default
   return {
     card: "border-black/10 bg-[#F7F7F7]",
     badge: "bg-white text-black/60 border-black/10",
@@ -102,7 +357,14 @@ const Donut = ({ value }: { value: number }) => {
   return (
     <div className="relative h-[90px] w-[90px]">
       <svg viewBox="0 0 100 100" className="h-full w-full">
-        <circle cx="50" cy="50" r={r} strokeWidth="10" fill="none" className="stroke-black/10" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          strokeWidth="10"
+          fill="none"
+          className="stroke-black/10"
+        />
         <circle
           cx="50"
           cy="50"
@@ -134,7 +396,10 @@ export default function CampaignMilestones({ campaign }: Props) {
     React.useState<string>(defaultInfluencerId);
 
   const selectedInfluencerCampaign = React.useMemo(() => {
-    return influencers.find((x) => x.influencer.id === selectedInfluencerId) ?? influencers[0];
+    return (
+      influencers.find((x) => x.influencer.id === selectedInfluencerId) ??
+      influencers[0]
+    );
   }, [influencers, selectedInfluencerId]);
 
   const milestones = selectedInfluencerCampaign?.milestones ?? [];
@@ -150,7 +415,6 @@ export default function CampaignMilestones({ campaign }: Props) {
   const [dangerOpen, setDangerOpen] = React.useState(false);
 
   React.useEffect(() => {
-    // when influencer changes, auto expand first milestone
     const first = selectedInfluencerCampaign?.milestones?.[0]?.id ?? "";
     setExpandedMilestoneId(first);
     setDetailsOpen(true);
@@ -158,16 +422,21 @@ export default function CampaignMilestones({ campaign }: Props) {
   }, [selectedInfluencerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const progress = selectedInfluencerCampaign?.progress;
+
   const completedCount =
     progress?.completedCount ??
-    milestones.filter((m) => String(m.status).toLowerCase() === "completed").length;
+    milestones.filter((m) => String(m.status).toLowerCase() === "completed")
+      .length;
 
   const totalCount = progress?.totalCount ?? milestones.length;
+
   const percentCompleted =
     progress?.percentCompleted ??
     (totalCount ? Math.round((completedCount / totalCount) * 100) : 0);
 
-  const expandedMilestone = milestones.find((m) => m.id === expandedMilestoneId);
+  const expandedMilestone = milestones.find(
+    (m) => m.id === expandedMilestoneId,
+  );
 
   return (
     <Card className="border-none">
@@ -175,13 +444,18 @@ export default function CampaignMilestones({ campaign }: Props) {
         {/* Header row */}
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/icons/milestone.svg" height={18} width={18} alt="icon" />
+            <Image
+              src="/icons/milestone.svg"
+              height={18}
+              width={18}
+              alt="icon"
+            />
             <h2 className="text-Primary font-semibold">Campaign Milestones</h2>
           </div>
 
           <Select
             value={selectedInfluencerId}
-            onValueChange={(v) => setSelectedInfluencerId(v)}
+            onValueChange={setSelectedInfluencerId}
           >
             <SelectTrigger className="w-full md:w-[260px] bg-white">
               <SelectValue placeholder="Select influencer" />
@@ -268,7 +542,12 @@ export default function CampaignMilestones({ campaign }: Props) {
                         </Badge>
                       </div>
 
-                      <p className={["mt-6 text-right text-xs font-semibold", s.text].join(" ")}>
+                      <p
+                        className={[
+                          "mt-6 text-right text-xs font-semibold",
+                          s.text,
+                        ].join(" ")}
+                      >
                         {m.dayLabel ?? `DAY ${idx + 1}`}
                       </p>
                     </button>
@@ -292,7 +571,12 @@ export default function CampaignMilestones({ campaign }: Props) {
               className="w-full flex items-center justify-between px-4 py-3"
             >
               <div className="flex items-center gap-2">
-                <Image src="/icons/milestone.svg" height={16} width={16} alt="icon" />
+                <Image
+                  src="/icons/milestone.svg"
+                  height={16}
+                  width={16}
+                  alt="icon"
+                />
                 <p className="text-Primary font-semibold">
                   {expandedMilestone.title}
                 </p>
@@ -307,7 +591,7 @@ export default function CampaignMilestones({ campaign }: Props) {
 
             {detailsOpen && (
               <div className="px-4 pb-4 space-y-4">
-                {/* Top row: content req + targets + actions + status */}
+                {/* Top row */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                   {/* Content req */}
                   <div className="lg:col-span-4 rounded-lg border border-black/10 bg-light-green/5 p-3">
@@ -316,7 +600,7 @@ export default function CampaignMilestones({ campaign }: Props) {
                     </p>
                     <ul className="mt-2 space-y-1 text-xs text-black/60">
                       {(expandedMilestone.contentRequirements ?? []).length ? (
-                        expandedMilestone.contentRequirements!.map((r, i) => (
+                        expandedMilestone.contentRequirements.map((r, i) => (
                           <li key={i} className="flex gap-2">
                             <span className="mt-1 h-1.5 w-1.5 rounded-full bg-light-green" />
                             <span className="min-w-0">{r}</span>
@@ -346,11 +630,6 @@ export default function CampaignMilestones({ campaign }: Props) {
                           </p>
                         </div>
                       ))}
-
-                      {(!expandedMilestone.milestoneTargets ||
-                        expandedMilestone.milestoneTargets.length === 0) && (
-                        <p className="text-xs text-black/50">—</p>
-                      )}
                     </div>
                   </div>
 
@@ -367,7 +646,9 @@ export default function CampaignMilestones({ campaign }: Props) {
                     <Button
                       variant="outline"
                       className="border-black/10"
-                      disabled={!expandedMilestone.actions?.canViewSubmittedReport}
+                      disabled={
+                        !expandedMilestone.actions?.canViewSubmittedReport
+                      }
                     >
                       View Submitted Report
                     </Button>
@@ -461,8 +742,8 @@ export default function CampaignMilestones({ campaign }: Props) {
                               ))}
 
                             {(!expandedMilestone.submission?.platformLinks ||
-                              expandedMilestone.submission.platformLinks.length ===
-                                0) && (
+                              expandedMilestone.submission.platformLinks
+                                .length === 0) && (
                               <p className="text-xs text-black/50">—</p>
                             )}
                           </div>
@@ -516,41 +797,48 @@ export default function CampaignMilestones({ campaign }: Props) {
                             </p>
 
                             <div className="mt-3 space-y-3">
-                              {expandedMilestone.performance.metrics.map((m) => {
-                                const current = Number(m.current ?? 0);
-                                const target = Number(m.target ?? 0);
-                                const pct =
-                                  target > 0
-                                    ? Math.min(100, Math.round((current / target) * 100))
-                                    : 0;
+                              {expandedMilestone.performance.metrics.map(
+                                (m) => {
+                                  const current = Number(m.current ?? 0);
+                                  const target = Number(m.target ?? 0);
+                                  const pct =
+                                    target > 0
+                                      ? Math.min(
+                                          100,
+                                          Math.round((current / target) * 100),
+                                        )
+                                      : 0;
 
-                                return (
-                                  <div key={m.key}>
-                                    <div className="flex items-center justify-between text-xs">
-                                      <p className="text-black/70 font-semibold">
-                                        {m.label}
-                                      </p>
-                                      <p className="text-black/50">
-                                        {compact(current)} / {compact(target)}
+                                  return (
+                                    <div key={m.key}>
+                                      <div className="flex items-center justify-between text-xs">
+                                        <p className="text-black/70 font-semibold">
+                                          {m.label}
+                                        </p>
+                                        <p className="text-black/50">
+                                          {compact(current)} / {compact(target)}
+                                        </p>
+                                      </div>
+
+                                      <div className="mt-2 h-2 rounded-full bg-black/10 overflow-hidden">
+                                        <div
+                                          className="h-full bg-light-green"
+                                          style={{ width: `${pct}%` }}
+                                        />
+                                      </div>
+
+                                      <p className="mt-1 text-[10px] text-black/40">
+                                        Target hit threshold:{" "}
+                                        {
+                                          expandedMilestone.performance
+                                            .targetHitThresholdPercent
+                                        }
+                                        %
                                       </p>
                                     </div>
-
-                                    <div className="mt-2 h-2 rounded-full bg-black/10 overflow-hidden">
-                                      <div
-                                        className="h-full bg-light-green"
-                                        style={{ width: `${pct}%` }}
-                                      />
-                                    </div>
-
-                                    <p className="mt-1 text-[10px] text-black/40">
-                                      Target hit threshold:{" "}
-                                      {expandedMilestone.performance?.targetHitThresholdPercent ??
-                                        0}
-                                      %
-                                    </p>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                },
+                              )}
                             </div>
                           </div>
 
@@ -562,7 +850,8 @@ export default function CampaignMilestones({ campaign }: Props) {
                               <Donut
                                 value={
                                   Number(
-                                    expandedMilestone.performance?.averagePerformancePercent ?? 0
+                                    expandedMilestone.performance
+                                      .averagePerformancePercent ?? 0,
                                   ) || 0
                                 }
                               />
@@ -571,7 +860,7 @@ export default function CampaignMilestones({ campaign }: Props) {
                         </div>
                       )}
 
-                      {/* Footer action buttons (optional) */}
+                      {/* Footer action buttons */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                         <Button variant="outline" className="border-black/10">
                           Decline
@@ -581,7 +870,7 @@ export default function CampaignMilestones({ campaign }: Props) {
                         </Button>
                       </div>
 
-                      {/* Declined reason example (only show when status is Declined) */}
+                      {/* Declined reason example */}
                       {String(expandedMilestone.status).toLowerCase() ===
                         "declined" && (
                         <div className="rounded-lg border border-red-200 bg-red-50 p-3">
@@ -614,7 +903,9 @@ export default function CampaignMilestones({ campaign }: Props) {
                 <X className="h-4 w-4" />
               </span>
               <div className="text-left">
-                <p className="text-sm font-semibold text-red-600">Danger Zone</p>
+                <p className="text-sm font-semibold text-red-600">
+                  Danger Zone
+                </p>
                 <p className="text-[11px] text-red-500">Cancel Campaign</p>
               </div>
             </div>
@@ -633,7 +924,7 @@ export default function CampaignMilestones({ campaign }: Props) {
                 placeholder="Write your reason..."
               />
               <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                Request Cancellation & Submit Reason
+                Request Cancellation &amp; Submit Reason
               </Button>
             </div>
           )}
@@ -642,3 +933,8 @@ export default function CampaignMilestones({ campaign }: Props) {
     </Card>
   );
 }
+
+/** -------------------------
+ * Example usage (optional)
+ * <CampaignMilestones campaign={campaignMocksData[0]} />
+ * -------------------------- */

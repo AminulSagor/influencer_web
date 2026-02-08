@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import SubmissionProofs from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/submission-proof";
 
 /* =======================
-   TYPES (KEEP AS YOU WROTE)
+   TYPES (kept, but removed `any`)
 ======================= */
 export type PerformanceMetric = {
   reach?: number;
@@ -40,7 +40,7 @@ export type PerformanceMetric = {
 export type Proof = {
   liveLink: string;
   performanceMetric: PerformanceMetric;
-  attachment?: any;
+  attachment?: unknown; // ✅ safer than any
 };
 
 export type Submission = {
@@ -54,30 +54,35 @@ export type FormType = {
 };
 
 /* =======================
-   ZOD SCHEMA (FIXED INPUT TYPE)
-   ✅ output = FormType
-   ✅ input  = FormType   (IMPORTANT)
+   ZOD SCHEMA (fixed)
+   ✅ don't force ZodType<FormType,...> here
 ======================= */
-const formSchema: z.ZodType<FormType, z.ZodTypeDef, FormType> = z.object({
-  submissions: z.array(
-    z.object({
-      description: z.string().optional(),
-      paymentAmount: z.string().optional(),
-      proofs: z.array(
-        z.object({
-          liveLink: z.string().url("Invalid link"),
-          performanceMetric: z.object({
-            reach: z.number().optional(),
-            views: z.number().optional(),
-            likes: z.number().optional(),
-            comments: z.number().optional(),
-          }),
-          attachment: z.any().optional(),
-        })
-      ),
-    })
-  ),
+const performanceMetricSchema = z.object({
+  reach: z.number().optional(),
+  views: z.number().optional(),
+  likes: z.number().optional(),
+  comments: z.number().optional(),
 });
+
+const proofSchema = z.object({
+  liveLink: z.string().url("Invalid link"),
+  performanceMetric: performanceMetricSchema,
+  attachment: z.unknown().optional(),
+});
+
+const submissionSchema = z.object({
+  description: z.string().optional(),
+  paymentAmount: z.string().optional(),
+  proofs: z.array(proofSchema),
+});
+
+const formSchema = z.object({
+  submissions: z.array(submissionSchema),
+});
+
+/** If you want schema-driven type as well (recommended) */
+// export type FormSchemaType = z.infer<typeof formSchema>;
+// (Your FormType matches this shape already.)
 
 const defaultValues: FormType = {
   submissions: [
@@ -106,6 +111,7 @@ const SubmissionForm = () => {
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
     defaultValues,
+    mode: "onSubmit",
   });
 
   const {
@@ -119,6 +125,7 @@ const SubmissionForm = () => {
 
   const onSubmit = (values: FormType) => {
     setStatus("In Review");
+    // eslint-disable-next-line no-console
     console.log(values, "values");
   };
 
@@ -162,7 +169,7 @@ const SubmissionForm = () => {
                               {submissionFields.length > 1 && (
                                 <Button
                                   type="button"
-                                  variant={"outline"}
+                                  variant="outline"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     remove(index);
@@ -189,25 +196,31 @@ const SubmissionForm = () => {
                       />
 
                       <div className="flex items-center gap-2">
-                        <Checkbox id="ownership" />
-                        <Label htmlFor="ownership" className="text-gray-400">
-                          Confirm you own all the submitted assets & links{" "}
+                        <Checkbox id={`ownership-${index}`} />
+                        <Label
+                          htmlFor={`ownership-${index}`}
+                          className="text-gray-400"
+                        >
+                          Confirm you own all the submitted assets &amp; links
                         </Label>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <Checkbox id="terms" />
-                        <Label htmlFor="terms" className="text-gray-400">
+                        <Checkbox id={`terms-${index}`} />
+                        <Label
+                          htmlFor={`terms-${index}`}
+                          className="text-gray-400"
+                        >
                           You accept the{" "}
                           <Link
-                            href={"/"}
+                            href="/"
                             className="text-light-green hover:underline"
                           >
                             user license agreement
-                          </Link>
-                          &{" "}
+                          </Link>{" "}
+                          &amp;{" "}
                           <Link
-                            href={"/"}
+                            href="/"
                             className="text-light-green hover:underline"
                           >
                             Terms and condition

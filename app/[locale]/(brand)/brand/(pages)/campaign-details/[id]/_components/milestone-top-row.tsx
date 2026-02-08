@@ -17,7 +17,7 @@ import {
   normalizeKey,
   targetIconMap,
 } from "./milestone-ui-helpers";
-import { Milestone } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details-influencer/[id]/_components/milestone-details-panel";
+import { Milestone } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-details-panel";
 
 /** ✅ Dummy submitted report type */
 type SubmittedReport = {
@@ -131,11 +131,6 @@ export default function MilestoneTopRow({
               </div>
             );
           })}
-
-          {(!milestone.milestoneTargets ||
-            milestone.milestoneTargets.length === 0) && (
-            <p className="text-Primary">—</p>
-          )}
         </div>
       </div>
 

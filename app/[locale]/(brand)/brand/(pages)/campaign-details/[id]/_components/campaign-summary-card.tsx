@@ -100,7 +100,7 @@ export default function CampaignSummaryCard({
         <div className="px-4 sm:px-6 py-4 sm:py-5 text-white">
           <div className="flex flex-col lg:flex-row items-stretch lg:justify-between gap-5 lg:gap-6">
             {/* left */}
-            <div className="flex-1 min-w-0 border">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-white/90 text-sm min-w-0">
                   <span className="border rounded-full">

@@ -3,11 +3,11 @@
 import React from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
 import { statusStyle } from "./milestone-ui-helpers";
-import MilestoneTopRow from "@/app/[locale]/(brand)/brand/(pages)/campaign-details-influencer/[id]/_components/milestone-top-row";
-import MilestoneSubmissionDetails from "@/app/[locale]/(brand)/brand/(pages)/campaign-details-influencer/[id]/_components/milestone-submission-details";
 
+import MilestoneTopRow from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-top-row";
+import MilestoneSubmissionDetails from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-submission-details";
+import { campaignMocksData } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-milestones";
 
 type CampaignDetails = (typeof campaignMocksData)[number];
 type InfluencerCampaign = CampaignDetails["influencerCampaigns"][number];

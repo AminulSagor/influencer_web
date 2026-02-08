@@ -1,15 +1,19 @@
 "use client";
 
 import React from "react";
-import type { CampaignApi, CampaignMilestoneApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  CampaignApi,
+  CampaignMilestoneApi,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
 import CampaignMilestonesOverview from "./campaign-milestones-overview";
 import DangerZoneCard from "./danger-zone-card";
 import { isMilestoneExpandable } from "../helpers/milestone-ui-helpers";
 
-// ✅ TEMP: keep your existing panel, but it currently uses dummy types.
-// We'll create two new panels next: PaidAdMilestoneDetailsPanel + InfluencerMilestoneDetailsPanel
-// For now we render a placeholder panel with basic info.
-function BasicMilestonePanel({ milestone }: { milestone: CampaignMilestoneApi }) {
+function BasicMilestonePanel({
+  milestone,
+}: {
+  milestone: CampaignMilestoneApi;
+}) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4">
       <div className="flex items-center justify-between">
@@ -31,23 +35,31 @@ function BasicMilestonePanel({ milestone }: { milestone: CampaignMilestoneApi })
         <div className="rounded-lg border border-black/10 p-3">
           <p className="text-xs text-black/50">Targets</p>
           <p className="font-medium">
-            Reach: {milestone.expectedReach ?? "—"} | Views: {milestone.expectedViews ?? "—"}
+            Reach: {milestone.expectedReach ?? "—"} | Views:{" "}
+            {milestone.expectedViews ?? "—"}
           </p>
         </div>
 
         <div className="rounded-lg border border-black/10 p-3">
           <p className="text-xs text-black/50">Amount</p>
-          <p className="font-medium">৳ {Number(milestone.amount ?? 0).toLocaleString("en-US")}</p>
+          <p className="font-medium">
+            ৳ {Number(milestone.amount ?? 0).toLocaleString("en-US")}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-export default function CampaignMilestonesSection({ campaign }: { campaign: CampaignApi }) {
+export default function CampaignMilestonesSection({
+  campaign,
+}: {
+  campaign: CampaignApi;
+}) {
   const milestones = campaign.milestones ?? [];
 
-  const [expandedMilestoneId, setExpandedMilestoneId] = React.useState<string>("");
+  const [expandedMilestoneId, setExpandedMilestoneId] =
+    React.useState<string>("");
 
   const expandedMilestone = expandedMilestoneId
     ? milestones.find((m) => m.id === expandedMilestoneId)
@@ -61,7 +73,7 @@ export default function CampaignMilestonesSection({ campaign }: { campaign: Camp
         onSelectMilestone={setExpandedMilestoneId}
       />
 
-      {/* ✅ Status-wise: do not show details for pending */}
+      {/*Status-wise: do not show details for pending */}
       {expandedMilestone && isMilestoneExpandable(expandedMilestone.status) && (
         <>
           {campaign.campaignType === "paid_ad" ? (

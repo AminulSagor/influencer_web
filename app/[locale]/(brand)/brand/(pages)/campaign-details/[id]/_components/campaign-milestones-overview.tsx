@@ -11,7 +11,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import type { CampaignApi, CampaignMilestoneApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  CampaignApi,
+  CampaignMilestoneApi,
+} from "@/app/[locale]/(brand)/brand/types/client-types";
 import { statusStyle } from "./milestone-ui-helpers";
 
 export default function CampaignMilestonesOverview({
@@ -26,19 +29,26 @@ export default function CampaignMilestonesOverview({
   const milestones: CampaignMilestoneApi[] = campaign.milestones ?? [];
 
   const completedCount = milestones.filter(
-    (m) => String(m.status).toLowerCase() === "completed"
+    (m) => String(m.status).toLowerCase() === "completed",
   ).length;
 
   const totalCount = milestones.length;
 
-  const percent = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+  const percent = totalCount
+    ? Math.round((completedCount / totalCount) * 100)
+    : 0;
 
   return (
     <Card>
       <CardHeader className="space-y-3">
         <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src={"/icons/milestone.svg"} height={18} width={18} alt="icon" />
+            <Image
+              src={"/icons/milestone.svg"}
+              height={18}
+              width={18}
+              alt="icon"
+            />
             <h2 className="text-Primary font-semibold">Campaign Milestones</h2>
           </div>
 
@@ -86,7 +96,7 @@ export default function CampaignMilestonesOverview({
                     onClick={() => onSelectMilestone(m.id)}
                     className={[
                       "w-full text-left rounded-lg p-5 transition",
-                      s.card,
+                      s.badge,
                       active ? "border-2" : "border",
                     ].join(" ")}
                   >
@@ -110,11 +120,16 @@ export default function CampaignMilestonesOverview({
                         variant={"secondary"}
                         className={["shrink-0", s.badge].join(" ")}
                       >
-                        {String(s.pill)}
+                        {String(s.badge)}
                       </Badge>
                     </div>
 
-                    <p className={["mt-6 text-right text-xs font-semibold", s.text].join(" ")}>
+                    <p
+                      className={[
+                        "mt-6 text-right text-xs font-semibold",
+                        s.badge,
+                      ].join(" ")}
+                    >
                       {`DAY ${m.deliveryDays ?? idx + 1}`}
                     </p>
                   </button>

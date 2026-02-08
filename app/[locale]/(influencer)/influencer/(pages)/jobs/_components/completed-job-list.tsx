@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { JSX, useMemo } from "react";
+import React, { JSX, useMemo } from "react";
 import { FaClock } from "react-icons/fa";
 import { AiFillTikTok } from "react-icons/ai";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
@@ -12,10 +12,137 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import StarRating from "@/app/[locale]/(influencer)/influencer/(pages)/jobs/_components/star-rating";
 
-import type { CampaignDetails } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/types";
-import { campaignMocksData } from "@/app/[locale]/(brand)/brand/dummy-data-campaign/data";
-
+/** -------------------------
+ * Types + Mock Data
+ * -------------------------- */
 type Platform = "instagram" | "youtube" | "tiktok";
+
+type Influencer = {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+};
+
+type InfluencerCampaign = {
+  id: string;
+  influencer: Influencer;
+};
+
+type Quote = {
+  baseBudget: {
+    amount: number;
+    currency: "BDT";
+  };
+};
+
+type Deadline = {
+  date: string; // ISO
+};
+
+type Rating = {
+  averageStars: number; // 0-5
+  totalReviews?: number;
+};
+
+type CampaignStatus = "Draft" | "Pending" | "Running" | "Completed" | "Cancelled";
+
+type CampaignDetails = {
+  id: string;
+  title: string;
+  status: CampaignStatus;
+  platforms: Platform[];
+  selectedInfluencerId?: string;
+  influencerCampaigns: InfluencerCampaign[];
+  quote?: Quote;
+  deadline?: Deadline;
+  rating?: Rating;
+};
+
+const campaignMocksData: CampaignDetails[] = [
+  {
+    id: "cmp_001",
+    title: "Winter Skincare Launch",
+    status: "Completed",
+    platforms: ["instagram", "tiktok"],
+    selectedInfluencerId: "inf_001",
+    influencerCampaigns: [
+      {
+        id: "ic_001",
+        influencer: {
+          id: "inf_001",
+          name: "Ayesha Rahman",
+          avatarUrl: "/images/avatar-1.png",
+        },
+      },
+      {
+        id: "ic_002",
+        influencer: {
+          id: "inf_002",
+          name: "Nayeem Hasan",
+          avatarUrl: "/images/avatar-2.png",
+        },
+      },
+      {
+        id: "ic_003",
+        influencer: {
+          id: "inf_003",
+          name: "Rafiul Islam",
+          avatarUrl: "/images/avatar-3.png",
+        },
+      },
+    ],
+    quote: {
+      baseBudget: { amount: 45000, currency: "BDT" },
+    },
+    deadline: { date: "2026-01-28T00:00:00.000Z" },
+    rating: { averageStars: 4.6, totalReviews: 38 },
+  },
+  {
+    id: "cmp_002",
+    title: "Gadget Review Campaign",
+    status: "Completed",
+    platforms: ["youtube", "instagram"],
+    selectedInfluencerId: "inf_004",
+    influencerCampaigns: [
+      {
+        id: "ic_101",
+        influencer: {
+          id: "inf_004",
+          name: "Tahsin Ahmed",
+          avatarUrl: "/images/avatar-4.png",
+        },
+      },
+      {
+        id: "ic_102",
+        influencer: {
+          id: "inf_005",
+          name: "Nusrat Jahan",
+          avatarUrl: "/images/avatar-5.png",
+        },
+      },
+    ],
+    quote: {
+      baseBudget: { amount: 90000, currency: "BDT" },
+    },
+    deadline: { date: "2026-02-02T00:00:00.000Z" },
+    rating: { averageStars: 4.2, totalReviews: 21 },
+  },
+  {
+    id: "cmp_003",
+    title: "Restaurant Promo Week",
+    status: "Running",
+    platforms: ["instagram"],
+    influencerCampaigns: [
+      {
+        id: "ic_201",
+        influencer: { id: "inf_006", name: "Mahi", avatarUrl: "/images/avatar-6.png" },
+      },
+    ],
+    quote: { baseBudget: { amount: 25000, currency: "BDT" } },
+    deadline: { date: "2026-02-20T00:00:00.000Z" },
+    rating: { averageStars: 0 },
+  },
+];
 
 const platformIcons: Record<Platform, JSX.Element> = {
   instagram: <RiInstagramFill size={26} className="fill-light-green" />,
@@ -57,9 +184,8 @@ function AvatarStack({ avatars }: { avatars: Array<string | undefined> }) {
 
 function getPreviewInfluencer(c: CampaignDetails) {
   const selected =
-    c.influencerCampaigns.find(
-      (x) => x.influencer.id === c.selectedInfluencerId
-    ) ?? c.influencerCampaigns[0];
+    c.influencerCampaigns.find((x) => x.influencer.id === c.selectedInfluencerId) ??
+    c.influencerCampaigns[0];
 
   const name = selected?.influencer.name ?? "Influencer";
 
@@ -68,6 +194,7 @@ function getPreviewInfluencer(c: CampaignDetails) {
     .filter(Boolean)
     .slice(0, 2);
 
+  // ✅ if more than 1 influencer total, show +N (excluding selected)
   const extraCount = Math.max(0, c.influencerCampaigns.length - 1);
 
   return { name, avatars, extraCount };
@@ -85,17 +212,13 @@ function CompletedCampaignCard({ campaign }: { campaign: CampaignDetails }) {
       <CardContent className="p-5 space-y-4">
         {/* Title */}
         <div className="space-y-1">
-          <h3 className="text-Primary font-semibold leading-tight">
-            {campaign.title}
-          </h3>
+          <h3 className="text-Primary font-semibold leading-tight">{campaign.title}</h3>
           <p className="text-dark-gray text-xs">Influencer Promotion</p>
         </div>
 
-        {/* Influencer preview (like screenshot) */}
+        {/* Influencer preview */}
         <div className="flex items-center gap-3">
-          <AvatarStack
-            avatars={preview.avatars.length ? preview.avatars : ["", ""]}
-          />
+          <AvatarStack avatars={preview.avatars.length ? preview.avatars : ["", ""]} />
           <p className="text-orange text-sm font-medium truncate">
             {preview.name}
             {preview.extraCount > 0 ? `, +${preview.extraCount}` : ""}
@@ -108,13 +231,13 @@ function CompletedCampaignCard({ campaign }: { campaign: CampaignDetails }) {
           <div className="flex items-center gap-2">
             {campaign.platforms.map((p) => (
               <span key={p} className="leading-none">
-                {platformIcons[p as Platform]}
+                {platformIcons[p]}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Offered box (grey like screenshot) */}
+        {/* Offered box */}
         <div className="rounded-xl border border-border bg-muted/40 px-4 py-5 space-y-2">
           <p className="text-Primary text-base font-medium">Offered</p>
           <p className="text-light-green text-4xl font-semibold leading-none">
@@ -149,7 +272,7 @@ function CompletedCampaignCard({ campaign }: { campaign: CampaignDetails }) {
 
 const CompletedJobList = () => {
   const completedCampaigns = useMemo(
-    () => campaignMocksData.filter((c) => c.tabStatus === "Completed"),
+    () => campaignMocksData.filter((c) => c.status === "Completed"),
     []
   );
 

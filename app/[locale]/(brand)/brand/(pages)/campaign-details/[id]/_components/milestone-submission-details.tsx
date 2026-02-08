@@ -201,11 +201,10 @@ export default function MilestoneSubmissionDetails({
                       const pctRaw = tar > 0 ? (cur / tar) * 100 : 0;
                       const pct = Math.max(
                         0,
-                        Math.min(100, Math.round(pctRaw))
+                        Math.min(100, Math.round(pctRaw)),
                       );
 
-                      const Icon =
-                        metricIconMap[normalizeMetricKey(m.key ?? m.label)];
+                      const Icon = metricIconMap[normalizeMetricKey(m.key)];
 
                       return (
                         <div key={m.key} className="space-y-2">
@@ -258,7 +257,7 @@ export default function MilestoneSubmissionDetails({
                     <Donut
                       value={
                         Number(
-                          milestone.performance?.averagePerformancePercent ?? 0
+                          milestone.performance?.averagePerformancePercent ?? 0,
                         ) || 0
                       }
                     />
