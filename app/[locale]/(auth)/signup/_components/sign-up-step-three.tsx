@@ -3,18 +3,55 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useRef, ChangeEvent, KeyboardEvent, useMemo } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
 import { useTranslations } from "next-intl";
-import axios from "axios";
 
 import Loader from "@/components/spin-loader";
-import api from "@/lib/axios";
-import { notifyError, notifySuccess } from "@/helpers/helper";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { handlePhoneFormat } from "@/utils/phone_util";
+import { resendOtp, verifyOtp } from "@/api/auth/otp";
 
 type Props = {
   nextStep: () => void;
 };
+
+
+function extractToken(data: unknown): string | null {
+  if (!data) return null;
+
+  // token is directly a string
+  if (typeof data === "string") return data;
+
+  if (typeof data === "object") {
+    const d: any = data;
+
+  
+    const t1 = d.token;
+    if (typeof t1 === "string") return t1;
+
+    const t2 = d.accessToken;
+    if (typeof t2 === "string") return t2;
+
+    const t3 = d.data?.token;
+    if (typeof t3 === "string") return t3;
+
+    const t4 = d.token?.accessToken;
+    if (typeof t4 === "string") return t4;
+
+    const t5 = d.data?.accessToken;
+    if (typeof t5 === "string") return t5;
+  }
+
+  return null;
+}
 
 const SignUpStepThree = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step3");
@@ -23,7 +60,7 @@ const SignUpStepThree = ({ nextStep }: Props) => {
 
   const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
-  const [loading2, setLoading2] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const otp = useMemo(() => codes.join(""), [codes]);
@@ -34,9 +71,9 @@ const SignUpStepThree = ({ nextStep }: Props) => {
 
   const handleChange = (index: number, value: string) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newCodes = [...codes];
-      newCodes[index] = value;
-      setCodes(newCodes);
+      const next = [...codes];
+      next[index] = value;
+      setCodes(next);
 
       if (value && index < 3) {
         inputRefs.current[index + 1]?.focus();
@@ -56,30 +93,18 @@ const SignUpStepThree = ({ nextStep }: Props) => {
     }
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text/plain").trim();
+    const pasted = e.clipboardData.getData("text/plain").trim();
+    if (!/^\d{4}$/.test(pasted)) return;
 
-    if (/^\d{4}$/.test(pastedData)) {
-      const digits = pastedData.split("");
-      const newCodes = [...codes];
-
-      digits.slice(0, 4).forEach((digit, idx) => {
-        newCodes[idx] = digit;
-      });
-
-      setCodes(newCodes);
-      inputRefs.current[3]?.focus();
-    }
-  };
-
-  const formatBdPhone = (raw: string) => {
-    const p = raw.trim();
-    if (!p) return "";
-    if (p.startsWith("+880")) return p;
-    if (p.startsWith("880")) return `+${p}`;
-    if (p.startsWith("01")) return `+88${p}`;
-    return `+88${p}`;
+    const digits = pasted.split("");
+    const next = [...codes];
+    digits.forEach((d, i) => {
+      if (i < 4) next[i] = d;
+    });
+    setCodes(next);
+    inputRefs.current[3]?.focus();
   };
 
   const handleContinue = async () => {
@@ -88,84 +113,66 @@ const SignUpStepThree = ({ nextStep }: Props) => {
       return;
     }
 
-    const formattedPhone = formatBdPhone(phoneFromStore || "");
-
+    const formattedPhone = handlePhoneFormat(phoneFromStore || "");
     if (!formattedPhone) {
       notifyError("Phone number not found. Please sign up again.");
       return;
     }
 
     setLoading(true);
-
     try {
-      const payload = { phone: formattedPhone, otp };
-      const res = await fetch("/api/auth/verify-otp", {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const d = await res.json();
+      const res = await verifyOtp({ phone: formattedPhone, otp });
 
-      if (res.status === 200) {
+      // success status can be 200 (or sometimes 201 depending backend)
+      if (res.status === 200 || res.status === 201) {
+        const token = extractToken(res.data);
+
+        if (!token) {
+          // This is why Step 5 shows "Token not found"
+          notifyError("Token missing from server response. Please contact support.");
+          return;
+        }
+
+        setToken(token);
         notifySuccess("OTP verified successfully");
-        setToken(d.token);
         nextStep();
-      }
-      if (res.status === 400) {
-        notifyError(`${d.message}`);
-      }
-      return;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const apiMsg =
-          (error.response?.data as { message?: string })?.message ||
-          "OTP verification failed";
-        notifyError(apiMsg);
         return;
       }
 
       notifyError("OTP verification failed");
+    } catch (e: any) {
+      notifyError(e?.message ?? "OTP verification failed");
     } finally {
       setLoading(false);
     }
   };
 
-  //rest otp
   const handleResetOtp = async () => {
-    setLoading2(true);
-    const formattedPhone = formatBdPhone(phoneFromStore || "");
+    setResendLoading(true);
 
+    const formattedPhone = handlePhoneFormat(phoneFromStore || "");
     if (!formattedPhone) {
       notifyError("Phone number not found");
+      setResendLoading(false);
       return;
     }
 
     try {
-      await api.post("/influencer/auth/resend-otp", { phone: formattedPhone });
-      notifySuccess(`Otp send again to ${formattedPhone}`);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        const msg =
-          (error.response?.data as { message?: string })?.message ||
-          "Failed to resend OTP";
+      const res = await resendOtp(formattedPhone);
 
-        // your special case
-        if (status === 400 && msg === "Phone number is already verified") {
-          notifyError("Phone number is already verified");
-          return;
-        }
-
-        notifyError(msg);
-        return;
+      if (res.status === 200 || res.status === 201) {
+        notifySuccess(`Otp sent again to ${formattedPhone}`);
+      } else {
+        notifyError("Failed to resend OTP");
       }
-
-      notifyError("Failed to resend OTP");
+    } catch (e: any) {
+      if (e?.status === 400 && e?.message === "Phone number is already verified") {
+        notifyError("Phone number is already verified");
+      } else {
+        notifyError(e?.message ?? "Failed to resend OTP");
+      }
     } finally {
-      setLoading2(false);
+      setResendLoading(false);
     }
   };
 
@@ -176,11 +183,12 @@ const SignUpStepThree = ({ nextStep }: Props) => {
         <h1 className="text-Primary text-[32px] lg:text-[38px] text-center max-w-72 font-semibold">
           {t("title")}
         </h1>
+
         <p className="text-[16px] text-black mt-6 font-normal text-center">
           We send a code to {phoneFromStore}
         </p>
 
-        {/* code send part */}
+        {/* OTP boxes */}
         <div className="mt-14">
           <div className="flex justify-center gap-3 sm:gap-4">
             {codes.map((code, index) => (
@@ -211,16 +219,17 @@ const SignUpStepThree = ({ nextStep }: Props) => {
             {t("resend")}:{" "}
             <button
               type="button"
-              className="text-black cursor-pointer font-medium hover:underline"
+              className="text-black cursor-pointer font-medium hover:underline disabled:opacity-60"
               onClick={handleResetOtp}
-              disabled={loading2}
+              disabled={resendLoading}
             >
-              {loading2 ? "ReSending..." : t("resend")}
+              {resendLoading ? "ReSending..." : t("resend")}
             </button>
           </p>
         </div>
 
         <Button
+          type="button"
           className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full sm:w-78.5 text-[18px] mt-10"
           onClick={handleContinue}
           disabled={loading || !isOtpComplete}

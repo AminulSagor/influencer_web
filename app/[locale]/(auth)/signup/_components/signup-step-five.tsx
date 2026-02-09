@@ -1,5 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,11 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { useTranslations } from "next-intl";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -22,33 +23,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { BD_LOCATIONS } from "@/location-data/bd-location";
-import axiosInstance from "@/lib/axios";
+import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import type { UserRole } from "@/types/auth/role_type";
+
+import { notifyError } from "@/utils/toast_util";
 import Loader from "@/components/spin-loader";
-import { notifyError, notifySuccess } from "@/helpers/helper";
+import { useOnboardingStore } from "@/store/onboarding_store";
+import { AddressFormValues, addressSchema } from "@/schemas/onboarding/address_schema";
+import { decodeJwtPayload } from "@/utils/jwt_util";
+
 
 type Props = {
   nextStep: () => void;
 };
 
-type AddressFormValues = {
-  thana: string;
-  zila: string;
-  fullAddress: string;
-};
-
 const SignUpStepFive = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step5");
-  const token = useAuthStore((s) => s.token);
-  const userType = useAuthStore((s) => s.userType);
-  const [loading, setLoading] = useState(false);
+  const userType = useAuthStore((s) => s.userType) as UserRole;
+
+  const savedAddress = useOnboardingStore((s) => s.address);
+  const setAddress = useOnboardingStore((s) => s.setAddress);
 
   const methods = useForm<AddressFormValues>({
-    defaultValues: {
-      thana: "",
-      zila: "",
-      fullAddress: "",
-    },
+    resolver: zodResolver(addressSchema),
+    defaultValues: savedAddress, 
     mode: "onChange",
     reValidateMode: "onChange",
   });
@@ -66,40 +66,49 @@ const SignUpStepFive = ({ nextStep }: Props) => {
   }, [selectedZila]);
 
   const onSubmit = async (data: AddressFormValues) => {
-    setLoading(true);
-    try {
-      const res = await axiosInstance.patch(
-        `/${userType}/profile/onboarding`,
-        data,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.status === 200) {
-        nextStep();
-      }
-    } catch (error: unknown) {
-      notifyError("Try again later");
+    setAddress(data);
+
+    // optional: verify minimum state
+    if (!data.zila || !data.thana || !data.fullAddress) {
+      notifyError("Please fill all required fields");
+      return;
     }
+
+    nextStep();
   };
+
+
+
+const token = useAuthStore((s) => s.token);
+
+const jwt = token ? decodeJwtPayload(token) : null;
+
+console.log("token:", token ? token.slice(0, 20) : "NO_TOKEN");
+console.log("jwt payload:", jwt);
+console.log("jwt role:", jwt?.role);
+console.log("isVerified:", jwt?.isVerified);
 
   return (
     <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-10">
-      {/* Left Content */}
+      {/* Left */}
       <div className="w-full md:w-1/2">
-        <div className="flex flex-col md:items-center  text-center lg:px-4">
+        <div className="flex flex-col md:items-center text-center lg:px-4">
           <div className="space-y-5 md:space-y-10">
             <h1 className="text-Primary text-4xl md:text-[48px] font-semibold">
               {t("title")}
             </h1>
-            <p className=" text-2xl md:text-[23px] text-light-green font-semibold">
+
+            <p className="text-2xl md:text-[23px] text-light-green font-semibold">
               {userType === "influencer"
-                ? "Where should we sent the good stuff?"
+                ? "Where should we send the good stuff?"
                 : "Establish Your Business Presence"}
             </p>
+
             <p className="text-[18px] text-Primary">{t("description")}</p>
           </div>
 
           <Image
-            src={"/auth-images/step-5-brand.png"}
+            src="/auth-images/step-5-brand.png"
             height={400}
             width={400}
             alt="brand-image"
@@ -108,11 +117,11 @@ const SignUpStepFive = ({ nextStep }: Props) => {
         </div>
       </div>
 
-      {/* Right Content / Form */}
-      <div className="rounded-xl md:p-4 w-full md:w-1/2 ">
+      {/* Right */}
+      <div className="rounded-xl md:p-4 w-full md:w-1/2">
         <div className="flex gap-2 text-Primary">
           <Image
-            src={"/auth-images/step-5-subimage.png"}
+            src="/auth-images/step-5-subimage.png"
             height={29}
             width={29}
             alt="logo-images"
@@ -129,7 +138,7 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
         <div className="flex gap-2 text-Primary mt-10 items-center pb-4">
           <Image
-            src={"/auth-images/step-5-location.png"}
+            src="/auth-images/step-5-location.png"
             height={29}
             width={29}
             alt="logo-images"
@@ -138,31 +147,21 @@ const SignUpStepFive = ({ nextStep }: Props) => {
           <p className="font-semibold text-lg">{t("addressSection")}</p>
         </div>
 
-        {/* Form Area */}
         <Form {...methods}>
-          <form
-            onSubmit={methods.handleSubmit(onSubmit)}
-            className="space-y-4 mt-4"
-          >
-            {/* Zila Select */}
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+            {/* Zila */}
             <FormField
               control={methods.control}
               name="zila"
-              rules={{ required: `${t("zilaLabel")} is required` }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-light-green">
-                    {t("zilaLabel")}
-                  </FormLabel>
+                  <FormLabel className="text-light-green">{t("zilaLabel")}</FormLabel>
                   <FormControl>
                     <Select
                       value={field.value}
                       onValueChange={(v) => {
                         field.onChange(v);
-                        methods.setValue("thana", "", {
-                          shouldValidate: true,
-                          shouldDirty: true,
-                        });
+                        methods.setValue("thana", "", { shouldValidate: true, shouldDirty: true });
                       }}
                     >
                       <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
@@ -182,16 +181,13 @@ const SignUpStepFive = ({ nextStep }: Props) => {
               )}
             />
 
-            {/* Thana Select (depends on Zila) */}
+            {/* Thana */}
             <FormField
               control={methods.control}
               name="thana"
-              rules={{ required: `${t("thanaLabel")} is required` }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-light-green">
-                    {t("thanaLabel")}
-                  </FormLabel>
+                  <FormLabel className="text-light-green">{t("thanaLabel")}</FormLabel>
                   <FormControl>
                     <Select
                       value={field.value}
@@ -200,11 +196,7 @@ const SignUpStepFive = ({ nextStep }: Props) => {
                     >
                       <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
                         <SelectValue
-                          placeholder={
-                            selectedZila
-                              ? t("thanaPlaceholder")
-                              : "Select Zila first"
-                          }
+                          placeholder={selectedZila ? t("thanaPlaceholder") : "Select Zila first"}
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -221,16 +213,13 @@ const SignUpStepFive = ({ nextStep }: Props) => {
               )}
             />
 
-            {/* Full address */}
+            {/* Full Address */}
             <FormField
               control={methods.control}
               name="fullAddress"
-              rules={{ required: `${t("fullAddressLabel")} is required` }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-light-green">
-                    {t("fullAddressLabel")}
-                  </FormLabel>
+                  <FormLabel className="text-light-green">{t("fullAddressLabel")}</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder={t("fullAddressPlaceholder")}
@@ -245,9 +234,10 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
             <Button
               type="submit"
+              disabled={!methods.formState.isValid}
               className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-4"
             >
-              {loading ? <Loader /> : t("continue")}
+              {methods.formState.isSubmitting ? <Loader /> : t("continue")}
             </Button>
           </form>
         </Form>

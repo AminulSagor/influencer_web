@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useForm, useFieldArray } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,38 +25,60 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import Loader from "@/components/spin-loader";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import axiosInstance from "@/lib/axios";
+import { useOnboardingStore } from "@/store/onboarding_store";
+
+import { notifyError } from "@/utils/toast_util";
+import type { UserRole } from "@/types/auth/role_type";
+
+import {
+  socialSchema,
+  type SocialFormValues,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+} from "@/schemas/onboarding/social_schema";
 
 type Props = {
   nextStep: () => void;
 };
 
-type SocialLinkItem = {
-  platform: string;
-  url: string;
+const PLATFORM_LABEL: Record<Exclude<SocialPlatform, "">, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  x: "X",
 };
-
-type SocialFormValues = {
-  website?: string;
-  socialLinks: SocialLinkItem[];
-};
-
-const PLATFORM_OPTIONS = ["Facebook", "YouTube", "TikTok", "LinkedIn"] as const;
 
 const SignUpStepSix = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step6");
-  const token = useAuthStore((s) => s.token);
-  const userType = useAuthStore((s) => s.userType);
+  const userType = useAuthStore((s) => s.userType) as UserRole;
+
+  const savedSocial = useOnboardingStore((s) => ({
+    website: (s.data.website ?? "") as string,
+    socialLinks:
+      (s.data.socialLinks ?? []).map((x) => ({
+        platform: (x.platform ?? "") as SocialPlatform,
+        url: x.url ?? "",
+      })) || [],
+  }));
+
+  const setWebsite = useOnboardingStore((s) => s.setWebsite);
+  const setSocialLinks = useOnboardingStore((s) => s.setSocialLinks);
 
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<SocialFormValues>({
+    resolver: zodResolver(socialSchema),
     defaultValues: {
-      website: "",
-      socialLinks: [{ platform: "", url: "" }],
+      website: savedSocial.website,
+      socialLinks: savedSocial.socialLinks.length
+        ? savedSocial.socialLinks
+        : [{ platform: "", url: "" }],
     },
-    mode: "onSubmit",
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -64,37 +87,24 @@ const SignUpStepSix = ({ nextStep }: Props) => {
   });
 
   const onSubmit = async (values: SocialFormValues) => {
-    const website = (values.website ?? "").trim();
-
-    const touchedRows = (values.socialLinks ?? [])
-      .map((x) => ({
-        platform: (x.platform ?? "").trim(),
-        url: (x.url ?? "").trim(),
-      }))
-      .filter((x) => x.platform || x.url);
-
-    const socialLinks = touchedRows.filter((x) => x.platform && x.url);
-
-    const hasAnyData = Boolean(website) || socialLinks.length > 0;
-
-    if (!hasAnyData) {
-      nextStep();
-      return;
-    }
-
     setLoading(true);
     try {
-      const payload: { website?: string; socialLinks?: SocialLinkItem[] } = {};
-      if (website) payload.website = website;
-      if (socialLinks.length) payload.socialLinks = socialLinks;
+      const website = (values.website ?? "").trim();
 
-      await axiosInstance.patch(`/${userType}/profile/onboarding`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const normalized = (values.socialLinks ?? [])
+        .map((row) => ({
+          platform: (row.platform ?? "").toString().trim() as SocialPlatform,
+          url: (row.url ?? "").trim(),
+        }))
+        .filter((x) => x.platform && x.url); // keep complete rows only
+
+      // store only (NO API CALL)
+      setWebsite(website);
+      setSocialLinks(normalized);
 
       nextStep();
-    } catch (error: unknown) {
-      console.log(error);
+    } catch {
+      notifyError("Try again later");
     } finally {
       setLoading(false);
     }
@@ -102,14 +112,17 @@ const SignUpStepSix = ({ nextStep }: Props) => {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 justify-between mt-4">
+      {/* Left */}
       <div className="w-full lg:w-1/2">
         <div className="space-y-5 md:space-y-10 flex flex-col text-center lg:text-start">
           <h1 className="text-Primary text-3xl md:text-[40px] font-semibold">
             Time to shine!
           </h1>
+
           <p className="text-2xl md:text-[23px] text-light-green font-semibold">
             Let shine your social presence!
           </p>
+
           <p className="text-md md:text-[18px] text-Primary">
             {userType === "client"
               ? "Help creators understand your brand's voice and aesthetic by linking your active social channels."
@@ -119,7 +132,7 @@ const SignUpStepSix = ({ nextStep }: Props) => {
 
         <div className="flex justify-center">
           <Image
-            src={"/auth-images/step-6-brand.png"}
+            src="/auth-images/step-6-brand.png"
             height={428}
             width={428}
             alt="brand-image"
@@ -128,10 +141,11 @@ const SignUpStepSix = ({ nextStep }: Props) => {
         </div>
       </div>
 
+      {/* Right */}
       <div className="rounded-xl md:p-4 w-full lg:w-1/2">
         <div className="flex gap-4 text-Primary md:items-center">
           <Image
-            src={"/auth-images/step-6-handshack.png"}
+            src="/auth-images/step-6-handshack.png"
             height={35}
             width={35}
             alt="logo-images"
@@ -142,7 +156,7 @@ const SignUpStepSix = ({ nextStep }: Props) => {
 
         <div className="flex gap-4 text-Primary mt-10 items-center pb-4">
           <Image
-            src={"/auth-images/step-6-media.png"}
+            src="/auth-images/step-6-media.png"
             height={35}
             width={35}
             alt="logo-images"
@@ -152,18 +166,14 @@ const SignUpStepSix = ({ nextStep }: Props) => {
         </div>
 
         <Form {...methods}>
-          <form
-            onSubmit={methods.handleSubmit(onSubmit)}
-            className="space-y-4 mt-4"
-          >
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+            {/* Website */}
             <FormField
               control={methods.control}
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-light-green">
-                    {t("websiteLabel")}
-                  </FormLabel>
+                  <FormLabel className="text-light-green">{t("websiteLabel")}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("websitePlaceholder")}
@@ -176,6 +186,7 @@ const SignUpStepSix = ({ nextStep }: Props) => {
               )}
             />
 
+            {/* Social Links */}
             <div className="space-y-6">
               {fields.map((f, index) => {
                 const platformName = `socialLinks.${index}.platform` as const;
@@ -183,68 +194,39 @@ const SignUpStepSix = ({ nextStep }: Props) => {
 
                 return (
                   <div key={f.id} className="space-y-4">
+                    {/* Platform */}
                     <FormField
                       control={methods.control}
                       name={platformName}
-                      rules={{
-                        validate: (_, formValues) => {
-                          const row = formValues.socialLinks?.[index];
-                          const p = (row?.platform ?? "").trim();
-                          const u = (row?.url ?? "").trim();
-
-                          if (!p && !u) return true;
-
-                          if (
-                            p &&
-                            !PLATFORM_OPTIONS.includes(
-                              p as (typeof PLATFORM_OPTIONS)[number]
-                            )
-                          ) {
-                            return "Please select a valid platform.";
-                          }
-
-                          return (
-                            (p && u) || "After selecting platform, enter URL."
-                          );
-                        },
-                      }}
                       render={({ field }) => (
                         <FormItem>
-                          <Label className="text-light-green">
-                            Choose platforms
-                          </Label>
+                          <Label className="text-light-green">Choose platform</Label>
+
                           <Select
                             value={field.value || ""}
                             onValueChange={(val) => {
                               if (val === "__none__") {
                                 field.onChange("");
-                                methods.setValue(
-                                  `socialLinks.${index}.url`,
-                                  "",
-                                  { shouldValidate: true, shouldDirty: true }
-                                );
-                                methods.clearErrors([
-                                  `socialLinks.${index}.platform`,
-                                  `socialLinks.${index}.url`,
-                                ]);
+                                methods.setValue(`socialLinks.${index}.url`, "", {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                });
                                 return;
                               }
-                              field.onChange(val);
+                              field.onChange(val as SocialPlatform);
                             }}
                           >
                             <FormControl>
                               <SelectTrigger className="w-full focus-visible:ring-1 py-6">
-                                <SelectValue placeholder="Choose platforms" />
+                                <SelectValue placeholder="Choose platform" />
                               </SelectTrigger>
                             </FormControl>
 
                             <SelectContent className="w-full">
-                              <SelectItem value="__none__">
-                                Clear selection
-                              </SelectItem>
-                              {PLATFORM_OPTIONS.map((p) => (
+                              <SelectItem value="__none__">Clear selection</SelectItem>
+                              {SOCIAL_PLATFORMS.map((p) => (
                                 <SelectItem key={p} value={p}>
-                                  {p}
+                                  {PLATFORM_LABEL[p]}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -255,23 +237,10 @@ const SignUpStepSix = ({ nextStep }: Props) => {
                       )}
                     />
 
+                    {/* URL */}
                     <FormField
                       control={methods.control}
                       name={urlName}
-                      rules={{
-                        validate: (v) => {
-                          const row = methods.getValues(`socialLinks.${index}`);
-                          const p = (row?.platform ?? "").trim();
-                          const u = (v ?? "").trim();
-
-                          if (!p && !u) return true;
-
-                          if (p && !u)
-                            return "After selecting platform, enter URL.";
-
-                          return true;
-                        },
-                      }}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-light-green">
@@ -312,11 +281,16 @@ const SignUpStepSix = ({ nextStep }: Props) => {
             </button>
 
             <Button
-              disabled={loading}
               type="submit"
+              disabled={loading || !methods.formState.isValid}
               className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-10 disabled:opacity-60"
+              onClick={() => {
+                if (!methods.formState.isValid) {
+                  notifyError("Please fix the errors above.");
+                }
+              }}
             >
-              {loading ? "Saving..." : t("continue")}
+              {loading ? <Loader /> : t("continue")}
             </Button>
           </form>
         </Form>

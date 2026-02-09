@@ -14,18 +14,18 @@ export const notifyError = (message: string): void => {
 };
 
 //format the phoneNumber
-export const handlePhoneFormat = (phoneNumber: string) => {
-  const rawPhone = phoneNumber.trim();
-  const formattedPhone = rawPhone.startsWith("+880")
-    ? rawPhone
-    : rawPhone.startsWith("880")
-    ? `+${rawPhone}`
-    : rawPhone.startsWith("01")
-    ? `+88${rawPhone}`
-    : `+88${rawPhone}`;
+// export const handlePhoneFormat = (phoneNumber: string) => {
+//   const rawPhone = phoneNumber.trim();
+//   const formattedPhone = rawPhone.startsWith("+880")
+//     ? rawPhone
+//     : rawPhone.startsWith("880")
+//     ? `+${rawPhone}`
+//     : rawPhone.startsWith("01")
+//     ? `+88${rawPhone}`
+//     : `+88${rawPhone}`;
 
-  return formattedPhone;
-};
+//   return formattedPhone;
+// };
 
 //decoder
 export type UserRole = "client" | "influencer" | "agency";

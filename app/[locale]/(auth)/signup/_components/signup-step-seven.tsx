@@ -17,8 +17,8 @@ import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-upload
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
-import axiosInstance from "@/lib/axios";
 import { notifyError } from "@/helpers/helper";
+import { apiClient } from "@/api/base/axios_client";
 
 type Props = {
   nextStep: () => void;
@@ -67,7 +67,7 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
       module: `${userType}/nid-documents`,
     };
 
-    const response = await axiosInstance.post<SignedUrlResponse>(
+    const response = await apiClient.post<SignedUrlResponse>(
       "/upload/signed-url",
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -97,7 +97,7 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
       module: `${userType}/nid-documents`,
     };
 
-    const response = await axiosInstance.post<SignedUrlResponse>(
+    const response = await apiClient.post<SignedUrlResponse>(
       "/upload/signed-url",
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -134,7 +134,7 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
         payload.nidBackImg = await getPublicUrl(backFile);
       }
 
-      const res = await axiosInstance.patch(
+      const res = await apiClient.patch(
         `/${userType}/profile/onboarding`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }

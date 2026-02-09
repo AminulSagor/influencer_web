@@ -1,11 +1,11 @@
-import { UserType } from "@/types/auth-types";
+import { UserRole } from "@/types/auth/role_type";
 import { create } from "zustand";
 
 type AuthStore = {
-  userType: UserType;
+  userType: UserRole;
   phone: string;
   token: string | null;
-  setUserType: (type: UserType) => void;
+  setUserType: (type: UserRole) => void;
   setPhone: (phone: string) => void;
   setToken: (token: string) => void;
   clearAuth: () => void;

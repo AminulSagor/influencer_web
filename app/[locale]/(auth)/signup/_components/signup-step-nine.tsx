@@ -17,8 +17,8 @@ import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-upload
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
-import axiosInstance from "@/lib/axios";
 import { notifyError } from "@/helpers/helper";
+import { apiClient } from "@/api/base/axios_client";
 
 type Props = {
   nextStep: () => void;
@@ -65,7 +65,7 @@ const SignUpStepNine = ({ nextStep }: Props) => {
       module: `${userType}/tin-certificate`,
     };
 
-    const response = await axiosInstance.post<SignedUrlResponse>(
+    const response = await apiClient.post<SignedUrlResponse>(
       "/upload/signed-url",
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -95,7 +95,7 @@ const SignUpStepNine = ({ nextStep }: Props) => {
       module: `${userType}/tin-certificate`,
     };
 
-    const response = await axiosInstance.post<SignedUrlResponse>(
+    const response = await apiClient.post<SignedUrlResponse>(
       "/upload/signed-url",
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
@@ -125,7 +125,7 @@ const SignUpStepNine = ({ nextStep }: Props) => {
         payload.tinCertificateImg = await getPublicUrl(file);
       }
 
-      const res = await axiosInstance.patch(
+      const res = await apiClient.patch(
         `/${userType}/profile/onboarding`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
