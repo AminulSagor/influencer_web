@@ -2,7 +2,7 @@
 import { SocialLink } from "./social-link_type";
 
 export type OnboardingPayload = {
-  zila: string;
+  zilla: string;
   thana: string;
   fullAddress: string;
 

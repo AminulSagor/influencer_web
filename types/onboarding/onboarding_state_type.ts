@@ -1,8 +1,11 @@
 import type { AddressFormValues } from "@/schemas/onboarding/address_schema";
 import { SocialLink } from "./social-link_type";
 import { OnboardingPayload } from "./onboarding_payload_type";
+import { UserRole } from "../auth/role_type";
 
 export type OnboardingState = {
+  userRole: UserRole | null;
+  setUserRole: (role: UserRole) => void;
   // STEP 5
   address: AddressFormValues;
   setAddress: (address: AddressFormValues) => void;
@@ -40,6 +43,7 @@ export type OnboardingState = {
     tinImage?: string; 
     binNumber?: string; 
   }) => void;
+
 
   // FINAL
   toPayload: () => OnboardingPayload;

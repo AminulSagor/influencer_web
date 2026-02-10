@@ -1,4 +1,4 @@
-export type UserRole = "client" | "influencer" | "agency";
+type UserRole = "client" | "influencer" | "agency";
 export type JwtPayload = { role?: UserRole; isVerified?: boolean; exp?: number };
 
 export function decodeJwtPayload(token: string): JwtPayload | null {
