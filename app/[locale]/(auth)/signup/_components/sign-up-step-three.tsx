@@ -23,11 +23,10 @@ type Props = {
   nextStep: () => void;
 };
 
-
 function extractToken(data: unknown): string | null {
   if (!data) return null;
 
-  // token is directly a string
+
   if (typeof data === "string") return data;
 
   if (typeof data === "object") {
@@ -123,12 +122,10 @@ const SignUpStepThree = ({ nextStep }: Props) => {
     try {
       const res = await verifyOtp({ phone: formattedPhone, otp });
 
-      // success status can be 200 (or sometimes 201 depending backend)
       if (res.status === 200 || res.status === 201) {
         const token = extractToken(res.data);
 
         if (!token) {
-          // This is why Step 5 shows "Token not found"
           notifyError("Token missing from server response. Please contact support.");
           return;
         }

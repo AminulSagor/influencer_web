@@ -1,84 +1,49 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select";
-
-import Loader from "@/components/spin-loader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import { SocialPlatform } from "@/types/onboarding/social-link_type";
 import { useOnboardingStore } from "@/store/onboarding_store";
 
-import { notifyError } from "@/utils/toast_util";
-import type { UserRole } from "@/types/auth/role_type";
 
-import {
-  socialSchema,
-  type SocialFormValues,
-  SOCIAL_PLATFORMS,
-  type SocialPlatform,
-} from "@/schemas/onboarding/social_schema";
 
-type Props = {
-  nextStep: () => void;
+export type Step6FormValues = {
+  website: string;
+  socialLinks: {
+    platform: SocialPlatform | "";
+    profileUrl: string;
+  }[];
 };
 
-const PLATFORM_LABEL: Record<Exclude<SocialPlatform, "">, string> = {
-  facebook: "Facebook",
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  youtube: "YouTube",
-  x: "X",
-};
 
-const SignUpStepSix = ({ nextStep }: Props) => {
-  const t = useTranslations("Signup.step6");
-  const userType = useAuthStore((s) => s.userType) as UserRole;
+const PLATFORM_OPTIONS = [
+  "Facebook",
+  "Instagram",
+  "Tiktok",
+  "Youtube",
+  "X",
+] as const;
 
-  const savedSocial = useOnboardingStore((s) => ({
-    website: (s.data.website ?? "") as string,
-    socialLinks:
-      (s.data.socialLinks ?? []).map((x) => ({
-        platform: (x.platform ?? "") as SocialPlatform,
-        url: x.url ?? "",
-      })) || [],
-  }));
+export default function StepSix({ userType, t, nextStep }: any) {
+  const { website, socialLinks, setWebsite, setSocialLinks } =
+    useOnboardingStore();
 
-  const setWebsite = useOnboardingStore((s) => s.setWebsite);
-  const setSocialLinks = useOnboardingStore((s) => s.setSocialLinks);
-
-  const [loading, setLoading] = useState(false);
-
-  const methods = useForm<SocialFormValues>({
-    resolver: zodResolver(socialSchema),
+  const methods = useForm<Step6FormValues>({
     defaultValues: {
-      website: savedSocial.website,
-      socialLinks: savedSocial.socialLinks.length
-        ? savedSocial.socialLinks
-        : [{ platform: "", url: "" }],
+      website,
+      socialLinks,
     },
-    mode: "onChange",
-    reValidateMode: "onChange",
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -86,33 +51,15 @@ const SignUpStepSix = ({ nextStep }: Props) => {
     name: "socialLinks",
   });
 
-  const onSubmit = async (values: SocialFormValues) => {
-    setLoading(true);
-    try {
-      const website = (values.website ?? "").trim();
-
-      const normalized = (values.socialLinks ?? [])
-        .map((row) => ({
-          platform: (row.platform ?? "").toString().trim() as SocialPlatform,
-          url: (row.url ?? "").trim(),
-        }))
-        .filter((x) => x.platform && x.url); // keep complete rows only
-
-      // store only (NO API CALL)
-      setWebsite(website);
-      setSocialLinks(normalized);
-
-      nextStep();
-    } catch {
-      notifyError("Try again later");
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data: Step6FormValues) => {
+    setWebsite(data.website);
+    setSocialLinks(data.socialLinks);
+    nextStep();
   };
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 justify-between mt-4">
-      {/* Left */}
+      {/* LEFT */}
       <div className="w-full lg:w-1/2">
         <div className="space-y-5 md:space-y-10 flex flex-col text-center lg:text-start">
           <h1 className="text-Primary text-3xl md:text-[40px] font-semibold">
@@ -141,162 +88,96 @@ const SignUpStepSix = ({ nextStep }: Props) => {
         </div>
       </div>
 
-      {/* Right */}
+      {/* RIGHT */}
       <div className="rounded-xl md:p-4 w-full lg:w-1/2">
-        <div className="flex gap-4 text-Primary md:items-center">
-          <Image
-            src="/auth-images/step-6-handshack.png"
-            height={35}
-            width={35}
-            alt="logo-images"
-            className="h-8"
-          />
-          <p>{t("descriptionSmall")}</p>
-        </div>
-
-        <div className="flex gap-4 text-Primary mt-10 items-center pb-4">
-          <Image
-            src="/auth-images/step-6-media.png"
-            height={35}
-            width={35}
-            alt="logo-images"
-            className="h-8"
-          />
-          <p className="font-semibold text-lg">{t("socialSection")}</p>
-        </div>
-
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-            {/* Website */}
             <FormField
               control={methods.control}
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-light-green">{t("websiteLabel")}</FormLabel>
+                  <FormLabel className="text-light-green">
+                    Website (optional)
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder={t("websitePlaceholder")}
-                      {...field}
-                      className="bg-white border py-5.5 font-normal focus-visible:ring-1"
-                    />
+                    <Input {...field} className="bg-white py-5.5" />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Social Links */}
-            <div className="space-y-6">
-              {fields.map((f, index) => {
-                const platformName = `socialLinks.${index}.platform` as const;
-                const urlName = `socialLinks.${index}.url` as const;
-
-                return (
-                  <div key={f.id} className="space-y-4">
-                    {/* Platform */}
-                    <FormField
-                      control={methods.control}
-                      name={platformName}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label className="text-light-green">Choose platform</Label>
-
-                          <Select
-                            value={field.value || ""}
-                            onValueChange={(val) => {
-                              if (val === "__none__") {
-                                field.onChange("");
-                                methods.setValue(`socialLinks.${index}.url`, "", {
-                                  shouldValidate: true,
-                                  shouldDirty: true,
-                                });
-                                return;
-                              }
-                              field.onChange(val as SocialPlatform);
-                            }}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="w-full focus-visible:ring-1 py-6">
-                                <SelectValue placeholder="Choose platform" />
-                              </SelectTrigger>
-                            </FormControl>
-
-                            <SelectContent className="w-full">
-                              <SelectItem value="__none__">Clear selection</SelectItem>
-                              {SOCIAL_PLATFORMS.map((p) => (
-                                <SelectItem key={p} value={p}>
-                                  {PLATFORM_LABEL[p]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* URL */}
-                    <FormField
-                      control={methods.control}
-                      name={urlName}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-light-green">
-                            {t("profileLinkLabel")}
-                          </FormLabel>
+            <div className="w-full">
+              {fields.map((f, index) => (
+                <div key={f.id} className="space-y-4">
+                  <FormField
+                    control={methods.control}
+                    name={`socialLinks.${index}.platform`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label className="text-light-green">
+                          Choose platforms
+                        </Label>
+                        <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <Input
-                              placeholder={t("profileLinkPlaceholder")}
-                              {...field}
-                              className="bg-white border py-6 font-normal focus-visible:ring-1"
-                            />
+                            <SelectTrigger className="py-6 text-light-green w-full">
+                              <SelectValue placeholder="Choose platforms" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {fields.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="text-sm text-red-600 hover:underline"
-                      >
-                        Remove
-                      </button>
+                          <SelectContent>
+                            {PLATFORM_OPTIONS.map((p) => (
+                              <SelectItem key={p} value={p}>
+                                {p}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
                     )}
-                  </div>
-                );
-              })}
+                  />
+
+                  <FormField
+                    control={methods.control}
+                    name={`socialLinks.${index}.profileUrl`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-light-green w-full">
+                          Profile link
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="py-6" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="text-sm text-red-600"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
 
             <button
               type="button"
-              onClick={() => append({ platform: "", url: "" })}
-              className="border border-dashed border-Primary w-full rounded-lg h-14 text-light-green cursor-pointer flex items-center justify-center font-semibold"
+              onClick={() => append({ platform: "", profileUrl: "" })}
+              className="border border-dashed border-light-green w-full rounded-lg h-14 text-light-green cursor-pointer flex items-center justify-center font-semibold"
             >
-              + {t("addAnother")}
+              + Add Another
             </button>
 
-            <Button
-              type="submit"
-              disabled={loading || !methods.formState.isValid}
-              className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-10 disabled:opacity-60"
-              onClick={() => {
-                if (!methods.formState.isValid) {
-                  notifyError("Please fix the errors above.");
-                }
-              }}
-            >
-              {loading ? <Loader /> : t("continue")}
+            <Button type="submit" className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 w-full text-[18px] mt-10 disabled:opacity-60">
+              Continue
             </Button>
           </form>
         </Form>
       </div>
     </div>
   );
-};
-
-export default SignUpStepSix;
+}

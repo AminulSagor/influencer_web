@@ -8,7 +8,7 @@ import { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import { notifyError } from "@/helpers/helper";
+import { notifyError } from "@/utils/toast_util";
 import { UserRole } from "@/types/auth/role_type";
 
 type Props = {

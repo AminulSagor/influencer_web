@@ -1,96 +1,81 @@
-// import { OnboardingPayload } from "@/types/profile/onbording_type";
-// import { create } from "zustand";
-// import { persist } from "zustand/middleware";
-
-// type OnboardingState = {
-//   data: OnboardingPayload;
-
-//   setAddress: (v: Pick<OnboardingPayload, "zila" | "thana" | "fullAddress">) => void;
-//   setWebsite: (website: string) => void;
-
-//   setSocialLinks: (links: SocialLink[]) => void;
-//   addSocialLink: (link: SocialLink) => void;
-//   removeSocialLink: (platform: SocialLink["platform"]) => void;
-
-//   setNid: (v: Pick<OnboardingPayload, "nidNumber" | "nidFrontImg" | "nidBackImg">) => void;
-//   setTrade: (v: Pick<OnboardingPayload, "tradeLicenseNumber" | "tradeLicenseImg">) => void;
-
-//   resetOnboarding: () => void;
-// };
-
-// const initialData: OnboardingPayload = {
-//   zila: "",
-//   thana: "",
-//   fullAddress: "",
-//   website: "",
-//   socialLinks: [],
-//   nidNumber: "",
-//   nidFrontImg: "",
-//   nidBackImg: "",
-//   tradeLicenseNumber: "",
-//   tradeLicenseImg: "",
-// };
-
-// export const useOnboardingStore = create<OnboardingState>()(
-//   persist(
-//     (set, get) => ({
-//       data: initialData,
-
-//       setAddress: (v) =>
-//         set((s) => ({ data: { ...s.data, ...v } })),
-
-//       setWebsite: (website) =>
-//         set((s) => ({ data: { ...s.data, website } })),
-
-//       setSocialLinks: (links) =>
-//         set((s) => ({ data: { ...s.data, socialLinks: links } })),
-
-//       addSocialLink: (link) =>
-//         set((s) => ({
-//           data: {
-//             ...s.data,
-//             socialLinks: [
-//               ...s.data.socialLinks.filter((x) => x.platform !== link.platform),
-//               link,
-//             ],
-//           },
-//         })),
-
-//       removeSocialLink: (platform) =>
-//         set((s) => ({
-//           data: {
-//             ...s.data,
-//             socialLinks: s.data.socialLinks.filter((x) => x.platform !== platform),
-//           },
-//         })),
-
-//       setNid: (v) =>
-//         set((s) => ({ data: { ...s.data, ...v } })),
-
-//       setTrade: (v) =>
-//         set((s) => ({ data: { ...s.data, ...v } })),
-
-//       resetOnboarding: () => set({ data: initialData }),
-//     }),
-//     { name: "onboarding-store" }
-//   )
-// );
-
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { OnboardingPayload } from "@/types/onboarding/onboarding_payload_type";
+import { SocialPlatform } from "@/types/onboarding/social-link_type";
 import type { AddressFormValues } from "@/schemas/onboarding/address_schema";
+import { OnboardingState } from "@/types/onboarding/onboarding_state_type";
 
-type OnboardingState = {
-  address: AddressFormValues;
-  setAddress: (v: AddressFormValues) => void;
-};
+export const useOnboardingStore = create<OnboardingState>((set, get) => ({
+  // step 5
+  address: {
+    zila: "",
+    thana: "",
+    fullAddress: "",
+  },
+  setAddress: (address) => set({ address }),
 
-export const useOnboardingStore = create<OnboardingState>()(
-  persist(
-    (set) => ({
-      address: { zila: "", thana: "", fullAddress: "" },
-      setAddress: (v) => set({ address: v }),
-    }),
-    { name: "onboarding-store" }
-  )
-);
+  // step 6
+  website: "",
+  socialLinks: [{ platform: "", profileUrl: "" }],
+  setWebsite: (website) => set({ website }),
+  setSocialLinks: (socialLinks) => set({ socialLinks }),
+
+  // Step 7
+  nidNumber: "",
+  nidFrontImg: "",
+  nidBackImg: "",
+  setNidInfo: (nid) => set(nid),
+
+  // Step 8 - Trade License
+  tradeLicenseNumber: "",
+  tradeLicenseImg: "",
+  setTradeLicenseInfo: (tradeLicense) => set(tradeLicense),
+
+  // Step 9 - TIN/BIN
+  tinNumber: "",
+  tinImage: "",
+  binNumber: "",
+  setTinBinInfo: (tinBin) => set(tinBin),
+
+  // payload builder - UPDATED TO INCLUDE ALL FIELDS
+  toPayload: () => {
+    const { 
+      address, 
+      website, 
+      socialLinks, 
+      nidNumber, 
+      nidFrontImg, 
+      nidBackImg,
+      tradeLicenseNumber,
+      tradeLicenseImg,
+      tinNumber,
+      tinImage,
+      binNumber
+    } = get();
+
+    return {
+      zila: address.zila,
+      thana: address.thana,
+      fullAddress: address.fullAddress,
+
+      website: website.trim() || null,
+
+      socialLinks: socialLinks
+        .filter((l) => l.platform && l.profileUrl)
+        .map((l) => ({
+          platform: l.platform as SocialPlatform,
+          profileUrl: l.profileUrl.trim(),
+        })),
+
+      nidNumber: nidNumber.trim() || null,
+      nidFrontImg: nidFrontImg.trim() || null,
+      nidBackImg: nidBackImg.trim() || null,
+
+      tradeLicenseNumber: tradeLicenseNumber.trim() || null,
+      tradeLicenseImg: tradeLicenseImg.trim() || null,
+
+      tinNumber: tinNumber.trim() || null,
+      tinImage: tinImage.trim() || null,
+      binNumber: binNumber.trim() || null,
+    };
+  },
+}));

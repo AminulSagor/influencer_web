@@ -30,9 +30,9 @@ import type { UserRole } from "@/types/auth/role_type";
 
 import { notifyError } from "@/utils/toast_util";
 import Loader from "@/components/spin-loader";
-import { useOnboardingStore } from "@/store/onboarding_store";
 import { AddressFormValues, addressSchema } from "@/schemas/onboarding/address_schema";
 import { decodeJwtPayload } from "@/utils/jwt_util";
+import { useOnboardingStore } from "@/store/onboarding_store";
 
 
 type Props = {

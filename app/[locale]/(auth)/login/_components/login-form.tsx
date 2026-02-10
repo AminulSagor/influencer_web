@@ -1,4 +1,3 @@
-// LoginForm.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -14,15 +13,14 @@ import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { Lock, User } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { LoginFormValues } from "@/types/auth-types";
 import { useState } from "react";
 import {
-  handlePhoneFormat,
   notifyError,
   notifySuccess,
-} from "@/helpers/helper";
+} from "@/utils/toast_util";
 import Loader from "@/components/spin-loader";
 import { useRouter } from "next/navigation";
+import { handlePhoneFormat } from "@/utils/phone_util";
 
 type UserRole = "client" | "influencer" | "agency";
 type Response = {

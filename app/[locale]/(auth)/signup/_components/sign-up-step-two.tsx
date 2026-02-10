@@ -29,6 +29,7 @@ import {
 } from "@/schemas/signup_schema";
 import { UserRole } from "@/types/auth/role_type";
 import { apiClient } from "@/api/base/axios_client";
+import { signup } from "@/api/auth/signup";
 
 type Props = {
   nextStep: () => void;
@@ -79,22 +80,17 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
     }
 
     try {
-      const res: Response = await apiClient.post("/influencer/auth/signup", payload);
+    const res = await signup(payload);
 
-      if (res.status === 201) {
-        notifySuccess(`Verification Code Sent on ${formattedPhone}`);
-        nextStep();
-      }
-    } catch (error: any) {
-      const apiMsg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Something went wrong";
-
-      notifyError(apiMsg);
-    } finally {
-      setLoading(false);
+    if (res.status === 201) {
+      notifySuccess(`Verification Code Sent on ${formattedPhone}`);
+      nextStep();
     }
+  } catch (error: any) {
+    notifyError(error.message);
+  } finally {
+    setLoading(false);
+  }
   };
 
   const fields = [

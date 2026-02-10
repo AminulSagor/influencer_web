@@ -1,9 +1,5 @@
-export type SocialPlatform = "facebook" | "instagram" | "tiktok" | "youtube" | "x";
-
-export type SocialLink = {
-  platform: SocialPlatform;
-  url: string;
-};
+// types/onboarding/onboarding_payload_type.ts
+import { SocialLink } from "./social-link_type";
 
 export type OnboardingPayload = {
   zila: string;
@@ -18,5 +14,9 @@ export type OnboardingPayload = {
   nidBackImg?: string | null; 
 
   tradeLicenseNumber?: string | null;
-  tradeLicenseImg?: string | null; 
+  tradeLicenseImg?: string | null;
+
+  tinNumber?: string | null;
+  tinImage?: string | null;
+  binNumber?: string | null;
 };

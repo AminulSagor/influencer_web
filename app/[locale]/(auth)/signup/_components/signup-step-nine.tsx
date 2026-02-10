@@ -17,125 +17,51 @@ import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-upload
 import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
-import { notifyError } from "@/helpers/helper";
-import { apiClient } from "@/api/base/axios_client";
+import { useOnboardingStore } from "@/store/onboarding_store";
 
 type Props = {
   nextStep: () => void;
 };
 
-type TinFormValues = {
-  tinNumber: string;
-  tinCertificateImg: string;
-  binNumber?: string;
-};
-
 type FormDataWithFiles = {
-  tinNumber: string;
-  tinCertificate?: FileList;
+  tinNumber?: string;
+  tinImage?: FileList;
   binNumber?: string;
-};
-
-type SignedUrlResponse = {
-  success: boolean;
-  message: string;
-  signedUrl: string;
-  fileKey: string;
-  publicUrl: string;
 };
 
 const SignUpStepNine = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step9");
   const [loading, setLoading] = useState(false);
   const userType = useAuthStore((s) => s.userType);
-  const token = useAuthStore((s) => s.token);
+  
+  // Use the onboarding store - add TIN/BIN fields
+  const { tinNumber, tinImage, binNumber, setTinBinInfo } = useOnboardingStore();
 
   const methods = useForm<FormDataWithFiles>({
     defaultValues: {
-      tinNumber: "",
-      tinCertificate: undefined,
-      binNumber: "",
+      tinNumber: tinNumber || "",
+      tinImage: undefined,
+      binNumber: binNumber || "",
     },
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
-  const getSignedUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/tin-certificate`,
-    };
-
-    const response = await apiClient.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get signed URL");
-    }
-
-    return response.data.signedUrl;
-  };
-
-  const uploadToS3 = async (signedUrl: string, file: File): Promise<void> => {
-    await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-  };
-
-  const getPublicUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/tin-certificate`,
-    };
-
-    const response = await apiClient.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get public URL");
-    }
-
-    return response.data.publicUrl;
-  };
-
-  const onSubmit = async (formData: FormDataWithFiles) => {
+  const onSubmit = (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
-      const payload: TinFormValues = {
-        tinNumber: formData.tinNumber,
-        tinCertificateImg: "",
-        binNumber: formData.binNumber,
-      };
+      // Store TIN/BIN info in Zustand store - EXACTLY LIKE OTHER STEPS
+      setTinBinInfo({
+        tinNumber: formData.tinNumber || "",
+        tinImage: formData.tinImage?.[0] ? "pending-upload" : "",
+        binNumber: formData.binNumber || "",
+      });
 
-      if (formData.tinCertificate && formData.tinCertificate.length > 0) {
-        const file = formData.tinCertificate[0];
-        const signedUrl = await getSignedUrl(file);
-        await uploadToS3(signedUrl, file);
-        payload.tinCertificateImg = await getPublicUrl(file);
-      }
-
-      const res = await apiClient.patch(
-        `/${userType}/profile/onboarding`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.status === 200) {
-        nextStep();
-      }
+      // Move to next step - NO API CALL
+      nextStep();
     } catch (error: unknown) {
-      notifyError("Try again later");
+      console.error("Error in step 9:", error);
     } finally {
       setLoading(false);
     }
@@ -194,15 +120,11 @@ const SignUpStepNine = ({ nextStep }: Props) => {
             <FormField
               control={methods.control}
               name="tinNumber"
-              rules={{
-                required: "TIN number is required",
-                validate: (v) =>
-                  (v ?? "").trim().length > 0 || "TIN number is required",
-              }}
+              // Remove required validation to make it optional
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-light-green">
-                    {t("tinLabel")}
+                    {t("tinLabel")} (optional)
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -217,22 +139,20 @@ const SignUpStepNine = ({ nextStep }: Props) => {
             />
 
             <ImageUploader<FormDataWithFiles>
-              label={t("tinUpload")}
-              name="tinCertificate"
+              label={`${t("tinUpload")} (optional)`}
+              name="tinImage"
               control={methods.control}
-              rules={{
-                validate: (value) =>
-                  value?.length ? true : "TIN certificate is required",
-              }}
+              // Remove required validation
             />
 
             <FormField
               control={methods.control}
               name="binNumber"
+              // Remove required validation to make it optional
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-light-green">
-                    {t("binLabel")}
+                    {t("binLabel")} (optional)
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -259,7 +179,15 @@ const SignUpStepNine = ({ nextStep }: Props) => {
         <div className="flex justify-end">
           <span
             className="text-light-green text-lg text-end mt-3 font-semibold cursor-pointer"
-            onClick={nextStep}
+            onClick={() => {
+              // Skip step - store empty values
+              setTinBinInfo({
+                tinNumber: "",
+                tinImage: "",
+                binNumber: "",
+              });
+              nextStep();
+            }}
           >
             {t("skip")}
           </span>

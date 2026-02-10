@@ -3,15 +3,7 @@ import toast from "react-hot-toast";
 //api base url
 export const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
-//success toast
-export const notifySuccess = (message: string): void => {
-  toast.success(message);
-};
 
-//notify error
-export const notifyError = (message: string): void => {
-  toast.error(message);
-};
 
 //format the phoneNumber
 // export const handlePhoneFormat = (phoneNumber: string) => {

@@ -6,7 +6,7 @@ import { VerifyOtpPayload, VerifyOtpResponse } from "@/types/auth/otp_type";
 export async function verifyOtp(payload: VerifyOtpPayload) {
   try {
     const res = await apiClient.post<VerifyOtpResponse>(
-      "/influencer/auth/verify-otp-fallback",
+      "/influencer/auth/verify-otp",
       payload
     );
     return res;
