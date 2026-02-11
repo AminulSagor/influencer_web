@@ -1,109 +1,88 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import Link from "next/link";
-import { Lock, User } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
-import {
-  notifyError,
-  notifySuccess,
-} from "@/utils/toast_util";
-import Loader from "@/components/spin-loader";
 import { useRouter } from "next/navigation";
-import { handlePhoneFormat } from "@/utils/phone_util";
+import { useTranslations, useLocale } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { User, Lock, Loader } from "lucide-react";
 
-type UserRole = "client" | "influencer" | "agency";
-type Response = {
-  role?: string;
-  message?: string;
-  isVerified?: boolean;
-};
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-const roleRoot = {
-  client: "brand",
-  influencer: "influencer",
-  agency: "agency",
-} as const;
+import { loginSchema, LoginFormValues } from "@/schemas/auth/login_schema";
+import { login } from "@/api/auth/login";
+import { useAuthStore } from "@/store/auth_store";
+import { setToken } from "@/utils/cookies_util";
+import { decodeJwtPayload } from "@/utils/jwt_util";
 
-function isUserRole(v: unknown): v is UserRole {
-  return v === "client" || v === "influencer" || v === "agency";
-}
 const LoginForm = () => {
   const t = useTranslations("login");
   const locale = useLocale();
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
 
+  const { setAuth } = useAuthStore();
+
   const methods = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       phone: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    const formatedPhone = handlePhoneFormat(data.phone);
-    const payload = { ...data, phone: formatedPhone };
-
+const onSubmit = async (data: LoginFormValues) => {
+  try {
     setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
 
-      const data: Response = await res.json();
-      if (res.status === 200) {
-        notifySuccess(data?.message as string);
-      }
+    const res = await login({
+      phone: data.phone,
+      password: data.password,
+    });
 
-      if (res.status === 401) {
-        notifyError(data?.message as string);
-      }
+    const token = res.accessToken;
+    setToken(token);
 
-      const role = data.role;
+    const payload = decodeJwtPayload(token);
+    if (!payload) throw new Error("Invalid token");
 
-      if (!isUserRole(role)) {
-        console.log("Role missing/invalid from API response");
-        return;
-      }
+    setAuth({
+      token,
+      role: payload.role,
+      phone: payload.phone,
+      email: payload.email,
+      isVerified: payload.isVerified,
+    });
 
-      const root = roleRoot[role];
-      const nextPath = data.isVerified
-        ? `/${locale}/${root}/dashboard`
-        : `/${locale}/${root}/unverified`;
+    const role = payload.role;
 
-      router.push(nextPath);
-      router.refresh();
-    } catch (error: unknown) {
-      if (error) {
-        notifyError("Server Error");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Determine next path based on verification
+    const nextPath = payload.isVerified
+      ? `/${locale}/${role}/dashboard`
+      : `/${locale}/${role}/unverified`;
+
+    console.log("Redirecting to:", nextPath);
+
+    await router.push(nextPath);
+    router.refresh(); // ensures app router state updates
+
+  } catch (error: any) {
+    methods.setError("root", {
+      message:
+        error?.response?.data?.message ||
+        "Login failed. Please try again.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Form {...methods}>
-      <form
-        onSubmit={methods.handleSubmit(onSubmit)}
-        className="space-y-4 mt-8"
-      >
-        {/* Phone / Email */}
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-8">
         <FormField
           control={methods.control}
           name="phone"

@@ -15,8 +15,25 @@ import NewJobOffers from "./_components/new-job-offers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import EarningOverviewCard from "./_components/earning-overview-card";
 import ActionRequiredCard from "./_components/action-required-card";
+import { useEffect } from "react";
+import { useAuthStore } from "@/store/auth_store";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
+
+   
+const { token } = useAuthStore();
+  const router = useRouter();
+
+useEffect(() => {
+  if (!token) {
+    router.push("/en/login");
+  }
+}, [token, router]);
+
+if (!token) return <div>Loading...</div>;
+
+
   const t = useTranslations("influencer.dashboard");
 
   const dashboardCards = [

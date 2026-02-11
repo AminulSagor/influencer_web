@@ -19,17 +19,15 @@ import {
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/spin-loader";
 
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-
 import { handlePhoneFormat } from "@/utils/phone_util";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 import {
   buildSignupSchema,
   type SignupFormValues,
-} from "@/schemas/signup_schema";
+} from "@/schemas/auth/signup_schema";
 import { UserRole } from "@/types/auth/role_type";
-import { apiClient } from "@/api/base/axios_client";
 import { signup } from "@/api/auth/signup";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;

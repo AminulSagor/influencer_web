@@ -13,11 +13,11 @@ import {
 import { useTranslations } from "next-intl";
 
 import Loader from "@/components/spin-loader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 import { handlePhoneFormat } from "@/utils/phone_util";
 import { resendOtp, verifyOtp } from "@/api/auth/otp";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;

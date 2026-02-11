@@ -1,5 +1,7 @@
-type UserRole = "client" | "influencer" | "agency";
-export type JwtPayload = { role?: UserRole; isVerified?: boolean; exp?: number };
+// type UserRole = "client" | "influencer" | "agency";
+// export type JwtPayload = { role?: UserRole; isVerified?: boolean; exp?: number };
+
+import { JwtPayload } from "@/types/jwt_type";
 
 export function decodeJwtPayload(token: string): JwtPayload | null {
   try {

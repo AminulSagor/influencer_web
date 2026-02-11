@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useOnboardingStore } from "@/store/onboarding_store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
-import { submitOnboarding } from "@/api/auth/onboarding";
+import { submitOnboarding } from "@/api/onboarding";
+import { useAuthStore } from "@/store/auth_store";
 
 const FinalStep = () => {
   const t = useTranslations("Signup.finalStep");

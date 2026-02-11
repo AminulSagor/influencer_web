@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/select";
 
 import { BD_LOCATIONS } from "@/location-data/bd-location";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import type { UserRole } from "@/types/auth/role_type";
 
 import { notifyError } from "@/utils/toast_util";
@@ -33,6 +32,7 @@ import Loader from "@/components/spin-loader";
 import { AddressFormValues, addressSchema } from "@/schemas/onboarding/address_schema";
 import { decodeJwtPayload } from "@/utils/jwt_util";
 import { useOnboardingStore } from "@/store/onboarding_store";
+import { useAuthStore } from "@/store/auth_store";
 
 
 type Props = {
@@ -74,9 +74,9 @@ const SignUpStepFive = ({ nextStep }: Props) => {
     if (token) {
       try {
         const jwt = decodeJwtPayload(token);
-        console.log("jwt payload:", jwt);
-        console.log("jwt role:", jwt?.role);
-        console.log("isVerified:", jwt?.isVerified);
+        // console.log("jwt payload:", jwt);
+        // console.log("jwt role:", jwt?.role);
+        // console.log("isVerified:", jwt?.isVerified);
         
         // ✅ CRITICAL: Set the role in Zustand store
         if (jwt?.role) {

@@ -1,6 +1,6 @@
 // api/onboarding.ts
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { apiClient } from "./base/axios_client";
 import { OnboardingPayload } from "@/types/onboarding/onboarding_payload_type";
 
 export async function submitOnboarding(

@@ -14,10 +14,10 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
 import { useOnboardingStore } from "@/store/onboarding_store";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;

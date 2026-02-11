@@ -11,8 +11,8 @@ import SignUpStepSeven from "@/app/[locale]/(auth)/signup/_components/signup-ste
 import SignUpStepEight from "@/app/[locale]/(auth)/signup/_components/signup-step-eight";
 import SignUpStepNine from "@/app/[locale]/(auth)/signup/_components/signup-step-nine";
 import FinalStep from "@/app/[locale]/(auth)/signup/_components/final-step";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import AgencyExtraSignUpStep from "@/app/[locale]/(auth)/signup/_components/agency-extra-signup-step";
+import { useAuthStore } from "@/store/auth_store";
 
 const SignUpPage = () => {
   const [step, setStep] = useState<number>(1);

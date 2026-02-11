@@ -7,9 +7,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 import { useTranslations } from "next-intl";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { notifyError } from "@/utils/toast_util";
-import { UserRole } from "@/types/auth/role_type";
+import { UserRole, UserRoleWithNull } from "@/types/auth/role_type";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;
@@ -26,7 +26,7 @@ const SignUpStepOne = ({ nextStep }: Props) => {
   const { setUserType } = useAuthStore();
 
   // selected now UserType
-  const [selected, setSelected] = useState<UserRole>(null);
+  const [selected, setSelected] = useState<UserRoleWithNull>(null);
 
   const users: User[] = [
     {

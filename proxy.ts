@@ -1,7 +1,8 @@
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
-import { decodeJwtPayload, UserRole } from "@/helpers/helper";
+import { UserRole } from "./types/auth/role_type";
+import { decodeJwtPayload } from "./utils/jwt_util";
 
 // 1) next-intl middleware
 const intlMiddleware = createMiddleware({
