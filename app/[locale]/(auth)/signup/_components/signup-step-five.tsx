@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react"; // ✅ Added useEffect
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -45,6 +45,8 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
   const savedAddress = useOnboardingStore((s) => s.address);
   const setAddress = useOnboardingStore((s) => s.setAddress);
+  // ✅ CRITICAL: Get setUserRole from store
+  const setUserRole = useOnboardingStore((s) => s.setUserRole);
 
   const methods = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
@@ -65,6 +67,30 @@ const SignUpStepFive = ({ nextStep }: Props) => {
     return (found?.thanas ?? []).slice().sort((a, b) => a.localeCompare(b));
   }, [selectedZila]);
 
+  const token = useAuthStore((s) => s.token);
+
+  // ✅ CRITICAL: Use useEffect to set userRole on component mount
+  useEffect(() => {
+    if (token) {
+      try {
+        const jwt = decodeJwtPayload(token);
+        console.log("jwt payload:", jwt);
+        console.log("jwt role:", jwt?.role);
+        console.log("isVerified:", jwt?.isVerified);
+        
+        // ✅ CRITICAL: Set the role in Zustand store
+        if (jwt?.role) {
+          setUserRole(jwt.role);
+          console.log('✅ Successfully set userRole in store:', jwt.role);
+        }
+      } catch (error) {
+        console.error('Failed to decode or set role:', error);
+      }
+    } else {
+      console.warn('No token found in auth store');
+    }
+  }, [token, setUserRole]); // Add dependencies
+
   const onSubmit = async (data: AddressFormValues) => {
     setAddress(data);
 
@@ -76,17 +102,6 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
     nextStep();
   };
-
-
-
-const token = useAuthStore((s) => s.token);
-
-const jwt = token ? decodeJwtPayload(token) : null;
-
-console.log("token:", token ? token.slice(0, 20) : "NO_TOKEN");
-console.log("jwt payload:", jwt);
-console.log("jwt role:", jwt?.role);
-console.log("isVerified:", jwt?.isVerified);
 
   return (
     <div className="flex flex-col md:flex-row gap-6 lg:gap-10 justify-between mt-10">

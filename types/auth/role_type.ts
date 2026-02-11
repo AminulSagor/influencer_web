@@ -1,1 +1,1 @@
-export type UserRole = "client" | "influencer" | "agency" | null;
+export type UserRole = "client" | "influencer" | "agency";

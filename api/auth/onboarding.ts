@@ -9,9 +9,6 @@ export async function submitOnboarding(
   token: string | null
 ) {
   try {
-    // Debug: Log the payload
-    console.log("🚀 Sending payload to API:", JSON.stringify(payload, null, 2));
-    
     const res = await apiClient.patch(
       `/${userType}/profile/onboarding`,
       payload,
