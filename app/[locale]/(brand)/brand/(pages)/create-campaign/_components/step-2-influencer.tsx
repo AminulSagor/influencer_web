@@ -105,6 +105,7 @@ const StepTwoInfluencer = () => {
         preferredInfluencerIds: preferred.map((i) => i.id),
         notPreferableInfluencerIds: notPreferred.map((i) => i.id),
       });
+      console.log(campaignId);
       increaseStep();
     } catch (err: any) {
       notifyError(err.message || "Failed to save step 2");
