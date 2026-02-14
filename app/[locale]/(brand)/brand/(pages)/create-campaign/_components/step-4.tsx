@@ -28,11 +28,11 @@ import { BsEye } from "react-icons/bs";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import axiosInstance from "@/lib/axios";
+//import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import Loader from "@/components/spin-loader";
-import { notifyError } from "@/helpers/helper";
-import { useToken } from "@/hooks/useGetToken";
+import { notifyError } from "@/utils/toast_util";
+//import { useToken } from "@/hooks/useGetToken";
 import {
   ApiMilestone,
   NewMilestoneForm,
@@ -316,7 +316,7 @@ const extractNumber = (value: string) => {
 
 const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const campaignId = useCampaignStore((s) => s.campaignId);
-  const { token } = useToken();
+  //const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
   const campaignType = useCampaignStore((s) => s.campaignType);
 

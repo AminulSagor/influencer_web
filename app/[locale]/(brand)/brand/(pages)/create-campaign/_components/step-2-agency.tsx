@@ -13,10 +13,9 @@ import clsx from "clsx";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import { useToken } from "@/hooks/useGetToken";
-import axiosInstance from "@/lib/axios";
 import { CAMPAIGN_NICHES } from "@/app/[locale]/(brand)/brand/dummy-data/niche-and-productType-data";
 import { Info } from "lucide-react";
+import { apiClient } from "@/api/base/axios_client";
 
 /* ================= Types ================= */
 
@@ -34,7 +33,6 @@ type FieldErrors = Partial<
 
 export default function StepTwoAgency() {
   const { increaseStep, decreaseStep } = useCampaignStore();
-  const { token } = useToken();
 
   const [CAMPAIGN_NICHESS, set_CAMPAIGN_NICHES] = useState<string[]>([]);
   const [campaignNiche, setCampaignNiche] = useState<string>("");
@@ -51,13 +49,10 @@ export default function StepTwoAgency() {
   /* ================= Fetch Niches ================= */
 
   useEffect(() => {
-    if (!token) return;
 
     (async () => {
       try {
-        const res = await axiosInstance.get("/campaign/get/niches", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiClient.get("/campaign/get/niches");
 
         if (res.status === 200 && Array.isArray(res.data)) {
           const niches = res.data.map((v: { name: string }) => v.name);
@@ -67,18 +62,16 @@ export default function StepTwoAgency() {
         set_CAMPAIGN_NICHES(CAMPAIGN_NICHES);
       }
     })();
-  }, [token]);
+  });
 
   /* ================= Fetch Agencies (Pagination) ================= */
 
   useEffect(() => {
-    if (!token || !hasMore) return;
 
     const fetchAgencies = async () => {
       setLoadingAgencies(true);
       try {
-        const res = await axiosInstance.get("/client/agencies", {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await apiClient.get("/client/agencies", {
           params: {
             page,
             limit,
@@ -100,7 +93,7 @@ export default function StepTwoAgency() {
     };
 
     fetchAgencies();
-  }, [page, token, hasMore]);
+  }, [page, hasMore]);
 
   /* ================= Validation ================= */
 

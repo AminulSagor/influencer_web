@@ -1,12 +1,15 @@
 export const setToken = (token: string) => {
-  document.cookie = `access_token=${token}; path=/`;
+  document.cookie = `access_token=${token}; path=/; max-age=${60 * 60 * 24};`;
 };
 
 export const getToken = (): string | null => {
-  const match = document.cookie.match(new RegExp("(^| )token=([^;]+)"));
-  return match ? match[2] : null;
+  if (typeof document === "undefined") return null;
+
+  const match = document.cookie.match(/access_token=([^;]+)/);
+  return match ? match[1] : null;
 };
 
 export const removeToken = () => {
-  document.cookie = "token=; Max-Age=0; path=/";
+  document.cookie = "access_token=; path=/; max-age=0;";
 };
+

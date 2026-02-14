@@ -1,17 +1,20 @@
 import { create } from "zustand";
 
-//step1
+// ===== Step 2 types =====
+export interface StepTwoData {
+  productType: string;
+  campaignNiche: string;
+  preferredInfluencerIds: string[];
+  notPreferableInfluencerIds: string[];
+}
+
+// Step 1
 interface StepOneData {
   campaignName: string;
   campaignType: "paid-ad" | "influencer";
 }
 
-//step2
-interface StepTwoData {
-  nicheType: string;
-}
-
-//step3
+// Step 3
 export interface StepThreeData {
   campaignGoals: string;
   productDetails: string;
@@ -23,7 +26,7 @@ export interface StepThreeData {
   duration: string;
 }
 
-//step 4 types
+// Step 4
 interface PromotionTarget {
   title: string;
   amount: string;
@@ -50,7 +53,7 @@ interface StepFourData {
   milestones: MilestoneData[];
 }
 
-//Step 5 interfaces
+// Step 5
 interface UploadedFile {
   id: string;
   name: string;
@@ -64,7 +67,7 @@ interface StepFiveData {
   brandAssets: UploadedFile[];
 }
 
-//====== zustand type ===========//
+// ===== Full Store Interface =====
 interface FormStore {
   stepOne: StepOneData;
   setStepOne: (data: Partial<StepOneData>) => void;
@@ -80,8 +83,9 @@ interface FormStore {
   addMilestone: (milestone: MilestoneData) => void;
   removeMilestone: (id: number) => void;
   clearMilestones: () => void;
-  validationErrors: Record<string, string>;
-  setValidationErrors: (errors: Record<string, string>) => void;
+
+  validationErrors: Record<string, string | undefined>;
+  setValidationErrors: (errors: Record<string, string | undefined>) => void;
   clearValidationErrors: () => void;
 
   stepFive: StepFiveData;
@@ -94,43 +98,39 @@ interface FormStore {
 }
 
 export const useFormStore = create<FormStore>((set) => ({
-  //stepOne
+  // Step 1
   stepOne: {
     campaignName: "",
     campaignType: "paid-ad",
   },
   setStepOne: (data) =>
-    set((state) => ({
-      stepOne: { ...state.stepOne, ...data },
-    })),
+    set((state) => ({ stepOne: { ...state.stepOne, ...data } })),
 
-  //stpeTwo
+  // Step 2
   stepTwo: {
-    nicheType: "",
+    productType: "",
+    campaignNiche: "",
+    preferredInfluencerIds: [],
+    notPreferableInfluencerIds: [],
   },
-  setStepTwo: (data) =>
-    set((state) => ({
-      stepTwo: { ...state.stepTwo, ...data },
-    })),
+  setStepTwo: (data: Partial<StepTwoData>) =>
+    set((state) => ({ stepTwo: { ...state.stepTwo, ...data } })),
 
-  //stepThree
+  // Step 3
   stepThree: {
     campaignGoals: "",
     productDetails: "",
     dos: "",
     donts: "",
-
     reportingRequirements: "",
     usageRights: "",
     startingDate: "",
     duration: "",
   },
   setStepThree: (data) =>
-    set((state) => ({
-      stepThree: { ...state.stepThree, ...data },
-    })),
+    set((state) => ({ stepThree: { ...state.stepThree, ...data } })),
 
-  //stepFour
+  // Step 4
   stepFour: {
     budget: 0,
     vatAmount: 0,
@@ -142,9 +142,7 @@ export const useFormStore = create<FormStore>((set) => ({
     milestones: [],
   },
   setStepFour: (data) =>
-    set((state) => ({
-      stepFour: { ...state.stepFour, ...data },
-    })),
+    set((state) => ({ stepFour: { ...state.stepFour, ...data } })),
   addMilestone: (milestone) =>
     set((state) => ({
       stepFour: {
@@ -152,7 +150,7 @@ export const useFormStore = create<FormStore>((set) => ({
         milestones: [...state.stepFour.milestones, milestone],
       },
     })),
-  removeMilestone: (id) =>
+  removeMilestone: (id: number) =>
     set((state) => ({
       stepFour: {
         ...state.stepFour,
@@ -160,28 +158,14 @@ export const useFormStore = create<FormStore>((set) => ({
       },
     })),
   clearMilestones: () =>
-    set((state) => ({
-      stepFour: {
-        ...state.stepFour,
-        milestones: [],
-      },
-    })),
+    set((state) => ({ stepFour: { ...state.stepFour, milestones: [] } })),
 
   validationErrors: {},
-  setValidationErrors: (errors) =>
-    set(() => ({
-      validationErrors: errors,
-    })),
-  clearValidationErrors: () =>
-    set(() => ({
-      validationErrors: {},
-    })),
+  setValidationErrors: (errors) => set(() => ({ validationErrors: errors })),
+  clearValidationErrors: () => set(() => ({ validationErrors: {} })),
 
-  //step Five
-  stepFive: {
-    contentAssets: [],
-    brandAssets: [],
-  },
+  // Step 5
+  stepFive: { contentAssets: [], brandAssets: [] },
   addContentAsset: (file) =>
     set((state) => {
       const newFile: UploadedFile = {
@@ -214,36 +198,22 @@ export const useFormStore = create<FormStore>((set) => ({
         },
       };
     }),
-  removeContentAsset: (id) =>
+  removeContentAsset: (id: string) =>
     set((state) => ({
       stepFive: {
         ...state.stepFive,
-        contentAssets: state.stepFive.contentAssets.filter(
-          (asset) => asset.id !== id
-        ),
+        contentAssets: state.stepFive.contentAssets.filter((f) => f.id !== id),
       },
     })),
-  removeBrandAsset: (id) =>
+  removeBrandAsset: (id: string) =>
     set((state) => ({
       stepFive: {
         ...state.stepFive,
-        brandAssets: state.stepFive.brandAssets.filter(
-          (asset) => asset.id !== id
-        ),
+        brandAssets: state.stepFive.brandAssets.filter((f) => f.id !== id),
       },
     })),
   clearContentAssets: () =>
-    set((state) => ({
-      stepFive: {
-        ...state.stepFive,
-        contentAssets: [],
-      },
-    })),
+    set((state) => ({ stepFive: { ...state.stepFive, contentAssets: [] } })),
   clearBrandAssets: () =>
-    set((state) => ({
-      stepFive: {
-        ...state.stepFive,
-        brandAssets: [],
-      },
-    })),
+    set((state) => ({ stepFive: { ...state.stepFive, brandAssets: [] } })),
 }));

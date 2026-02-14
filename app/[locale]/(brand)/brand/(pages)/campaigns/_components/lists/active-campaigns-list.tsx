@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { FaClock } from "react-icons/fa";
 import PercentageBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/percentage-bar";
 import ListShell from "../list-shell";
-import { getPlatformIcon } from "@/helpers/platforms";
-import { buildDueLabelFromDeadline, formatDeadline } from "@/helpers/helper";
+//import { getPlatformIcon } from "@/helpers/platforms";
+//import { buildDueLabelFromDeadline, formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import { buildDueLabelFromDeadline, formatDeadline } from "@/utils/date_util";
+import { getPlatformIcon } from "@/utils/platforms_util";
 
 export default function ActiveCampaignsList({
   campaigns,

@@ -19,11 +19,11 @@ import {
   StepThreeData,
   useFormStore,
 } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
-import axiosInstance from "@/lib/axios";
+//import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import Loader from "@/components/spin-loader";
-import { notifyError } from "@/helpers/helper";
-import { useToken } from "@/hooks/useGetToken";
+import { notifyError } from "@/utils/toast_util";
+//import { useToken } from "@/hooks/useGetToken";
 
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -33,11 +33,12 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import clsx from "clsx";
+import { apiClient } from "@/api/base/axios_client";
 
 const StepThree = () => {
   const { decreaseStep, increaseStep } = useCampaignStore();
   const campaignId = useCampaignStore((s) => s.campaignId);
-  const { token } = useToken();
+  // const { token } = useToken();
 
   const {
     stepThree,
@@ -126,12 +127,9 @@ const StepThree = () => {
         duration: Number(stepThree.duration),
       };
 
-      const res = await axiosInstance.patch(
+      const res = await apiClient.patch(
         `/campaign/${campaignId}/step-3`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        payload
       );
 
       if (res.status === 200 || res.status === 201) {

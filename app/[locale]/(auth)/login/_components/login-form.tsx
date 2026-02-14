@@ -44,6 +44,8 @@ const onSubmit = async (data: LoginFormValues) => {
     });
 
     const token = res.accessToken;
+
+    // Save token in cookie only
     setToken(token);
 
     const payload = decodeJwtPayload(token);
@@ -57,18 +59,23 @@ const onSubmit = async (data: LoginFormValues) => {
       isVerified: payload.isVerified,
     });
 
-    const role = payload.role;
+    const role = payload.role || "";
 
-    // Determine next path based on verification
+    const pathMap: Record<string, string> = {
+      client: "brand",
+      admin: "admin",
+      agency: "agency",
+      influencer: "influencer",
+    };
+
+    const basePath = pathMap[role] || role;
+
     const nextPath = payload.isVerified
-      ? `/${locale}/${role}/dashboard`
-      : `/${locale}/${role}/unverified`;
-
-    console.log("Redirecting to:", nextPath);
+      ? `/${locale}/${basePath}/dashboard`
+      : `/${locale}/${basePath}/unverified`;
 
     await router.push(nextPath);
-    router.refresh(); // ensures app router state updates
-
+    router.refresh();
   } catch (error: any) {
     methods.setError("root", {
       message:
@@ -79,6 +86,7 @@ const onSubmit = async (data: LoginFormValues) => {
     setLoading(false);
   }
 };
+
 
   return (
     <Form {...methods}>

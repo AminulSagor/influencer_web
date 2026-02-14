@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import axiosInstance from "@/lib/axios";
-import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
-import { useToken } from "@/hooks/useGetToken";
 import axios from "axios";
+
+import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { apiClient } from "@/api/base/axios_client";
 
 type Meta = { total: number; page: number; limit: number };
 
@@ -15,27 +15,29 @@ type ApiResponse = {
 };
 
 export function useMyCampaignsByStatus(status: string) {
-  const { token } = useToken();
+  // Remove useToken hook - no token needed
 
   const [data, setData] = useState<CampaignSummary[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 10 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const key = useMemo(() => `${status}|${token ?? ""}`, [status, token]);
+  // Simplified key - only depends on status now
+  const key = useMemo(() => `${status}`, [status]);
 
   useEffect(() => {
-    if (!token) return;
-
+    // Remove token check - cookies handle authentication
     let cancelled = false;
 
     const run = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await axiosInstance.get<ApiResponse>(
-          `/campaign/my-campaigns?status=${encodeURIComponent(status)}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        // Use apiClient instead of axiosInstance (make sure it has withCredentials: true)
+        // Remove Authorization header - cookies will be sent automatically
+        const res = await apiClient.get<ApiResponse>(
+          `/campaign/my-campaigns?status=${encodeURIComponent(status)}`
+          // No headers needed
         );
 
         if (cancelled) return;
@@ -45,9 +47,19 @@ export function useMyCampaignsByStatus(status: string) {
       } catch (error: unknown) {
         if (cancelled) return;
         if (axios.isAxiosError(error)) {
-          setError(
-            error?.response?.data?.message ?? "Failed to load campaigns"
-          );
+          // Handle 401 specifically
+          if (error.response?.status === 401) {
+            setError("Session expired. Please login again.");
+            // Optionally redirect to login
+            // const locale = document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] || 'en';
+            // window.location.href = `/${locale}/login`;
+          } else {
+            setError(
+              error?.response?.data?.message ?? "Failed to load campaigns"
+            );
+          }
+        } else {
+          setError("An unexpected error occurred");
         }
         setData([]);
         setMeta({ total: 0, page: 1, limit: 10 });
@@ -61,7 +73,7 @@ export function useMyCampaignsByStatus(status: string) {
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [key]); // Only depends on status now
 
   return { data, meta, loading, error };
 }

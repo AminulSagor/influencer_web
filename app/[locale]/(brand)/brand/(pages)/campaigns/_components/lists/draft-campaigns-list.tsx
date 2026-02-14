@@ -6,8 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
 
-import { getPlatformIcon } from "@/helpers/platforms";
-import { formatDeadline } from "@/helpers/helper";
+//import { getPlatformIcon } from "@/helpers/platforms";
+//import { formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 

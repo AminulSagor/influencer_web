@@ -14,8 +14,8 @@ import {
   getAssignedUserBasedText,
   toNumberSafe,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
-import { getPlatformIcon } from "@/helpers/platforms";
-import { formatDeadline } from "@/helpers/helper";
+//import { getPlatformIcon } from "@/helpers/platforms";
+//import { formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 

@@ -16,23 +16,24 @@ import {
   Trash,
 } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
-import axiosInstance from "@/lib/axios";
+//import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import Loader from "@/components/spin-loader";
-import { notifyError } from "@/helpers/helper";
-import { useToken } from "@/hooks/useGetToken";
+//import { notifyError } from "@/helpers/helper";
+//import { useToken } from "@/hooks/useGetToken";
 import { Input } from "@/components/ui/input";
 import {
   AssetCategory,
   LocalAsset,
   SignedUrlResponse,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { notifyError } from "@/utils/toast_util";
 
 const StepFive = () => {
   const { decreaseStep, increaseStep, campaignType, campaignId } =
     useCampaignStore();
 
-  const { token } = useToken();
+  //const { token } = useToken();
 
   const [enabled, setEnabled] = useState<boolean>(false);
 
@@ -146,7 +147,7 @@ const StepFive = () => {
       module: "lead-manager/b2b",
     };
 
-    const res = await axiosInstance.post("/upload/signed-url", payload);
+   // const res = await axiosInstance.post("/upload/signed-url", payload);
 
     const signedUrl: string | undefined = res.data?.signedUrl;
     const publicUrl: string | undefined = res.data?.publicUrl;

@@ -14,339 +14,159 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import axiosInstance from "@/lib/axios";
-import { useToken } from "@/hooks/useGetToken";
-import { notifyError } from "@/helpers/helper";
-import {
-  CAMPAIGN_NICHES,
-  PRODUCT_TYPES,
-} from "@/app/[locale]/(brand)/brand/dummy-data/niche-and-productType-data";
+import { notifyError } from "@/utils/toast_util";
+import { CampaignService } from "@/api/campaign/campaign-service";
+import axios from "axios";
+import { apiClient } from "@/api/base/axios_client";
 
 type FieldErrors = Partial<
   Record<"productType" | "campaignNiche" | "preferred" | "notPreferred", string>
 >;
+
+type Influencer = { id: string; fullName: string };
+
 const StepTwoInfluencer = () => {
   const { increaseStep, decreaseStep } = useCampaignStore();
-  const { token } = useToken();
 
-  const [CAMPAIGN_NICHESS, set_CAMPAIGN_NICHES] = useState<string[]>([]);
-  const [PRODUCT_TYPESS, set_PRODUCT_TYPES] = useState<string[]>([]);
+  const [productTypes, setProductTypes] = useState<string[]>([]);
+  const [campaignNiches, setCampaignNiches] = useState<string[]>([]);
 
-  const [productType, setProductType] = useState<string>("");
-  const [campaignNiche, setCampaignNiche] = useState<string>("");
+  const [productType, setProductType] = useState("");
+  const [campaignNiche, setCampaignNiche] = useState("");
 
   const [preferredInput, setPreferredInput] = useState("");
   const [notPreferredInput, setNotPreferredInput] = useState("");
 
-  const [preferred, setPreferred] = useState<string[]>([]);
-  const [notPreferred, setNotPreferred] = useState<string[]>([]);
+  const [preferred, setPreferred] = useState<Influencer[]>([]);
+  const [notPreferred, setNotPreferred] = useState<Influencer[]>([]);
+
+  const [preferredSuggestions, setPreferredSuggestions] = useState<Influencer[]>([]);
+  const [notPreferredSuggestions, setNotPreferredSuggestions] = useState<Influencer[]>([]);
+
+   const campaignId = useCampaignStore((s) => s.campaignId); // get campaignId from store
 
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  const normalizeName = (v: string) => v.trim().replace(/\s+/g, " ");
-
-  //fetching product type
+  // ==================== Fetch product types and niches ====================
   useEffect(() => {
-    if (!token) return;
-
     (async () => {
       try {
-        const res = await axiosInstance.get("/campaign/get/niches", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.status === 200 && Array.isArray(res.data)) {
-          const niches = res.data.map((v: { name: string }) => v.name);
-          set_CAMPAIGN_NICHES(niches);
-        }
-      } catch (error) {
-        if (error) {
-          set_CAMPAIGN_NICHES(CAMPAIGN_NICHES);
-        }
+        setProductTypes(await CampaignService.getProductTypes());
+      } catch (err: any) {
+        notifyError(err.message || "Failed to load product types");
       }
-    })();
-
-    (async () => {
       try {
-        const res = await axiosInstance.get("/campaign/get/product-types", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.status === 200 && Array.isArray(res.data)) {
-          const products = res.data.map((v: { name: string }) => v.name);
-          set_PRODUCT_TYPES(products);
-        }
-      } catch (error) {
-        if (error) {
-          notifyError("");
-        }
+        setCampaignNiches(await CampaignService.getCampaignNiches());
+      } catch (err: any) {
+        notifyError(err.message || "Failed to load campaign niches");
       }
     })();
-  }, [token]);
+  }, []);
 
-  //fetching niches
-
-  const splitToNames = (raw: string) =>
-    raw
-      .split(",")
-      .map((x) => normalizeName(x))
-      .filter(Boolean);
-
-  const addNames = (
-    raw: string,
-    current: string[],
-    setter: (v: string[]) => void
-  ) => {
-    const incoming = splitToNames(raw);
-    if (!incoming.length) return current;
-
-    const existingLower = new Set(current.map((x) => x.toLowerCase()));
-    const next = [...current];
-
-    for (const name of incoming) {
-      const key = name.toLowerCase();
-      if (existingLower.has(key)) continue;
-      next.push(name);
-      existingLower.add(key);
+  // ==================== Influencer search ====================
+  const searchInfluencers = async (query: string, forPreferred: boolean) => {
+    if (!query.trim()) return;
+    try {
+      const res = await apiClient.get("/client/search/influencers", { params: { query } });
+      const data: Influencer[] = res.data || [];
+      if (forPreferred) setPreferredSuggestions(data);
+      else setNotPreferredSuggestions(data);
+    } catch (err: any) {
+      console.error("Influencer search failed:", err);
     }
-
-    setter(next);
-    return next;
   };
 
-  const removeTag = (
-    tag: string,
-    current: string[],
-    setter: (v: string[]) => void
-  ) => {
-    const key = tag.toLowerCase();
-    setter(current.filter((t) => t.toLowerCase() !== key));
-  };
-
+  // ==================== Helpers ====================
   const clearError = (key: keyof FieldErrors) => {
     setErrors((prev) => {
-      if (!prev[key]) return prev;
       const next = { ...prev };
       delete next[key];
       return next;
     });
   };
 
-  const validateAll = (pref: string[], notPref: string[]) => {
+  const validateAll = () => {
     const nextErrors: FieldErrors = {};
-
     if (!productType) nextErrors.productType = "Please select a product type.";
-    if (!campaignNiche)
-      nextErrors.campaignNiche = "Please select a campaign niche.";
-    if (pref.length === 0)
-      nextErrors.preferred = "Please add at least 1 preferred influencer.";
-    if (notPref.length === 0)
-      nextErrors.notPreferred =
-        "Please add at least 1 not preferable influencer.";
-
+    if (!campaignNiche) nextErrors.campaignNiche = "Please select a campaign niche.";
+    if (preferred.length === 0) nextErrors.preferred = "Add at least 1 preferred influencer.";
+    if (notPreferred.length === 0) nextErrors.notPreferred = "Add at least 1 not preferable influencer.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
-  const onNext = () => {
-    // capture typed names even if user didn’t press Enter
-    let prefNow = preferred;
-    let notPrefNow = notPreferred;
+  const onNext = async () => {
+    if (!validateAll()) return;
 
-    if (preferredInput.trim()) {
-      prefNow = addNames(preferredInput, prefNow, setPreferred);
-      setPreferredInput("");
+    try {
+      await CampaignService.updateStepTwo(campaignId, {
+        productType,
+        campaignNiche,
+        preferredInfluencerIds: preferred.map((i) => i.id),
+        notPreferableInfluencerIds: notPreferred.map((i) => i.id),
+      });
+      increaseStep();
+    } catch (err: any) {
+      notifyError(err.message || "Failed to save step 2");
+      console.error(err);
     }
-
-    if (notPreferredInput.trim()) {
-      notPrefNow = addNames(notPreferredInput, notPrefNow, setNotPreferred);
-      setNotPreferredInput("");
-    }
-
-    const ok = validateAll(prefNow, notPrefNow);
-    if (!ok) return;
-
-    increaseStep();
   };
 
+  // ==================== Render ====================
   return (
-    <Card className="border-none">
+    <Card className="border-none relative">
       <CardContent className="space-y-8">
-        {/* ================= Select Product Type ================= */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-Primary">
-              Select Product Type
-            </h2>
-            <Info className="w-4 h-4 text-gray-400" />
-          </div>
 
-          <Select
-            value={productType}
-            onValueChange={(v) => {
-              setProductType(v);
-              clearError("productType");
-            }}
-          >
-            <SelectTrigger
-              className={[
-                "focus-visible:ring-1 w-full",
-                errors.productType ? "border-red-500" : "",
-              ].join(" ")}
-            >
-              <SelectValue placeholder="Select Product Type" />
-            </SelectTrigger>
+        {/* Product Type */}
+        <SelectField
+          label="Product Type"
+          options={productTypes}
+          value={productType}
+          onChange={(v) => { setProductType(v); clearError("productType"); }}
+          error={errors.productType}
+        />
 
-            <SelectContent className="max-h-64">
-              {PRODUCT_TYPESS.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Campaign Niche */}
+        <SelectField
+          label="Campaign Niche"
+          options={campaignNiches}
+          value={campaignNiche}
+          onChange={(v) => { setCampaignNiche(v); clearError("campaignNiche"); }}
+          error={errors.campaignNiche}
+        />
 
-          {errors.productType && (
-            <p className="text-sm text-red-500">{errors.productType}</p>
-          )}
+        {/* Preferred Influencers */}
+        <InfluencerInput
+          label="Preferred Influencers"
+          value={preferredInput}
+          setValue={setPreferredInput}
+          selected={preferred}
+          setSelected={setPreferred}
+          suggestions={preferredSuggestions}
+          setSuggestions={setPreferredSuggestions}
+          clearError={() => clearError("preferred")}
+          searchFn={searchInfluencers}
+        />
+
+        {/* Not Preferable Influencers */}
+        <InfluencerInput
+          label="Not Preferable Influencers"
+          value={notPreferredInput}
+          setValue={setNotPreferredInput}
+          selected={notPreferred}
+          setSelected={setNotPreferred}
+          suggestions={notPreferredSuggestions}
+          setSuggestions={setNotPreferredSuggestions}
+          clearError={() => clearError("notPreferred")}
+          searchFn={searchInfluencers}
+        />
+
+        {/* Footer Buttons */}
+        <div className="mt-10 flex justify-end gap-4">
+          <SecondaryButton onClick={decreaseStep}>Previous</SecondaryButton>
+          <PrimaryButton onClick={onNext}>Next</PrimaryButton>
         </div>
 
-        {/* ================= Campaign Niche ================= */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-Primary">
-              Campaign Niche
-            </h2>
-            <Info className="w-4 h-4 text-gray-400" />
-          </div>
-
-          <Select
-            value={campaignNiche}
-            onValueChange={(v) => {
-              setCampaignNiche(v);
-              clearError("campaignNiche");
-            }}
-          >
-            <SelectTrigger
-              className={[
-                "focus-visible:ring-1 w-full",
-                errors.campaignNiche ? "border-red-500" : "",
-              ].join(" ")}
-            >
-              <SelectValue placeholder="Select Niche Type" />
-            </SelectTrigger>
-
-            <SelectContent className="max-h-64">
-              {CAMPAIGN_NICHESS.map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {errors.campaignNiche && (
-            <p className="text-sm text-red-500">{errors.campaignNiche}</p>
-          )}
-        </div>
-
-        {/* ================= Preferred Influencers ================= */}
-        <div className="space-y-3">
-          <h2 className="text-base font-semibold text-Primary">
-            Preferred Influencers
-          </h2>
-
-          <Input
-            value={preferredInput}
-            onChange={(e) => {
-              setPreferredInput(e.target.value);
-              if (preferred.length > 0) clearError("preferred");
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (!preferredInput.trim()) return;
-                const next = addNames(preferredInput, preferred, setPreferred);
-                setPreferredInput("");
-                if (next.length > 0) clearError("preferred");
-              }
-            }}
-            placeholder="Enter Influencers Names... (Separate Each With A Comma)"
-            className={[
-              "h-12 focus-visible:ring-1 placeholder:text-sm",
-              errors.preferred ? "border-red-500" : "",
-            ].join(" ")}
-          />
-
-          <TagBox
-            tags={preferred}
-            onRemove={(tag) => {
-              removeTag(tag, preferred, setPreferred);
-              // if user removes to empty, keep error only when pressing Next
-              clearError("preferred");
-            }}
-          />
-
-          {errors.preferred && (
-            <p className="text-sm text-red-500">{errors.preferred}</p>
-          )}
-        </div>
-
-        {/* ================= Not Preferable Influencers ================= */}
-        <div className="space-y-3">
-          <h2 className="text-base font-semibold text-Primary">
-            Not Preferable Influencers
-          </h2>
-
-          <Input
-            value={notPreferredInput}
-            onChange={(e) => {
-              setNotPreferredInput(e.target.value);
-              if (notPreferred.length > 0) clearError("notPreferred");
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                if (!notPreferredInput.trim()) return;
-                const next = addNames(
-                  notPreferredInput,
-                  notPreferred,
-                  setNotPreferred
-                );
-                setNotPreferredInput("");
-                if (next.length > 0) clearError("notPreferred");
-              }
-            }}
-            placeholder="Enter Influencers Names... (Separate Each With A Comma)"
-            className={[
-              "h-12 focus-visible:ring-1 placeholder:text-sm",
-              errors.notPreferred ? "border-red-500" : "",
-            ].join(" ")}
-          />
-
-          <TagBox
-            tags={notPreferred}
-            onRemove={(tag) => {
-              removeTag(tag, notPreferred, setNotPreferred);
-              clearError("notPreferred");
-            }}
-          />
-
-          {errors.notPreferred && (
-            <p className="text-sm text-red-500">{errors.notPreferred}</p>
-          )}
-        </div>
-        <div className="mt-10 flex justify-end">
-          <div className="flex gap-4">
-            <SecondaryButton onClick={() => decreaseStep()}>
-              Previous
-            </SecondaryButton>
-
-            <PrimaryButton className="px-8" onClick={increaseStep}>
-              Next
-            </PrimaryButton>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
@@ -354,31 +174,104 @@ const StepTwoInfluencer = () => {
 
 export default StepTwoInfluencer;
 
-const TagBox = ({
-  tags,
-  onRemove,
-}: {
-  tags: string[];
-  onRemove: (tag: string) => void;
-}) => {
+
+
+interface SelectFieldProps {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+}
+const SelectField = ({ label, options, value, onChange, error }: SelectFieldProps) => (
+  <div className="space-y-3">
+    <div className="flex items-center gap-2">
+      <h2 className="text-base font-semibold text-Primary">{label}</h2>
+      <Info className="w-4 h-4 text-gray-400" />
+    </div>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className={`focus-visible:ring-1 w-full ${error ? "border-red-500" : ""}`}>
+        <SelectValue placeholder={`Select ${label}`} />
+      </SelectTrigger>
+      <SelectContent className="max-h-64">
+        {options.map((opt) => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+      </SelectContent>
+    </Select>
+    {error && <p className="text-sm text-red-500">{error}</p>}
+  </div>
+);
+
+interface InfluencerInputProps {
+  label: string;
+  value: string;
+  setValue: (v: string) => void;
+  selected: Influencer[];
+  setSelected: (v: Influencer[]) => void;
+  suggestions: Influencer[];
+  setSuggestions: (v: Influencer[]) => void;
+  clearError: () => void;
+  searchFn: (query: string, forPreferred: boolean) => void;
+}
+
+const InfluencerInput = ({
+  label,
+  value,
+  setValue,
+  selected,
+  setSelected,
+  suggestions,
+  setSuggestions,
+  clearError,
+  searchFn,
+}: InfluencerInputProps) => {
+
+  const addInfluencer = (inf: Influencer) => {
+    if (!selected.find((s) => s.id === inf.id)) setSelected([...selected, inf]);
+    setValue("");
+    setSuggestions([]);
+    clearError();
+  };
+
   return (
-    <div className="flex flex-wrap gap-2 rounded-xl border border-light-gray p-3 min-h-44">
-      {tags.map((tag) => (
-        <span
-          key={tag}
-          className="flex items-center gap-1 rounded-full bg-Secondary px-3 py-1 text-sm text-Primary h-8"
-        >
-          {tag}
-          <button
-            type="button"
-            onClick={() => onRemove(tag)}
-            aria-label={`Remove ${tag}`}
-            className="opacity-60 hover:opacity-100"
-          >
-            <X className="w-3.5 h-3.5 cursor-pointer" />
-          </button>
-        </span>
-      ))}
+    <div className="space-y-3 relative">
+      <h2 className="text-base font-semibold text-Primary">{label}</h2>
+      <Input
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+          if (e.target.value) searchFn(e.target.value, label.includes("Preferred"));
+        }}
+        placeholder="Type influencer name..."
+        className="h-12 focus-visible:ring-1 placeholder:text-sm"
+      />
+
+      {suggestions.length > 0 && (
+        <ul className="absolute z-10 w-full bg-white border rounded shadow max-h-60 overflow-auto">
+          {suggestions.map((inf) => (
+            <li key={inf.id} className="p-2 cursor-pointer hover:bg-gray-100" onClick={() => addInfluencer(inf)}>
+              {inf.fullName}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <TagBox
+        tags={selected.map((s) => s.fullName)}
+        onRemove={(name) => setSelected(selected.filter((s) => s.fullName !== name))}
+      />
     </div>
   );
 };
+
+const TagBox = ({ tags, onRemove }: { tags: string[]; onRemove: (tag: string) => void }) => (
+  <div className="flex flex-wrap gap-2 rounded-xl border border-light-gray p-3 min-h-44">
+    {tags.map((tag) => (
+      <span key={tag} className="flex items-center gap-1 rounded-full bg-Secondary px-3 py-1 text-sm text-Primary h-8">
+        {tag}
+        <button type="button" onClick={() => onRemove(tag)} aria-label={`Remove ${tag}`} className="opacity-60 hover:opacity-100">
+          <X className="w-3.5 h-3.5 cursor-pointer" />
+        </button>
+      </span>
+    ))}
+  </div>
+);

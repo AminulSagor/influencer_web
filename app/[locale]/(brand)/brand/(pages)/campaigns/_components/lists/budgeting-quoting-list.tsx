@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 
 import { formatBDT } from "../../_lib/card-helpers";
-import { getPlatformIcon } from "@/helpers/platforms";
+//import { getPlatformIcon } from "@/helpers/platforms";
 import ListShell from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/list-shell";
-import { formatDeadline } from "@/helpers/helper";
+//import { formatDeadline } from "@/helpers/helper";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 
 type BudgetingFilter = "all" | "budget_pending" | "quotation_received";
