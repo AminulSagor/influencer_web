@@ -81,13 +81,11 @@ const SignUpStepFive = ({ nextStep }: Props) => {
         // ✅ CRITICAL: Set the role in Zustand store
         if (jwt?.role) {
           setUserRole(jwt.role);
-          console.log('✅ Successfully set userRole in store:', jwt.role);
+          //console.log('✅ Successfully set userRole in store:', jwt.role);
         }
       } catch (error) {
         console.error('Failed to decode or set role:', error);
       }
-    } else {
-      console.warn('No token found in auth store');
     }
   }, [token, setUserRole]); // Add dependencies
 

@@ -18,10 +18,7 @@ apiClient.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Bearer token attached");
-    } else {
-      console.log("❌ No token found in cookie");
-    }
+    } 
 
     return config;
   },
@@ -33,7 +30,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("🔴 401 Unauthorized - clearing auth");
+      //console.log("🔴 401 Unauthorized - clearing auth");
 
       removeToken();
 

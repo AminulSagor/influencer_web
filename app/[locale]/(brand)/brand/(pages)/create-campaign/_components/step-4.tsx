@@ -37,6 +37,10 @@ import {
   ApiMilestone,
   NewMilestoneForm,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { submitCampaignStepFour } from "@/api/campaign/update-step-4";
+import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
+import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
+import { buildStepFourPayload } from "@/utils/campaigns/step-4_util";
 
 type BudgetPros = {
   budget: string;
@@ -538,43 +542,29 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     return "";
   };
 
-  const handleNextStep = async () => {
-    const msg = validateBeforeSubmit();
-    if (msg) {
-      notifyError(msg);
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const payload = {
-        baseBudget: extractNumber(budget),
-        milestones: buildApiMilestones(),
-      };
-      const res = await axiosInstance.patch(
-        `/campaign/${campaignId}/step-4`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+const handleNextStep = async () => {
+  const payload = buildStepFourPayload(budget, milestones);
 
-      if (res.status === 200 || res.status === 201) {
-        increaseStep();
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const message =
-          err.response?.data?.message ||
-          err.message ||
-          "Something went wrong. Please try again.";
-        notifyError(message);
-        console.log(err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const validation = stepFourSchema.safeParse(payload);
+
+  if (!validation.success) {
+    notifyError(validation.error.issues[0]?.message || "Validation failed");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await submitCampaignStepFour(campaignId, payload);
+    increaseStep();
+  } catch (err: any) {
+    notifyError(err?.message || "Failed to save Step 4");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const METRICS = [
     {

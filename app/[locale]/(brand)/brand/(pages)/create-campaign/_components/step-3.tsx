@@ -28,6 +28,9 @@ import { z } from "zod";
 import Loader from "@/components/spin-loader";
 import { stepThreeSchema } from "@/schemas/campaign/step3_campaign_validation";
 import { notifyError } from "@/utils/toast_util";
+import { CampaignService } from "@/api/campaign/campaign-service";
+import { submitCampaignStepThree } from "@/api/campaign/update-step-3";
+import { StepThreePayload } from "@/types/campaign/step3_campaign_type";
 
 const StepThree = () => {
   const { decreaseStep, increaseStep, campaignId } = useCampaignStore();
@@ -55,28 +58,28 @@ const StepThree = () => {
   }, []);
 
   // ==================== Zod Validation ====================
-const validateStep = (): boolean => {
-  const result = stepThreeSchema.safeParse(stepThree);
+  const validateStep = (): boolean => {
+    const result = stepThreeSchema.safeParse(stepThree);
 
-  if (!result.success) {
-    const formatted: Record<string, string> = {};
+    if (!result.success) {
+      const formatted: Record<string, string> = {};
 
-    result.error.issues.forEach((issue: z.ZodIssue) => {
-      const field = issue.path[0] as string;
-      if (field) {
-        formatted[field] = issue.message;
-      }
-    });
+      result.error.issues.forEach((issue: z.ZodIssue) => {
+        const field = issue.path[0] as string;
+        if (field) {
+          formatted[field] = issue.message;
+        }
+      });
 
-    setValidationErrors(formatted);
-    setLocalErrors(formatted);
-    return false;
-  }
+      setValidationErrors(formatted);
+      setLocalErrors(formatted);
+      return false;
+    }
 
-  setValidationErrors({});
-  setLocalErrors({});
-  return true;
-};
+    setValidationErrors({});
+    setLocalErrors({});
+    return true;
+  };
 
 
   const handleNext = async () => {
@@ -87,10 +90,20 @@ const validateStep = (): boolean => {
 
     setLoading(true);
     try {
-      // Logic to call API here using your CampaignService
-      // await CampaignService.updateStepThree(campaignId, stepThree);
+      const payload: StepThreePayload = {
+        campaignGoals: stepThree.campaignGoals,
+        productServiceDetails: stepThree.productDetails, 
+        reportingRequirements: stepThree.reportingRequirements,
+        usageRights: stepThree.usageRights,
+        startingDate: stepThree.startingDate,
+        duration: Number(stepThree.duration), 
+        dos: stepThree.dos,
+        donts: stepThree.donts,
+      };
 
-      increaseStep(); // move to next step
+      await submitCampaignStepThree(campaignId, payload);
+
+      increaseStep();
     } catch (err: unknown) {
       console.error(err);
       notifyError("Something went wrong while saving step 3.");

@@ -1,4 +1,5 @@
 // page.tsx
+import { apiClient } from "@/api/base/axios_client";
 import AssetsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/assets.card";
 import CampaignMilestonesSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-milestones-section";
 import CampaignProgressCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-progress-card";
@@ -7,7 +8,6 @@ import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-deta
 import RatingCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/rating-card";
 import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/_components/terms-and-condition-card";
 import type { CampaignApi, ApiResponse } from "@/app/[locale]/(brand)/brand/types/client-types";
-import axiosInstance from "@/lib/axios";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -26,7 +26,7 @@ export default async function CampaignDetailsPage({ params }: PageProps) {
   let campaign: CampaignApi | null = null;
 
   try {
-    const res = await axiosInstance.get<ApiResponse<CampaignApi>>(`campaign/${id}`, {
+    const res = await apiClient.get<ApiResponse<CampaignApi>>(`campaign/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

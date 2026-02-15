@@ -61,7 +61,11 @@ export default function StepTwoAgency() {
       setLoadingAgencies(true);
       try {
         const res = await apiClient.get("/client/agencies", { params: { page, limit } });
-        const newAgencies: Agency[] = res.data?.data || [];
+        const newAgencies: Agency[] = (res.data?.data || []).map((a: any) => ({
+          id: a.id,
+          name: a.agencyName,      // map agencyName to name
+          subtitle: a.fullName,    // map fullName to subtitle
+        }));
         setAllAgencies((prev) => [...prev, ...newAgencies]);
         if (newAgencies.length < limit) setHasMore(false);
       } catch (err) {
@@ -73,17 +77,23 @@ export default function StepTwoAgency() {
     fetchAgencies();
   }, [page]);
 
+
   // ================= Search Agencies =================
   const searchAgencies = async (query: string) => {
     if (!query.trim()) return;
     try {
       const res = await apiClient.get("/client/agencies", { params: { page: 1, limit: 30, search: query } });
-      const data: Agency[] = res.data?.data || [];
+      const data: Agency[] = (res.data?.data || []).map((a: any) => ({
+        id: a.id,
+        name: a.agencyName,
+        subtitle: a.fullName,
+      }));
       setAgencySuggestions(data);
     } catch (err) {
       console.error("Agency search failed:", err);
     }
   };
+
 
   // ================= Validation =================
   const clearError = (key: keyof FieldErrors) => {
@@ -192,8 +202,8 @@ export default function StepTwoAgency() {
               }
             }}
           >
-            {allAgencies.map((a) => (
-              <AgencyCard key={a.id} agency={a} onClick={() => addAgency(a)} />
+            {allAgencies.slice(0, 5).map((a) => ( // Example: first 5 as recommended
+              <AgencyCard key={`h-${a.id}`} agency={a} onClick={() => addAgency(a)} />
             ))}
           </div>
         </div>
@@ -202,11 +212,14 @@ export default function StepTwoAgency() {
         <div>
           <h1 className="text-Primary font-semibold">Other Ad Agencies</h1>
           <div className="max-h-72 overflow-x-auto flex flex-col gap-3 mt-3">
-            {allAgencies.map((a) => (
-              <AgencyCard2 key={a.id} agency={a} onClick={() => addAgency(a)} />
-            ))}
+            {allAgencies
+              .slice(5) 
+              .map((a) => (
+                <AgencyCard2 key={`v-${a.id}`} agency={a} onClick={() => addAgency(a)} />
+              ))}
           </div>
         </div>
+
 
         {/* Footer Buttons */}
         <div className="flex justify-end gap-4 mt-6">

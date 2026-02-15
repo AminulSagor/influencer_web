@@ -38,7 +38,7 @@ const CampaignTable = () => {
   const influencerData = userData["influencer"];
   const data = influencerData.find((i) => i.id === id);
   const campaignData = data?.campaigns;
-  console.log(campaignData);
+  //console.log(campaignData);
   return (
     <Card>
       <CardHeader className="border-b">
