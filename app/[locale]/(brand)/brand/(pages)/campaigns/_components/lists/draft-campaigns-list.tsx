@@ -6,10 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
 
-//import { getPlatformIcon } from "@/helpers/platforms";
-//import { formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
+import { getPlatformIcon } from "@/utils/platforms_util";
+import { formatDeadline } from "@/utils/date_util";
 
 export default function DraftCampaignsList({
   campaigns,

@@ -17,6 +17,8 @@ import { login } from "@/api/auth/login";
 import { useAuthStore } from "@/store/auth_store";
 import { setToken } from "@/utils/cookies_util";
 import { decodeJwtPayload } from "@/utils/jwt_util";
+import { handlePhoneFormat } from "@/utils/phone_util";
+import { notifyError } from "@/utils/toast_util";
 
 const LoginForm = () => {
   const t = useTranslations("login");
@@ -39,13 +41,13 @@ const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
 
     const res = await login({
-      phone: data.phone,
+      phone: handlePhoneFormat(data.phone),
       password: data.password,
     });
 
-    const token = res.accessToken;
+    const token = res?.accessToken;
+    if (!token) throw new Error("No token returned");
 
-    // Save token in cookie only
     setToken(token);
 
     const payload = decodeJwtPayload(token);
@@ -59,8 +61,6 @@ const onSubmit = async (data: LoginFormValues) => {
       isVerified: payload.isVerified,
     });
 
-    const role = payload.role || "";
-
     const pathMap: Record<string, string> = {
       client: "brand",
       admin: "admin",
@@ -68,8 +68,7 @@ const onSubmit = async (data: LoginFormValues) => {
       influencer: "influencer",
     };
 
-    const basePath = pathMap[role] || role;
-
+    const basePath = pathMap[payload.role || ""] || (payload.role || "");
     const nextPath = payload.isVerified
       ? `/${locale}/${basePath}/dashboard`
       : `/${locale}/${basePath}/unverified`;
@@ -77,15 +76,25 @@ const onSubmit = async (data: LoginFormValues) => {
     await router.push(nextPath);
     router.refresh();
   } catch (error: any) {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      notifyError("Phone Number or Password wrong");
+    } else {
+      notifyError(
+        error?.response?.data?.message || "Login failed. Please try again."
+      );
+    }
+
     methods.setError("root", {
       message:
-        error?.response?.data?.message ||
-        "Login failed. Please try again.",
+        error?.response?.data?.message || "Login failed. Please try again.",
     });
   } finally {
     setLoading(false);
   }
 };
+
 
 
   return (
@@ -94,7 +103,7 @@ const onSubmit = async (data: LoginFormValues) => {
         <FormField
           control={methods.control}
           name="phone"
-          rules={{ required: "Email or phone required" }}
+          rules={{ required: "Phone number required" }}
           render={({ field }) => (
             <FormItem>
               <FormControl>

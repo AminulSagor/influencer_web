@@ -66,7 +66,11 @@ export default function StepTwoAgency() {
           name: a.agencyName,      // map agencyName to name
           subtitle: a.fullName,    // map fullName to subtitle
         }));
-        setAllAgencies((prev) => [...prev, ...newAgencies]);
+        setAllAgencies((prev) => {
+          const map = new Map(prev.map((x) => [x.id, x]));
+          for (const a of newAgencies) map.set(a.id, a); // overwrite duplicates by same id
+          return Array.from(map.values());
+        });
         if (newAgencies.length < limit) setHasMore(false);
       } catch (err) {
         console.error(err);
@@ -213,7 +217,7 @@ export default function StepTwoAgency() {
           <h1 className="text-Primary font-semibold">Other Ad Agencies</h1>
           <div className="max-h-72 overflow-x-auto flex flex-col gap-3 mt-3">
             {allAgencies
-              .slice(5) 
+              .slice(5)
               .map((a) => (
                 <AgencyCard2 key={`v-${a.id}`} agency={a} onClick={() => addAgency(a)} />
               ))}

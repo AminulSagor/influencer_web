@@ -4,10 +4,10 @@ import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
-//import { getPlatformIcon } from "@/helpers/platforms";
-//import { formatDeadline } from "@/helpers/helper";
 import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
+import { getPlatformIcon } from "@/utils/platforms_util";
+import { formatDeadline } from "@/utils/date_util";
 
 export default function CancelledCampaignsList({
   campaigns,
