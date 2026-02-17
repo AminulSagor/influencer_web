@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CampaignStatusType, InvitationStatusType } from "../[id]/page";
+import { CampaignStatusType, InvitationStatusType } from "../../[id]/page";
 import CollapsibleCard from "./collapsible-card";
 import StarRating from "./star-rating";
 import ClientRatingCard from "./client-rating-card";

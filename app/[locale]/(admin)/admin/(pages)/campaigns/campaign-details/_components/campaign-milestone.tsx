@@ -22,7 +22,7 @@ import {
   CampaignStatusType,
   Influencer,
   InvitationStatusType,
-} from "../[id]/page";
+} from "../../[id]/page";
 import {
   Select,
   SelectContent,

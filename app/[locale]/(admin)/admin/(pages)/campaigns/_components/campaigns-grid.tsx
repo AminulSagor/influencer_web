@@ -110,7 +110,7 @@ export default function CampaignsGrid({
 
               <div className="flex gap-2">
                 <Button variant="lightGreen" className="flex-1">
-                  <Link href={"/admin/campaigns/campaign-details/" + campaign.id}>
+                  <Link href={`/admin/campaigns/${campaign.id}`}>
                     View Details
                   </Link>
                 </Button>

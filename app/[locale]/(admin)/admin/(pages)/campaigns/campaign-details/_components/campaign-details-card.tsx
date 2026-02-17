@@ -124,6 +124,7 @@ const CampaignDetailsCard = ({
           <div className="flex">
             {platform.map((plat, index) => {
               const Icon = ICON_MAP[plat.key];
+              if (!Icon) return null; // ✅ prevents crash if key not in ICON_MAP
               return (
                 <div key={index}>
                   <Icon size={24} />

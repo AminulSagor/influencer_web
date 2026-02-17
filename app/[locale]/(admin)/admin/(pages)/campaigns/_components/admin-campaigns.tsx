@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAllCampaigns } from "@/api/admin/campaign/get-all-campaign";
+import { getAllCampaigns } from "@/api/admin/campaign/get-campaign";
 
 import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";

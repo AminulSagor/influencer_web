@@ -13,7 +13,7 @@ import {
   CampaignStatusType,
   Influencer,
   InvitationStatusType,
-} from "../[id]/page";
+} from "../../[id]/page";
 import CampaignMilestone from "./campaign-milestone";
 import CollapsibleCard from "./collapsible-card";
 import IconText from "./icon-text";
