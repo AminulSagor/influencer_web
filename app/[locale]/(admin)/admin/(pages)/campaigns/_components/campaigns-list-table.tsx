@@ -50,7 +50,7 @@ export default function CampaignsListTable({
           {campaigns.map((campaign) => {
             const progress = progressMap[campaign.status];
             const showProgress = isProgressStatus(campaign.status);
-
+          
             return (
               <TableRow key={campaign.id}>
                 <TableCell className="w-[40px]">
