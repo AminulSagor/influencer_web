@@ -16,10 +16,8 @@ export const getAllCampaigns = async (params: GetCampaignParams) => {
   return res.data;
 };
 
-
-
 export const getCampaignById = async (campaignId: string) => {
-  const res = await apiClient.get(`/campaign/admin/${campaignId}`);
+  const res = await apiClient.get(`/influencer/admin/campaigns/${campaignId}`);
   return res.data;
 };
 

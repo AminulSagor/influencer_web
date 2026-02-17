@@ -109,6 +109,7 @@ const CampaignDetailsCard = ({
                   >
                     {influencer.name}
                   </Badge>
+
                 ))}
               </div>
             </div>

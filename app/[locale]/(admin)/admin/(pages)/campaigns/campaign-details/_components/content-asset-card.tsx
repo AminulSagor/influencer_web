@@ -11,67 +11,73 @@ import { BsDownload, BsFileEarmarkText } from "react-icons/bs";
 import { PiImageLight, PiVideoLight } from "react-icons/pi";
 import CollapsibleCard from "./collapsible-card";
 
-/* ---------------- icon map ---------------- */
 const fileTypeIconMap: Record<string, ReactNode> = {
   image: <PiImageLight size={30} />,
   video: <PiVideoLight size={30} />,
   document: <BsFileEarmarkText size={30} />,
 };
 
-/* ---------------- data ---------------- */
-const contentAssets = [
-  {
-    id: 1,
-    title: "Brand Logo Pack",
-    meta: "PNG, SVG - 2.4MB",
-    type: "image",
-  },
-  {
-    id: 2,
-    title: "Product Demo Video",
-    meta: "MP4 - 90MB",
-    type: "video",
-  },
-  {
-    id: 3,
-    title: "Brand Guideline",
-    meta: "PDF - 750KB",
-    type: "document",
-  },
-];
+type Asset = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize?: string;
+  mimeType?: string;
+  description?: string;
+};
 
-const ContentAssetCard = () => {
+const getType = (mime?: string) => {
+  if (!mime) return "document";
+  if (mime.startsWith("image/")) return "image";
+  if (mime.startsWith("video/")) return "video";
+  return "document";
+};
+
+export default function ContentAssetCard({ assets }: { assets: Asset[] }) {
   return (
     <CollapsibleCard heading="Content Assets" icon={<BsDownload />}>
       <div className="space-y-2">
-        {contentAssets.map((asset) => (
-          <Item
-            key={asset.id}
-            variant="outline"
-            className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
-          >
-            <div>{fileTypeIconMap[asset.type]}</div>
-            <ItemContent>
-              <ItemTitle>{asset.title}</ItemTitle>
-              <ItemDescription className="text-light-green text-xs">
-                {asset.meta}
-              </ItemDescription>
-            </ItemContent>
+        {assets?.length ? (
+          assets.map((asset) => {
+            const type = getType(asset.mimeType);
+            const meta = `${asset.mimeType ?? "file"}${
+              asset.fileSize ? ` - ${asset.fileSize}` : ""
+            }`;
 
-            <ItemActions>
-              <Button
+            return (
+              <Item
+                key={asset.id}
                 variant="outline"
-                size="sm"
-                className="hover:text-light-green/90 border border-light-green"
+                className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
               >
-                <BsDownload />
-              </Button>
-            </ItemActions>
-          </Item>
-        ))}
+                <div>{fileTypeIconMap[type]}</div>
+
+                <ItemContent>
+                  <ItemTitle>{asset.fileName}</ItemTitle>
+                  <ItemDescription className="text-light-green text-xs">
+                    {asset.description ? `${asset.description} • ${meta}` : meta}
+                  </ItemDescription>
+                </ItemContent>
+
+                <ItemActions>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="hover:text-light-green/90 border border-light-green"
+                  >
+                    <a href={asset.fileUrl} target="_blank" rel="noreferrer">
+                      <BsDownload />
+                    </a>
+                  </Button>
+                </ItemActions>
+              </Item>
+            );
+          })
+        ) : (
+          <p className="text-gray-400 text-sm">No assets found.</p>
+        )}
       </div>
     </CollapsibleCard>
   );
-};
-
-export default ContentAssetCard;
+}
