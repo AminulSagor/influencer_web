@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import CampaignMilestone from "./campaign-milestone";
 import CollapsibleCard from "./collapsible-card";
@@ -33,28 +33,97 @@ const CircularProgressChart = dynamic(() => import("./circular-progress"), {
 interface Props {
   invitationStatus: InvitationStatusType;
   campaignStatus: CampaignStatusType;
+
+  /** keep old prop (avatar list etc.) */
   influencers: InfluencerUI[];
+
+  /**
+   * ✅ backend influencers for dropdown (preferred/assigned)
+   * pass: campaign?.preferredInfluencers (recommended)
+   */
+  dropdownInfluencers?: any[];
+
   milestones: CampaignMilestoneApi[];
+}
+
+function safeStr(v: any) {
+  return String(v ?? "").trim();
 }
 
 export default function CampaignMilestoneContainer({
   invitationStatus,
   campaignStatus,
   influencers,
+  dropdownInfluencers,
   milestones,
 }: Props) {
-  const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
-    milestones?.[0]?.id ?? null
-  );
+  const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const firstId = safeStr(milestones?.[0]?.id);
+    setActiveMilestoneId((prev) => prev ?? (firstId || null));
+  }, [milestones]);
 
   const activeMilestone = useMemo(() => {
-    return (milestones ?? []).find((m) => m.id === activeMilestoneId) ?? null;
+    const id = safeStr(activeMilestoneId);
+    return (milestones ?? []).find((m) => safeStr(m.id) === id) ?? null;
   }, [milestones, activeMilestoneId]);
+
+  /**
+   * ✅ dropdown list must be InfluencerUI with:
+   * { id: string; name: string; imageUrl: string; }
+   */
+  const milestoneInfluencers: InfluencerUI[] = useMemo(() => {
+    const fallbackImg = "/avatar-fallback.png";
+
+    // 1) Prefer API list for dropdown
+    if (Array.isArray(dropdownInfluencers) && dropdownInfluencers.length > 0) {
+      return dropdownInfluencers
+        .map((i: any, idx: number) => {
+          const id = safeStr(i?.id) || safeStr(i?._id) || `inf-${idx + 1}`;
+
+          const name =
+            safeStr(i?.name) ||
+            `${safeStr(i?.firstName)} ${safeStr(i?.lastName)}`.trim() ||
+            id;
+
+          const imageUrl =
+            safeStr(i?.imageUrl) ||
+            safeStr(i?.profileImg) ||
+            safeStr(i?.profileImage) ||
+            fallbackImg;
+
+          // make sure SelectItem value never becomes empty
+          if (!safeStr(id)) return null;
+
+          const item: InfluencerUI = {
+            id,
+            name,
+            imageUrl,
+          };
+
+          return item;
+        })
+        .filter(Boolean) as InfluencerUI[];
+    }
+
+    // 2) Fallback to provided influencers list (only if it fits InfluencerUI)
+    return (influencers ?? [])
+      .map((x: any, idx: number) => {
+        const id = safeStr(x?.id) || `inf-${idx + 1}`;
+        const name = safeStr(x?.name) || id;
+        const imageUrl = safeStr(x?.imageUrl) || fallbackImg;
+
+        const item: InfluencerUI = { id, name, imageUrl };
+        return item;
+      })
+      .filter((x) => safeStr(x.id).length > 0);
+  }, [dropdownInfluencers, influencers]);
 
   return (
     <div className="space-y-4">
       <CampaignMilestone
-        influencers={influencers}
+        influencers={milestoneInfluencers}
         campaignStatus={campaignStatus}
         invitationStatus={invitationStatus}
         milestones={milestones}
@@ -68,12 +137,7 @@ export default function CampaignMilestoneContainer({
             <CardHeader className="flex gap-4">
               <CardTitle className="flex flex-1 items-center gap-6 text-Primary text-base font-semibold">
                 <div>
-                  <Image
-                    src={"/icons/milestone.svg"}
-                    height={24}
-                    width={24}
-                    alt="svg"
-                  />
+                  <Image src={"/icons/milestone.svg"} height={24} width={24} alt="svg" />
                 </div>
 
                 <div className="space-y-1">
@@ -83,9 +147,7 @@ export default function CampaignMilestoneContainer({
 
                   <div className="flex items-center gap-8">
                     <h2>{activeMilestone.contentTitle}</h2>
-                    <p className="text-light-green">
-                      ৳ {Number(activeMilestone.amount ?? 0)}
-                    </p>
+                    <p className="text-light-green">৳ {Number(activeMilestone.amount ?? 0)}</p>
                   </div>
                 </div>
               </CardTitle>
@@ -95,9 +157,7 @@ export default function CampaignMilestoneContainer({
               <div className="border p-4 rounded-lg border-light-green grid grid-cols-12 gap-4 items-center bg-linear-to-r from-Secondary to-white">
                 <div className="col-span-3">
                   <ul className="list-disc text-Primary">
-                    <li className="ml-6 text-sm">
-                      {activeMilestone.contentQuantity}
-                    </li>
+                    <li className="ml-6 text-sm">{activeMilestone.contentQuantity}</li>
                   </ul>
                 </div>
 
@@ -146,22 +206,13 @@ export default function CampaignMilestoneContainer({
 
               <CollapsibleCard heading="Submission Details" badge="Completed">
                 <div className="space-y-2">
-                  <IconText
-                    className="text-base gap-2"
-                    icon={<FaUserPen />}
-                    text="Description / Update"
-                  />
+                  <IconText className="text-base gap-2" icon={<FaUserPen />} text="Description / Update" />
                   <p>Description of the proof will be visible here</p>
 
                   <div className="border rounded-md p-4 space-y-4 mt-6">
                     <div className="flex">
                       <div className="flex-1">
-                        <IconText
-                          className="gap-2 font-semibold"
-                          text="Platform 1"
-                          icon={<CgWebsite size={20} />}
-                        />
-
+                        <IconText className="gap-2 font-semibold" text="Platform 1" icon={<CgWebsite size={20} />} />
                         <Button asChild className="p-0" variant={"link"}>
                           <Link href={"#"}>platform link</Link>
                         </Button>
@@ -197,15 +248,8 @@ export default function CampaignMilestoneContainer({
                         </div>
 
                         <div className="p-2 col-span-4 flex items-center flex-col gap-2 justify-center">
-                          <h2 className="text-lg font-semibold">
-                            Average Performance
-                          </h2>
-
-                          <CircularProgressChart
-                            percentage={80}
-                            size={180}
-                            strokeWidth={30}
-                          />
+                          <h2 className="text-lg font-semibold">Average Performance</h2>
+                          <CircularProgressChart percentage={80} size={180} strokeWidth={30} />
                         </div>
                       </div>
                     </div>

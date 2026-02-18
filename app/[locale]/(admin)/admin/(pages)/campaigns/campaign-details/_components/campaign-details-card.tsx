@@ -7,17 +7,15 @@ export type Platform = {
   url: string;
   key: string;
 };
+
 export type Influencer = {
   name: string;
   imageUrl: string;
+  // ✅ if you have id in future, add it here and use it for keys
+  // id?: string;
 };
 
-type Status =
-  | "Need Quote"
-  | "Pending Invitations"
-  | "Active"
-  | "Completed"
-  | "Paid";
+type Status = "Need Quote" | "Pending Invitations" | "Active" | "Completed" | "Paid";
 
 type Props = {
   title: string;
@@ -62,29 +60,24 @@ const CampaignDetailsCard = ({
   return (
     <div className="bg-linear-to-r from-Primary to-light-green p-4 rounded-lg text-off-white ">
       <div className="flex items-center justify-between">
-        <Button
-          variant="link"
-          className="has-[>svg]:px-0 text-off-white"
-          asChild
-        >
+        <Button variant="link" className="has-[>svg]:px-0 text-off-white" asChild>
           <Link href="/admin/campaigns">
             <BiChevronLeftCircle />
             Back to Campaigns
           </Link>
         </Button>
+
         <Button className="bg-linear-to-r from-white to-Secondary text-light-green">
           {status}
         </Button>
       </div>
+
       <div>
         <h2 className="text-white-two text-2xl font-semibold">{title}</h2>
+
         <div className="mt-2 space-x-2">
-          <Badge className="bg-white-two text-Primary text-base px-4">
-            {description}
-          </Badge>
-          <Badge className="bg-white-two text-Primary text-base px-4">
-            Niche: {niche}
-          </Badge>
+          <Badge className="bg-white-two text-Primary text-base px-4">{description}</Badge>
+          <Badge className="bg-white-two text-Primary text-base px-4">Niche: {niche}</Badge>
         </div>
       </div>
 
@@ -92,55 +85,70 @@ const CampaignDetailsCard = ({
         {influencers && influencers.length > 0 && (
           <div>
             <div className="flex items-center gap-1">
-              {influencers.map((i) => (
-                <Avatar key={i.name}>
-                  <AvatarImage src={i.imageUrl} alt={i.name} />
-                  <AvatarFallback>{i.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-              ))}
+              {influencers.map((i, idx) => {
+                const key = `${i?.name?.trim() || "influencer"}-${i?.imageUrl || "noimg"}-${idx}`;
+                return (
+                  <Avatar key={key}>
+                    <AvatarImage src={i.imageUrl} alt={i.name} />
+                    <AvatarFallback>{(i.name || "?").charAt(0)}</AvatarFallback>
+                  </Avatar>
+                );
+              })}
             </div>
+
             <div className="flex items-center gap-1 mt-2">
               <h3 className="text-white-two font-medium">Influencers:</h3>
-              <div className="space-x-2">
-                {influencers.map((influencer, index) => (
-                  <Badge
-                    className="bg-white-two text-Primary text-xs px-4"
-                    key={index}
-                  >
-                    {influencer.name}
-                  </Badge>
 
-                ))}
+              <div className="space-x-2">
+                {influencers.map((influencer, idx) => {
+                  const key = `${influencer?.name?.trim() || "influencer"}-${
+                    influencer?.imageUrl || "noimg"
+                  }-${idx}`;
+
+                  return (
+                    <Badge className="bg-white-two text-Primary text-xs px-4" key={key}>
+                      {influencer.name}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           </div>
         )}
       </div>
+
       <div className="mt-6 mb-4">
         <Separator />
       </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-white-two">
           Platforms:
           <div className="flex">
-            {platform.map((plat, index) => {
-              const Icon = ICON_MAP[plat.key];
-              if (!Icon) return null; // ✅ prevents crash if key not in ICON_MAP
+            {platform.map((plat, idx) => {
+              const iconKey = String(plat?.key ?? "").trim().toLowerCase();
+              const Icon = ICON_MAP[iconKey];
+              if (!Icon) return null;
+
+              // ✅ stable unique key (avoid `key={index}` alone)
+              const key = `${iconKey || "platform"}-${plat?.url || "nourl"}-${idx}`;
+
               return (
-                <div key={index}>
+                <div key={key}>
                   <Icon size={24} />
                 </div>
               );
             })}
           </div>
         </div>
+
         <div className="flex items-center gap-2">
           <div>Client:</div>
           <div className="flex items-center gap-2">
             <Avatar>
               <AvatarImage src={clientAvatar} alt={clientName} />
               <AvatarFallback className="text-light-green">
-                {clientName.charAt(0)}
+                {(clientName || "?").charAt(0)}
               </AvatarFallback>
             </Avatar>
             <p>{clientName}</p>

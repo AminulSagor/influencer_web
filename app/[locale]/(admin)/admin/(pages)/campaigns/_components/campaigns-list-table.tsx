@@ -20,6 +20,7 @@ import { isProgressStatus, progressMap } from "@/utils/admin/campaign/campaign-c
 import StatusSelect from "./status-select";
 import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign-ui_type";
 import ProgressBar from "./progress-bar";
+import Link from "next/link";
 
 export default function CampaignsListTable({
   campaigns,
@@ -114,9 +115,11 @@ export default function CampaignsListTable({
 
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
+                    <Link href={`/admin/campaigns/${campaign.id}`}>
                     <Button variant="outline">
                       <FaEye />
                     </Button>
+                    </Link>
                     <Button variant="outline">
                       <FaRegTrashCan />
                     </Button>

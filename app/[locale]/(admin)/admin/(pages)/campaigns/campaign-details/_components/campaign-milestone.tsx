@@ -23,8 +23,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue, // ✅ IMPORTANT: use shadcn SelectValue
 } from "@/components/ui/select";
-import { SelectValue } from "@radix-ui/react-select";
 
 import { ChevronRight } from "lucide-react";
 
@@ -135,28 +135,38 @@ export default function CampaignMilestone({
 }: Props) {
   const [disabled, setDisabled] = useState(true);
 
-  const isActiveAccepted =
-    campaignStatus === "active" && invitationStatus === "accepted";
-  const isActiveSent =
-    campaignStatus === "active" && invitationStatus === "sent";
+  const isActiveAccepted = campaignStatus === "active" && invitationStatus === "accepted";
+  const isActiveSent = campaignStatus === "active" && invitationStatus === "sent";
 
   const normalizedMilestones = useMemo(() => {
-    return (milestones ?? [])
-      .slice()
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return (milestones ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [milestones]);
+
+  // ✅ Ensure SelectItem never receives empty string value
+  const selectInfluencers = useMemo(() => {
+    return (influencers ?? [])
+      .map((inf, idx) => {
+        const name = String((inf as any)?.name ?? "").trim();
+        const id = String((inf as any)?.id ?? "").trim();
+
+        // prefer id, fallback to name
+        const value = id || name;
+
+        return {
+          _key: `${value || "inf"}-${idx}`, // unique key
+          value: value, // SelectItem value (MUST NOT be "")
+          label: name || value || `Influencer ${idx + 1}`,
+        };
+      })
+      .filter((x) => String(x.value ?? "").trim().length > 0); // ✅ remove empty values
+  }, [influencers]);
 
   return (
     <Card>
       <CardHeader className="flex gap-4">
         <CardTitle className="flex flex-1 items-center gap-2 text-Primary text-base font-semibold">
           <div>
-            <Image
-              src={"/icons/milestone.svg"}
-              height={24}
-              width={24}
-              alt="svg"
-            />
+            <Image src={"/icons/milestone.svg"} height={24} width={24} alt="svg" />
           </div>
           Campaign Milestone
         </CardTitle>
@@ -172,10 +182,11 @@ export default function CampaignMilestone({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Influencer" />
                   </SelectTrigger>
+
                   <SelectContent>
-                    {influencers.map((influencer) => (
-                      <SelectItem key={influencer.name} value={influencer.name}>
-                        {influencer.name}
+                    {selectInfluencers.map((inf) => (
+                      <SelectItem key={inf._key} value={inf.value}>
+                        {inf.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -183,9 +194,7 @@ export default function CampaignMilestone({
               </div>
 
               <div className="flex-1">
-                <h2 className="text-Primary text-lg font-semibold">
-                  Offered Amount
-                </h2>
+                <h2 className="text-Primary text-lg font-semibold">Offered Amount</h2>
                 <p className="text-Primary text-lg font-medium">৳ 30,000</p>
               </div>
 
@@ -195,9 +204,7 @@ export default function CampaignMilestone({
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                <h2 className="text-Primary text-lg font-semibold">
-                  Invitation remains: 03
-                </h2>
+                <h2 className="text-Primary text-lg font-semibold">Invitation remains: 03</h2>
                 <Button variant={"PrimaryGradient"} size={"lg"}>
                   Send Invitation
                 </Button>
@@ -207,9 +214,7 @@ export default function CampaignMilestone({
             {/* milestone amounts */}
             <div className="mt-4">
               <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-Primary font-semibold">
-                  Milestone amounts
-                </h2>
+                <h2 className="text-Primary font-semibold">Milestone amounts</h2>
                 <Button
                   onClick={() => setDisabled(false)}
                   className="text-white bg-orange"
@@ -222,25 +227,28 @@ export default function CampaignMilestone({
               <Card>
                 <div className="px-4 py-4">
                   <div className="grid grid-cols-12 gap-4">
-                    {normalizedMilestones.map((m, idx) => (
-                      <div key={m.id} className="col-span-3 space-y-2">
-                        <Label>Milestone {idx + 1}</Label>
+                    {normalizedMilestones.map((m, idx) => {
+                      const key = `${String(m?.id ?? "").trim() || "milestone"}-${idx}`;
+                      return (
+                        <div key={key} className="col-span-3 space-y-2">
+                          <Label>Milestone {idx + 1}</Label>
 
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                            ৳
-                          </span>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                              ৳
+                            </span>
 
-                          <Input
-                            disabled={disabled}
-                            type="number"
-                            value={Number(m.amount ?? 0)}
-                            className="pl-8 text-right"
-                            readOnly
-                          />
+                            <Input
+                              disabled={disabled}
+                              type="number"
+                              value={Number(m.amount ?? 0)}
+                              className="pl-8 text-right"
+                              readOnly
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </Card>
@@ -254,9 +262,7 @@ export default function CampaignMilestone({
             <div className="flex justify-between px-2">
               <div className="flex-1">
                 <h2>Overall Progress</h2>
-                <p className="text-orange font-semibold text-lg">
-                  46% Completed
-                </p>
+                <p className="text-orange font-semibold text-lg">46% Completed</p>
               </div>
 
               <div className="flex-1">
@@ -264,10 +270,11 @@ export default function CampaignMilestone({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select Influencer" />
                   </SelectTrigger>
+
                   <SelectContent>
-                    {influencers.map((influencer) => (
-                      <SelectItem key={influencer.name} value={influencer.name}>
-                        {influencer.name}
+                    {selectInfluencers.map((inf) => (
+                      <SelectItem key={inf._key} value={inf.value}>
+                        {inf.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -281,20 +288,18 @@ export default function CampaignMilestone({
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 mr-1 -ml-4 pr-24">
             {normalizedMilestones.map((m, index) => {
-              // backend status -> UI style
               const uiStatus = (m.status ?? TODO) as MilestoneStatus;
               const styles = milestoneStatusStyles[uiStatus] ?? milestoneStatusStyles[TODO];
 
-              const isSelected = activeMilestoneId === m.id;
+              const id = String(m?.id ?? "").trim();
+              const safeId = id || `milestone-${index}`;
+              const isSelected = activeMilestoneId === safeId;
 
               return (
-                <CarouselItem
-                  key={m.id}
-                  className="basis-full md:basis-[34%]"
-                >
+                <CarouselItem key={safeId} className="basis-full md:basis-[34%]">
                   <div
                     onClick={() => {
-                      if (campaignStatus !== "needs-quote") onSelectMilestone(m.id);
+                      if (campaignStatus !== "needs-quote") onSelectMilestone(safeId);
                     }}
                     className={cn(
                       "border border-light-green p-4 rounded-md space-y-2 cursor-pointer transition",
@@ -336,9 +341,7 @@ export default function CampaignMilestone({
                     </div>
 
                     {/* CONTENT REQUIREMENTS */}
-                    <p className="text-gray-500 text-sm">
-                      {m.contentQuantity}
-                    </p>
+                    <p className="text-gray-500 text-sm">{m.contentQuantity}</p>
 
                     {/* FOOTER */}
                     <div

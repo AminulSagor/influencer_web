@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { getCampaignById } from "@/api/admin/campaign/get-campaign";
 
@@ -25,11 +25,10 @@ export type CampaignStatusType =
 export type Influencer = { imageUrl: string; name: string };
 
 function mapStatusToUI(status: string | undefined) {
-  // ✅ your UI expects these exact values
-  // backend has: received, etc.
   const s = (status ?? "").toLowerCase();
   if (s === "received") return "Need Quote";
   if (s === "pending") return "Pending Invitations";
+  if (s === "pending_influencer") return "Pending Invitations";
   if (s === "active") return "Active";
   if (s === "completed") return "Completed";
   if (s === "paid") return "Paid";
@@ -40,6 +39,7 @@ function mapCampaignStatus(status: string | undefined): CampaignStatusType {
   const s = (status ?? "").toLowerCase();
   if (s === "received") return "needs-quote";
   if (s === "pending" || s === "pending-invitations") return "pending-invitations";
+  if (s === "pending_influencer") return "pending-invitations";
   if (s === "active") return "active";
   if (s === "completed") return "completed";
   if (s === "paid") return "paid";
@@ -50,73 +50,107 @@ export default function Page() {
   const { id } = useParams<{ id: string }>();
   const campaignId = id;
 
-  // ✅ currently your UI flow uses these
-  // you can later drive these from backend if you have fields
   const invitationStatus: InvitationStatusType = "sent";
-
   const [campaign, setCampaign] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
+  const fetchCampaign = useCallback(async () => {
     if (!campaignId) return;
-
-    (async () => {
+    setLoading(true);
+    try {
       const res = await getCampaignById(campaignId);
-      // some axios wrappers return {data: ...}, some return directly
-      setCampaign(res?.data ?? res);
-    })();
+      setCampaign(res);
+    } finally {
+      setLoading(false);
+    }
   }, [campaignId]);
 
-  if (!campaign) return <div>Loading...</div>;
+  useEffect(() => {
+    fetchCampaign();
+  }, [fetchCampaign]);
 
-  // ---------------- derived from backend ----------------
+  // ✅ derive quoteState from backend (reload-safe)
+  const rawStatus = String(campaign?.status ?? "").toLowerCase();
+
+  const waitingFor = String(
+    campaign?.negotiation?.waitingFor ??
+    campaign?.quote?.waitingFor ??
+    campaign?.waitingFor ??
+    ""
+  ).toLowerCase();
+
+  const quoteState = useMemo<"none" | "sent" | "confirmed">(() => {
+    if (rawStatus === "pending_influencer") return "confirmed";
+    if (waitingFor === "client") return "sent";
+    return "none";
+  }, [rawStatus, waitingFor]);
+
+  // ---------------- derived values ----------------
   const totalBudget = Number(campaign?.financials?.totalBudget ?? 0);
   const clientBudget = Number(campaign?.financials?.clientBudget ?? 0);
   const vatAmount = Number(campaign?.financials?.vatAmount ?? 0);
   const netPayableAmount = Number(campaign?.financials?.netPayableAmount ?? 0);
 
-  // ✅ FIXED 2% (NO EDIT)
+  const paidAmount =
+    Number(campaign?.financials?.paidAmount ?? 0) ||
+    Number(campaign?.negotiation?.agreedBudget ?? 0) ||
+    Number(campaign?.agreedBudget ?? 0) ||
+    0;
+
+  const dueAmount =
+    Number(campaign?.financials?.dueAmount ?? 0) ||
+    Number(campaign?.negotiation?.dueAmount ?? 0) ||
+    Number(campaign?.dueAmount ?? 0) ||
+    0;
+
   const platformFeePercent = 2;
   const platformFeeAmount = Math.round((totalBudget * platformFeePercent) / 100);
   const availableForInfluencers = Math.max(0, totalBudget - platformFeeAmount);
 
+  const platform = useMemo(() => {
+    const keys = Array.from(
+      new Set<string>(
+        (campaign?.milestones ?? [])
+          .map((m: any) => m?.platform)
+          .filter((p: any): p is string => typeof p === "string" && p.length > 0)
+      )
+    );
 
+    return keys.map((key) => ({
+      key,
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      url:
+        key === "instagram"
+          ? "https://instagram.com"
+          : key === "youtube"
+            ? "https://youtube.com"
+            : key === "tiktok"
+              ? "https://tiktok.com"
+              : key === "facebook"
+                ? "https://facebook.com"
+                : "#",
+    }));
+  }, [campaign?.milestones]);
 
-
-  const platform = Array.from(
-    new Set<string>(
-      (campaign?.milestones ?? [])
-        .map((m: any) => m?.platform)
-        .filter((p: any): p is string => typeof p === "string" && p.length > 0)
-    )
-  ).map((key) => ({
-    key,
-    name: key.charAt(0).toUpperCase() + key.slice(1),
-    url:
-      key === "instagram"
-        ? "https://instagram.com"
-        : key === "youtube"
-          ? "https://youtube.com"
-          : key === "tiktok"
-            ? "https://tiktok.com"
-            : key === "facebook"
-              ? "https://facebook.com"
-              : "#",
-  }));
-
-  const influencers: Influencer[] = (campaign?.preferredInfluencers ?? []).map(
-    (i: any) => ({
+  const influencers: Influencer[] = useMemo(() => {
+    return (campaign?.preferredInfluencers ?? []).map((i: any, idx: number) => ({
       imageUrl: i?.profileImg ?? "/avatar-fallback.png",
-      name: `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim(),
-    })
+      name: `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() || `Influencer ${idx + 1}`,
+    }));
+  }, [campaign?.preferredInfluencers]);
+
+  const stats = useMemo(
+    () => [
+      { label: "Final Quoted Budget", value: totalBudget },
+      { label: "Target Profit / Platform Fee", value: platformFeeAmount },
+      { label: "Available For Influencers", value: availableForInfluencers },
+    ],
+    [totalBudget, platformFeeAmount, availableForInfluencers]
   );
 
-  const stats = [
-    { label: "Final Quoted Budget", value: totalBudget },
-    { label: "Target Profit / Platform Fee", value: platformFeeAmount }, // amount
-    { label: "Available For Influencers", value: availableForInfluencers },
-  ];
-
   const campaignStatus: CampaignStatusType = mapCampaignStatus(campaign?.status);
+
+  if (loading || !campaign) return <div>Loading...</div>;
 
   return (
     <div className="p-4 space-y-4">
@@ -138,6 +172,9 @@ export default function Page() {
 
         <div className="col-span-12 md:col-span-6">
           <CampaignQuoteDetails
+            campaignId={campaignId}
+            quoteState={quoteState}
+            onRefresh={fetchCampaign}
             revisedCount={0}
             currencySymbol="৳"
             platform={platform}
@@ -151,28 +188,27 @@ export default function Page() {
         </div>
       </div>
 
-      <CampaignStepper currentStep={campaign?.currentStep ?? 1} />
+      <CampaignStepper campaignId={campaignId} />
 
       <PlatformProfit
+        preferredInfluencers={campaign?.preferredInfluencers}
+        notPreferableInfluencers={campaign?.notPreferableInfluencers}
         campaignStatus={campaignStatus}
         stats={stats}
         invitationStatus={invitationStatus}
-        totalBudget={totalBudget} // ✅ IMPORTANT (remove hardcoded 100000)
+        quoteState={quoteState}
       />
 
-      <InfluencerPaymentMethod
-        campaignStatus={campaignStatus}
-        invitationStatus={invitationStatus}
-      />
+      <InfluencerPaymentMethod campaignStatus={campaignStatus} invitationStatus={invitationStatus} />
 
       <CampaignMilestoneContainer
         invitationStatus={invitationStatus}
         campaignStatus={campaignStatus}
-        influencers={influencers}
+        influencers={influencers as any}
+        dropdownInfluencers={campaign?.preferredInfluencers ?? []}
         milestones={campaign?.milestones ?? []}
       />
-
-
+      
       <CampaignTermsCard
         campaignGoals={campaign?.campaignGoals ?? ""}
         productServiceDetails={campaign?.productServiceDetails ?? ""}
@@ -184,10 +220,7 @@ export default function Page() {
 
       <ContentAssetCard assets={campaign?.assets ?? []} />
 
-      <InfluencerRatingCard
-        campaignStatus={campaignStatus}
-        invitationStatus={invitationStatus}
-      />
+      <InfluencerRatingCard campaignStatus={campaignStatus} invitationStatus={invitationStatus} />
     </div>
   );
 }

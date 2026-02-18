@@ -21,3 +21,9 @@ export const getCampaignById = async (campaignId: string) => {
   return res.data;
 };
 
+export const getAllInfluencer = async () => {
+  const res = await apiClient.get(`/influencer/admin/all`);
+  return res.data;
+};
+
+

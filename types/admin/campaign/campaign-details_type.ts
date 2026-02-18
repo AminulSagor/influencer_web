@@ -7,7 +7,7 @@ export type CampaignStatusType =
   | "completed"
   | "paid";
 
-export type InfluencerUI = { imageUrl: string; name: string };
+export type InfluencerUI = {id: string; imageUrl: string; name: string };
 
 // (optional) if you want strict typing for milestone API
 export type CampaignMilestoneApi = {
