@@ -1,16 +1,11 @@
 import { apiClient } from "@/api/base/axios_client";
 
-export type CampaignProgressRes = {
-  success: boolean;
-  message: string;
-  data: {
-    campaignId: string;
-    campaignStatus: string;          // e.g. "cancelled"
-    operationalProgress: string;     // e.g. "0%"
-  };
+export const getCampaignProgress = async (campaignId: string) => {
+  try {
+    const res = await apiClient.get(`/campaign/progress/${campaignId}`);
+    return res.data; // backend: { success, message, data }
+  } catch (err: any) {
+    if (err?.response?.status === 404) return null; // ✅ endpoint not available
+    throw err;
+  }
 };
-
-export async function getCampaignProgress(campaignId: string) {
-  const res = await apiClient.get<CampaignProgressRes>(`/campaign/progress/${campaignId}`);
-  return res.data;
-}

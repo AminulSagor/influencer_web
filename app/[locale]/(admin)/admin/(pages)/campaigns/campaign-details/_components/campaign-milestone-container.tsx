@@ -22,7 +22,6 @@ import Link from "next/link";
 import type {
   CampaignStatusType,
   InfluencerUI,
-  InvitationStatusType,
   CampaignMilestoneApi,
 } from "@/types/admin/campaign/campaign-details_type";
 
@@ -31,7 +30,6 @@ const CircularProgressChart = dynamic(() => import("./circular-progress"), {
 });
 
 interface Props {
-  invitationStatus: InvitationStatusType;
   campaignStatus: CampaignStatusType;
 
   /** keep old prop (avatar list etc.) */
@@ -51,7 +49,6 @@ function safeStr(v: any) {
 }
 
 export default function CampaignMilestoneContainer({
-  invitationStatus,
   campaignStatus,
   influencers,
   dropdownInfluencers,
@@ -93,7 +90,6 @@ export default function CampaignMilestoneContainer({
             safeStr(i?.profileImage) ||
             fallbackImg;
 
-          // make sure SelectItem value never becomes empty
           if (!safeStr(id)) return null;
 
           const item: InfluencerUI = {
@@ -121,17 +117,20 @@ export default function CampaignMilestoneContainer({
   }, [dropdownInfluencers, influencers]);
 
   return (
-    <div className="space-y-4">
-      <CampaignMilestone
-        influencers={milestoneInfluencers}
-        campaignStatus={campaignStatus}
-        invitationStatus={invitationStatus}
-        milestones={milestones}
-        activeMilestoneId={activeMilestoneId}
-        onSelectMilestone={(id: string) => setActiveMilestoneId(id)}
-      />
+    <div className="space-y-4 p-2">
+    {/* <div className="text-red-600 font-semibold">
+      CampaignMilestoneContainer MOUNTED ✅
+    </div> */}
 
-      {campaignStatus !== "needs-quote" && activeMilestone && (
+    <CampaignMilestone
+      influencers={milestoneInfluencers}
+      campaignStatus={campaignStatus}
+      milestones={milestones}
+      activeMilestoneId={activeMilestoneId}
+      onSelectMilestone={(id: string) => setActiveMilestoneId(id)}
+    />
+      {/* ✅ ALWAYS VISIBLE (only depends on activeMilestone existing) */}
+      {activeMilestone && (
         <div className="space-y-4">
           <Card>
             <CardHeader className="flex gap-4">
@@ -206,13 +205,21 @@ export default function CampaignMilestoneContainer({
 
               <CollapsibleCard heading="Submission Details" badge="Completed">
                 <div className="space-y-2">
-                  <IconText className="text-base gap-2" icon={<FaUserPen />} text="Description / Update" />
+                  <IconText
+                    className="text-base gap-2"
+                    icon={<FaUserPen />}
+                    text="Description / Update"
+                  />
                   <p>Description of the proof will be visible here</p>
 
                   <div className="border rounded-md p-4 space-y-4 mt-6">
                     <div className="flex">
                       <div className="flex-1">
-                        <IconText className="gap-2 font-semibold" text="Platform 1" icon={<CgWebsite size={20} />} />
+                        <IconText
+                          className="gap-2 font-semibold"
+                          text="Platform 1"
+                          icon={<CgWebsite size={20} />}
+                        />
                         <Button asChild className="p-0" variant={"link"}>
                           <Link href={"#"}>platform link</Link>
                         </Button>

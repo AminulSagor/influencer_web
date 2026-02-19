@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import CollapsibleCard from "./collapsible-card";
 import InfluencerBadges from "./influencers-badge";
 import {
@@ -12,8 +12,12 @@ import {
   MultiSelectValue,
 } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
 import { getAllInfluencer } from "@/api/admin/campaign/get-campaign";
+import { postDraftInvitations } from "@/api/admin/campaign/post-draft-invitations";
+import { getCampaignInvitations } from "@/api/admin/campaign/get-draft-invitations";
 
 type Statistics = { label: string; value: number };
 
@@ -25,11 +29,20 @@ type CampaignInfluencer = {
 };
 
 type AllInfluencerApiItem = {
-  id: string;
+  id: string; // userId sometimes
+  profileId?: string; // ✅ profileId preferred
   firstName?: string;
   lastName?: string;
   profileImg?: string | null;
   name?: string;
+};
+
+// ✅ adjust mapping below to match your response keys
+type InvitationApiItem = {
+  influencerProfileId?: string;
+  profileId?: string;
+  influencerId?: string;
+  id?: string;
 };
 
 type InfluencerBadgeItem = {
@@ -39,7 +52,7 @@ type InfluencerBadgeItem = {
 };
 
 type Influencer = {
-  id: string;
+  id: string; // profileId
   name: string;
   platform: string;
   profileUrl: string;
@@ -48,20 +61,22 @@ type Influencer = {
 };
 
 type Props = {
+  campaignId: string;
   campaignStatus:
     | "needs-quote"
     | "pending-invitations"
     | "active"
     | "completed"
     | "paid";
-  stats: Statistics[];
-  invitationStatus?: "sent" | "accepted";
 
-  // ✅ none = quote not sent, sent = waiting client, confirmed = client confirmed
+  stats: Statistics[];
   quoteState: "none" | "sent" | "confirmed";
 
   preferredInfluencers?: CampaignInfluencer[];
   notPreferableInfluencers?: CampaignInfluencer[];
+
+  // ✅ keep prop if other parts need it, but we won’t use it here anymore
+  onRefresh?: () => void;
 };
 
 const money = (n: number) => {
@@ -70,37 +85,31 @@ const money = (n: number) => {
 };
 
 const fullName = (i: { firstName?: string; lastName?: string; name?: string }) => {
-  if (i?.name) return i.name;
+  if (i?.name && i.name.trim()) return i.name.trim();
   return `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
 };
 
+const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
+
 export default function PlatformProfit({
+  campaignId,
+  campaignStatus,
   stats,
-  invitationStatus,
   preferredInfluencers = [],
   notPreferableInfluencers = [],
   quoteState,
 }: Props) {
-  // ✅ lock until client confirms quote
   const locked = quoteState !== "confirmed";
 
   const [allInfluencersApi, setAllInfluencersApi] = useState<AllInfluencerApiItem[]>([]);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
 
-  useEffect(() => {
-    if (locked) return;
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // profileIds
+  const [assignedInfluencers, setAssignedInfluencers] = useState<Influencer[]>([]);
+  const [lastSavedIds, setLastSavedIds] = useState<string[]>([]);
 
-    const loadAll = async () => {
-      try {
-        const res = await getAllInfluencer();
-        setAllInfluencersApi(res?.data ?? []);
-      } catch (e) {
-        console.error("❌ getAllInfluencer failed:", e);
-      }
-    };
-
-    loadAll();
-  }, [locked]);
-
+  // --------- budget math ----------
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
   const PLATFORM_FEE_PERCENT = 2;
 
@@ -114,9 +123,10 @@ export default function PlatformProfit({
     return v < 0 ? 0 : v;
   }, [finalQuotedBudget, platformFeeAmount]);
 
+  // --------- badges (display only) ----------
   const preferredList: InfluencerBadgeItem[] = useMemo(() => {
     return (preferredInfluencers ?? []).map((i) => ({
-      name: fullName(i) || i.id,
+      name: fullName(i) || "Unknown Influencer",
       platform: "—",
       profileUrl: "#",
     }));
@@ -124,16 +134,17 @@ export default function PlatformProfit({
 
   const notPreferredList: InfluencerBadgeItem[] = useMemo(() => {
     return (notPreferableInfluencers ?? []).map((i) => ({
-      name: fullName(i) || i.id,
+      name: fullName(i) || "Unknown Influencer",
       platform: "—",
       profileUrl: "#",
     }));
   }, [notPreferableInfluencers]);
 
+  // ✅ dropdown uses profileId as value
   const dropdownInfluencers: Influencer[] = useMemo(() => {
     return (allInfluencersApi ?? []).map((i) => ({
-      id: i.id,
-      name: fullName(i) || i.id,
+      id: i.profileId || i.id,
+      name: fullName(i) || "Unknown Influencer",
       platform: "—",
       profileUrl: "#",
       amount: 0,
@@ -141,45 +152,139 @@ export default function PlatformProfit({
     }));
   }, [allInfluencersApi]);
 
-  // ---------------- assignment logic ----------------
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [assignedInfluencers, setAssignedInfluencers] = useState<Influencer[]>([]);
+  const resolveNameById = useCallback(
+    (id: string) => dropdownInfluencers.find((x) => x.id === id)?.name || "Unknown Influencer",
+    [dropdownInfluencers]
+  );
 
-  const handleSelect = (values: string[]) => {
-    setSelectedIds(values);
+  // --------- load all influencers ----------
+  useEffect(() => {
+    if (locked) return;
+    if (!campaignId) return;
 
-    const mapped = values.map((id) => {
-      const existing = assignedInfluencers.find((i) => i.id === id);
-      const base = dropdownInfluencers.find((i) => i.id === id);
+    const loadAllInfluencers = async () => {
+      try {
+        const res: any = await getAllInfluencer();
+        const list = res?.data?.data ?? res?.data ?? [];
+        setAllInfluencersApi(Array.isArray(list) ? list : []);
+      } catch (e) {
+        console.error("❌ getAllInfluencer failed:", e);
+      }
+    };
 
-      return (
-        existing ??
-        base ?? {
-          id,
-          name: id,
-          platform: "—",
-          profileUrl: "#",
-          amount: 0,
-          percentage: 0,
-        }
+    loadAllInfluencers();
+  }, [locked, campaignId]);
+
+  // --------- get invitations + sync selection ----------
+  const fetchAndSyncInvitations = useCallback(async () => {
+    if (locked) return;
+    if (!campaignId) return;
+
+    setLoadingInvitations(true);
+    try {
+      const res: any = await getCampaignInvitations(campaignId);
+
+      console.log("✅ invitations response:", res);
+
+      const list: InvitationApiItem[] =
+        res?.data?.data ?? res?.data ?? res?.invitations ?? res ?? [];
+
+      const ids = uniq(
+        (Array.isArray(list) ? list : []).map((x) => {
+          return (
+            x?.influencerProfileId ||
+            x?.profileId ||
+            x?.influencerId ||
+            x?.id ||
+            ""
+          );
+        })
       );
+
+      console.log("✅ synced invitation profileIds:", ids);
+
+      setSelectedIds(ids);
+      setLastSavedIds(ids);
+    } catch (e) {
+      console.error("❌ getCampaignInvitations failed:", e);
+    } finally {
+      setLoadingInvitations(false);
+    }
+  }, [locked, campaignId]);
+
+  useEffect(() => {
+    fetchAndSyncInvitations();
+  }, [fetchAndSyncInvitations]);
+
+  // --------- keep table synced ----------
+  useEffect(() => {
+    if (locked) return;
+
+    setAssignedInfluencers((prev) => {
+      const prevMap = new Map(prev.map((x) => [x.id, x]));
+
+      return (selectedIds ?? []).map((id) => {
+        const existing = prevMap.get(id);
+
+        return {
+          id,
+          name: resolveNameById(id),
+          platform: existing?.platform ?? "—",
+          profileUrl: existing?.profileUrl ?? "#",
+          amount: existing?.amount ?? 0,
+          percentage: existing?.percentage ?? 0,
+        };
+      });
     });
+  }, [locked, selectedIds, resolveNameById]);
 
-    setAssignedInfluencers(mapped);
-  };
+  const percentageToAmount = useCallback(
+    (percentage: number) => Math.round((percentage / 100) * availableForInfluencers),
+    [availableForInfluencers]
+  );
 
-  const percentageToAmount = (percentage: number) =>
-    Math.round((percentage / 100) * availableForInfluencers);
-
-  const amountToPercentage = (amount: number) =>
-    availableForInfluencers === 0
-      ? 0
-      : Number(((amount / availableForInfluencers) * 100).toFixed(2));
+  const amountToPercentage = useCallback(
+    (amount: number) =>
+      availableForInfluencers === 0
+        ? 0
+        : Number(((amount / availableForInfluencers) * 100).toFixed(2)),
+    [availableForInfluencers]
+  );
 
   const totalPercentage = assignedInfluencers.reduce((sum, i) => sum + (i.percentage || 0), 0);
   const totalAmount = assignedInfluencers.reduce((sum, i) => sum + (i.amount || 0), 0);
 
-  const isReadOnly = invitationStatus === "accepted";
+  // ✅ local only
+  const handleSelect = (values: string[]) => {
+    setSelectedIds(uniq(values));
+  };
+
+  const hasUnsavedChanges = useMemo(() => {
+    const a = uniq(selectedIds).sort().join("|");
+    const b = uniq(lastSavedIds).sort().join("|");
+    return a !== b;
+  }, [selectedIds, lastSavedIds]);
+
+  // ✅ ONLY post on button click, then GET and sync (NO refresh)
+  const handleSaveAssignments = async () => {
+    const ids = uniq(selectedIds);
+    if (!campaignId) return;
+
+    try {
+      setSavingDraft(true);
+
+      console.log("✅ ASSIGN payload:", { campaignId, influencerIds: ids });
+      await postDraftInvitations(campaignId, ids);
+
+      // ✅ fetch latest server state and update UI
+      await fetchAndSyncInvitations();
+    } catch (e: any) {
+      console.error("❌ postDraftInvitations failed:", e);
+      console.log("Backend message:", e?.response?.data);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
 
   return (
     <CollapsibleCard heading="Platform Profit & Influencer Management">
@@ -210,9 +315,7 @@ export default function PlatformProfit({
                 : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
             )}
           >
-            <p
-              className={cn("text-2xl font-semibold", locked ? "text-gray-400" : "text-light-green")}
-            >
+            <p className={cn("text-2xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
               {PLATFORM_FEE_PERCENT}%
             </p>
             <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
@@ -243,14 +346,12 @@ export default function PlatformProfit({
           </div>
         </div>
 
-        {/* locked UI (quote sent but not accepted) */}
         {locked ? (
           <div className="py-10 text-center text-sm text-gray-400">
             Client needs to confirm the quote first
           </div>
         ) : (
           <>
-            {/* unlocked UI (after confirmation) */}
             <div className="grid grid-cols-12 gap-4 mt-6">
               <div className="col-span-12 md:col-span-4 space-y-4">
                 <InfluencerBadges title="Preffered" influencers={preferredList} />
@@ -258,26 +359,53 @@ export default function PlatformProfit({
               </div>
 
               <div className="col-span-12 md:col-span-8">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-Primary mb-2 font-semibold">Assign Influencers</h2>
-                  <p className="text-sm text-orange">Campaign Ongoing</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-Primary mb-1 font-semibold">Assign Influencers</h2>
+                    <p className="text-xs text-gray-500">
+                      {loadingInvitations
+                        ? "Loading invitations..."
+                        : hasUnsavedChanges
+                        ? "Unsaved changes"
+                        : "All changes saved"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => setSelectedIds([])}
+                      variant="outline"
+                      disabled={savingDraft || loadingInvitations}
+                    >
+                      Clear
+                    </Button>
+
+                    <Button
+                      onClick={handleSaveAssignments}
+                      disabled={savingDraft || loadingInvitations || !hasUnsavedChanges}
+                    >
+                      {savingDraft ? "Saving..." : "Save Assignments"}
+                    </Button>
+                  </div>
                 </div>
 
-                <MultiSelect values={selectedIds} onValuesChange={handleSelect}>
-                  <MultiSelectTrigger className="w-full">
-                    <MultiSelectValue placeholder="Select Influencers" />
-                  </MultiSelectTrigger>
+                <div className="mt-3">
+                  <MultiSelect values={selectedIds} onValuesChange={handleSelect}>
+                    <MultiSelectTrigger className="w-full">
+                      <MultiSelectValue placeholder="Select Influencers" />
+                    </MultiSelectTrigger>
 
-                  <MultiSelectContent>
-                    <MultiSelectGroup>
-                      {dropdownInfluencers.map((inf) => (
-                        <MultiSelectItem key={inf.id} value={inf.id}>
-                          {inf.name}
-                        </MultiSelectItem>
-                      ))}
-                    </MultiSelectGroup>
-                  </MultiSelectContent>
-                </MultiSelect>
+                    <MultiSelectContent>
+                      <MultiSelectGroup>
+                        {dropdownInfluencers.map((inf) => (
+                          <MultiSelectItem key={inf.id} value={inf.id}>
+                            {inf.name}
+                          </MultiSelectItem>
+                        ))}
+                      </MultiSelectGroup>
+                    </MultiSelectContent>
+                  </MultiSelect>
+                </div>
 
                 <div className="mt-4 rounded-lg border overflow-hidden">
                   <div className="bg-linear-to-r from-white to-Secondary px-4 py-3 flex items-center justify-between">
@@ -313,61 +441,45 @@ export default function PlatformProfit({
                             </td>
 
                             <td className="p-3 w-[160px]">
-                              {isReadOnly ? (
-                                <p className="text-right">{inf.percentage || 0}%</p>
-                              ) : (
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  value={inf.percentage === 0 ? "" : inf.percentage}
-                                  onChange={(e) => {
-                                    const percentage = Number(e.target.value);
-                                    setAssignedInfluencers((prev) =>
-                                      prev.map((x) =>
-                                        x.id === inf.id
-                                          ? {
-                                              ...x,
-                                              percentage,
-                                              amount: percentageToAmount(percentage),
-                                            }
-                                          : x
-                                      )
-                                    );
-                                  }}
-                                  className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
-                                  placeholder="0%"
-                                />
-                              )}
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={inf.percentage === 0 ? "" : inf.percentage}
+                                onChange={(e) => {
+                                  const percentage = Number(e.target.value);
+                                  setAssignedInfluencers((prev) =>
+                                    prev.map((x) =>
+                                      x.id === inf.id
+                                        ? { ...x, percentage, amount: percentageToAmount(percentage) }
+                                        : x
+                                    )
+                                  );
+                                }}
+                                className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
+                                placeholder="0%"
+                              />
                             </td>
 
                             <td className="p-3 w-[180px]">
-                              {isReadOnly ? (
-                                <p className="text-right font-semibold">৳ {money(inf.amount || 0)}</p>
-                              ) : (
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={availableForInfluencers}
-                                  value={inf.amount === 0 ? "" : inf.amount}
-                                  onChange={(e) => {
-                                    const amount = Number(e.target.value);
-                                    setAssignedInfluencers((prev) =>
-                                      prev.map((x) =>
-                                        x.id === inf.id
-                                          ? {
-                                              ...x,
-                                              amount,
-                                              percentage: amountToPercentage(amount),
-                                            }
-                                          : x
-                                      )
-                                    );
-                                  }}
-                                  className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
-                                  placeholder="৳0"
-                                />
-                              )}
+                              <input
+                                type="number"
+                                min={0}
+                                max={availableForInfluencers}
+                                value={inf.amount === 0 ? "" : inf.amount}
+                                onChange={(e) => {
+                                  const amount = Number(e.target.value);
+                                  setAssignedInfluencers((prev) =>
+                                    prev.map((x) =>
+                                      x.id === inf.id
+                                        ? { ...x, amount, percentage: amountToPercentage(amount) }
+                                        : x
+                                    )
+                                  );
+                                }}
+                                className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
+                                placeholder="৳0"
+                              />
                             </td>
                           </tr>
                         ))

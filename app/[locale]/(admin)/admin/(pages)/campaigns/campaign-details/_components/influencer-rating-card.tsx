@@ -1,12 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CampaignStatusType, InvitationStatusType } from "../../[id]/page";
+import { CampaignStatusType } from "../../[id]/page";
 import CollapsibleCard from "./collapsible-card";
-import StarRating from "./star-rating";
 import ClientRatingCard from "./client-rating-card";
 
 interface Props {
   campaignStatus: CampaignStatusType;
-  invitationStatus: InvitationStatusType;
 }
 
 const clientRatings = [
@@ -24,7 +21,7 @@ const clientRatings = [
   },
 ];
 
-const InfluencerRatingCard = ({ campaignStatus, invitationStatus }: Props) => {
+const InfluencerRatingCard = ({ campaignStatus }: Props) => {
   return (
     <CollapsibleCard
       heading="Rating overview of the Influencers"
@@ -49,9 +46,7 @@ const InfluencerRatingCard = ({ campaignStatus, invitationStatus }: Props) => {
         </div>
       ) : (
         <div className="min-h-[300px] flex items-center justify-center">
-          <p className="text-gray-400">
-            Client needs to confirm the quote first
-          </p>
+          <p className="text-gray-400">Client needs to confirm the quote first</p>
         </div>
       )}
     </CollapsibleCard>

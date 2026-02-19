@@ -14,7 +14,6 @@ import InfluencerPaymentMethod from "../campaign-details/_components/influencer-
 import InfluencerRatingCard from "../campaign-details/_components/influencer-rating-card";
 import PlatformProfit from "../campaign-details/_components/platform-profit";
 
-export type InvitationStatusType = "sent" | "accepted";
 export type CampaignStatusType =
   | "needs-quote"
   | "pending-invitations"
@@ -50,7 +49,6 @@ export default function Page() {
   const { id } = useParams<{ id: string }>();
   const campaignId = id;
 
-  const invitationStatus: InvitationStatusType = "sent";
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -69,14 +67,14 @@ export default function Page() {
     fetchCampaign();
   }, [fetchCampaign]);
 
-  // ✅ derive quoteState from backend (reload-safe)
+  // ---------------- quoteState ----------------
   const rawStatus = String(campaign?.status ?? "").toLowerCase();
 
   const waitingFor = String(
     campaign?.negotiation?.waitingFor ??
-    campaign?.quote?.waitingFor ??
-    campaign?.waitingFor ??
-    ""
+      campaign?.quote?.waitingFor ??
+      campaign?.waitingFor ??
+      ""
   ).toLowerCase();
 
   const quoteState = useMemo<"none" | "sent" | "confirmed">(() => {
@@ -85,28 +83,17 @@ export default function Page() {
     return "none";
   }, [rawStatus, waitingFor]);
 
-  // ---------------- derived values ----------------
+  // ---------------- financials ----------------
   const totalBudget = Number(campaign?.financials?.totalBudget ?? 0);
   const clientBudget = Number(campaign?.financials?.clientBudget ?? 0);
   const vatAmount = Number(campaign?.financials?.vatAmount ?? 0);
   const netPayableAmount = Number(campaign?.financials?.netPayableAmount ?? 0);
 
-  const paidAmount =
-    Number(campaign?.financials?.paidAmount ?? 0) ||
-    Number(campaign?.negotiation?.agreedBudget ?? 0) ||
-    Number(campaign?.agreedBudget ?? 0) ||
-    0;
-
-  const dueAmount =
-    Number(campaign?.financials?.dueAmount ?? 0) ||
-    Number(campaign?.negotiation?.dueAmount ?? 0) ||
-    Number(campaign?.dueAmount ?? 0) ||
-    0;
-
   const platformFeePercent = 2;
   const platformFeeAmount = Math.round((totalBudget * platformFeePercent) / 100);
   const availableForInfluencers = Math.max(0, totalBudget - platformFeeAmount);
 
+  // ---------------- platform list ----------------
   const platform = useMemo(() => {
     const keys = Array.from(
       new Set<string>(
@@ -123,20 +110,37 @@ export default function Page() {
         key === "instagram"
           ? "https://instagram.com"
           : key === "youtube"
-            ? "https://youtube.com"
-            : key === "tiktok"
-              ? "https://tiktok.com"
-              : key === "facebook"
-                ? "https://facebook.com"
-                : "#",
+          ? "https://youtube.com"
+          : key === "tiktok"
+          ? "https://tiktok.com"
+          : key === "facebook"
+          ? "https://facebook.com"
+          : "#",
     }));
   }, [campaign?.milestones]);
 
+  // ---------------- influencer avatar list ----------------
   const influencers: Influencer[] = useMemo(() => {
     return (campaign?.preferredInfluencers ?? []).map((i: any, idx: number) => ({
       imageUrl: i?.profileImg ?? "/avatar-fallback.png",
       name: `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() || `Influencer ${idx + 1}`,
     }));
+  }, [campaign?.preferredInfluencers]);
+
+  // ✅ for payment method component (name should never fallback to id)
+  const assignedInfluencersForPayment = useMemo(() => {
+    return (campaign?.preferredInfluencers ?? []).map((i: any, idx: number) => {
+      const fullName =
+        (i?.name && String(i.name).trim()) ||
+        `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
+
+      return {
+        id: String(i?.id ?? i?._id ?? `inf-${idx + 1}`),
+        name: fullName && fullName.length > 0 ? fullName : `Influencer ${idx + 1}`,
+        avatarUrl: i?.profileImg ?? "/avatar-fallback.png",
+        paymentMethods: Array.isArray(i?.paymentMethods) ? i.paymentMethods : [],
+      };
+    });
   }, [campaign?.preferredInfluencers]);
 
   const stats = useMemo(
@@ -191,24 +195,31 @@ export default function Page() {
       <CampaignStepper campaignId={campaignId} />
 
       <PlatformProfit
-        preferredInfluencers={campaign?.preferredInfluencers}
-        notPreferableInfluencers={campaign?.notPreferableInfluencers}
+        campaignId={campaignId}
         campaignStatus={campaignStatus}
         stats={stats}
-        invitationStatus={invitationStatus}
         quoteState={quoteState}
+        preferredInfluencers={campaign?.preferredInfluencers ?? []}
+        notPreferableInfluencers={campaign?.notPreferableInfluencers ?? []}
+        onRefresh={fetchCampaign}
       />
 
-      <InfluencerPaymentMethod campaignStatus={campaignStatus} invitationStatus={invitationStatus} />
-
+      {/* ✅ Milestone pre-loaded always (based on data) */}
       <CampaignMilestoneContainer
-        invitationStatus={invitationStatus}
         campaignStatus={campaignStatus}
         influencers={influencers as any}
         dropdownInfluencers={campaign?.preferredInfluencers ?? []}
         milestones={campaign?.milestones ?? []}
       />
-      
+
+      {/* ✅ PAYMENT METHOD ONLY AFTER ALL INVITES DONE (campaign becomes active) */}
+      {campaignStatus === "active" && (
+        <InfluencerPaymentMethod
+          campaignStatus={campaignStatus}
+          assignedInfluencers={assignedInfluencersForPayment}
+        />
+      )}
+
       <CampaignTermsCard
         campaignGoals={campaign?.campaignGoals ?? ""}
         productServiceDetails={campaign?.productServiceDetails ?? ""}
@@ -220,7 +231,7 @@ export default function Page() {
 
       <ContentAssetCard assets={campaign?.assets ?? []} />
 
-      <InfluencerRatingCard campaignStatus={campaignStatus} invitationStatus={invitationStatus} />
+      <InfluencerRatingCard campaignStatus={campaignStatus} />
     </div>
   );
 }

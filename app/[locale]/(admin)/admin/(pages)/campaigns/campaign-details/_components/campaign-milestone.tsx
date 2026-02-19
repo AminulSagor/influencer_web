@@ -23,7 +23,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue, // ✅ IMPORTANT: use shadcn SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 
 import { ChevronRight } from "lucide-react";
@@ -31,7 +31,6 @@ import { ChevronRight } from "lucide-react";
 import type {
   CampaignStatusType,
   InfluencerUI,
-  InvitationStatusType,
   CampaignMilestoneApi,
 } from "@/types/admin/campaign/campaign-details_type";
 
@@ -113,7 +112,6 @@ const milestoneStatusStyles: Record<
 };
 
 interface Props {
-  invitationStatus: InvitationStatusType;
   campaignStatus: CampaignStatusType;
   influencers: InfluencerUI[];
 
@@ -126,7 +124,6 @@ interface Props {
 }
 
 export default function CampaignMilestone({
-  invitationStatus,
   campaignStatus,
   influencers,
   milestones,
@@ -135,8 +132,8 @@ export default function CampaignMilestone({
 }: Props) {
   const [disabled, setDisabled] = useState(true);
 
-  const isActiveAccepted = campaignStatus === "active" && invitationStatus === "accepted";
-  const isActiveSent = campaignStatus === "active" && invitationStatus === "sent";
+  // ✅ invitationStatus removed
+  const isActive = campaignStatus === "active";
 
   const normalizedMilestones = useMemo(() => {
     return (milestones ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -149,16 +146,15 @@ export default function CampaignMilestone({
         const name = String((inf as any)?.name ?? "").trim();
         const id = String((inf as any)?.id ?? "").trim();
 
-        // prefer id, fallback to name
         const value = id || name;
 
         return {
-          _key: `${value || "inf"}-${idx}`, // unique key
-          value: value, // SelectItem value (MUST NOT be "")
+          _key: `${value || "inf"}-${idx}`,
+          value: value,
           label: name || value || `Influencer ${idx + 1}`,
         };
       })
-      .filter((x) => String(x.value ?? "").trim().length > 0); // ✅ remove empty values
+      .filter((x) => String(x.value ?? "").trim().length > 0);
   }, [influencers]);
 
   return (
@@ -173,8 +169,8 @@ export default function CampaignMilestone({
       </CardHeader>
 
       <CardContent>
-        {/* ------------------------ TOP BAR (Active + Sent) ------------------------ */}
-        {isActiveSent && (
+        {/* ✅ Show this top bar whenever campaign is active (no invitationStatus) */}
+        {isActive && (
           <div className="px-2">
             <div className="flex items-center justify-between gap-8">
               <div className="flex-2">
@@ -256,34 +252,6 @@ export default function CampaignMilestone({
           </div>
         )}
 
-        {/* ------------------------ TOP BAR (Active + Accepted) ------------------------ */}
-        {isActiveAccepted && (
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between px-2">
-              <div className="flex-1">
-                <h2>Overall Progress</h2>
-                <p className="text-orange font-semibold text-lg">46% Completed</p>
-              </div>
-
-              <div className="flex-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Influencer" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {selectInfluencers.map((inf) => (
-                      <SelectItem key={inf._key} value={inf.value}>
-                        {inf.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ------------------------ MILESTONE CARDS ------------------------ */}
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 mr-1 -ml-4 pr-24">
@@ -303,11 +271,12 @@ export default function CampaignMilestone({
                     }}
                     className={cn(
                       "border border-light-green p-4 rounded-md space-y-2 cursor-pointer transition",
-                      isActiveAccepted && styles.card,
+                      // keep your accepted-style theme applied whenever active (optional)
+                      isActive && styles.card,
                       isSelected &&
                         cn(
                           "ring-2 ring-offset-1 ring-light-green",
-                          isActiveAccepted && styles.ring
+                          isActive && styles.ring
                         )
                     )}
                   >
@@ -317,7 +286,7 @@ export default function CampaignMilestone({
                         <div
                           className={cn(
                             "w-6 h-6 rounded-full flex items-center justify-center text-white bg-light-green",
-                            isActiveAccepted && styles.circle
+                            isActive && styles.circle
                           )}
                         >
                           {index + 1}
@@ -326,14 +295,14 @@ export default function CampaignMilestone({
                         <h2
                           className={cn(
                             "text-base font-medium text-light-green",
-                            isActiveAccepted && styles.title
+                            isActive && styles.title
                           )}
                         >
                           {m.contentTitle}
                         </h2>
                       </div>
 
-                      {isActiveAccepted && (
+                      {isActive && (
                         <Badge className={styles.badge}>
                           {uiStatus} <ChevronRight />
                         </Badge>
@@ -344,29 +313,14 @@ export default function CampaignMilestone({
                     <p className="text-gray-500 text-sm">{m.contentQuantity}</p>
 
                     {/* FOOTER */}
-                    <div
-                      className={cn(
-                        "flex items-center justify-between",
-                        isActiveAccepted && styles.amount
-                      )}
-                    >
-                      {(isActiveAccepted || isActiveSent) && (
-                        <p
-                          className={cn(
-                            "text-xl font-semibold text-light-green",
-                            isActiveAccepted && styles.amount
-                          )}
-                        >
+                    <div className={cn("flex items-center justify-between", isActive && styles.amount)}>
+                      {isActive && (
+                        <p className={cn("text-xl font-semibold text-light-green", isActive && styles.amount)}>
                           ৳ {Number(m.amount ?? 0)}
                         </p>
                       )}
 
-                      <p
-                        className={cn(
-                          "text-sm text-light-green",
-                          isActiveAccepted && styles.amount
-                        )}
-                      >
+                      <p className={cn("text-sm text-light-green", isActive && styles.amount)}>
                         DAY {m.deliveryDays ?? 0}
                       </p>
                     </div>
