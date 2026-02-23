@@ -133,7 +133,7 @@ export default function CampaignMilestone({
   const [disabled, setDisabled] = useState(true);
 
   // ✅ invitationStatus removed
-  const isActive = campaignStatus === "active";
+  const isActive = String(campaignStatus).toLowerCase() === "active";
 
   const normalizedMilestones = useMemo(() => {
     return (milestones ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -251,7 +251,11 @@ export default function CampaignMilestone({
             </div>
           </div>
         )}
-
+        {normalizedMilestones.length === 0 && (
+          <div className="p-4 text-sm text-muted-foreground">
+            No milestones found.
+          </div>
+        )}
         {/* ------------------------ MILESTONE CARDS ------------------------ */}
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 mr-1 -ml-4 pr-24">
@@ -274,10 +278,10 @@ export default function CampaignMilestone({
                       // keep your accepted-style theme applied whenever active (optional)
                       isActive && styles.card,
                       isSelected &&
-                        cn(
-                          "ring-2 ring-offset-1 ring-light-green",
-                          isActive && styles.ring
-                        )
+                      cn(
+                        "ring-2 ring-offset-1 ring-light-green",
+                        isActive && styles.ring
+                      )
                     )}
                   >
                     {/* HEADER */}

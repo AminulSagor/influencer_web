@@ -34,6 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PlatformIcon from "./platform-icon";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
 
 function capitalizeFirstLetter(text?: string): string {
   if (!text) return "";
@@ -41,7 +42,7 @@ function capitalizeFirstLetter(text?: string): string {
 }
 
 interface Props {
-  users: Influencer[];
+  users: InfluencerListItem[];
 }
 
 const UserCard = ({ users }: Props) => {
@@ -179,13 +180,13 @@ const UserCard = ({ users }: Props) => {
                 </TableHeader>
                 <TableBody>
                   {users.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.userId}>
                       <TableCell>
                         <Checkbox />
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={"/admin/users/influencer/" + user.id}
+                          href={"/admin/users/influencer/" + user.userId}
                           className="flex items-center gap-2"
                         >
                           <Avatar>
@@ -195,7 +196,7 @@ const UserCard = ({ users }: Props) => {
                           <p>{user.name}</p>
                         </Link>
                       </TableCell>
-                      <TableCell>{user.niche.join(", ")}</TableCell>
+                      <TableCell>{user.niches.join(", ")}</TableCell>
                       <TableCell className="flex items-center gap-2">
                         <span>
                           <Star
@@ -207,43 +208,39 @@ const UserCard = ({ users }: Props) => {
                       </TableCell>
                       <TableCell>
                         <div className="flex">
-                          {user.platforms.map((platform) => {
-                            return (
-                              <PlatformIcon
-                                className="text-light-green"
-                                key={platform.link}
-                                size={20}
-                                platform={platform}
-                              />
-                            );
-                          })}
+                          {user.platforms.map((platform) => (
+                            <PlatformIcon
+                              key={platform}
+                              size={20}
+                              className="text-light-green"
+                              platform={{ title: platform, nickName: "", link: "" }}
+                            />
+                          ))}
                         </div>
                       </TableCell>
                       <TableCell>
                         <p className="text-center font-semibold">
-                          {user.activeJobs}
+                          {user.stats.activeJob}
                         </p>
                       </TableCell>
                       <TableCell>
                         <p className="text-center font-semibold">
-                          {user.jobDone}
+                          {user.stats.jobDone}
                         </p>
                       </TableCell>
                       <TableCell>
                         <p className="text-center font-semibold">
-                          {user.revenue}
+                          {user.stats.revenue}
                         </p>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge
-                          variant={
-                            user.status === "Approved"
-                              ? "lightGreen"
-                              : "destructive"
-                          }
-                        >
-                          {user.status}
-                        </Badge>
+                        <TableCell className="text-center">
+                          <Badge
+                            variant={user.isVerified ? "lightGreen" : "destructive"}
+                          >
+                            {user.isVerified ? "Approved" : "Pending"}
+                          </Badge>
+                        </TableCell>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -254,7 +251,7 @@ const UserCard = ({ users }: Props) => {
         ) : (
           <div className="grid grid-cols-12 gap-2">
             {users.map((user) => (
-              <UserCardItem influencer={user} key={user.id} />
+              <UserCardItem influencer={user} key={user.userId} />
             ))}
           </div>
         )}

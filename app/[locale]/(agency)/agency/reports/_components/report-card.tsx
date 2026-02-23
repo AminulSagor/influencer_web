@@ -44,11 +44,11 @@ const STATUS_CONFIG: Record<
   },
   Resolved: {
     Icon: FaCheckCircle,
-    badgeBg: "bg-green-600",
-    badgeBorder: "border-green-600",
+    badgeBg: "bg-light-green-600",
+    badgeBorder: "border-light-green-600",
     badgeText: "text-white",
-    cardBg: "bg-green-100",
-    cardBorder: "border-green-300",
+    cardBg: "bg-light-green-100",
+    cardBorder: "border-light-green-300",
   },
 };
 
@@ -245,7 +245,7 @@ const ReportCard = () => {
                   report.tag === "Pending" &&
                     "bg-yellow-100 border-yellow-300 text-yellow-600",
                   report.tag === "Resolved" &&
-                    "bg-green-100 border-green-300 text-green-600",
+                    "bg-light-green-100 border-light-green-300 text-light-green-600",
                   isActive &&
                     cn(
                       "ring-2 ring-offset-1",
@@ -254,7 +254,7 @@ const ReportCard = () => {
                       report.tag === "Pending" &&
                         "ring-yellow-400 bg-yellow-600/80 text-white",
                       report.tag === "Resolved" &&
-                        "ring-green-400 bg-green-600 text-white"
+                        "ring-green-400 bg-light-green-600 text-white"
                     )
                 )}
               >

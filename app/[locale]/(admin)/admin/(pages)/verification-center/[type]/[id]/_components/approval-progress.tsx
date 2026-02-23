@@ -28,7 +28,7 @@ const ApprovalProgress = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-light-green-700 rounded-full flex items-center justify-center">
             <Check className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-800">
@@ -56,7 +56,7 @@ const ApprovalProgress = () => {
               {index < steps.length - 1 && (
                 <div
                   className={`absolute top-6 left-1/2 w-full h-0.5 ${
-                    step.status === "completed" ? "bg-green-700" : "bg-gray-300"
+                    step.status === "completed" ? "bg-light-green-700" : "bg-gray-300"
                   }`}
                   style={{ zIndex: 0 }}
                 />
@@ -66,7 +66,7 @@ const ApprovalProgress = () => {
               <div className="relative z-10 mb-3">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    step.status === "completed" ? "bg-green-700" : "bg-gray-300"
+                    step.status === "completed" ? "bg-light-green-700" : "bg-gray-300"
                   }`}
                 >
                   {step.status === "completed" ? (

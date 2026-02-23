@@ -22,59 +22,67 @@ interface PayoutSettings {
 }
 
 interface Props {
-  payoutSettings: PayoutSettings[];
+  payoutSettings?: PayoutSettings[]; // ✅ allow undefined
 }
 
-const PayoutSettings = ({ payoutSettings }: Props) => {
+const PayoutSettings = ({ payoutSettings = [] }: Props) => {
+  const safePayoutSettings = payoutSettings ?? [];
+
+  // ✅ count banks safely (no map side-effects)
   let bankAccountCount = 0;
 
   return (
     <CollapsibleCard heading="Payout Settings">
       <div className="space-y-3">
-        {payoutSettings.map((payout) => {
-          if (payout.type === "Bank Account") {
-            bankAccountCount += 1;
-          }
+        {safePayoutSettings.length === 0 ? (
+          <div className="border border-light-green/30 bg-linear-to-r from-white to-Secondary rounded-md p-4">
+            <p className="text-sm text-gray-400">No payout settings found.</p>
+          </div>
+        ) : (
+          safePayoutSettings.map((payout) => {
+            if (payout.type === "Bank Account") {
+              bankAccountCount += 1;
+            }
 
-          const isFirstBank =
-            payout.type === "Bank Account" && bankAccountCount === 1;
-          const isSecondOrMoreBank =
-            payout.type === "Bank Account" && bankAccountCount > 1;
+            const isFirstBank =
+              payout.type === "Bank Account" && bankAccountCount === 1;
 
-          // Border & Background classes
-          const borderClass = isSecondOrMoreBank
-            ? "border-orange"
-            : "border-light-green";
+            const isSecondOrMoreBank =
+              payout.type === "Bank Account" && bankAccountCount > 1;
 
-          const bgClass = isSecondOrMoreBank
-            ? "bg-gradient-to-r from-white to-orange/20"
-            : "bg-linear-to-r from-white to-Secondary";
+            // Border & Background classes
+            const borderClass = isSecondOrMoreBank
+              ? "border-orange"
+              : "border-light-green";
 
-          // Text color class
-          const textClass = isSecondOrMoreBank
-            ? "text-orange"
-            : "text-light-green";
+            const bgClass = isSecondOrMoreBank
+              ? "bg-gradient-to-r from-white to-orange/20"
+              : "bg-linear-to-r from-white to-Secondary";
 
-          // Button variant
-          const buttonVariant =
-            payout.type === "Bank Account"
-              ? isFirstBank
+            // Text color class
+            const textClass = isSecondOrMoreBank
+              ? "text-orange"
+              : "text-light-green";
+
+            // Button variant
+            const buttonVariant =
+              payout.type === "Bank Account"
+                ? isFirstBank
+                  ? "lightGreen"
+                  : "orange"
+                : payout.status === "Approved"
                 ? "lightGreen"
-                : "orange"
-              : payout.status === "Approved"
-              ? "lightGreen"
-              : "outline";
+                : "outline";
 
-          return (
-            <Item
-              key={payout.id}
-              className={`border ${borderClass} ${bgClass}`}
-              variant="outline"
-            >
-              <ItemContent>
-                {payout.type === "Bank Account" ? (
-                  <div className="flex items-center gap-2">
-                    <div>
+            return (
+              <Item
+                key={`${payout.type}-${payout.id}`}
+                className={`border ${borderClass} ${bgClass}`}
+                variant="outline"
+              >
+                <ItemContent>
+                  {payout.type === "Bank Account" ? (
+                    <div className="flex items-center gap-2">
                       <div className="relative w-10 aspect-square">
                         <Image
                           src={
@@ -86,56 +94,58 @@ const PayoutSettings = ({ payoutSettings }: Props) => {
                           alt="Bank"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <ItemTitle className={textClass}>
-                        Bank Account no. {bankAccountCount}
-                      </ItemTitle>
+
                       <div>
-                        <p className="text-xs text-gray-400">
-                          {payout.bankName}
-                        </p>
-                        <p className={cn(textClass, "line-clamp-1")}>
-                          Account No. {payout.accountNumber}
-                        </p>
+                        <ItemTitle className={textClass}>
+                          Bank Account no. {bankAccountCount}
+                        </ItemTitle>
+
+                        <div>
+                          <p className="text-xs text-gray-400">
+                            {payout.bankName ?? "—"}
+                          </p>
+                          <p className={cn(textClass, "line-clamp-1")}>
+                            Account No. {payout.accountNumber ?? "—"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div>
+                  ) : (
+                    <div className="flex items-center gap-2">
                       <div className="relative w-8 aspect-square">
                         <Image
                           className="object-contain"
                           src={"/icons/bkash-icon.svg"}
                           fill
-                          alt="Bank"
+                          alt="Bkash"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <ItemTitle className="text-light-green">
-                        {payout.phoneNumber}
-                      </ItemTitle>
+
                       <div>
-                        <p className="text-xs text-gray-400">Bkash</p>
-                        <p className="text-light-green">
-                          {payout.accountHolder}
-                        </p>
+                        <ItemTitle className="text-light-green">
+                          {payout.phoneNumber ?? "—"}
+                        </ItemTitle>
+
+                        <div>
+                          <p className="text-xs text-gray-400">Bkash</p>
+                          <p className="text-light-green">
+                            {payout.accountHolder ?? "—"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </ItemContent>
+                  )}
+                </ItemContent>
 
-              <ItemActions>
-                <Button variant={buttonVariant} size="sm">
-                  View
-                </Button>
-              </ItemActions>
-            </Item>
-          );
-        })}
+                <ItemActions>
+                  <Button variant={buttonVariant} size="sm">
+                    View
+                  </Button>
+                </ItemActions>
+              </Item>
+            );
+          })
+        )}
       </div>
     </CollapsibleCard>
   );

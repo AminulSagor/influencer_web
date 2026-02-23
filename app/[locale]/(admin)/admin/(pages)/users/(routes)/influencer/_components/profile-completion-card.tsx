@@ -61,7 +61,7 @@ const ProfileCompletionCard = ({
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="space-x-2">
-                  {niches.map((n) => (
+                  {(niches ?? []).map((n) => (
                     <Badge variant={"lightGreen"} key={n}>
                       {n}
                     </Badge>
@@ -77,7 +77,7 @@ const ProfileCompletionCard = ({
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="space-x-2">
-                  {skills.map((n) => (
+                  {(skills ?? []).map((n) => (
                     <Badge variant={"lightGreen"} key={n}>
                       {n}
                     </Badge>

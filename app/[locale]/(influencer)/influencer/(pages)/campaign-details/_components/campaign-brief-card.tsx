@@ -170,12 +170,12 @@ function DoDont() {
   const t = useTranslations("influencer.campaign-details");
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-        <div className="flex items-center gap-2 text-green-700 font-medium mb-2">
+      <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
+        <div className="flex items-center gap-2 text-light-green-700 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
           <span>{t("Do’s")}</span>
         </div>
-        <ul className="text-sm text-green-700 space-y-1">
+        <ul className="text-sm text-light-green-700 space-y-1">
           <li>• Show authentic usage</li>
           <li>• Tag @StyleCo in all posts</li>
           <li>• Use natural lighting</li>

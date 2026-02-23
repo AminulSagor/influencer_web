@@ -94,7 +94,7 @@ export default function CampaignStepper({ campaignId }: StepperProps) {
     <div className="rounded-xl border bg-white p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h3 className={cn("flex items-center gap-2 font-semibold", isCancelled ? "text-red-600" : "text-green-700")}>
+        <h3 className={cn("flex items-center gap-2 font-semibold", isCancelled ? "text-red-600" : "text-light-green-700")}>
           {isCancelled ? <XCircle className="h-5 w-5" /> : <Check className="h-5 w-5" />}
           Campaign Progress
         </h3>
@@ -111,7 +111,7 @@ export default function CampaignStepper({ campaignId }: StepperProps) {
         {/* Line */}
         <div className="absolute left-0 right-0 top-6 h-[2px] bg-gray-200">
           <div
-            className={cn("h-full transition-all", isCancelled ? "bg-red-600" : "bg-green-700")}
+            className={cn("h-full transition-all", isCancelled ? "bg-red-600" : "bg-light-green-700")}
             style={{ width: `${progressPercent}%` }} // ✅ real backend percent
           />
         </div>
@@ -135,7 +135,7 @@ export default function CampaignStepper({ campaignId }: StepperProps) {
                   isCompleted
                     ? isCancelled
                       ? "border-red-600 bg-red-600 text-white"
-                      : "border-green-700 bg-green-700 text-white"
+                      : "border-light-green-700 bg-light-green-700 text-white"
                     : "border-gray-300 text-gray-400",
                   isActive && (isCancelled ? "ring-4 ring-red-100" : "ring-4 ring-green-100")
                 )}

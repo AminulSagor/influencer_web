@@ -49,8 +49,8 @@ const VerificationMethodCard = () => {
               <div className="space-y-4 px-1">
                 {/* Status Banner */}
                 {isVerified ? (
-                  <div className="p-2 rounded-md bg-green-100 border border-green-200">
-                    <p className="text-green-600 font-medium">
+                  <div className="p-2 rounded-md bg-light-green-100 border border-light-green-200">
+                    <p className="text-light-green-600 font-medium">
                       Verification Completed
                     </p>
                   </div>
