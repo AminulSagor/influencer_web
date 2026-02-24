@@ -1,263 +1,210 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Search, Star } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import UserCardItem from "./user-card-item";
-import { Influencer } from "./user-type";
+
+import { useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
+  TableBody,
   TableRow,
+  TableHead,
+  TableCell,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import PlatformIcon from "./platform-icon";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
+import { cn } from "@/lib/utils";
+import { Card } from "@/components/ui/card";
 
-function capitalizeFirstLetter(text?: string): string {
-  if (!text) return "";
-  return text[0].toUpperCase() + text.slice(1);
-}
-
-interface Props {
-  users: InfluencerListItem[];
-}
-
-const UserCard = ({ users }: Props) => {
-  const [view, setView] = useState<"list" | "grid">("list");
-  const pathname = usePathname();
-  const url = pathname.split("/").pop();
-  const cardTitle = capitalizeFirstLetter(url);
-
-  const [activeTab, setActiveTab] = useState<"all" | "blocked">("all");
-
-  const getButtonClass = (tab: "all" | "blocked") =>
-    activeTab === tab
-      ? "bg-light-green text-white px-3 py-1 rounded-full px-6"
-      : "text-Primary";
-
-  const baseBtn =
-    "bg-Secondary text-light-green border border-light-green hover:bg-Secondary/90 hover:text-light-green";
-  const activeBtn =
-    "bg-light-green text-white hover:bg-light-green/90 hover:text-white";
-  return (
-    <Card>
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <CardTitle className="text-Primary">{cardTitle}</CardTitle>
-            <CardDescription>Browse {url} and their details</CardDescription>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="link"
-              className={getButtonClass("all")}
-              onClick={() => setActiveTab("all")}
-            >
-              All
-            </Button>
-
-            <Button
-              variant="link"
-              className={getButtonClass("blocked")}
-              onClick={() => setActiveTab("blocked")}
-            >
-              Blocked
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* search bar */}
-        <div className="flex justify-between items-center gap-4 mx-2">
-          <div className="flex-1">
-            <div className="relative w-full">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                size={18}
-              />
-              <Input placeholder="Search by campaign name" className="pl-10" />
-            </div>
-          </div>
-
-          <div className="space-x-2">
-            <Button
-              className={cn(baseBtn, view === "list" && activeBtn)}
-              onClick={() => setView("list")}
-            >
-              List View
-            </Button>
-
-            <Button
-              className={cn(baseBtn, view === "grid" && activeBtn)}
-              onClick={() => setView("grid")}
-            >
-              Grid View
-            </Button>
-          </div>
-        </div>
-
-        <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
-                  1 selected
-                </div>
-              </div>
-              <div>
-                <Select>
-                  <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
-                    <SelectValue placeholder="Bulk Actions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="delete">Delete</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm">
-                  <SelectValue placeholder="Nov 20 - Dec 20" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="delete">Nov 20 - Dec 20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        {view === "list" ? (
-          <div>
-            <div className="rounded-md overflow-hidden border">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-light-green hover:bg-light-green">
-                    <TableHead className="w-[40px]">
-                      <Checkbox />
-                    </TableHead>
-                    <TableHead className="text-white">Name</TableHead>
-                    <TableHead className="text-white">Niche</TableHead>
-                    <TableHead className="text-white">Ratings</TableHead>
-                    <TableHead className="text-white">Platforms</TableHead>
-                    <TableHead className="text-white text-center">
-                      Active Jobs
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      Job Done
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      Revenue
-                    </TableHead>
-                    <TableHead className="text-white text-center">
-                      Status
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.userId}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={"/admin/users/influencer/" + user.userId}
-                          className="flex items-center gap-2"
-                        >
-                          <Avatar>
-                            <AvatarImage src={"/img"} />
-                            <AvatarFallback>{user.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <p>{user.name}</p>
-                        </Link>
-                      </TableCell>
-                      <TableCell>{user.niches.join(", ")}</TableCell>
-                      <TableCell className="flex items-center gap-2">
-                        <span>
-                          <Star
-                            size={20}
-                            className="fill-yellow-500 text-yellow-500"
-                          />
-                        </span>
-                        <span className="font-semibold">{user.rating}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex">
-                          {user.platforms.map((platform) => (
-                            <PlatformIcon
-                              key={platform}
-                              size={20}
-                              className="text-light-green"
-                              platform={{ title: platform, nickName: "", link: "" }}
-                            />
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-center font-semibold">
-                          {user.stats.activeJob}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-center font-semibold">
-                          {user.stats.jobDone}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-center font-semibold">
-                          {user.stats.revenue}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <TableCell className="text-center">
-                          <Badge
-                            variant={user.isVerified ? "lightGreen" : "destructive"}
-                          >
-                            {user.isVerified ? "Approved" : "Pending"}
-                          </Badge>
-                        </TableCell>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-12 gap-2">
-            {users.map((user) => (
-              <UserCardItem influencer={user} key={user.userId} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+/** Influencer shape (already in your project) */
+export type InfluencerRow = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  niches: string[];
+  skills: string[];
+  rating: number;
+  platforms: string[];
+  status: string;
+  isVerified: boolean;
 };
 
-export default UserCard;
+/** Client/Agency shape (matches your backend response you pasted) */
+export type ClientRow = {
+  id: string;
+  userId: string;
+  brandName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImg?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  zilla?: string | null;
+  country?: string | null;
+  isOnboardingComplete?: boolean;
+  nidVerification?: { nidStatus?: string | null } | null;
+};
+
+type Variant = "influencer" | "client"; // (your API returns role=client for agency route too)
+
+type Props =
+  | { variant: "influencer"; users: InfluencerRow[] }
+  | { variant: "client"; users: ClientRow[] };
+
+function StatusPill({ status }: { status: string }) {
+  const s = String(status ?? "").toLowerCase();
+  const isApproved = s === "approved" || s === "verified";
+  const isPending = s === "pending" || s === "unverified";
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
+        isApproved
+          ? "bg-light-green/15 text-light-green"
+          : isPending
+          ? "bg-orange/15 text-orange"
+          : "bg-red/15 text-red"
+      )}
+    >
+      {status}
+    </span>
+  );
+}
+
+export default function UserCard(props: Props) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const title = useMemo(() => {
+    const last = pathname?.split("/").filter(Boolean).pop() ?? "";
+    return last ? last.replace(/-/g, " ") : "Users";
+  }, [pathname]);
+
+  function goDetails(userId: string) {
+    // your influencer details route is /users/(routes)/influencer/[id]
+    // for clients you likely have a similar route; if not, keep console log for now
+    if (props.variant === "influencer") {
+      router.push(`${pathname}/influencer/${userId}`);
+      return;
+    }
+    router.push(`${pathname}/agency/${userId}`);
+  }
+
+  return (
+    <Card className="p-0 overflow-hidden">
+      <div className="px-6 py-4 border-b border-Primary/10">
+        <h2 className="text-lg font-semibold text-black capitalize">{title}</h2>
+      </div>
+
+      <div className="p-4">
+        <div className="rounded-md border border-Primary/10 overflow-hidden">
+          <Table>
+            <TableHeader>
+              {props.variant === "influencer" ? (
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Niches</TableHead>
+                  <TableHead>Skills</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Platforms</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Action</TableHead>
+                </TableRow>
+              ) : (
+                <TableRow>
+                  <TableHead>Brand / Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Action</TableHead>
+                </TableRow>
+              )}
+            </TableHeader>
+
+            <TableBody>
+              {props.users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-sm text-light-gray py-8">
+                    No data found.
+                  </TableCell>
+                </TableRow>
+              ) : props.variant === "influencer" ? (
+                props.users.map((u) => (
+                  <TableRow key={u.userId}>
+                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell className="text-sm text-light-gray">
+                      {(u.niches ?? []).slice(0, 2).join(", ")}
+                      {(u.niches ?? []).length > 2 ? "..." : ""}
+                    </TableCell>
+                    <TableCell className="text-sm text-light-gray">
+                      {(u.skills ?? []).slice(0, 2).join(", ")}
+                      {(u.skills ?? []).length > 2 ? "..." : ""}
+                    </TableCell>
+                    <TableCell className="text-sm">{u.rating ?? 0}</TableCell>
+                    <TableCell className="text-sm text-light-gray">
+                      {(u.platforms ?? []).slice(0, 2).join(", ")}
+                      {(u.platforms ?? []).length > 2 ? "..." : ""}
+                    </TableCell>
+                    <TableCell>
+                      <StatusPill status={u.status ?? "pending"} />
+                    </TableCell>
+
+                    {/* ✅ FIXED: only one TableCell here (no nested td) */}
+                    <TableCell className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => goDetails(u.userId)}
+                        className="h-9 rounded-md bg-Primary px-4 text-sm font-medium text-white hover:brightness-95 active:scale-[0.98]"
+                      >
+                        View
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                props.users.map((u) => {
+                  const displayName =
+                    u.brandName ||
+                    `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() ||
+                    "—";
+
+                  const status =
+                    u.nidVerification?.nidStatus ??
+                    (u.isOnboardingComplete ? "pending" : "incomplete");
+
+                  const location = [u.zilla, u.country].filter(Boolean).join(", ") || "—";
+
+                  return (
+                    <TableRow key={u.userId ?? u.id}>
+                      <TableCell className="font-medium">{displayName}</TableCell>
+                      <TableCell className="text-sm text-light-gray">
+                        {u.email ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-light-gray">
+                        {u.phone ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-sm text-light-gray">{location}</TableCell>
+                      <TableCell>
+                        <StatusPill status={String(status)} />
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => goDetails(u.userId ?? u.id)}
+                          className="h-9 rounded-md bg-Primary px-4 text-sm font-medium text-white hover:brightness-95 active:scale-[0.98]"
+                        >
+                          View
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </Card>
+  );
+}

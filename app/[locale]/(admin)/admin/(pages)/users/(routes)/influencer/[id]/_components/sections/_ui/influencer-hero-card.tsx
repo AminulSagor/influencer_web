@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Instagram, Youtube, Music2, HelpCircle } from "lucide-react";
 import type { InfluencerSocialLink } from "@/types/admin/user/influencer-verification-profile_type";
+import { extractUrlHandle } from "@/utils/admin/users/extract-url-handle_util";
 
 type Props = {
   name: string;
@@ -84,7 +85,7 @@ export default function InfluencerHeroCard({
                 </div>
 
                 <div className="text-[16px] text-white/90 whitespace-nowrap truncate">
-                  {s.url}
+                  @{extractUrlHandle(s.url)}
                 </div>
               </div>
             ))}

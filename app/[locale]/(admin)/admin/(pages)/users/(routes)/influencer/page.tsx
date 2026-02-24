@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { getAllInfluencers } from "@/api/admin/users/get-all-influencers";
+import { getAllInfluencers } from "@/api/admin/users/influencers/get-all-influencers";
 import type { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
 import VerificationBreadcrumb from "../../_components/verification-breadcrumb";
 import VariantLinksCard from "../../_components/variants-links-card";
@@ -30,7 +30,7 @@ export default function InfluencerUsersClient() {
     <div className="p-4 space-y-4">
       <VerificationBreadcrumb type="influencer" name="Hania amir" />
       <VariantLinksCard />
-      <UserCard users={users} />
+      <UserCard variant="influencer" users={users} />
       {loading ? <div className="text-sm text-light-gray">Loading...</div> : null}
     </div>
   );
