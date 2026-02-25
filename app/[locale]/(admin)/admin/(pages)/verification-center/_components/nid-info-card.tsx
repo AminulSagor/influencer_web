@@ -1,10 +1,10 @@
 import React from "react";
-import CollapsibleCard from "./collapsible-card";
+import CollapsibleCard from "../../../../campaigns/campaign-details/_components/collapsible-card";
 
 interface NidInfo {
   nidNumber: string;
-  frontSideImageUrl: string;
-  backSideImageUrl: string;
+  frontSideImageUrl?: string;
+  backSideImageUrl?: string;
 }
 
 interface Props {

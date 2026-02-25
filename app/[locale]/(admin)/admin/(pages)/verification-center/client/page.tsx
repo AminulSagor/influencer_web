@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 import { getAllInfluencers } from "@/api/admin/users/influencers/get-all-influencers";
 import type { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
-import UserCardVerification from "./_components/user-card-verification";
-import VariantLinksCard from "./_components/variant-links-card";
-import VerificationBreadcrumb from "./_components/verification-bread-crumb";
+import VerificationBreadcrumb from "../../users/_components/verification-breadcrumb";
+import VariantLinksCard from "../_components/variant-links-card";
+import UserCard from "../_components/user-card-verification";
 
 export default function InfluencerUsersClient() {
   const [users, setUsers] = useState<InfluencerListItem[]>([]);
@@ -30,7 +30,7 @@ export default function InfluencerUsersClient() {
     <div className="p-4 space-y-4">
       <VerificationBreadcrumb type="influencer" name="Hania amir" />
       <VariantLinksCard />
-      <UserCardVerification variant="influencer" users={users} />
+      <UserCard variant="influencer" users={users} />
       {loading ? <div className="text-sm text-light-gray">Loading...</div> : null}
     </div>
   );

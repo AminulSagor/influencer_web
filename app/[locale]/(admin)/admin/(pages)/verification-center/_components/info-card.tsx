@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { VerificationStatus } from "../../../_components/verification-data";
+
 import { FaInstagram, FaTiktok, FaTwitter } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 
@@ -12,7 +12,7 @@ interface Props {
     tiktok?: string;
     twitter?: string;
   };
-  verifiedStatus: VerificationStatus;
+  verifiedStatus: string;
 }
 
 const SOCIAL_CONFIG = {

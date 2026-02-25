@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 
-/** Influencer shape (already in your project) */
+/** Influencer shape (your existing) */
 export type InfluencerRow = {
   userId: string;
   name: string;
@@ -27,7 +27,7 @@ export type InfluencerRow = {
   isVerified: boolean;
 };
 
-/** Client/Agency shape (matches your backend response you pasted) */
+/** Client/Agency shape */
 export type ClientRow = {
   id: string;
   userId: string;
@@ -43,11 +43,14 @@ export type ClientRow = {
   nidVerification?: { nidStatus?: string | null } | null;
 };
 
-type Variant = "influencer" | "client"; // (your API returns role=client for agency route too)
-
 type Props =
-  | { variant: "influencer"; users: InfluencerRow[] }
-  | { variant: "client"; users: ClientRow[] };
+  | { variant: "influencer"; users: InfluencerRow[]; detailsBase?: "users" | "verification-center" }
+  | { variant: "agency"; users: ClientRow[]; detailsBase?: "users" | "verification-center" };
+
+function getLocaleFromPath(path: string) {
+  const parts = String(path ?? "").split("/").filter(Boolean);
+  return parts[0] || "en";
+}
 
 function StatusPill({ status }: { status: string }) {
   const s = String(status ?? "").toLowerCase();
@@ -80,13 +83,12 @@ export default function UserCard(props: Props) {
   }, [pathname]);
 
   function goDetails(userId: string) {
-    // your influencer details route is /users/(routes)/influencer/[id]
-    // for clients you likely have a similar route; if not, keep console log for now
-    if (props.variant === "influencer") {
-      router.push(`${pathname}/influencer/${userId}`);
-      return;
-    }
-    router.push(`${pathname}/agency/${userId}`);
+    if (!userId) return;
+
+    const locale = getLocaleFromPath(pathname);
+
+    // ✅ IMPORTANT: absolute route (no pathname append)
+    router.push(`/${locale}/admin/verification-center/${props.variant}/${userId}`);
   }
 
   return (
@@ -124,7 +126,10 @@ export default function UserCard(props: Props) {
             <TableBody>
               {props.users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-sm text-light-gray py-8">
+                  <TableCell
+                    colSpan={props.variant === "influencer" ? 7 : 6}
+                    className="text-center text-sm text-light-gray py-8"
+                  >
                     No data found.
                   </TableCell>
                 </TableRow>
@@ -132,24 +137,28 @@ export default function UserCard(props: Props) {
                 props.users.map((u) => (
                   <TableRow key={u.userId}>
                     <TableCell className="font-medium">{u.name}</TableCell>
+
                     <TableCell className="text-sm text-light-gray">
                       {(u.niches ?? []).slice(0, 2).join(", ")}
                       {(u.niches ?? []).length > 2 ? "..." : ""}
                     </TableCell>
+
                     <TableCell className="text-sm text-light-gray">
                       {(u.skills ?? []).slice(0, 2).join(", ")}
                       {(u.skills ?? []).length > 2 ? "..." : ""}
                     </TableCell>
+
                     <TableCell className="text-sm">{u.rating ?? 0}</TableCell>
+
                     <TableCell className="text-sm text-light-gray">
                       {(u.platforms ?? []).slice(0, 2).join(", ")}
                       {(u.platforms ?? []).length > 2 ? "..." : ""}
                     </TableCell>
+
                     <TableCell>
                       <StatusPill status={u.status ?? "pending"} />
                     </TableCell>
 
-                    {/* ✅ FIXED: only one TableCell here (no nested td) */}
                     <TableCell className="text-center">
                       <button
                         type="button"
@@ -172,18 +181,27 @@ export default function UserCard(props: Props) {
                     u.nidVerification?.nidStatus ??
                     (u.isOnboardingComplete ? "pending" : "incomplete");
 
-                  const location = [u.zilla, u.country].filter(Boolean).join(", ") || "—";
+                  const location =
+                    [u.zilla, u.country].filter(Boolean).join(", ") || "—";
+
+                  const id = u.userId ?? u.id;
 
                   return (
-                    <TableRow key={u.userId ?? u.id}>
+                    <TableRow key={id}>
                       <TableCell className="font-medium">{displayName}</TableCell>
+
                       <TableCell className="text-sm text-light-gray">
                         {u.email ?? "—"}
                       </TableCell>
+
                       <TableCell className="text-sm text-light-gray">
                         {u.phone ?? "—"}
                       </TableCell>
-                      <TableCell className="text-sm text-light-gray">{location}</TableCell>
+
+                      <TableCell className="text-sm text-light-gray">
+                        {location}
+                      </TableCell>
+
                       <TableCell>
                         <StatusPill status={String(status)} />
                       </TableCell>
@@ -191,7 +209,7 @@ export default function UserCard(props: Props) {
                       <TableCell className="text-center">
                         <button
                           type="button"
-                          onClick={() => goDetails(u.userId ?? u.id)}
+                          onClick={() => goDetails(id)}
                           className="h-9 rounded-md bg-Primary px-4 text-sm font-medium text-white hover:brightness-95 active:scale-[0.98]"
                         >
                           View

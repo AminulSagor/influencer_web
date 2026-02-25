@@ -1,7 +1,8 @@
 import React from "react";
-import CollapsibleCard from "./collapsible-card";
-import IconText from "./icon-text";
+
 import { MdLocationOn } from "react-icons/md";
+import CollapsibleCard from "../../../../campaigns/campaign-details/_components/collapsible-card";
+import IconText from "../../../../campaigns/campaign-details/_components/icon-text";
 
 const DeliveryLocationCard = () => {
   return (

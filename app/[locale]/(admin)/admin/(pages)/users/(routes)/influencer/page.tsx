@@ -6,7 +6,7 @@ import { getAllInfluencers } from "@/api/admin/users/influencers/get-all-influen
 import type { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
 import VerificationBreadcrumb from "../../_components/verification-breadcrumb";
 import VariantLinksCard from "../../_components/variants-links-card";
-import UserCard from "../../_components/user-card";
+import UserCard from "../../../verification-center/_components/user-card-verification";
 
 export default function InfluencerUsersClient() {
   const [users, setUsers] = useState<InfluencerListItem[]>([]);

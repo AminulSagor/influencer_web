@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 
 import VerificationBreadcrumb from "../../_components/verification-breadcrumb";
 import VariantLinksCard from "../../_components/variants-links-card";
-import UserCard, { ClientRow } from "../../_components/user-card";
 import { getAllClients } from "@/api/admin/users/clients/get-all-clients";
+import UserCard from "../../../verification-center/_components/user-card-verification";
 
 export default function ClientsUsersClient() {
   const [users, setUsers] = useState<ClientRow[]>([]);
