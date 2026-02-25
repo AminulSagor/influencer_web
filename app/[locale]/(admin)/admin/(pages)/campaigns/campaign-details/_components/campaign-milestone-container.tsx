@@ -19,29 +19,28 @@ import { HiMiniIdentification } from "react-icons/hi2";
 import { ChartColumnIncreasing } from "lucide-react";
 import Link from "next/link";
 
+import InviteInfluencerBar from "./invite-influencer-bar";
+
+import { splitEqual } from "@/utils/admin/campaign/campaign-calculation";
+
 import type {
   CampaignStatusType,
   InfluencerUI,
   CampaignMilestoneApi,
 } from "@/types/admin/campaign/campaign-details_type";
 
-const CircularProgressChart = dynamic(() => import("./circular-progress"), {
-  ssr: false,
-});
+const CircularProgressChart = dynamic(() => import("./circular-progress"), { ssr: false });
 
 interface Props {
+  campaignId: string;
   campaignStatus: CampaignStatusType;
 
-  /** keep old prop (avatar list etc.) */
   influencers: InfluencerUI[];
-
-  /**
-   * ✅ backend influencers for dropdown (preferred/assigned)
-   * pass: campaign?.preferredInfluencers (recommended)
-   */
   dropdownInfluencers?: any[];
-
   milestones: CampaignMilestoneApi[];
+
+  // ✅ MUST exist because page.tsx passes it
+  availableForInfluencers: number;
 }
 
 function safeStr(v: any) {
@@ -49,10 +48,12 @@ function safeStr(v: any) {
 }
 
 export default function CampaignMilestoneContainer({
+  campaignId,
   campaignStatus,
   influencers,
   dropdownInfluencers,
   milestones,
+  availableForInfluencers, // ✅ RECEIVE IT
 }: Props) {
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
 
@@ -66,14 +67,9 @@ export default function CampaignMilestoneContainer({
     return (milestones ?? []).find((m) => safeStr(m.id) === id) ?? null;
   }, [milestones, activeMilestoneId]);
 
-  /**
-   * ✅ dropdown list must be InfluencerUI with:
-   * { id: string; name: string; imageUrl: string; }
-   */
   const milestoneInfluencers: InfluencerUI[] = useMemo(() => {
     const fallbackImg = "/avatar-fallback.png";
 
-    // 1) Prefer API list for dropdown
     if (Array.isArray(dropdownInfluencers) && dropdownInfluencers.length > 0) {
       return dropdownInfluencers
         .map((i: any, idx: number) => {
@@ -92,44 +88,46 @@ export default function CampaignMilestoneContainer({
 
           if (!safeStr(id)) return null;
 
-          const item: InfluencerUI = {
-            id,
-            name,
-            imageUrl,
-          };
-
-          return item;
+          return { id, name, imageUrl } as InfluencerUI;
         })
         .filter(Boolean) as InfluencerUI[];
     }
 
-    // 2) Fallback to provided influencers list (only if it fits InfluencerUI)
     return (influencers ?? [])
       .map((x: any, idx: number) => {
         const id = safeStr(x?.id) || `inf-${idx + 1}`;
         const name = safeStr(x?.name) || id;
         const imageUrl = safeStr(x?.imageUrl) || fallbackImg;
 
-        const item: InfluencerUI = { id, name, imageUrl };
-        return item;
+        return { id, name, imageUrl } as InfluencerUI;
       })
       .filter((x) => safeStr(x.id).length > 0);
   }, [dropdownInfluencers, influencers]);
 
+  // ✅ CALCULATE OFFERED AMOUNT PER INFLUENCER (your rule)
+  const offeredAmountPerInfluencer = useMemo(() => {
+    const count = milestoneInfluencers.length;
+    return splitEqual(availableForInfluencers, count).per;
+  }, [availableForInfluencers, milestoneInfluencers.length]);
+
   return (
     <div className="space-y-4 p-2">
-    {/* <div className="text-red-600 font-semibold">
-      CampaignMilestoneContainer MOUNTED ✅
-    </div> */}
+      {/* ✅ ALWAYS VISIBLE TOP INVITE BAR */}
+      <InviteInfluencerBar
+        campaignId={campaignId}
+        availableForInfluencers={availableForInfluencers}
+        milestoneCount={milestones.length}
+      />
 
-    <CampaignMilestone
-      influencers={milestoneInfluencers}
-      campaignStatus={campaignStatus}
-      milestones={milestones}
-      activeMilestoneId={activeMilestoneId}
-      onSelectMilestone={(id: string) => setActiveMilestoneId(id)}
-    />
-      {/* ✅ ALWAYS VISIBLE (only depends on activeMilestone existing) */}
+      <CampaignMilestone
+        influencers={milestoneInfluencers}
+        campaignStatus={campaignStatus}
+        milestones={milestones}
+        activeMilestoneId={activeMilestoneId}
+        onSelectMilestone={(id) => setActiveMilestoneId(id)}
+        offeredAmountPerInfluencer={offeredAmountPerInfluencer} // ✅ NOW EXISTS
+      />
+
       {activeMilestone && (
         <div className="space-y-4">
           <Card>

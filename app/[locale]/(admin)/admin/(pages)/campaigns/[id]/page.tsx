@@ -72,9 +72,9 @@ export default function Page() {
 
   const waitingFor = String(
     campaign?.negotiation?.waitingFor ??
-      campaign?.quote?.waitingFor ??
-      campaign?.waitingFor ??
-      ""
+    campaign?.quote?.waitingFor ??
+    campaign?.waitingFor ??
+    ""
   ).toLowerCase();
 
   const quoteState = useMemo<"none" | "sent" | "confirmed">(() => {
@@ -110,12 +110,12 @@ export default function Page() {
         key === "instagram"
           ? "https://instagram.com"
           : key === "youtube"
-          ? "https://youtube.com"
-          : key === "tiktok"
-          ? "https://tiktok.com"
-          : key === "facebook"
-          ? "https://facebook.com"
-          : "#",
+            ? "https://youtube.com"
+            : key === "tiktok"
+              ? "https://tiktok.com"
+              : key === "facebook"
+                ? "https://facebook.com"
+                : "#",
     }));
   }, [campaign?.milestones]);
 
@@ -206,10 +206,12 @@ export default function Page() {
 
       {/* ✅ Milestone pre-loaded always (based on data) */}
       <CampaignMilestoneContainer
+        campaignId={campaignId}
         campaignStatus={campaignStatus}
         influencers={influencers as any}
         dropdownInfluencers={campaign?.preferredInfluencers ?? []}
         milestones={campaign?.milestones ?? []}
+        availableForInfluencers={availableForInfluencers}
       />
 
       {/* ✅ PAYMENT METHOD ONLY AFTER ALL INVITES DONE (campaign becomes active) */}

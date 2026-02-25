@@ -16,8 +16,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { getAllInfluencer } from "@/api/admin/campaign/get-campaign";
-import { postDraftInvitations } from "@/api/admin/campaign/post-draft-invitations";
-import { getCampaignInvitations } from "@/api/admin/campaign/get-draft-invitations";
+import {
+  assignCampaignInfluencers,
+  fetchCampaignInvitations,
+} from "@/api/admin/campaign/assign-influencer";
+
+import {
+  splitEqual,
+  amountToPercentage,
+  money as moneyFmt,
+} from "@/utils/admin/campaign/campaign-calculation";
 
 type Statistics = { label: string; value: number };
 
@@ -29,20 +37,20 @@ type CampaignInfluencer = {
 };
 
 type AllInfluencerApiItem = {
-  id: string; // userId sometimes
-  profileId?: string; // ✅ profileId preferred
+  id: string;
+  profileId?: string;
   firstName?: string;
   lastName?: string;
   profileImg?: string | null;
   name?: string;
 };
 
-// ✅ adjust mapping below to match your response keys
 type InvitationApiItem = {
-  influencerProfileId?: string;
-  profileId?: string;
-  influencerId?: string;
-  id?: string;
+  jobId: string;
+  influencerName: string;
+  status?: string;
+  sentAt?: string;
+  respondedAt?: string | null;
 };
 
 type InfluencerBadgeItem = {
@@ -52,7 +60,7 @@ type InfluencerBadgeItem = {
 };
 
 type Influencer = {
-  id: string; // profileId
+  id: string;
   name: string;
   platform: string;
   profileUrl: string;
@@ -75,13 +83,7 @@ type Props = {
   preferredInfluencers?: CampaignInfluencer[];
   notPreferableInfluencers?: CampaignInfluencer[];
 
-  // ✅ keep prop if other parts need it, but we won’t use it here anymore
   onRefresh?: () => void;
-};
-
-const money = (n: number) => {
-  const safe = Number.isFinite(n) ? n : 0;
-  return safe.toLocaleString("en-US");
 };
 
 const fullName = (i: { firstName?: string; lastName?: string; name?: string }) => {
@@ -105,7 +107,7 @@ export default function PlatformProfit({
   const [savingDraft, setSavingDraft] = useState(false);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // profileIds
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [assignedInfluencers, setAssignedInfluencers] = useState<Influencer[]>([]);
   const [lastSavedIds, setLastSavedIds] = useState<string[]>([]);
 
@@ -140,7 +142,7 @@ export default function PlatformProfit({
     }));
   }, [notPreferableInfluencers]);
 
-  // ✅ dropdown uses profileId as value
+  // dropdown list
   const dropdownInfluencers: Influencer[] = useMemo(() => {
     return (allInfluencersApi ?? []).map((i) => ({
       id: i.profileId || i.id,
@@ -157,7 +159,7 @@ export default function PlatformProfit({
     [dropdownInfluencers]
   );
 
-  // --------- load all influencers ----------
+  // load all influencers
   useEffect(() => {
     if (locked) return;
     if (!campaignId) return;
@@ -175,86 +177,71 @@ export default function PlatformProfit({
     loadAllInfluencers();
   }, [locked, campaignId]);
 
-  // --------- get invitations + sync selection ----------
+  // fetch invitations -> build selectedIds (best effort)
   const fetchAndSyncInvitations = useCallback(async () => {
     if (locked) return;
     if (!campaignId) return;
 
     setLoadingInvitations(true);
     try {
-      const res: any = await getCampaignInvitations(campaignId);
+      const res: any = await fetchCampaignInvitations(campaignId);
 
-      console.log("✅ invitations response:", res);
+      // your API: { success: true, data: [...] } with influencerName
+      const list: InvitationApiItem[] = res?.data?.data ?? [];
 
-      const list: InvitationApiItem[] =
-        res?.data?.data ?? res?.data ?? res?.invitations ?? res ?? [];
+      const names = uniq(
+        (Array.isArray(list) ? list : [])
+          .filter((x) => String(x?.status ?? "").toLowerCase() === "draft")
+          .map((x) => String(x?.influencerName ?? "").trim())
+          .filter(Boolean)
+      );
 
-      const ids = uniq(
-        (Array.isArray(list) ? list : []).map((x) => {
-          return (
-            x?.influencerProfileId ||
-            x?.profileId ||
-            x?.influencerId ||
-            x?.id ||
-            ""
+      // map names -> ids (if found in allInfluencers list)
+      const idsFromNames = uniq(
+        names.map((name) => {
+          const found = dropdownInfluencers.find(
+            (d) => d.name.trim().toLowerCase() === name.toLowerCase()
           );
+          return found?.id ?? "";
         })
       );
 
-      console.log("✅ synced invitation profileIds:", ids);
-
-      setSelectedIds(ids);
-      setLastSavedIds(ids);
+      setSelectedIds(idsFromNames);
+      setLastSavedIds(idsFromNames);
     } catch (e) {
-      console.error("❌ getCampaignInvitations failed:", e);
+      console.error("❌ fetchCampaignInvitations failed:", e);
     } finally {
       setLoadingInvitations(false);
     }
-  }, [locked, campaignId]);
+  }, [locked, campaignId, dropdownInfluencers]);
 
   useEffect(() => {
     fetchAndSyncInvitations();
   }, [fetchAndSyncInvitations]);
 
-  // --------- keep table synced ----------
+  // ✅ ALWAYS CALCULATE per influencer amount/percentage from selectedIds
   useEffect(() => {
     if (locked) return;
 
-    setAssignedInfluencers((prev) => {
-      const prevMap = new Map(prev.map((x) => [x.id, x]));
+    const ids = uniq(selectedIds);
+    const { per } = splitEqual(availableForInfluencers, ids.length);
+    const pct = amountToPercentage(per, availableForInfluencers);
 
-      return (selectedIds ?? []).map((id) => {
-        const existing = prevMap.get(id);
-
-        return {
-          id,
-          name: resolveNameById(id),
-          platform: existing?.platform ?? "—",
-          profileUrl: existing?.profileUrl ?? "#",
-          amount: existing?.amount ?? 0,
-          percentage: existing?.percentage ?? 0,
-        };
-      });
-    });
-  }, [locked, selectedIds, resolveNameById]);
-
-  const percentageToAmount = useCallback(
-    (percentage: number) => Math.round((percentage / 100) * availableForInfluencers),
-    [availableForInfluencers]
-  );
-
-  const amountToPercentage = useCallback(
-    (amount: number) =>
-      availableForInfluencers === 0
-        ? 0
-        : Number(((amount / availableForInfluencers) * 100).toFixed(2)),
-    [availableForInfluencers]
-  );
+    setAssignedInfluencers(
+      ids.map((id) => ({
+        id,
+        name: resolveNameById(id),
+        platform: "—",
+        profileUrl: "#",
+        amount: per,
+        percentage: pct,
+      }))
+    );
+  }, [locked, selectedIds, availableForInfluencers, resolveNameById]);
 
   const totalPercentage = assignedInfluencers.reduce((sum, i) => sum + (i.percentage || 0), 0);
   const totalAmount = assignedInfluencers.reduce((sum, i) => sum + (i.amount || 0), 0);
 
-  // ✅ local only
   const handleSelect = (values: string[]) => {
     setSelectedIds(uniq(values));
   };
@@ -265,7 +252,6 @@ export default function PlatformProfit({
     return a !== b;
   }, [selectedIds, lastSavedIds]);
 
-  // ✅ ONLY post on button click, then GET and sync (NO refresh)
   const handleSaveAssignments = async () => {
     const ids = uniq(selectedIds);
     if (!campaignId) return;
@@ -273,13 +259,14 @@ export default function PlatformProfit({
     try {
       setSavingDraft(true);
 
-      console.log("✅ ASSIGN payload:", { campaignId, influencerIds: ids });
-      await postDraftInvitations(campaignId, ids);
+      await assignCampaignInfluencers({
+        campaignId,
+        influencerIds: ids,
+      });
 
-      // ✅ fetch latest server state and update UI
       await fetchAndSyncInvitations();
     } catch (e: any) {
-      console.error("❌ postDraftInvitations failed:", e);
+      console.error("❌ assignCampaignInfluencers failed:", e);
       console.log("Backend message:", e?.response?.data);
     } finally {
       setSavingDraft(false);
@@ -300,7 +287,7 @@ export default function PlatformProfit({
             )}
           >
             <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              ৳{money(locked ? 0 : finalQuotedBudget)}
+              ৳{moneyFmt(locked ? 0 : finalQuotedBudget)}
             </p>
             <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
               Final Quoted Budget
@@ -322,7 +309,7 @@ export default function PlatformProfit({
               Target Profit / Platform Fee
             </h3>
             <p className={cn("text-xs", locked ? "text-gray-400" : "text-gray-500")}>
-              ৳{money(locked ? 0 : platformFeeAmount)}
+              ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
             </p>
           </div>
 
@@ -335,7 +322,7 @@ export default function PlatformProfit({
             )}
           >
             <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              ৳{money(locked ? 0 : availableForInfluencers)}
+              ৳{moneyFmt(locked ? 0 : availableForInfluencers)}
             </p>
             <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-orange")}>
               Available For Influencers
@@ -381,6 +368,7 @@ export default function PlatformProfit({
                     </Button>
 
                     <Button
+                      className="bg-Primary"
                       onClick={handleSaveAssignments}
                       disabled={savingDraft || loadingInvitations || !hasUnsavedChanges}
                     >
@@ -424,7 +412,7 @@ export default function PlatformProfit({
                       {assignedInfluencers.length === 0 ? (
                         <tr>
                           <td className="p-4 text-sm text-gray-400">
-                            Select influencers to assign percentage/amount.
+                            Select influencers to auto-assign percentage/amount.
                           </td>
                         </tr>
                       ) : (
@@ -440,45 +428,23 @@ export default function PlatformProfit({
                               </div>
                             </td>
 
+                            {/* ✅ readOnly (calculated) */}
                             <td className="p-3 w-[160px]">
                               <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                value={inf.percentage === 0 ? "" : inf.percentage}
-                                onChange={(e) => {
-                                  const percentage = Number(e.target.value);
-                                  setAssignedInfluencers((prev) =>
-                                    prev.map((x) =>
-                                      x.id === inf.id
-                                        ? { ...x, percentage, amount: percentageToAmount(percentage) }
-                                        : x
-                                    )
-                                  );
-                                }}
-                                className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
-                                placeholder="0%"
+                                type="text"
+                                value={`${inf.percentage.toFixed(2)}%`}
+                                readOnly
+                                className="w-full rounded-md border px-3 py-2 text-right bg-[rgba(248,250,252,1)] text-gray-600"
                               />
                             </td>
 
+                            {/* ✅ readOnly (calculated) */}
                             <td className="p-3 w-[180px]">
                               <input
-                                type="number"
-                                min={0}
-                                max={availableForInfluencers}
-                                value={inf.amount === 0 ? "" : inf.amount}
-                                onChange={(e) => {
-                                  const amount = Number(e.target.value);
-                                  setAssignedInfluencers((prev) =>
-                                    prev.map((x) =>
-                                      x.id === inf.id
-                                        ? { ...x, amount, percentage: amountToPercentage(amount) }
-                                        : x
-                                    )
-                                  );
-                                }}
-                                className="w-full rounded-md border px-3 py-2 text-right focus:ring-2 focus:ring-light-green"
-                                placeholder="৳0"
+                                type="text"
+                                value={`৳ ${moneyFmt(inf.amount)}`}
+                                readOnly
+                                className="w-full rounded-md border px-3 py-2 text-right bg-[rgba(248,250,252,1)] text-gray-600"
                               />
                             </td>
                           </tr>
@@ -493,7 +459,9 @@ export default function PlatformProfit({
                     <p className="text-sm text-gray-500">
                       Total Percentage: {totalPercentage.toFixed(2)}%
                     </p>
-                    <p className="font-semibold text-Primary">Total Amount: ৳{money(totalAmount)}</p>
+                    <p className="font-semibold text-Primary">
+                      Total Amount: ৳{moneyFmt(totalAmount)}
+                    </p>
                   </div>
                 )}
               </div>
