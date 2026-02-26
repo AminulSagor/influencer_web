@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/multi-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { getAllInfluencer } from "@/api/admin/campaign/get-campaign";
@@ -21,11 +22,8 @@ import {
   fetchCampaignInvitations,
 } from "@/api/admin/campaign/assign-influencer";
 
-import {
-  splitEqual,
-  amountToPercentage,
-  money as moneyFmt,
-} from "@/utils/admin/campaign/campaign-calculation";
+import { money as moneyFmt } from "@/utils/admin/campaign/campaign-calculation";
+import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform-fee_util";
 
 type Statistics = { label: string; value: number };
 
@@ -83,6 +81,10 @@ type Props = {
   preferredInfluencers?: CampaignInfluencer[];
   notPreferableInfluencers?: CampaignInfluencer[];
 
+  // ✅ NEW: editable platform fee %
+  platformFeePercent?: number; // default 2
+  onChangePlatformFeePercent?: (next: number) => void;
+
   onRefresh?: () => void;
 };
 
@@ -100,6 +102,9 @@ export default function PlatformProfit({
   preferredInfluencers = [],
   notPreferableInfluencers = [],
   quoteState,
+
+  platformFeePercent = 2,
+  onChangePlatformFeePercent,
 }: Props) {
   const locked = quoteState !== "confirmed";
 
@@ -111,19 +116,18 @@ export default function PlatformProfit({
   const [assignedInfluencers, setAssignedInfluencers] = useState<Influencer[]>([]);
   const [lastSavedIds, setLastSavedIds] = useState<string[]>([]);
 
+  // ✅ editable platform fee %
+  const [feeEdit, setFeeEdit] = useState(false);
+  const [feePercent, setFeePercent] = useState<number>(platformFeePercent);
+
+  useEffect(() => setFeePercent(platformFeePercent), [platformFeePercent]);
+
   // --------- budget math ----------
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
-  const PLATFORM_FEE_PERCENT = 2;
 
-  const platformFeeAmount = useMemo(
-    () => Math.round((finalQuotedBudget * PLATFORM_FEE_PERCENT) / 100),
-    [finalQuotedBudget]
-  );
-
-  const availableForInfluencers = useMemo(() => {
-    const v = finalQuotedBudget - platformFeeAmount;
-    return v < 0 ? 0 : v;
-  }, [finalQuotedBudget, platformFeeAmount]);
+  const { platformFeeAmount, availableBudget: availableForInfluencers } = useMemo(() => {
+    return calcPlatformFee(finalQuotedBudget, feePercent);
+  }, [finalQuotedBudget, feePercent]);
 
   // --------- badges (display only) ----------
   const preferredList: InfluencerBadgeItem[] = useMemo(() => {
@@ -185,8 +189,6 @@ export default function PlatformProfit({
     setLoadingInvitations(true);
     try {
       const res: any = await fetchCampaignInvitations(campaignId);
-
-      // your API: { success: true, data: [...] } with influencerName
       const list: InvitationApiItem[] = res?.data?.data ?? [];
 
       const names = uniq(
@@ -196,7 +198,6 @@ export default function PlatformProfit({
           .filter(Boolean)
       );
 
-      // map names -> ids (if found in allInfluencers list)
       const idsFromNames = uniq(
         names.map((name) => {
           const found = dropdownInfluencers.find(
@@ -219,13 +220,17 @@ export default function PlatformProfit({
     fetchAndSyncInvitations();
   }, [fetchAndSyncInvitations]);
 
-  // ✅ ALWAYS CALCULATE per influencer amount/percentage from selectedIds
+  // ✅ initialize equal percentages on selection change
   useEffect(() => {
     if (locked) return;
 
     const ids = uniq(selectedIds);
-    const { per } = splitEqual(availableForInfluencers, ids.length);
-    const pct = amountToPercentage(per, availableForInfluencers);
+    if (ids.length === 0) {
+      setAssignedInfluencers([]);
+      return;
+    }
+
+    const equalPct = clampPercent(100 / ids.length);
 
     setAssignedInfluencers(
       ids.map((id) => ({
@@ -233,11 +238,24 @@ export default function PlatformProfit({
         name: resolveNameById(id),
         platform: "—",
         profileUrl: "#",
-        amount: per,
-        percentage: pct,
+        percentage: equalPct,
+        amount: Math.round((availableForInfluencers * equalPct) / 100),
       }))
     );
   }, [locked, selectedIds, availableForInfluencers, resolveNameById]);
+
+  // ✅ editable percentage -> amount recalculates
+  const updateInfluencerPercent = (id: string, nextPct: number) => {
+    const pct = clampPercent(nextPct);
+
+    setAssignedInfluencers((prev) =>
+      prev.map((x) =>
+        x.id === id
+          ? { ...x, percentage: pct, amount: Math.round((availableForInfluencers * pct) / 100) }
+          : x
+      )
+    );
+  };
 
   const totalPercentage = assignedInfluencers.reduce((sum, i) => sum + (i.percentage || 0), 0);
   const totalAmount = assignedInfluencers.reduce((sum, i) => sum + (i.amount || 0), 0);
@@ -294,6 +312,7 @@ export default function PlatformProfit({
             </h3>
           </div>
 
+          {/* ✅ editable fee percent */}
           <div
             className={cn(
               "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
@@ -302,15 +321,59 @@ export default function PlatformProfit({
                 : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
             )}
           >
-            <p className={cn("text-2xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              {PLATFORM_FEE_PERCENT}%
-            </p>
-            <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
-              Target Profit / Platform Fee
-            </h3>
-            <p className={cn("text-xs", locked ? "text-gray-400" : "text-gray-500")}>
-              ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1">
+                {feeEdit ? (
+                  <div className="relative max-w-[140px]">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={feePercent}
+                      onChange={(e) => setFeePercent(Number(e.target.value || 0))}
+                      className="pr-8"
+                      disabled={locked}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                      %
+                    </span>
+                  </div>
+                ) : (
+                  <p
+                    className={cn(
+                      "text-2xl font-semibold",
+                      locked ? "text-gray-400" : "text-light-green"
+                    )}
+                  >
+                    {clampPercent(feePercent)}%
+                  </p>
+                )}
+
+                <h3
+                  className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}
+                >
+                  Target Profit / Platform Fee
+                </h3>
+                <p className={cn("text-xs", locked ? "text-gray-400" : "text-gray-500")}>
+                  ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
+                </p>
+              </div>
+
+              {!locked && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-Primary hover:bg-black/5"
+                  onClick={() => {
+                    if (!feeEdit) return setFeeEdit(true);
+                    setFeeEdit(false);
+                    onChangePlatformFeePercent?.(clampPercent(feePercent));
+                  }}
+                >
+                  {feeEdit ? "Save" : "Edit"}
+                </Button>
+              )}
+            </div>
           </div>
 
           <div
@@ -412,7 +475,7 @@ export default function PlatformProfit({
                       {assignedInfluencers.length === 0 ? (
                         <tr>
                           <td className="p-4 text-sm text-gray-400">
-                            Select influencers to auto-assign percentage/amount.
+                            Select influencers to assign percentage/amount.
                           </td>
                         </tr>
                       ) : (
@@ -428,23 +491,27 @@ export default function PlatformProfit({
                               </div>
                             </td>
 
-                            {/* ✅ readOnly (calculated) */}
+                            {/* ✅ editable percentage input */}
                             <td className="p-3 w-[160px]">
-                              <input
-                                type="text"
-                                value={`${inf.percentage.toFixed(2)}%`}
-                                readOnly
-                                className="w-full rounded-md border px-3 py-2 text-right bg-[rgba(248,250,252,1)] text-gray-600"
+                              <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={Number.isFinite(inf.percentage) ? inf.percentage : 0}
+                                onChange={(e) =>
+                                  updateInfluencerPercent(inf.id, Number(e.target.value || 0))
+                                }
+                                className="text-right"
                               />
                             </td>
 
-                            {/* ✅ readOnly (calculated) */}
+                            {/* calculated amount */}
                             <td className="p-3 w-[180px]">
-                              <input
+                              <Input
                                 type="text"
                                 value={`৳ ${moneyFmt(inf.amount)}`}
                                 readOnly
-                                className="w-full rounded-md border px-3 py-2 text-right bg-[rgba(248,250,252,1)] text-gray-600"
+                                className="text-right bg-[rgba(248,250,252,1)] text-gray-600"
                               />
                             </td>
                           </tr>
@@ -456,8 +523,9 @@ export default function PlatformProfit({
 
                 {assignedInfluencers.length > 0 && (
                   <div className="mt-3 text-right space-y-1">
-                    <p className="text-sm text-gray-500">
+                    <p className={cn("text-sm", totalPercentage > 100 ? "text-red" : "text-gray-500")}>
                       Total Percentage: {totalPercentage.toFixed(2)}%
+                      {totalPercentage > 100 ? " (exceeds 100%)" : ""}
                     </p>
                     <p className="font-semibold text-Primary">
                       Total Amount: ৳{moneyFmt(totalAmount)}

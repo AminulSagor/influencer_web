@@ -15,7 +15,7 @@ export type Influencer = {
   // id?: string;
 };
 
-type Status = "Need Quote" | "Pending Invitations" | "Active" | "Completed" | "Paid";
+export type Status = "Need Quote" | "Pending Invitations" | "Active" | "Completed" | "Paid";
 
 type Props = {
   title: string;
