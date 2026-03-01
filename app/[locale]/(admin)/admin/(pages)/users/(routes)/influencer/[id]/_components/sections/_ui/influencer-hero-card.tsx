@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Instagram, Youtube, Music2, HelpCircle } from "lucide-react";
 import type { InfluencerSocialLink } from "@/types/admin/user/influencer-verification-profile_type";
-import { extractUrlHandle } from "@/utils/admin/users/extract-url-handle_util";
+import { extractUrlHandle } from "@/utils/admin/users/extract_url_handle_util";
 
 type Props = {
   name: string;

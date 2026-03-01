@@ -11,8 +11,8 @@ import { FaClock } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 import AssignedPersonalsCell from "./assigned-personals-cell";
-import { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign-ui_type";
-import { progressMap } from "@/utils/admin/campaign/campaign-constrants_type";
+import { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign_ui_type";
+import { progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
 import ProgressBar from "./progress-bar";
 

@@ -10,53 +10,59 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { fetchCampaignInvitations } from "@/api/admin/campaign/assign-influencer";
-import { inviteAssignment } from "@/api/admin/campaign/invite-assignment";
-import { splitEqual, money } from "@/utils/admin/campaign/campaign_calculation_util";
+import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
-type InvitationRow = {
-  jobId: string;
-  influencerName: string;
-  status?: string; // "draft"
-  sentAt?: string;
-  respondedAt?: string | null;
-};
+import {
+  fetchCampaignAgencyDrafts
+} from "@/api/admin/campaign/agency/get-campaign-agency-draft";
+import { inviteAgency } from "@/api/admin/campaign/agency/send-invite-agency";
+import { AgencyDraftRow } from "@/types/admin/campaign/agency/agency_draft_row";
 
-export default function InviteInfluencerBar({
+function fullName(row: AgencyDraftRow) {
+  return (
+    String(row?.agencyName ?? "").trim() ||
+    `${String(row?.firstName ?? "").trim()} ${String(
+      row?.lastName ?? ""
+    ).trim()}`.trim() ||
+    "Agency"
+  );
+}
+
+export default function InviteAgencyBar({
   campaignId,
-  availableForInfluencers,
-  milestoneCount,
+  availableForAgency, // ✅ fixed amount for ALL agencies
+  onRefreshDraft,
 }: {
   campaignId: string;
-  availableForInfluencers: number;
-  milestoneCount: number;
+  availableForAgency: number;
+  onRefreshDraft?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [inviting, setInviting] = useState(false);
 
-  const [draftRows, setDraftRows] = useState<InvitationRow[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>("");
+  const [draftRows, setDraftRows] = useState<AgencyDraftRow[]>([]);
+  const [selectedAgencyId, setSelectedAgencyId] = useState<string>("");
 
   const loadDrafts = async () => {
     if (!campaignId) return;
 
     setLoading(true);
     try {
-      const res: any = await fetchCampaignInvitations(campaignId);
+      const res: any = await fetchCampaignAgencyDrafts(campaignId);
 
-      const list: InvitationRow[] = res?.data?.data ?? [];
+      const list: AgencyDraftRow[] = res?.data?.data ?? [];
+
       const drafts = (Array.isArray(list) ? list : []).filter(
         (x) => String(x?.status ?? "").toLowerCase() === "draft"
       );
 
       setDraftRows(drafts);
 
-      // auto-select first draft
-      setSelectedJobId((prev) => prev || drafts?.[0]?.jobId || "");
+      setSelectedAgencyId((prev) => prev || drafts?.[0]?.id || "");
     } catch (e) {
-      console.error("❌ fetchCampaignInvitations failed:", e);
+      console.error("❌ fetchCampaignAgencyDrafts failed:", e);
       setDraftRows([]);
-      setSelectedJobId("");
+      setSelectedAgencyId("");
     } finally {
       setLoading(false);
     }
@@ -68,30 +74,27 @@ export default function InviteInfluencerBar({
   }, [campaignId]);
 
   const selectedRow = useMemo(
-    () => draftRows.find((r) => r.jobId === selectedJobId) || null,
-    [draftRows, selectedJobId]
+    () => draftRows.find((r) => r.id === selectedAgencyId) || null,
+    [draftRows, selectedAgencyId]
   );
-
-  // ✅ offered amount per influencer (based on how many drafts are still remaining)
-  const { per: offeredAmountPerInfluencer, remainder } = useMemo(() => {
-    return splitEqual(availableForInfluencers, draftRows.length);
-  }, [availableForInfluencers, draftRows.length]);
-
-  const milestoneAmount = useMemo(() => {
-    return splitEqual(offeredAmountPerInfluencer, milestoneCount).per;
-  }, [offeredAmountPerInfluencer, milestoneCount]);
 
   const invitationRemainsText = String(draftRows.length).padStart(2, "0");
 
   const handleInvite = async () => {
-    if (!selectedJobId) return;
+    if (!campaignId || !selectedAgencyId) return;
 
     try {
       setInviting(true);
-      await inviteAssignment(selectedJobId); // ✅ PATCH no body
-      await loadDrafts(); // ✅ refresh UI
+
+      await inviteAgency({
+        campaignId,
+        agencyId: selectedAgencyId, // ✅ id from your response
+      });
+
+      await loadDrafts(); // refresh dropdown
+      onRefreshDraft?.(); // refresh parent table
     } catch (e) {
-      console.error("❌ inviteAssignment failed:", e);
+      console.error("❌ inviteAgency failed:", e);
     } finally {
       setInviting(false);
     }
@@ -102,50 +105,53 @@ export default function InviteInfluencerBar({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-8">
         {/* dropdown */}
         <div className="md:flex-[2]">
-          <Select value={selectedJobId} onValueChange={setSelectedJobId}>
+          <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
             <SelectTrigger className="w-full">
               <SelectValue
-                placeholder={loading ? "Loading..." : "Select Influencer"}
+                placeholder={loading ? "Loading..." : "Select Agency"}
               />
             </SelectTrigger>
 
             <SelectContent>
               {draftRows.length === 0 ? (
                 <SelectItem value="__none" disabled>
-                  No draft influencers found
+                  No draft agencies found
                 </SelectItem>
               ) : (
                 draftRows.map((row) => (
-                  <SelectItem key={row.jobId} value={row.jobId}>
-                    {row.influencerName}
+                  <SelectItem key={row.id} value={row.id}>
+                    {fullName(row)}
                   </SelectItem>
                 ))
               )}
             </SelectContent>
           </Select>
 
-          {/* optional helper text */}
           {selectedRow && (
             <div className="mt-1 text-xs text-gray-500">
-              Selected: {selectedRow.influencerName}
+              Selected: {fullName(selectedRow)}
             </div>
           )}
         </div>
 
-        {/* offered */}
+        {/* offered amount (FIXED) */}
         <div className="md:flex-1">
           <h2 className="text-Primary text-sm md:text-lg font-semibold">
             Offered Amount:
           </h2>
           <p className="text-Primary text-sm md:text-lg font-medium">
-            ৳ {money(offeredAmountPerInfluencer)}
+            ৳ {money(availableForAgency)}
           </p>
         </div>
 
-        {/* remaining */}
+        {/* remaining count */}
         <div className="md:flex-1 text-orange">
-          <h2 className="text-sm md:text-lg">Remaining amount to distribute:</h2>
-          <p className="text-sm md:text-lg font-medium">৳ {money(remainder)}</p>
+          <h2 className="text-sm md:text-lg">
+            Draft invitations remaining:
+          </h2>
+          <p className="text-sm md:text-lg font-medium">
+            {invitationRemainsText}
+          </p>
         </div>
 
         {/* CTA */}
@@ -155,22 +161,19 @@ export default function InviteInfluencerBar({
           </h2>
 
           <Button
-            variant={"PrimaryGradient"}
-            size={"lg"}
+            variant={"PrimaryGradient" as any}
+            size={"lg" as any}
             disabled={
               loading ||
               inviting ||
-              !selectedJobId ||
-              selectedJobId === "__none" ||
+              !selectedAgencyId ||
+              selectedAgencyId === "__none" ||
               draftRows.length === 0
             }
             onClick={handleInvite}
           >
             {inviting ? "Sending..." : "Send Invitation"}
           </Button>
-
-          {/* debug (optional) */}
-          <div className="text-xs text-gray-400">milestone: ৳{money(milestoneAmount)}</div>
         </div>
       </div>
     </div>

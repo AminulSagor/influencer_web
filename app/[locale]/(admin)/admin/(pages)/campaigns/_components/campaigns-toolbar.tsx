@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { CampaignView } from "@/types/admin/campaign/campaign-ui_type";
-import { activeBtn, baseBtn } from "@/utils/admin/campaign/campaign-constrants_type";
+import { CampaignView } from "@/types/admin/campaign/campaign_ui_type";
+import { activeBtn, baseBtn } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import { Search } from "lucide-react";
 
 // import type { CampaignView } from "../_types/ui.types";

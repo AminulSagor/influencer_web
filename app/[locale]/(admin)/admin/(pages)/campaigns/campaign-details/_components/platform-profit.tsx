@@ -22,8 +22,8 @@ import {
   fetchCampaignInvitations,
 } from "@/api/admin/campaign/assign-influencer";
 
-import { money as moneyFmt } from "@/utils/admin/campaign/campaign-calculation";
-import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform-fee_util";
+import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
+import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 
 type Statistics = { label: string; value: number };
 

@@ -9,7 +9,7 @@ import SectionHeader from "./section-header";
 import ActionButtons from "./action-buttons";
 import { cn } from "@/lib/utils";
 
-import { extractUrlHandle } from "@/utils/admin/users/extract-url-handle_util";
+import { extractUrlHandle } from "@/utils/admin/users/extract_url_handle_util";
 import { updateInfluencerSocialStatus } from "@/api/admin/users/influencers/update-social-status";
 
 function iconFor(platform: string) {

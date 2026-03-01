@@ -7,7 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { CampaignStatus } from "@/types/admin/campaign/campaign-ui_type";
+import { CampaignStatus } from "@/types/admin/campaign/campaign_ui_type";
 
 export default function StatusSelect({
     value,

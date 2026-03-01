@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { useForgotPasswordStore } from "@/store/forgot-password_store";
+import { useForgotPasswordStore } from "@/store/forgot_password_store";
 import Loader from "@/components/spin-loader";
 import { notifySuccess, notifyError } from "@/utils/toast_util";
 import { resetPassword } from "@/api/auth/forgot-password";

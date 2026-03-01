@@ -12,7 +12,7 @@ import {
   Settings,
   ShieldOff,
 } from "lucide-react";
-import { SidebarItem } from "@/types/app-sidebar-type";
+import { SidebarItem } from "@/types/app_sidebar-type";
 import TopBar from "@/app/[locale]/(influencer)/influencer/_component/top-bar";
 import { useLocale } from "next-intl";
 

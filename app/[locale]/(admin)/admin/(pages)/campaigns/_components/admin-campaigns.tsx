@@ -10,13 +10,13 @@ import CampaignsBulkBar from "./campaigns-bulkbar";
 import CampaignsListTable from "./campaigns-list-table";
 import CampaignsGrid from "./campaigns-grid";
 
-import type { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign-ui_type";
+import type { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign_ui_type";
 import type { GetCampaignResponse } from "@/types/campaign/get_campaign_type";
-import { mapApiCampaignToUI } from "@/utils/admin/campaign/campaign-mapper_type";
+import { mapApiCampaignToUI } from "@/utils/admin/campaign/campaign_mapper_type_util";
 
-import type { CampaignTabKey } from "@/types/admin/campaign/campaign-filter_types";
+import type { CampaignTabKey } from "@/types/admin/campaign/campaign_filter_types";
 import CampaignsStatusTabs from "./campaigns-status-tabs";
-import { TAB_TO_BACKEND_STATUSES } from "@/utils/admin/campaign/campaign-status-tab_util";
+import { TAB_TO_BACKEND_STATUSES } from "@/utils/admin/campaign/campaign_status_tab_util";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<CampaignUI[]>([]);

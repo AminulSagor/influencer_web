@@ -40,7 +40,7 @@ import {
 import { submitCampaignStepFour } from "@/api/campaign/update-step-4";
 import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
 import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
-import { buildStepFourPayload } from "@/utils/campaigns/step-4_util";
+import { buildStepFourPayload } from "@/utils/campaigns/step_4_util";
 
 type BudgetPros = {
   budget: string;

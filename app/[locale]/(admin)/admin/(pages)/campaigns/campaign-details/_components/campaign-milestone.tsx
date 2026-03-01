@@ -7,8 +7,8 @@ import type {
   CampaignStatusType,
   InfluencerUI,
   CampaignMilestoneApi,
-} from "@/types/admin/campaign/campaign-details_type";
-import { splitEqual, money } from "@/utils/admin/campaign/campaign-calculation";
+} from "@/types/admin/campaign/campaign_details_type";
+import { splitEqual, money } from "@/utils/admin/campaign/campaign_calculation_util";
 
 interface Props {
   influencers: InfluencerUI[];

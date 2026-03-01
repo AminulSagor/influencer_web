@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/store/auth_store";
 import { getToken } from "./cookies_util";
-import { decodeJwtPayload } from "./jwt_util";
+import { decodeJwtPayload } from "../storage/jwt_decoder";
 
 
 export const initAuth = () => {

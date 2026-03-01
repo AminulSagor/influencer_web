@@ -1,7 +1,7 @@
 import { AddressFormValues } from "@/schemas/onboarding/address_schema";
 import { UserRole } from "../auth/role_type";
 import { OnboardingPayload } from "./onboarding_payload_type";
-import { SocialLink } from "./social-link_type";
+import { SocialLink } from "./social_link_type";
 import { AgencyPlatform } from "../agency/agency-platform_type";
 
 // types/onboarding/onboarding_state_type.ts

@@ -30,7 +30,7 @@ import type { UserRole } from "@/types/auth/role_type";
 import { notifyError } from "@/utils/toast_util";
 import Loader from "@/components/spin-loader";
 import { AddressFormValues, addressSchema } from "@/schemas/onboarding/address_schema";
-import { decodeJwtPayload } from "@/utils/jwt_util";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
 import { useOnboardingStore } from "@/store/onboarding_store";
 import { useAuthStore } from "@/store/auth_store";
 

@@ -4,7 +4,7 @@ import { ChangeEvent, KeyboardEvent, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/spin-loader";
 import { useTranslations } from "next-intl";
-import { useForgotPasswordStore } from "@/store/forgot-password_store";
+import { useForgotPasswordStore } from "@/store/forgot_password_store";
 import { verifyForgotPasswordOtp, requestForgotPasswordOtp } from "@/api/auth/forgot-password";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 

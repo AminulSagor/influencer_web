@@ -1,5 +1,5 @@
-import { CampaignApi } from "@/types/admin/campaign/campaign-api_type";
-import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign-ui_type";
+import { CampaignApi } from "@/types/admin/campaign/campaign_api_type";
+import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
 
 function safeDate(value?: string | null) {
   if (!value) return "—";

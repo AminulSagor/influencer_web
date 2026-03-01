@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { SocialPlatform } from "@/types/onboarding/social-link_type";
+import { SocialPlatform } from "@/types/onboarding/social_link_type";
 import { OnboardingState } from "@/types/onboarding/onboarding_state_type";
 import { UserRole } from "@/types/auth/role_type";
 import { AgencyPlatform } from "@/types/agency/agency-platform_type";

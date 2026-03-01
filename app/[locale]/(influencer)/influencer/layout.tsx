@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import InfluencerShell from "@/app/[locale]/(influencer)/influencer/_component/influencer-shell";
-import { decodeJwtPayload } from "@/utils/jwt_util";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
 
 export default async function Layout({
   children,

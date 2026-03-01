@@ -16,9 +16,9 @@ import { FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 import AssignedPersonalsCell from "./assigned-personals-cell";
-import { isProgressStatus, progressMap } from "@/utils/admin/campaign/campaign-constrants_type";
+import { isProgressStatus, progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
-import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign-ui_type";
+import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
 import ProgressBar from "./progress-bar";
 import Link from "next/link";
 

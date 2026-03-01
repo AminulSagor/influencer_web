@@ -16,7 +16,7 @@ import { loginSchema, LoginFormValues } from "@/schemas/auth/login_schema";
 import { login } from "@/api/auth/login";
 import { useAuthStore } from "@/store/auth_store";
 import { setToken } from "@/utils/cookies_util";
-import { decodeJwtPayload } from "@/utils/jwt_util";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
 import { handlePhoneFormat } from "@/utils/phone_util";
 import { notifyError } from "@/utils/toast_util";
 

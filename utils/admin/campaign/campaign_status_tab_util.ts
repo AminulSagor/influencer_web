@@ -1,4 +1,4 @@
-import type { CampaignTabKey } from "@/types/admin/campaign/campaign-filter_types";
+import type { CampaignTabKey } from "@/types/admin/campaign/campaign_filter_types";
 
 export const TAB_LABEL: Record<CampaignTabKey, string> = {
   all: "All",

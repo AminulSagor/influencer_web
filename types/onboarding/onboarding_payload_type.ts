@@ -1,4 +1,4 @@
-import { SocialLink } from "./social-link_type";
+import { SocialLink } from "./social_link_type";
 import { AgencyExpertise } from "../agency/agency-expertise_type";
 
 export type OnboardingPayload = {

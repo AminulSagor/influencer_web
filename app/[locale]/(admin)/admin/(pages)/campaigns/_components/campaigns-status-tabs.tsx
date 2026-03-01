@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { CampaignUI } from "@/types/admin/campaign/campaign-ui_type";
-import type { CampaignTabKey } from "@/types/admin/campaign/campaign-filter_types";
-import { TAB_LABEL, TAB_TO_BACKEND_STATUSES } from "@/utils/admin/campaign/campaign-status-tab_util";
+import type { CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
+import type { CampaignTabKey } from "@/types/admin/campaign/campaign_filter_types";
+import { TAB_LABEL, TAB_TO_BACKEND_STATUSES } from "@/utils/admin/campaign/campaign_status_tab_util";
 
 const ORDER: CampaignTabKey[] = [
   "all",

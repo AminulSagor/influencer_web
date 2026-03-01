@@ -20,14 +20,15 @@ import { ChartColumnIncreasing } from "lucide-react";
 import Link from "next/link";
 
 import InviteInfluencerBar from "./invite-influencer-bar";
+import InviteAgencyBar from "./invite-agency-bar";
 
-import { splitEqual } from "@/utils/admin/campaign/campaign-calculation";
+import { splitEqual } from "@/utils/admin/campaign/campaign_calculation_util";
 
 import type {
   CampaignStatusType,
   InfluencerUI,
   CampaignMilestoneApi,
-} from "@/types/admin/campaign/campaign-details_type";
+} from "@/types/admin/campaign/campaign_details_type";
 
 const CircularProgressChart = dynamic(() => import("./circular-progress"), { ssr: false });
 
@@ -35,12 +36,17 @@ interface Props {
   campaignId: string;
   campaignStatus: CampaignStatusType;
 
+  // ✅ only need this flag (no campaignType required)
+  isPaidAd: boolean;
+
   influencers: InfluencerUI[];
   dropdownInfluencers?: any[];
   milestones: CampaignMilestoneApi[];
 
-  // ✅ MUST exist because page.tsx passes it
   availableForInfluencers: number;
+
+  // ✅ only required when NOT paid_ad (agency invite case)
+  availableForAgency?: number;
 }
 
 function safeStr(v: any) {
@@ -50,10 +56,14 @@ function safeStr(v: any) {
 export default function CampaignMilestoneContainer({
   campaignId,
   campaignStatus,
+  isPaidAd,
+
   influencers,
   dropdownInfluencers,
   milestones,
-  availableForInfluencers, // ✅ RECEIVE IT
+
+  availableForInfluencers,
+  availableForAgency = 0,
 }: Props) {
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(null);
 
@@ -104,20 +114,36 @@ export default function CampaignMilestoneContainer({
       .filter((x) => safeStr(x.id).length > 0);
   }, [dropdownInfluencers, influencers]);
 
-  // ✅ CALCULATE OFFERED AMOUNT PER INFLUENCER (your rule)
+  // ✅ Influencer per-offer logic stays same (ONLY for paid_ad case)
   const offeredAmountPerInfluencer = useMemo(() => {
+    if (!isPaidAd) return 0;
     const count = milestoneInfluencers.length;
     return splitEqual(availableForInfluencers, count).per;
-  }, [availableForInfluencers, milestoneInfluencers.length]);
+  }, [isPaidAd, availableForInfluencers, milestoneInfluencers.length]);
+
+  // Optional: show invite only in these statuses
+  const canInvite = campaignStatus === "pending-invitations" || campaignStatus === "active";
 
   return (
     <div className="space-y-4 p-2">
-      {/* ✅ ALWAYS VISIBLE TOP INVITE BAR */}
-      <InviteInfluencerBar
-        campaignId={campaignId}
-        availableForInfluencers={availableForInfluencers}
-        milestoneCount={milestones.length}
-      />
+      {/* ✅ ALWAYS render the correct invite bar based on isPaidAd */}
+      {canInvite && (
+        <>
+          {isPaidAd ? (
+            <InviteAgencyBar
+              campaignId={campaignId}
+              availableForAgency={availableForAgency}
+            />
+            
+          ) : (
+            <InviteInfluencerBar
+              campaignId={campaignId}
+              availableForInfluencers={availableForInfluencers}
+              milestoneCount={milestones.length}
+            />
+          )}
+        </>
+      )}
 
       <CampaignMilestone
         influencers={milestoneInfluencers}
@@ -125,7 +151,7 @@ export default function CampaignMilestoneContainer({
         milestones={milestones}
         activeMilestoneId={activeMilestoneId}
         onSelectMilestone={(id) => setActiveMilestoneId(id)}
-        offeredAmountPerInfluencer={offeredAmountPerInfluencer} // ✅ NOW EXISTS
+        offeredAmountPerInfluencer={offeredAmountPerInfluencer}
       />
 
       {activeMilestone && (
@@ -170,16 +196,12 @@ export default function CampaignMilestoneContainer({
 
                 <div className="col-span-6 md:ml-10 flex gap-6">
                   <div className="space-y-2">
-                    <div className="flex-1">
-                      <Button className="w-full" variant={"outline"} disabled>
-                        Change Status
-                      </Button>
-                    </div>
-                    <div>
-                      <Button className="w-full" variant={"outline"} disabled>
-                        View Submitted Report
-                      </Button>
-                    </div>
+                    <Button className="w-full" variant={"outline"} disabled>
+                      Change Status
+                    </Button>
+                    <Button className="w-full" variant={"outline"} disabled>
+                      View Submitted Report
+                    </Button>
                   </div>
 
                   <div className="flex-1 mr-10">
@@ -191,10 +213,7 @@ export default function CampaignMilestoneContainer({
                       </div>
 
                       <div className="text-[#8E8E8E] text-sm">
-                        <IconText
-                          icon={<FaClock />}
-                          text={(activeMilestone.createdAt ?? "").slice(0, 10)}
-                        />
+                        <IconText icon={<FaClock />} text={(activeMilestone.createdAt ?? "").slice(0, 10)} />
                       </div>
                     </div>
                   </div>
@@ -203,32 +222,20 @@ export default function CampaignMilestoneContainer({
 
               <CollapsibleCard heading="Submission Details" badge="Completed">
                 <div className="space-y-2">
-                  <IconText
-                    className="text-base gap-2"
-                    icon={<FaUserPen />}
-                    text="Description / Update"
-                  />
+                  <IconText className="text-base gap-2" icon={<FaUserPen />} text="Description / Update" />
                   <p>Description of the proof will be visible here</p>
 
                   <div className="border rounded-md p-4 space-y-4 mt-6">
                     <div className="flex">
                       <div className="flex-1">
-                        <IconText
-                          className="gap-2 font-semibold"
-                          text="Platform 1"
-                          icon={<CgWebsite size={20} />}
-                        />
+                        <IconText className="gap-2 font-semibold" text="Platform 1" icon={<CgWebsite size={20} />} />
                         <Button asChild className="p-0" variant={"link"}>
                           <Link href={"#"}>platform link</Link>
                         </Button>
                       </div>
 
                       <div className="flex-2 space-y-2">
-                        <IconText
-                          icon={<HiMiniIdentification size={20} />}
-                          className="gap-2 font-semibold"
-                          text="Attach Proof"
-                        />
+                        <IconText icon={<HiMiniIdentification size={20} />} className="gap-2 font-semibold" text="Attach Proof" />
                         <div className="flex gap-2">
                           {[1, 2, 3].map((i) => (
                             <div
@@ -241,11 +248,7 @@ export default function CampaignMilestoneContainer({
                     </div>
 
                     <div>
-                      <IconText
-                        className="gap-2 font-semibold"
-                        text="Performance Metrics"
-                        icon={<ChartColumnIncreasing size={18} />}
-                      />
+                      <IconText className="gap-2 font-semibold" text="Performance Metrics" icon={<ChartColumnIncreasing size={18} />} />
 
                       <div className="grid grid-cols-12 gap-4">
                         <div className="col-span-8 p-2 mt-4">

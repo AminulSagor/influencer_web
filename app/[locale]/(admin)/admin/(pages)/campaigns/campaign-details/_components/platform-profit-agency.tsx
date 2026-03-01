@@ -21,43 +21,10 @@ import { getAllAgencies } from "@/api/admin/campaign/agency/get-all-agencies";
 import { getAgencyServiceFee } from "@/api/admin/campaign/agency/get-agency-service-fee";
 import { assignAgencies } from "@/api/admin/campaign/agency/assign-agencies";
 
-import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform-fee_util";
-import { money as moneyFmt } from "@/utils/admin/campaign/campaign-calculation";
-
-type Statistics = { label: string; value: number };
-
-type AgencyOptionApi = {
-  id: string;
-  agencyName?: string;
-  fullName?: string;
-  logo?: string | null;
-};
-
-type PreferredAgency = { id: string; name: string; image?: string | null };
-
-type Row = {
-  id: string;
-  name: string;
-  logo?: string | null;
-
-  defaultPercentage: number;
-  assignPercentage: number;
-  profitAmount: number;
-};
-
-type DraftAssignedAgencyItem = {
-  agencyId?: string;
-  id?: string;
-
-  assignedServiceFeePercent?: number;
-  assignedPercentage?: number;
-  serviceFeePercent?: number;
-
-  agencyName?: string;
-  name?: string;
-  fullName?: string;
-  logo?: string | null;
-};
+import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform_fee_util";
+import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
+import InviteAgencyBar from "./invite-agency-bar";
+import { AgencyOptionApi, DraftAssignedAgencyItem, PreferredAgency, Row, Statistics } from "@/types/admin/campaign/agency/platform_profit_agency_type";
 
 type Props = {
   campaignId: string;
@@ -71,14 +38,17 @@ type Props = {
   draftAssignedAgencies?: DraftAssignedAgencyItem[];
   loadingDraftAssignedAgencies?: boolean;
   onRefreshDraft?: () => void;
+
+  // ✅ optional callback if you want to persist platform fee to backend
+  onChangePlatformFeePercent?: (v: number) => void;
 };
 
 const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
-
 const pickAgencyId = (x: any) => String(x?.agencyId ?? x?.id ?? "").trim();
 
 const pickAssignedPercent = (x: any) => {
   const v =
+    x?.assignPercentage ??
     x?.assignedServiceFeePercent ??
     x?.assignedPercentage ??
     x?.serviceFeePercent ??
@@ -99,15 +69,27 @@ export default function PlatformProfitAgency({
   draftAssignedAgencies = [],
   loadingDraftAssignedAgencies = false,
   onRefreshDraft,
+
+  onChangePlatformFeePercent,
 }: Props) {
   const locked = quoteState !== "confirmed";
 
   // ---------------- budget ----------------
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
 
+  // ✅ platform fee state (UI like screenshot)
+  const [feeEdit, setFeeEdit] = useState(false);
+  const [feePercent, setFeePercent] = useState<number>(clampPercent(platformFeePercent));
+
+  // keep in sync if prop changes
+  useEffect(() => {
+    if (feeEdit) return;
+    setFeePercent(clampPercent(platformFeePercent));
+  }, [platformFeePercent, feeEdit]);
+
   const { platformFeeAmount, availableBudget: availableForAgency } = useMemo(() => {
-    return calcPlatformFee(finalQuotedBudget, platformFeePercent);
-  }, [finalQuotedBudget, platformFeePercent]);
+    return calcPlatformFee(finalQuotedBudget, clampPercent(feePercent));
+  }, [finalQuotedBudget, feePercent]);
 
   // ---------------- agencies list ----------------
   const [allAgenciesApi, setAllAgenciesApi] = useState<AgencyOptionApi[]>([]);
@@ -172,6 +154,32 @@ export default function PlatformProfitAgency({
 
   const hasUnsavedChanges = useMemo(() => currentSig !== lastSavedSig, [currentSig, lastSavedSig]);
 
+  // ---------------- default fee cache ----------------
+  const [defaultFeeMap, setDefaultFeeMap] = useState<Record<string, number>>({});
+  const [loadingFees, setLoadingFees] = useState(false);
+
+  // ✅ Seed default fee map from draft response so "Default Percentage" shows immediately
+  useEffect(() => {
+    if (locked) return;
+    if (loadingDraftAssignedAgencies) return;
+
+    const list = Array.isArray(draftAssignedAgencies) ? draftAssignedAgencies : [];
+    if (list.length === 0) return;
+
+    const next: Record<string, number> = {};
+    for (const x of list) {
+      const id = pickAgencyId(x);
+      if (!id) continue;
+
+      if (x?.defaultPercentage != null) {
+        next[id] = clampPercent(Number(x.defaultPercentage) || 0);
+      }
+    }
+
+    if (Object.keys(next).length === 0) return;
+    setDefaultFeeMap((prev) => ({ ...next, ...prev }));
+  }, [locked, loadingDraftAssignedAgencies, draftAssignedAgencies]);
+
   // ---------------- init from draft (ONLY ONCE) ----------------
   const [didInitFromDraft, setDidInitFromDraft] = useState(false);
 
@@ -194,7 +202,6 @@ export default function PlatformProfitAgency({
 
     setSelectedIds(ids);
 
-    // rows with assigned % immediately
     setRows(
       ids.map((id) => {
         const found = list.find((x) => pickAgencyId(x) === id);
@@ -204,12 +211,13 @@ export default function PlatformProfitAgency({
         const logo = (found?.logo ?? info?.logo ?? null) as string | null;
 
         const assignedPct = pickAssignedPercent(found);
+        const defaultPct = clampPercent(Number(found?.defaultPercentage ?? 0));
 
         return {
           id,
           name,
           logo,
-          defaultPercentage: 0, // filled by service-fee map later
+          defaultPercentage: defaultPct,
           assignPercentage: assignedPct,
           profitAmount: Math.round((availableForAgency * assignedPct) / 100),
         };
@@ -235,10 +243,7 @@ export default function PlatformProfitAgency({
     availableForAgency,
   ]);
 
-  // ---------------- default fee cache ----------------
-  const [defaultFeeMap, setDefaultFeeMap] = useState<Record<string, number>>({});
-  const [loadingFees, setLoadingFees] = useState(false);
-
+  // ---------------- fetch missing default fees ----------------
   useEffect(() => {
     if (locked) return;
 
@@ -258,12 +263,7 @@ export default function PlatformProfitAgency({
           missing.map(async (id) => {
             try {
               const res: any = await getAgencyServiceFee(id);
-              const fee = Number(
-                res?.data?.data?.defaultServiceFee ??
-                  res?.data?.defaultServiceFee ??
-                  0
-              );
-
+              const fee = Number(res?.data?.data?.defaultServiceFee ?? res?.data?.defaultServiceFee ?? 0);
               return { id, fee: clampPercent(fee) };
             } catch (e) {
               console.error("❌ getAgencyServiceFee failed for:", id, e);
@@ -314,9 +314,7 @@ export default function PlatformProfitAgency({
         const name = info?.name ?? prevRow?.name ?? "Agency";
         const logo = info?.logo ?? prevRow?.logo ?? null;
 
-        const defaultPct = clampPercent(defaultFeeMap[id] ?? 0);
-
-        // keep assigned % if draft/user already set, else default
+        const defaultPct = clampPercent(defaultFeeMap[id] ?? prevRow?.defaultPercentage ?? 0);
         const assignPct = clampPercent(prevRow?.assignPercentage ?? defaultPct);
 
         return {
@@ -336,29 +334,16 @@ export default function PlatformProfitAgency({
     setRows((prev) =>
       prev.map((r) =>
         r.id === id
-          ? {
-              ...r,
-              assignPercentage: pct,
-              profitAmount: Math.round((availableForAgency * pct) / 100),
-            }
+          ? { ...r, assignPercentage: pct, profitAmount: Math.round((availableForAgency * pct) / 100) }
           : r
       )
     );
   };
 
-  const removeRow = (id: string) => {
-    setSelectedIds((prev) => prev.filter((x) => x !== id));
-  };
+  const removeRow = (id: string) => setSelectedIds((prev) => prev.filter((x) => x !== id));
 
-  const totalPct = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.assignPercentage) || 0), 0),
-    [rows]
-  );
-
-  const totalProfit = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.profitAmount) || 0), 0),
-    [rows]
-  );
+  const totalPct = useMemo(() => rows.reduce((s, r) => s + (Number(r.assignPercentage) || 0), 0), [rows]);
+  const totalProfit = useMemo(() => rows.reduce((s, r) => s + (Number(r.profitAmount) || 0), 0), [rows]);
 
   const handleClear = () => setSelectedIds([]);
 
@@ -389,10 +374,12 @@ export default function PlatformProfitAgency({
   }, [campaignId, rows, currentSig, onRefreshDraft]);
 
   return (
+    <>
     <CollapsibleCard heading="Platform Profit & Agency Management">
       <div>
         {/* top stats */}
         <div className="grid grid-cols-12 gap-4">
+          {/* card 1 */}
           <div
             className={cn(
               "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
@@ -409,25 +396,77 @@ export default function PlatformProfitAgency({
             </h3>
           </div>
 
+          {/* card 2 ✅ UI like your provided snippet + screenshot */}
           <div
             className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
+              "col-span-12 md:col-span-4 rounded-lg border p-4",
               locked
                 ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
                 : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
             )}
           >
-            <p className={cn("text-2xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              {clampPercent(platformFeePercent)}%
-            </p>
-            <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
-              Target Profit / Platform Fee
-            </h3>
-            <p className={cn("text-xs", locked ? "text-gray-400" : "text-gray-500")}>
-              ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
-            </p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <div className="relative w-full max-w-[520px]">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    value={String(feeEdit ? feePercent : clampPercent(feePercent))}
+                    onChange={(e) => setFeePercent(clampPercent(Number(e.target.value || 0)))}
+                    disabled={locked}
+                    readOnly={!feeEdit}
+                    className={cn(
+                      "h-16 w-full rounded-xl border bg-white px-6 pr-14 text-[46px] font-bold leading-none",
+                      locked ? "text-gray-400" : "text-light-green",
+                      !feeEdit ? "cursor-default" : ""
+                    )}
+                  />
+
+                  <span
+                    className={cn(
+                      "absolute right-5 top-1/2 -translate-y-1/2 text-[46px] font-bold leading-none",
+                      locked ? "text-gray-400" : "text-light-green"
+                    )}
+                  >
+                    %
+                  </span>
+                </div>
+
+                <h3 className={cn("mt-3 text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
+                  Set Platform Charge
+                </h3>
+
+                <p className={cn("mt-1 text-xs", locked ? "text-gray-400" : "text-gray-500")}>
+                  ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
+                </p>
+              </div>
+
+              {!locked && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className={cn(
+                    "mt-3 text-[20px] font-semibold hover:bg-transparent",
+                    locked ? "text-gray-400" : "text-light-green hover:opacity-80"
+                  )}
+                  onClick={() => {
+                    if (!feeEdit) return setFeeEdit(true);
+
+                    setFeeEdit(false);
+
+                    // ✅ notify parent/backend if you wired it
+                    onChangePlatformFeePercent?.(clampPercent(feePercent));
+                  }}
+                >
+                  {feeEdit ? "Save" : "Edit"}
+                </Button>
+              )}
+            </div>
           </div>
 
+          {/* card 3 */}
           <div
             className={cn(
               "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
@@ -461,13 +500,12 @@ export default function PlatformProfitAgency({
                 influencers={
                   loadingPreferredAgencies
                     ? [{ name: "Loading...", platform: "—", profileUrl: "#" }]
-                    : preferredAgencies.map((a) => ({
+                    : (preferredAgencies.map((a) => ({
                         name: a.name,
                         platform: "—",
                         profileUrl: "#",
-                        // if your InfluencerBadges supports image, keep it here for later
                         imageUrl: a.image ?? undefined,
-                      })) as any
+                      })) as any)
                 }
               />
             </div>
@@ -501,9 +539,7 @@ export default function PlatformProfitAgency({
               <div className="mt-3">
                 <MultiSelect values={selectedIds} onValuesChange={(v) => setSelectedIds(uniq(v))}>
                   <MultiSelectTrigger className="w-full">
-                    <MultiSelectValue
-                      placeholder={loadingAgencies ? "Loading agencies..." : "Select Ad Agency"}
-                    />
+                    <MultiSelectValue placeholder={loadingAgencies ? "Loading agencies..." : "Select Ad Agency"} />
                   </MultiSelectTrigger>
 
                   <MultiSelectContent>
@@ -537,15 +573,10 @@ export default function PlatformProfitAgency({
                   ) : (
                     <div>
                       {rows.map((r) => (
-                        <div
-                          key={r.id}
-                          className="grid grid-cols-12 items-center px-5 py-4 border-t"
-                        >
+                        <div key={r.id} className="grid grid-cols-12 items-center px-5 py-4 border-t">
                           <div className="col-span-5 flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden" />
-                            <div className="text-[18px] font-medium text-black">
-                              {r.name}
-                            </div>
+                            <div className="text-[18px] font-medium text-black">{r.name}</div>
                           </div>
 
                           <div className="col-span-2 text-center text-[16px] text-Primary">
@@ -557,8 +588,10 @@ export default function PlatformProfitAgency({
                               type="number"
                               min={0}
                               max={100}
-                              value={Number.isFinite(r.assignPercentage) ? r.assignPercentage : 0}
+                              step="0.01"
+                              value={Number.isFinite(r.assignPercentage) ? String(r.assignPercentage) : "0"}
                               onChange={(e) => updateAssignPercent(r.id, Number(e.target.value || 0))}
+                              disabled={saving}
                               className="h-11 w-[120px] rounded-full border text-center text-Primary"
                             />
                           </div>
@@ -603,7 +636,7 @@ export default function PlatformProfitAgency({
                       {loadingAgencies ? "agencies" : ""}
                       {loadingAgencies && (loadingFees || loadingDraftAssignedAgencies) ? " & " : ""}
                       {loadingFees ? "default fees" : ""}
-                      {(loadingFees && loadingDraftAssignedAgencies) ? " & " : ""}
+                      {loadingFees && loadingDraftAssignedAgencies ? " & " : ""}
                       {loadingDraftAssignedAgencies ? "draft assignments" : ""}
                       ...
                     </p>
@@ -615,5 +648,6 @@ export default function PlatformProfitAgency({
         )}
       </div>
     </CollapsibleCard>
+</>
   );
 }

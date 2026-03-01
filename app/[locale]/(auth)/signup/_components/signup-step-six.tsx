@@ -13,7 +13,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { SocialPlatform } from "@/types/onboarding/social-link_type";
+import { SocialPlatform } from "@/types/onboarding/social_link_type";
 import { useOnboardingStore } from "@/store/onboarding_store";
 
 export type Step6FormValues = {
