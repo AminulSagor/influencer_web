@@ -1,6 +1,7 @@
+// app/[locale]/(admin)/admin/(pages)/campaigns/[id]/campaign-details/_components/campaign-milestone.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type {
@@ -8,7 +9,8 @@ import type {
   InfluencerUI,
   CampaignMilestoneApi,
 } from "@/types/admin/campaign/campaign_details_type";
-import { splitEqual, money } from "@/utils/admin/campaign/campaign_calculation_util";
+import { money } from "@/utils/admin/campaign/campaign_calculation_util";
+import { editMilestoneAmount } from "@/api/admin/campaign/agency/edit-milstone-amount";
 
 interface Props {
   influencers: InfluencerUI[];
@@ -18,12 +20,35 @@ interface Props {
   activeMilestoneId: string | null;
   onSelectMilestone: (id: string) => void;
 
-  // ✅ NEW: offered amount per influencer (calculated)
-  offeredAmountPerInfluencer: number;
+  // ✅ AGENCY offered amount (max). Can be number or formatted string ("149,045.5")
+  offeredAmountPerInfluencer: number | string;
 }
 
 function safeStr(v: any) {
   return String(v ?? "").trim();
+}
+
+function parseBDT(raw: string) {
+  const digits = raw.replace(/[^\d]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+// handles: number, "149,045.5", "149045.50", "৳ 149,045.5"
+function parseLooseNumber(v: unknown): number {
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const s = String(v ?? "").trim();
+  if (!s) return 0;
+  const cleaned = s.replace(/,/g, "").replace(/[^\d.]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function splitTotalEvenly(total: number, count: number) {
+  if (count <= 0) return [];
+  const t = Math.max(0, Math.floor(total));
+  const base = Math.floor(t / count);
+  const rem = t - base * count;
+  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
 }
 
 export default function CampaignMilestone({
@@ -35,20 +60,9 @@ export default function CampaignMilestone({
   offeredAmountPerInfluencer,
 }: Props) {
   const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const milestoneCount = (milestones ?? []).length;
-  const { per: milestoneAmount } = useMemo(() => {
-    return splitEqual(offeredAmountPerInfluencer, milestoneCount);
-  }, [offeredAmountPerInfluencer, milestoneCount]);
-
-  const milestoneInputs = useMemo(() => {
-    return (milestones ?? []).slice(0, 4).map((m, idx) => ({
-      key: safeStr(m?.id) || `m-${idx}`,
-      label: `Milestone ${idx + 1}`,
-    }));
-  }, [milestones]);
-
-  const cards = useMemo(() => {
+  const sortedMilestones = useMemo(() => {
     const list = [...(milestones ?? [])];
     list.sort((a: any, b: any) => Number(a?.order ?? 0) - Number(b?.order ?? 0));
 
@@ -58,11 +72,141 @@ export default function CampaignMilestone({
       const title = safeStr(m?.contentTitle) || "Milestone Title";
       const subtitle = safeStr(m?.contentQuantity) || "";
       const day = safeStr(m?.dayLabel) || `DAY ${order + 1}`;
-      return { id, order, title, subtitle, day };
+
+      const amountNum = parseLooseNumber(m?.amount ?? 0);
+      const amount = Math.max(0, Math.floor(amountNum));
+
+      return { id, order, title, subtitle, day, amount };
     });
   }, [milestones]);
 
+  const milestoneCount = sortedMilestones.length;
   const activeId = safeStr(activeMilestoneId);
+
+  // ✅ offered amount (max)
+  const totalBudget = useMemo(() => {
+    const n = parseLooseNumber(offeredAmountPerInfluencer);
+    return Math.max(0, n); // keep decimals for display/compare
+  }, [offeredAmountPerInfluencer]);
+
+  const [amounts, setAmounts] = useState<number[]>([]);
+
+  // snapshot for diffing/rollback
+  const serverAmountsRef = useRef<number[]>([]);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    const fromApi = sortedMilestones.map((m) => m.amount);
+    const allZero = fromApi.every((x) => Number(x ?? 0) === 0);
+
+    // if server gives all 0 but we have budget, split initially
+    const initial =
+      allZero && totalBudget > 0
+        ? splitTotalEvenly(totalBudget, milestoneCount)
+        : fromApi;
+
+    setAmounts(initial);
+    serverAmountsRef.current = fromApi;
+    initializedRef.current = true;
+  }, [sortedMilestones, totalBudget, milestoneCount]);
+
+  const milestoneInputs = useMemo(() => {
+    return sortedMilestones.slice(0, 4).map((m, idx) => ({
+      key: m.id,
+      label: `Milestone ${idx + 1}`,
+      idx,
+    }));
+  }, [sortedMilestones]);
+
+  const sum = useMemo(
+    () => amounts.reduce((a, b) => a + (Number(b) || 0), 0),
+    [amounts]
+  );
+
+  const exceedsBudget = totalBudget > 0 && sum > totalBudget;
+
+  // ✅ independent edit + clamp so total never exceeds offered
+  function onAmountChange(idx: number, raw: string) {
+    const v = parseBDT(raw);
+    const nextVal = Math.max(0, Math.floor(v));
+
+    setAmounts((prev) => {
+      const next = [...prev];
+
+      const otherSum = prev.reduce((acc, val, i) => {
+        if (i === idx) return acc;
+        return acc + (Number(val) || 0);
+      }, 0);
+
+      if (totalBudget > 0) {
+        // IMPORTANT: subtract first, then floor (so 149045.5 behaves correctly)
+        const remaining = Math.max(0, Math.floor(totalBudget - otherSum));
+        next[idx] = Math.min(nextVal, remaining);
+      } else {
+        next[idx] = nextVal;
+      }
+
+      return next;
+    });
+  }
+
+  async function saveChangedAmounts() {
+    if (!initializedRef.current) return;
+    if (exceedsBudget) return;
+
+    const ids = sortedMilestones.map((m) => m.id);
+    const server = serverAmountsRef.current;
+    const next = amounts;
+
+    const changes = ids
+      .map((id, idx) => {
+        const nextVal = Number(next[idx] ?? 0);
+        const serverVal = Number(server[idx] ?? 0);
+        if (nextVal === serverVal) return null;
+        return { milestoneId: id, amount: nextVal };
+      })
+      .filter(Boolean) as Array<{ milestoneId: string; amount: number }>;
+
+    if (changes.length === 0) return;
+
+    setSaving(true);
+    try {
+      await Promise.all(
+        changes.map((c) =>
+          editMilestoneAmount({ milestoneId: c.milestoneId, amount: c.amount })
+        )
+      );
+
+      serverAmountsRef.current = [...amounts];
+    } catch (e) {
+      console.error("❌ editMilestoneAmount failed:", e);
+      setAmounts(serverAmountsRef.current);
+      throw e;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onToggleEdit() {
+    if (saving) return;
+
+    // turning OFF edit => save
+    if (editing) {
+      try {
+        await saveChangedAmounts();
+        if (!exceedsBudget) setEditing(false);
+      } catch {
+        // keep editing open on failure
+      }
+      return;
+    }
+
+    // turning ON edit
+    setEditing(true);
+  }
+
+  // ✅ Edit should always be clickable; only Done is blocked when invalid
+  const doneDisabled = saving || (editing && exceedsBudget);
 
   return (
     <div className="rounded-xl border bg-white">
@@ -73,14 +217,19 @@ export default function CampaignMilestone({
           <Button
             type="button"
             size="sm"
-            className="h-8 rounded-md px-5 bg-orange text-white hover:brightness-95"
-            onClick={() => setEditing((p) => !p)}
+            className="h-8 rounded-md px-5 bg-orange text-white hover:brightness-95 disabled:opacity-60"
+            onClick={onToggleEdit}
+            disabled={doneDisabled}
+            title={
+              editing && exceedsBudget
+                ? "Total milestone amount cannot exceed offered amount"
+                : undefined
+            }
           >
-            Edit
+            {saving ? "Saving..." : editing ? "Done" : "Edit"}
           </Button>
         </div>
 
-        {/* calculated inputs */}
         <div className="mt-3 rounded-lg border p-3">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             {milestoneInputs.map((m) => (
@@ -90,23 +239,47 @@ export default function CampaignMilestone({
                 <div
                   className={cn(
                     "flex items-center rounded-md border px-3 py-2",
-                    editing ? "bg-white" : "bg-[rgba(248,250,252,1)]"
+                    editing ? "bg-white" : "bg-[rgba(248,250,252,1)]",
+                    exceedsBudget && "border-red"
                   )}
                 >
                   <span className="text-sm text-gray-500">৳</span>
+
                   <input
                     type="text"
-                    value={money(milestoneAmount)}
-                    readOnly
+                    inputMode="numeric"
+                    value={money(amounts[m.idx] ?? 0)}
+                    readOnly={!editing || saving}
+                    onChange={(e) => onAmountChange(m.idx, e.target.value)}
                     className={cn(
                       "ml-2 w-full bg-transparent text-right text-sm outline-none",
-                      !editing && "text-gray-500"
+                      (!editing || saving) && "text-gray-500"
                     )}
                   />
                 </div>
               </div>
             ))}
           </div>
+
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+            <span>Entered total:</span>
+            <span className={cn("font-semibold", exceedsBudget && "text-red")}>
+              ৳ {money(sum)}
+            </span>
+          </div>
+
+          {totalBudget > 0 && (
+            <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
+              <span>Offered Amount (max):</span>
+              <span className="font-semibold">৳ {money(totalBudget)}</span>
+            </div>
+          )}
+
+          {exceedsBudget && (
+            <div className="mt-2 text-xs text-red">
+              Total milestone amount cannot exceed offered amount.
+            </div>
+          )}
         </div>
       </div>
 
@@ -114,7 +287,7 @@ export default function CampaignMilestone({
       <div className="px-4 pb-4 pt-4">
         <div className="relative">
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {cards.map((c) => {
+            {sortedMilestones.map((c, idx) => {
               const isActive = c.id === activeId;
 
               return (
@@ -145,9 +318,8 @@ export default function CampaignMilestone({
                         {c.subtitle || "\u00A0"}
                       </div>
 
-                      {/* ✅ calculated amount */}
                       <div className="mt-2 text-lg font-semibold text-light-green">
-                        ৳ {money(milestoneAmount)}
+                        ৳ {money(amounts[idx] ?? 0)}
                       </div>
                     </div>
 
