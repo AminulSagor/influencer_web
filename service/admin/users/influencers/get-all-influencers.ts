@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 import { InfluencerListItem } from "@/types/admin/user/influencer-list_type";
 
 export type PaginationMeta = {
@@ -9,7 +9,7 @@ export type PaginationMeta = {
 };
 
 export async function getAllInfluencers(params?: { page?: number; limit?: number }) {
-  const res = await apiClient.get(`/influencer/admin/browsing/influencers`, {
+  const res = await serviceClient.get(`/influencer/admin/browsing/influencers`, {
     params: { page: params?.page ?? 1, limit: params?.limit ?? 10 },
   });
 

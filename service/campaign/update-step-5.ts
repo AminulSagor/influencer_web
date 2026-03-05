@@ -1,6 +1,6 @@
-// api/campaign/step5.ts
+// service/campaign/step5.ts
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { StepFivePayload, StepFiveResponse } from "@/types/campaign/step5_campaign_type";
 
 export async function submitCampaignStepFive(
@@ -8,7 +8,7 @@ export async function submitCampaignStepFive(
   payload: StepFivePayload
 ): Promise<StepFiveResponse> {
   try {
-    const res = await apiClient.patch<StepFiveResponse>(
+    const res = await serviceClient.patch<StepFiveResponse>(
       `/campaign/${campaignId}/step-5`,
       payload
     );

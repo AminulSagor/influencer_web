@@ -1,6 +1,6 @@
-// app/api/admin/campaign/invite-assignment.ts
-import { apiClient } from "@/api/base/axios_client";
+// app/service/admin/campaign/invite-assignment.ts
+import { serviceClient } from "@/service/base/axios_client";
 
 export function inviteAssignment(assignmentId: string) {
-  return apiClient.patch(`/campaign/admin/assignments/${assignmentId}/invite`);
+  return serviceClient.patch(`/campaign/admin/assignments/${assignmentId}/invite`);
 }

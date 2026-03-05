@@ -7,15 +7,15 @@ import { cn } from "@/lib/utils";
 import type {
   CampaignStatusType,
   InfluencerUI,
-  CampaignMilestoneApi,
+  CampaignMilestoneservice,
 } from "@/types/admin/campaign/campaign_details_type";
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
-import { editMilestoneAmount } from "@/api/admin/campaign/agency/edit-milstone-amount";
+import { editMilestoneAmount } from "@/service/admin/campaign/agency/edit-milstone-amount";
 
 interface Props {
   influencers: InfluencerUI[];
   campaignStatus: CampaignStatusType;
-  milestones: CampaignMilestoneApi[];
+  milestones: CampaignMilestoneservice[];
 
   activeMilestoneId: string | null;
   onSelectMilestone: (id: string) => void;
@@ -96,17 +96,17 @@ export default function CampaignMilestone({
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    const fromApi = sortedMilestones.map((m) => m.amount);
-    const allZero = fromApi.every((x) => Number(x ?? 0) === 0);
+    const fromservice = sortedMilestones.map((m) => m.amount);
+    const allZero = fromservice.every((x) => Number(x ?? 0) === 0);
 
     // if server gives all 0 but we have budget, split initially
     const initial =
       allZero && totalBudget > 0
         ? splitTotalEvenly(totalBudget, milestoneCount)
-        : fromApi;
+        : fromservice;
 
     setAmounts(initial);
-    serverAmountsRef.current = fromApi;
+    serverAmountsRef.current = fromservice;
     initializedRef.current = true;
   }, [sortedMilestones, totalBudget, milestoneCount]);
 

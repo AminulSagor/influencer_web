@@ -11,9 +11,9 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-type Props = { campaign: CampaignApi | null };
+type Props = { campaign: Campaignservice | null };
 
 const TermsAndConditionCard = ({ campaign }: Props) => {
   return (

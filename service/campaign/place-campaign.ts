@@ -1,11 +1,11 @@
-// api/campaign/place.ts
+// service/campaign/place.ts
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { PlaceCampaignResponse } from "@/types/campaign/place-campaign_type";
 
 export async function placeCampaign(campaignId: string): Promise<PlaceCampaignResponse> {
   try {
-    const res = await apiClient.post<PlaceCampaignResponse>(`/campaign/${campaignId}/place`);
+    const res = await serviceClient.post<PlaceCampaignResponse>(`/campaign/${campaignId}/place`);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {

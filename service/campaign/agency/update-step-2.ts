@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 import { StepTwoPayloadforAgency } from "@/types/campaign/step2_campaign_type";
 import axios from "axios";
 
@@ -8,7 +8,7 @@ export class campaignServiceAgency{
     payload: StepTwoPayloadforAgency
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.patch(`/campaign/${campaignId}/step-2`, payload);
+      const response = await serviceClient.patch(`/campaign/${campaignId}/step-2`, payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

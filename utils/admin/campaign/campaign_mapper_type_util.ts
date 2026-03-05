@@ -1,4 +1,4 @@
-import { CampaignApi } from "@/types/admin/campaign/campaign_api_type";
+import { Campaignservice } from "@/types/admin/campaign/campaign_service_type";
 import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
 
 function safeDate(value?: string | null) {
@@ -10,7 +10,7 @@ function safeDate(value?: string | null) {
   }
 }
 
-export function mapApiCampaignToUI(item: CampaignApi): CampaignUI {
+export function mapserviceCampaignToUI(item: Campaignservice): CampaignUI {
   return {
     id: item.id,
     name: item.campaignName || "Untitled Campaign",

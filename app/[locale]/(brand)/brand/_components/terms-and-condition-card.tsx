@@ -9,10 +9,10 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
 type Props = {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
 };
 
 const toBullets = (text?: string | null) => {

@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 
 export type AdminCampaignDetailsResponse = {
@@ -10,6 +10,6 @@ export type AdminCampaignDetailsResponse = {
 export async function getAdminCampaignById(id: string) {
   if (!id) throw new Error("Campaign id is required");
 
-  const res = await apiClient.get<AdminCampaignDetailsResponse>(`/campaign/admin/${id}`);
+  const res = await serviceClient.get<AdminCampaignDetailsResponse>(`/campaign/admin/${id}`);
   return res.data;
 }

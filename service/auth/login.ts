@@ -1,10 +1,10 @@
-// api/auth/login.ts
+// service/auth/login.ts
 
 import { LoginPayload } from "@/types/auth/login_type";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 
 export const login = async (payload: LoginPayload) => {
-  const response = await apiClient.post(
+  const response = await serviceClient.post(
     `/influencer/auth/login`,
     payload
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StepTwoData, useFormStore } from "../zustand-store/campaign-forms-store";
 import { StepTwoPayload } from "@/types/campaign/step2_campaign_type";
-import { CampaignService } from "@/api/campaign/campaign-service";
+import { CampaignService } from "@/service/campaign/campaign-service";
 import { useCampaignStore } from "../zustand-store/create-Campaign-Store";
 
 interface Options {

@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type SkillVerifyStatus = "approved" | "rejected";
 
@@ -10,5 +10,5 @@ export async function updateInfluencerSkillStatus(
     rejectReason: string;
   }
 ) {
-  return apiClient.patch(`/influencer/admin/verification/profile/${userId}/skill`, body);
+  return serviceClient.patch(`/influencer/admin/verification/profile/${userId}/skill`, body);
 }

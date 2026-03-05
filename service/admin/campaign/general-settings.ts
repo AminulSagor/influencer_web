@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type GeneralSettingsResponse = {
   success?: boolean;
@@ -12,10 +12,10 @@ export type GeneralSettingsResponse = {
 
 export async function getGeneralSettings() {
   // GET /influencer/admin/settings/general
-  return apiClient.get<GeneralSettingsResponse>("/influencer/admin/settings/general");
+  return serviceClient.get<GeneralSettingsResponse>("/influencer/admin/settings/general");
 }
 
 export async function patchGeneralSettings(payload: { platformFee: number }) {
   // PATCH /influencer/admin/settings/general
-  return apiClient.patch("/influencer/admin/settings/general", payload);
+  return serviceClient.patch("/influencer/admin/settings/general", payload);
 }

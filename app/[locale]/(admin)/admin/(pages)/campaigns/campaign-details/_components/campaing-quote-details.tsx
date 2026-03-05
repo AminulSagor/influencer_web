@@ -17,7 +17,7 @@ import { AiFillTikTok } from "react-icons/ai";
 import QuoteTextRow from "./quote-text-row";
 import type { Platform } from "./campaign-details-card";
 
-import { sendCampaignQuote } from "@/api/admin/campaign/send-campaign-quote";
+import { sendCampaignQuote } from "@/service/admin/campaign/send-campaign-quote";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 type QuoteState = "none" | "sent" | "confirmed";

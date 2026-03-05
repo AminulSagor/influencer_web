@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 
 export type AssignAgencyPayload = {
@@ -10,5 +10,5 @@ export type AssignAgencyPayload = {
 };
 
 export async function assignAgencies(payload: AssignAgencyPayload) {
-  return apiClient.post("/campaign/admin/assign-agency", payload);
+  return serviceClient.post("/campaign/admin/assign-agency", payload);
 }

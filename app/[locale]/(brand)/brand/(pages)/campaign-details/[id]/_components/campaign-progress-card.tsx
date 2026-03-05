@@ -1,15 +1,15 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Target } from "lucide-react";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 import ProgressStepper from "@/app/[locale]/(brand)/brand/_components/progress-stepper";
 
 type Props = {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
 };
 
 const toKey = (v?: string | null) => String(v ?? "").toLowerCase();
 
-function buildProgressStepper(campaign: CampaignApi) {
+function buildProgressStepper(campaign: Campaignservice) {
   const status = toKey(campaign.status);
   const pay = toKey(campaign.paymentStatus);
 

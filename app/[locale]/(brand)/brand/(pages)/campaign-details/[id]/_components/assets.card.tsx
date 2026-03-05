@@ -3,13 +3,13 @@
 import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card";
 import { Download, Film, FileText, File, Album, Link2 } from "lucide-react";
 import React from "react";
-import type { CampaignApi, CampaignAssetApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice, CampaignAssetservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
 type Props = {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
 };
 
-const getFileIcon = (asset: CampaignAssetApi) => {
+const getFileIcon = (asset: CampaignAssetservice) => {
   const mime = (asset.mimeType ?? asset.assetType ?? "").toLowerCase();
   if (mime.includes("http") || asset.fileUrl?.startsWith("http")) {
     // link types also use fileUrl - but keep normal icon if mime matches
@@ -28,7 +28,7 @@ const getFileSize = (sizeStr: string | null) => {
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
 };
 
-function AssetList({ assets }: { assets: CampaignAssetApi[] }) {
+function AssetList({ assets }: { assets: CampaignAssetservice[] }) {
   if (!assets.length) {
     return <p className="text-sm text-black/50">No assets uploaded.</p>;
   }

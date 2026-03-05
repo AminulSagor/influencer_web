@@ -9,8 +9,8 @@ export type CampaignStatusType =
 
 export type InfluencerUI = {id: string; imageUrl: string; name: string };
 
-// (optional) if you want strict typing for milestone API
-export type CampaignMilestoneApi = {
+// (optional) if you want strict typing for milestone service
+export type CampaignMilestoneservice = {
   id: string;
   contentTitle: string;
   platform: string;

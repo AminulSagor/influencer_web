@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export interface Influencer {
   id: string;
@@ -6,8 +6,8 @@ export interface Influencer {
 }
 
 // 🔍 Search Influencers
-export const searchInfluencersApi = async (query: string) => {
-  const res = await apiClient.get("/client/search/influencers", {
+export const searchInfluencersservice = async (query: string) => {
+  const res = await serviceClient.get("/client/search/influencers", {
     params: { query },
   });
 

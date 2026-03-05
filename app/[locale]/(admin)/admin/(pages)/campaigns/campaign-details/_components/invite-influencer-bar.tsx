@@ -10,11 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { inviteAssignment } from "@/api/admin/campaign/invite-assignment";
+import { inviteAssignment } from "@/service/admin/campaign/invite-assignment";
 import {
   fetchRemainingInvitations,
   RemainingInvitationInfluencer,
-} from "@/api/admin/campaign/assignment-remain";
+} from "@/service/admin/campaign/assignment-remain";
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
 function getAxiosErrorDebug(err: any) {

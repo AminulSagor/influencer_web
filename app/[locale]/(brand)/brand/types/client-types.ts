@@ -26,7 +26,7 @@ export interface NewMilestoneForm {
   promotionGoal: string;
 }
 
-export type ApiMilestoneInfluencer = {
+export type serviceMilestoneInfluencer = {
   contentTitle: string;
   platform: string;
   contentQuantity: string;
@@ -37,7 +37,7 @@ export type ApiMilestoneInfluencer = {
   expectedComments: number;
 };
 
-export type ApiMilestonePaidAd = {
+export type serviceMilestonePaidAd = {
   contentTitle: string;
   platform: string;
   contentQuantity: string;
@@ -51,7 +51,7 @@ export type ApiMilestonePaidAd = {
   expectedComments: number;
 }>;
 
-export type ApiMilestone = ApiMilestoneInfluencer | ApiMilestonePaidAd;
+export type serviceMilestone = serviceMilestoneInfluencer | serviceMilestonePaidAd;
 
 //respone uplaoad file
 export type SignedUrlResponse = {
@@ -130,7 +130,7 @@ export interface AssignedAgency {
 export type MilestoneStatus = "pending" | "accepted" | "completed" | string;
 export type BonusStatus = "unpaid" | "paid" | string;
 
-export interface CampaignMilestoneApi {
+export interface CampaignMilestoneservice {
   id: string;
   contentTitle: string;
   platform: SocialPlatform;
@@ -160,7 +160,7 @@ export interface CampaignMilestoneApi {
 // ===== ASSET =====
 export type AssetCategory = "brand" | "content" | string;
 
-export interface CampaignAssetApi {
+export interface CampaignAssetservice {
   id: string;
   category: AssetCategory;
 
@@ -201,7 +201,7 @@ export interface CampaignSummary {
 }
 
 // ===== CAMPAIGN =====
-export interface CampaignApi {
+export interface Campaignservice {
   id: string;
   campaignName: string;
   campaignType: CampaignType;
@@ -228,8 +228,8 @@ export interface CampaignApi {
 
   paymentStatus: PaymentStatus;
 
-  milestones: CampaignMilestoneApi[];
-  assets: CampaignAssetApi[];
+  milestones: CampaignMilestoneservice[];
+  assets: CampaignAssetservice[];
 
   status: CampaignStatus | string;
   currentStep: number;
@@ -242,15 +242,15 @@ export interface CampaignApi {
   termsConditions?: string | null;
 }
 
-export interface ApiSuccessResponse<T> {
+export interface serviceSuccessResponse<T> {
   success: true;
   data: T;
 }
 
-export interface ApiErrorResponse {
+export interface serviceErrorResponse {
   success: false;
   message?: string;
   data?: unknown;
 }
 
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
+export type serviceResponse<T> = serviceSuccessResponse<T> | serviceErrorResponse;

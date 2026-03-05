@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 type Meta = { total: number; page: number; limit: number };
 
-type ApiResponse = {
+type serviceResponse = {
   success: boolean;
   data: CampaignSummary[];
   meta: Meta;
@@ -33,9 +33,9 @@ export function useMyCampaignsByStatus(status: string) {
       setLoading(true);
       setError(null);
       try {
-        // Use apiClient instead of axiosInstance (make sure it has withCredentials: true)
+        // Use serviceClient instead of axiosInstance (make sure it has withCredentials: true)
         // Remove Authorization header - cookies will be sent automatically
-        const res = await apiClient.get<ApiResponse>(
+        const res = await serviceClient.get<serviceResponse>(
           `/campaign/my-campaigns?status=${encodeURIComponent(status)}`
           // No headers needed
         );

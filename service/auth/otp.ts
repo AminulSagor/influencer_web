@@ -1,11 +1,11 @@
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { VerifyOtpPayload, VerifyOtpResponse } from "@/types/auth/otp_type";
 
 
 export async function verifyOtp(payload: VerifyOtpPayload) {
   try {
-    const res = await apiClient.post<VerifyOtpResponse>(
+    const res = await serviceClient.post<VerifyOtpResponse>(
       "/influencer/auth/verify-otp",
       payload
     );
@@ -24,7 +24,7 @@ export async function verifyOtp(payload: VerifyOtpPayload) {
 
 export async function resendOtp(phone: string) {
   try {
-    const res = await apiClient.post("/influencer/auth/resend-otp-fallback", { phone });
+    const res = await serviceClient.post("/influencer/auth/resend-otp-fallback", { phone });
     return res;
   } catch (err) {
     if (axios.isAxiosError(err)) {

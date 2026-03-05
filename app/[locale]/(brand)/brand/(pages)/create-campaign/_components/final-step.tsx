@@ -15,14 +15,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
 
-import { getCampaignById } from "@/api/campaign/getById";
-import { placeCampaign } from "@/api/campaign/place-campaign";
-import { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { getCampaignById } from "@/service/campaign/getById";
+import { placeCampaign } from "@/service/campaign/place-campaign";
+import { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
 const FinalStep = () => {
   const { open, toggleOpen, decreaseStep, campaignId, campaignType } = useCampaignStore();
   const [placementLoading, setPlacementLoading] = useState(false);
-  const [campaign, setCampaign] = useState<CampaignApi | null>(null);
+  const [campaign, setCampaign] = useState<Campaignservice | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 1️⃣ Load campaign from backend when component mounts
@@ -33,7 +33,7 @@ const FinalStep = () => {
       try {
         setLoading(true);
         const res = await getCampaignById(campaignId);
-        setCampaign(res.data as unknown as CampaignApi);
+        setCampaign(res.data as unknown as Campaignservice);
         console.log("Fetched campaign:", res.data);
       } catch (err: any) {
         notifyError(err.message || "Failed to fetch campaign");
@@ -52,10 +52,10 @@ const FinalStep = () => {
     setPlacementLoading(true);
     try {
       const res = await placeCampaign(campaignId);
-      console.log("Placement API Response:", res);
+      console.log("Placement service Response:", res);
 
       if (res.success) {
-        const placedCampaign = res.data as unknown as CampaignApi;
+        const placedCampaign = res.data as unknown as Campaignservice;
         setCampaign(placedCampaign); // Update state to show final placed data
         toggleOpen();
         console.log("Campaign state updated after placement:", placedCampaign);

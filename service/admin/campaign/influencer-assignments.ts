@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 
 export async function postAssignInfluencer(payload: {
@@ -8,7 +8,7 @@ export async function postAssignInfluencer(payload: {
   offerAmount: number;
 }) {
   // POST: /campaign/admin/assign
-  return apiClient.post("/campaign/admin/assign", payload);
+  return serviceClient.post("/campaign/admin/assign", payload);
 }
 
 export async function patchAssignment(
@@ -16,14 +16,14 @@ export async function patchAssignment(
   payload: { offerAmount: number; percentage: number }
 ) {
   // PATCH: /campaign/admin/assignment/:assignmentId
-  return apiClient.patch(`/campaign/admin/assignment/${assignmentId}`, payload);
+  return serviceClient.patch(`/campaign/admin/assignment/${assignmentId}`, payload);
 }
 
 export async function deleteAssignment(assignmentId: string) {
   // DELETE: /campaign/admin/assignment/:assignmentId
-  return apiClient.delete(`/campaign/admin/assignment/${assignmentId}`);
+  return serviceClient.delete(`/campaign/admin/assignment/${assignmentId}`);
 }
 
 export const getDraftAssignments = async (campaignId: string) => {
-  return apiClient.get(`/campaign/admin/get/${campaignId}/assignments`);
+  return serviceClient.get(`/campaign/admin/get/${campaignId}/assignments`);
 };

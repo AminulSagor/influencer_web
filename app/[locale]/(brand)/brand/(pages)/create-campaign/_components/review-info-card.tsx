@@ -8,10 +8,10 @@ import {
   FaLinkedin,
 } from "react-icons/fa6";
 import { FiInstagram } from "react-icons/fi";
-import type { CampaignApi, SocialPlatform } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice, SocialPlatform } from "@/app/[locale]/(brand)/brand/types/client-types";
 
 type Props = {
-  campaign: CampaignApi | null;
+  campaign: Campaignservice | null;
 };
 
 const ReviewInfoCard = ({ campaign }: Props) => {

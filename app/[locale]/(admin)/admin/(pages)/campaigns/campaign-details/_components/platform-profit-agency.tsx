@@ -17,15 +17,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { getAllAgencies } from "@/api/admin/campaign/agency/get-all-agencies";
-import { getAgencyServiceFee } from "@/api/admin/campaign/agency/get-agency-service-fee";
-import { assignAgencies } from "@/api/admin/campaign/agency/assign-agencies";
+import { getAllAgencies } from "@/service/admin/campaign/agency/get-all-agencies";
+import { getAgencyServiceFee } from "@/service/admin/campaign/agency/get-agency-service-fee";
+import { assignAgencies } from "@/service/admin/campaign/agency/assign-agencies";
 
 import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
 import InviteAgencyBar from "./invite-agency-bar";
 import type {
-  AgencyOptionApi,
+  AgencyOptionservice,
   DraftAssignedAgencyItem,
   PreferredAgency,
   Row,
@@ -112,7 +112,7 @@ export default function PlatformProfitAgency({
   }, [finalQuotedBudget, effectiveFeePercent]);
 
   // ---------------- agencies list ----------------
-  const [allAgenciesApi, setAllAgenciesApi] = useState<AgencyOptionApi[]>([]);
+  const [allAgenciesservice, setAllAgenciesservice] = useState<AgencyOptionservice[]>([]);
   const [loadingAgencies, setLoadingAgencies] = useState(false);
 
   useEffect(() => {
@@ -126,11 +126,11 @@ export default function PlatformProfitAgency({
         const res: any = await getAllAgencies();
         const list = res?.data?.data ?? res?.data ?? res ?? [];
         if (!alive) return;
-        setAllAgenciesApi(Array.isArray(list) ? list : []);
+        setAllAgenciesservice(Array.isArray(list) ? list : []);
       } catch (e) {
         console.error("❌ getAllAgencies failed:", e);
         if (!alive) return;
-        setAllAgenciesApi([]);
+        setAllAgenciesservice([]);
       } finally {
         if (!alive) return;
         setLoadingAgencies(false);
@@ -145,12 +145,12 @@ export default function PlatformProfitAgency({
   }, [locked]);
 
   const dropdownAgencies = useMemo(() => {
-    return (allAgenciesApi ?? []).map((a) => ({
+    return (allAgenciesservice ?? []).map((a) => ({
       id: String(a.id),
       name: String(a.agencyName || a.fullName || "Agency"),
       logo: a.logo ?? null,
     }));
-  }, [allAgenciesApi]);
+  }, [allAgenciesservice]);
 
   const agencyInfoMap = useMemo(() => {
     const m = new Map<string, { name: string; logo?: string | null }>();

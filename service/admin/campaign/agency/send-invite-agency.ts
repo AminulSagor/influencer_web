@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type InviteAgencyPayload = {
   campaignId: string;
@@ -7,5 +7,5 @@ export type InviteAgencyPayload = {
 
 export const inviteAgency = async (payload: InviteAgencyPayload) => {
   // POST: /campaign/admin/invite-agency
-  return apiClient.post("/campaign/admin/invite-agency", payload);
+  return serviceClient.post("/campaign/admin/invite-agency", payload);
 };

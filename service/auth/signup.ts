@@ -1,11 +1,11 @@
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { SignupPayload, SignupResponse } from "@/types/auth/signup_type";
 
 
 export async function signup(payload: SignupPayload) {
   try {
-    const res = await apiClient.post<SignupResponse>(
+    const res = await serviceClient.post<SignupResponse>(
       "/influencer/auth/signup",
       payload
     );

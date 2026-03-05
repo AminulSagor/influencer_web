@@ -1,6 +1,6 @@
 
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { CampaignBasicPayload, CampaignBasicResponse } from "@/types/campaign/step1_campaign_basic_type";
 import { StepTwoPayload } from "@/types/campaign/step2_campaign_type";
 
@@ -10,7 +10,7 @@ export class CampaignService {
   ): Promise<CampaignBasicResponse> {
     
     try {
-      const response = await apiClient.post<CampaignBasicResponse>(
+      const response = await serviceClient.post<CampaignBasicResponse>(
         "/campaign",
         payload
       );
@@ -36,7 +36,7 @@ export class CampaignService {
     payload: StepTwoPayload
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await apiClient.patch(`/campaign/${campaignId}/step-2`, payload);
+      const response = await serviceClient.patch(`/campaign/${campaignId}/step-2`, payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -50,7 +50,7 @@ export class CampaignService {
 // Fetch product types from backend
   static async getProductTypes(): Promise<string[]> {
     try {
-      const response = await apiClient.get("/campaign/get/product-types");
+      const response = await serviceClient.get("/campaign/get/product-types");
       if (Array.isArray(response.data)) {
         return response.data.map((item: { name: string }) => item.name);
       }
@@ -68,7 +68,7 @@ export class CampaignService {
   // Fetch campaign niches from backend
   static async getCampaignNiches(): Promise<string[]> {
     try {
-      const response = await apiClient.get("/campaign/get/niches");
+      const response = await serviceClient.get("/campaign/get/niches");
       if (Array.isArray(response.data)) {
         return response.data.map((item: { name: string }) => item.name);
       }

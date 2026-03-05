@@ -1,6 +1,6 @@
-// api/onboarding.ts
+// service/onboarding.ts
 import axios from "axios";
-import { apiClient } from "./base/axios_client";
+import { serviceClient } from "./base/axios_client";
 import { OnboardingPayload } from "@/types/onboarding/onboarding_payload_type";
 
 export async function submitOnboarding(
@@ -9,7 +9,7 @@ export async function submitOnboarding(
   token: string | null
 ) {
   try {
-    const res = await apiClient.patch(
+    const res = await serviceClient.patch(
       `/${userType}/profile/onboarding`,
       payload,
       {

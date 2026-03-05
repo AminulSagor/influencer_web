@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type AdminAgencyProfileResponse = {
   success: boolean;
@@ -16,7 +16,7 @@ export type AdminAgencyProfileResponse = {
 export async function getAdminAgencyProfile(profileId: string) {
   if (!profileId) throw new Error("profileId is required");
 
-  const res = await apiClient.get<AdminAgencyProfileResponse>(
+  const res = await serviceClient.get<AdminAgencyProfileResponse>(
     `/influencer/admin/user/profile/${profileId}`
   );
 

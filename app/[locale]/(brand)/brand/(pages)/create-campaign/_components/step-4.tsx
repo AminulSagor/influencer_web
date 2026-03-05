@@ -34,10 +34,10 @@ import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
 //import { useToken } from "@/hooks/useGetToken";
 import {
-  ApiMilestone,
+  serviceMilestone,
   NewMilestoneForm,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
-import { submitCampaignStepFour } from "@/api/campaign/update-step-4";
+import { submitCampaignStepFour } from "@/service/campaign/update-step-4";
 import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
 import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
 import { buildStepFourPayload } from "@/utils/campaigns/step_4_util";
@@ -495,7 +495,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     setOpenId((prev) => (prev === id ? null : prev));
   };
 
-  const buildApiMilestones = (): ApiMilestone[] => {
+  const buildserviceMilestones = (): serviceMilestone[] => {
     return milestones.map((m) => {
       const deliveryDays = extractNumber(m.day) || 0;
 
@@ -503,7 +503,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
         const metricTitle = (m.promotionTarget?.title || "").toLowerCase();
         const metricValue = extractNumber(m.promotionTarget?.amount || "");
 
-        const base: ApiMilestone = {
+        const base: serviceMilestone = {
           contentTitle: m.title.trim(),
           platform: toPlatformEnum(m.platform),
           contentQuantity: m.subtitle.trim(),

@@ -2,8 +2,8 @@
 
 import React from "react";
 import type {
-  CampaignApi,
-  CampaignMilestoneApi,
+  Campaignservice,
+  CampaignMilestoneservice,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
 import CampaignMilestonesOverview from "./campaign-milestones-overview";
 import DangerZoneCard from "./danger-zone-card";
@@ -12,7 +12,7 @@ import { isMilestoneExpandable } from "../helpers/milestone-ui-helpers";
 function BasicMilestonePanel({
   milestone,
 }: {
-  milestone: CampaignMilestoneApi;
+  milestone: CampaignMilestoneservice;
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white p-4">
@@ -54,7 +54,7 @@ function BasicMilestonePanel({
 export default function CampaignMilestonesSection({
   campaign,
 }: {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
 }) {
   const milestones = campaign.milestones ?? [];
 

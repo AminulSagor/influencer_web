@@ -1,9 +1,9 @@
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 
 export async function requestForgotPasswordOtp(identifier: string) {
   try {
-    const res = await apiClient.post(
+    const res = await serviceClient.post(
       `/influencer/auth/forgot-password`,
       { identifier }
     );
@@ -20,7 +20,7 @@ export async function requestForgotPasswordOtp(identifier: string) {
 // Keep verifyForgotPasswordOtp as is - it's working correctly
 export async function verifyForgotPasswordOtp(identifier: string, otp: string) {
   try {
-    const res = await apiClient.post(
+    const res = await serviceClient.post(
       `/influencer/auth/forgot-password/verify-otp`,
       { identifier, otp }
     );
@@ -36,7 +36,7 @@ export async function verifyForgotPasswordOtp(identifier: string, otp: string) {
 
 export async function resetPassword(identifier: string, otp: string, newPassword: string) {
   try {
-    const res = await apiClient.post(
+    const res = await serviceClient.post(
       `/influencer/auth/reset-password`,
       { identifier, otp, newPassword}
     );

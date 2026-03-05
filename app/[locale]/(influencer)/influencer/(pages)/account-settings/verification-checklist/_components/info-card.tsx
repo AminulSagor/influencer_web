@@ -10,7 +10,7 @@ export default function InfoCard({status} : {status : boolean}) {
         {/* Left: Avatar + Info */}
         <div className="flex items-center gap-4 w-full">
           <div className="w-20 h-20 rounded-full bg-white border-2 border-white/70 overflow-hidden">
-            {/* API image later */}
+            {/* service image later */}
           </div>
 
           <div className="space-y-1">

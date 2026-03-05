@@ -26,7 +26,7 @@ import {
   type SignupFormValues,
 } from "@/schemas/auth/signup_schema";
 import { UserRole } from "@/types/auth/role_type";
-import { signup } from "@/api/auth/signup";
+import { signup } from "@/service/auth/signup";
 import { useAuthStore } from "@/store/auth_store";
 
 type Props = {

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Clock } from "lucide-react";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-type Props = { campaign: CampaignApi | null };
+type Props = { campaign: Campaignservice | null };
 
 const DeadlineCard = ({ campaign }: Props) => {
   return (

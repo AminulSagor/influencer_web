@@ -1,6 +1,6 @@
 export type Statistics = { label: string; value: number };
 
-export type AgencyOptionApi = {
+export type AgencyOptionservice = {
   id: string;
   agencyName?: string;
   fullName?: string;
@@ -23,7 +23,7 @@ export type DraftAssignedAgencyItem = {
   agencyId?: string;
   id?: string;
 
-  // ✅ keys from your draft assigned API response
+  // ✅ keys from your draft assigned service response
   defaultPercentage?: number;
   assignPercentage?: number;
   agencyProfit?: number;

@@ -12,7 +12,7 @@ import Loader from "@/components/spin-loader";
 import { Input } from "@/components/ui/input";
 import { AssetCategory, LocalAsset } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { notifyError } from "@/utils/toast_util";
-import { submitCampaignStepFive } from "@/api/campaign/update-step-5";
+import { submitCampaignStepFive } from "@/service/campaign/update-step-5";
 
 const StepFive = () => {
   const { decreaseStep, increaseStep, campaignType, campaignId } = useCampaignStore();
@@ -137,7 +137,7 @@ const StepFive = () => {
         assets,
       };
 
-      // ✅ API call to submit Step 5
+      // ✅ service call to submit Step 5
       const res = await submitCampaignStepFive(campaignId, payload);
 
       if (res.success) {

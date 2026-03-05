@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 interface GetCampaignParams {
   page?: number;
@@ -9,7 +9,7 @@ interface GetCampaignParams {
 }
 
 export const getAllCampaigns = async (params: GetCampaignParams) => {
-  const res = await apiClient.get("/influencer/admin/campaigns", {
+  const res = await serviceClient.get("/influencer/admin/campaigns", {
     params,
   });
 
@@ -17,17 +17,17 @@ export const getAllCampaigns = async (params: GetCampaignParams) => {
 };
 
 export const getCampaignById = async (campaignId: string) => {
-  const res = await apiClient.get(`/influencer/admin/campaigns/${campaignId}`);
+  const res = await serviceClient.get(`/influencer/admin/campaigns/${campaignId}`);
   return res.data;
 };
 
 export const getCampaignByIdFromAdmin = async (campaignId: string) => {
-  const res = await apiClient.get(`/campaign/admin/${campaignId}`);
+  const res = await serviceClient.get(`/campaign/admin/${campaignId}`);
   return res.data;
 };
 
 export const getAllInfluencer = async () => {
-  const res = await apiClient.get(`/influencer/admin/all`);
+  const res = await serviceClient.get(`/influencer/admin/all`);
   return res.data;
 };
 

@@ -60,7 +60,7 @@ export type InfluencerUserInfo = {
   updatedAt: string;
 };
 
-/* ✅ NEW: payouts structure from API */
+/* ✅ NEW: payouts structure from service */
 export type InfluencerBankPayout = {
   bankName: string;
   accStatus: InfluencerVerificationStatus;

@@ -12,8 +12,8 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import type {
-  CampaignApi,
-  CampaignMilestoneApi,
+  Campaignservice,
+  CampaignMilestoneservice,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { statusStyle } from "./milestone-ui-helpers";
 
@@ -22,11 +22,11 @@ export default function CampaignMilestonesOverview({
   expandedMilestoneId,
   onSelectMilestone,
 }: {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
   expandedMilestoneId: string;
   onSelectMilestone: (milestoneId: string) => void;
 }) {
-  const milestones: CampaignMilestoneApi[] = campaign.milestones ?? [];
+  const milestones: CampaignMilestoneservice[] = campaign.milestones ?? [];
 
   const completedCount = milestones.filter(
     (m) => String(m.status).toLowerCase() === "completed",
@@ -52,7 +52,7 @@ export default function CampaignMilestonesOverview({
             <h2 className="text-Primary font-semibold">Campaign Milestones</h2>
           </div>
 
-          {/* paid_ad screenshot has dropdown (optional: agency/influencer) — we’ll plug later if API gives it */}
+          {/* paid_ad screenshot has dropdown (optional: agency/influencer) — we’ll plug later if service gives it */}
           {campaign.campaignType === "paid_ad" ? (
             <div className="text-xs text-black/50"> </div>
           ) : (

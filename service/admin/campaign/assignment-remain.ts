@@ -1,5 +1,5 @@
-// app/api/admin/campaign/assignment-remain.ts
-import { apiClient } from "@/api/base/axios_client";
+// app/service/admin/campaign/assignment-remain.ts
+import { serviceClient } from "@/service/base/axios_client";
 
 export type RemainingInvitationInfluencer = {
   id: string;
@@ -22,7 +22,7 @@ export type RemainingInvitationsResponse = {
 export async function fetchRemainingInvitations(
   campaignId: string
 ): Promise<RemainingInvitationsResponse> {
-  const res = await apiClient.get(
+  const res = await serviceClient.get(
     `/campaign/admin/assignment/${campaignId}/remain`
   );
   return res.data;

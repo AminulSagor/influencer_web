@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type PaginatedMeta = {
   page: number;
@@ -16,7 +16,7 @@ export type GetAllAgenciesParams = {
 export async function getAllAgencies(params: GetAllAgenciesParams = {}) {
   const { page = 1, limit = 10, search } = params;
 
-  const res = await apiClient.get(`/influencer/admin/agencies`, {
+  const res = await serviceClient.get(`/influencer/admin/agencies`, {
     params: { page, limit, search },
   });
 

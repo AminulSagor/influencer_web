@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export async function editMilestoneAmount(params: {
   milestoneId: string;
@@ -6,7 +6,7 @@ export async function editMilestoneAmount(params: {
 }) {
   const { milestoneId, amount } = params;
 
-  return apiClient.patch(`/campaign/milestone/${milestoneId}/amount`, {
+  return serviceClient.patch(`/campaign/milestone/${milestoneId}/amount`, {
     amount,
   });
 }

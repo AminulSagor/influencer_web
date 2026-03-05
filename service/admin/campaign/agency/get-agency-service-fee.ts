@@ -1,7 +1,7 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 
 export const getAgencyServiceFee = async (profileId: string) => {
-  const res = await apiClient.get(`/campaign/admin/agency/${profileId}/service-fee`);
+  const res = await serviceClient.get(`/campaign/admin/agency/${profileId}/service-fee`);
   return res?.data; // { success, data: { agencyId, defaultServiceFee } }
 };

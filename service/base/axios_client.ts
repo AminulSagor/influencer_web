@@ -1,18 +1,18 @@
-// api/base/axios_client.ts
+// service/base/axios_client.ts
 
 import axios from "axios";
-import { API_URL } from "@/config/env";
+import { service_URL } from "@/config/env";
 import { getToken, removeToken } from "@/utils/cookies_util";
 
-export const apiClient = axios.create({
-  baseURL: API_URL,
+export const serviceClient = axios.create({
+  baseURL: service_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 // ✅ Request interceptor
-apiClient.interceptors.request.use(
+serviceClient.interceptors.request.use(
   (config) => {
     const token = getToken();
 
@@ -26,7 +26,7 @@ apiClient.interceptors.request.use(
 );
 
 // ✅ Response interceptor
-apiClient.interceptors.response.use(
+serviceClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {

@@ -1,12 +1,12 @@
-// api/campaign/getById.ts
+// service/campaign/getById.ts
 
 import { GetCampaignResponse } from "@/types/campaign/get_campaign_type";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import axios from "axios";
 
 export async function getCampaignById(campaignId: string): Promise<GetCampaignResponse> {
   try {
-    const res = await apiClient.get<GetCampaignResponse>(`/campaign/${campaignId}`);
+    const res = await serviceClient.get<GetCampaignResponse>(`/campaign/${campaignId}`);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {

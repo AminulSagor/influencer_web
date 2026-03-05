@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 import { loginSchema, LoginFormValues } from "@/schemas/auth/login_schema";
-import { login } from "@/api/auth/login";
+import { login } from "@/service/auth/login";
 import { useAuthStore } from "@/store/auth_store";
 import { setToken } from "@/utils/cookies_util";
 import { decodeJwtPayload } from "@/storage/jwt_decoder";

@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
 type QuoteDetailsCardProps = {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
   onPayDue?: (amount: number) => void;
 };
 

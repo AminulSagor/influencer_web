@@ -1,5 +1,5 @@
 // page.tsx
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 import AssetsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/assets.card";
 import CampaignMilestonesSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-milestones-section";
 import CampaignProgressCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-progress-card";
@@ -7,7 +7,7 @@ import CampaignSummaryCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-d
 import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote-details-card";
 import RatingCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/rating-card";
 import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/_components/terms-and-condition-card";
-import type { CampaignApi, ApiResponse } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice, serviceResponse } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -23,10 +23,10 @@ export default async function CampaignDetailsPage({ params }: PageProps) {
 
   if (!token) redirect("/login");
 
-  let campaign: CampaignApi | null = null;
+  let campaign: Campaignservice | null = null;
 
   try {
-    const res = await apiClient.get<ApiResponse<CampaignApi>>(`campaign/${id}`, {
+    const res = await serviceClient.get<serviceResponse<Campaignservice>>(`campaign/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

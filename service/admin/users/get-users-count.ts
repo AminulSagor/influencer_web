@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 type AdminUsersSummaryResponse = {
   success: boolean;
@@ -14,7 +14,7 @@ type AdminUsersSummaryResponse = {
 };
 
 export async function getAdminUserCounts() {
-  const res = await apiClient.get<AdminUsersSummaryResponse>(
+  const res = await serviceClient.get<AdminUsersSummaryResponse>(
     "/influencer/admin/users/summary"
   );
 

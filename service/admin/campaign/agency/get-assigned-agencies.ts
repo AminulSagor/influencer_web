@@ -1,6 +1,6 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 
 export async function getAssignedAgencies(campaignId: string) {
-  return apiClient.get(`/campaign/admin/${campaignId}/assigned-agencies`);
+  return serviceClient.get(`/campaign/admin/${campaignId}/assigned-agencies`);
 }

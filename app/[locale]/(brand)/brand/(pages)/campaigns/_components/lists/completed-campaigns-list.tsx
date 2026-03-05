@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type {
-  CampaignMilestoneApi,
+  CampaignMilestoneservice,
   CampaignSummary,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { Card, CardContent } from "@/components/ui/card";

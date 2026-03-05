@@ -14,7 +14,7 @@ export function useLogout() {
 
     setLoading(true);
     try {
-      await fetch("/api/auth/logout", {
+      await fetch("/service/auth/logout", {
         method: "POST",
         credentials: "include",
       });

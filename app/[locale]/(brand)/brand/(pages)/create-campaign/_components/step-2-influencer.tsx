@@ -15,9 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { notifyError } from "@/utils/toast_util";
-import { CampaignService } from "@/api/campaign/campaign-service";
+import { CampaignService } from "@/service/campaign/campaign-service";
 import axios from "axios";
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 type FieldErrors = Partial<
   Record<"productType" | "campaignNiche" | "preferred" | "notPreferred", string>
@@ -67,7 +67,7 @@ const StepTwoInfluencer = () => {
   const searchInfluencers = async (query: string, forPreferred: boolean) => {
     if (!query.trim()) return;
     try {
-      const res = await apiClient.get("/client/search/influencers", { params: { query } });
+      const res = await serviceClient.get("/client/search/influencers", { params: { query } });
       const data: Influencer[] = res.data || [];
       if (forPreferred) setPreferredSuggestions(data);
       else setNotPreferredSuggestions(data);

@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import Loader from "@/components/spin-loader";
 import { useState } from "react";
 import { useForgotPasswordStore } from "@/store/forgot_password_store";
-import { requestForgotPasswordOtp } from "@/api/auth/forgot-password";
+import { requestForgotPasswordOtp } from "@/service/auth/forgot-password";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 import { handlePhoneFormat } from "@/utils/phone_util";
 

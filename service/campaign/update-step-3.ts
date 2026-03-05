@@ -1,5 +1,5 @@
 import axios from "axios";
-import { apiClient } from "../base/axios_client";
+import { serviceClient } from "../base/axios_client";
 import { StepThreePayload, StepThreeResponse } from "@/types/campaign/step3_campaign_type";
 
 // --- Function to send Step 3 data ---
@@ -8,7 +8,7 @@ export async function submitCampaignStepThree(
   payload: StepThreePayload
 ) {
   try {
-    const res = await apiClient.patch<StepThreeResponse>(
+    const res = await serviceClient.patch<StepThreeResponse>(
       `/campaign/${campaignId}/step-3`,
       payload
     );

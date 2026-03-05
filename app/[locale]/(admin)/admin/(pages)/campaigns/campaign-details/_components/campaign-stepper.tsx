@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Check, Quote, CreditCard, Megaphone, Lock, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCampaignProgress } from "@/api/admin/campaign/get-campaign-progress";
+import { getCampaignProgress } from "@/service/admin/campaign/get-campaign-progress";
 
 type StepperProps = { campaignId: string };
 
@@ -23,7 +23,7 @@ const STEPS = [
   { key: "completed", title: "Completed", subtitle: "Campaign Finished", icon: "lock" },
 ] as const;
 
-type ApiPayload = {
+type servicePayload = {
   success?: boolean;
   data?: {
     status?: string; // ✅ main campaign status
@@ -108,7 +108,7 @@ export default function CampaignStepper({ campaignId }: StepperProps) {
     (async () => {
       try {
         setLoading(true);
-        const res: ApiPayload = await getCampaignProgress(campaignId);
+        const res: servicePayload = await getCampaignProgress(campaignId);
         const d = res?.data ?? {};
 
         if (!alive) return;

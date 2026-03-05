@@ -1,4 +1,4 @@
-export type AgencyApiItem = {
+export type AgencyserviceItem = {
   id: string;
   agencyName: string | null;
   firstName?: string | null;
@@ -12,5 +12,5 @@ export type AgencyApiItem = {
 
 export type GetAllAgenciesResponse = {
   success: boolean;
-  data: AgencyApiItem[];
+  data: AgencyserviceItem[];
 };

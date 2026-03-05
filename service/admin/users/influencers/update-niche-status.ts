@@ -1,4 +1,4 @@
-import { apiClient } from "@/api/base/axios_client";
+import { serviceClient } from "@/service/base/axios_client";
 
 export type NicheUpdateStatus = "approved" | "rejected";
 
@@ -11,7 +11,7 @@ export async function updateInfluencerNicheStatus(
   userId: string,
   body: UpdateNicheStatusBody
 ) {
-  return apiClient.patch(
+  return serviceClient.patch(
     `/influencer/admin/verification/profile/${userId}/niche`,
     body
   );

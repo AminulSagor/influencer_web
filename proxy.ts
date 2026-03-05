@@ -38,11 +38,11 @@ export default function middleware(req: NextRequest) {
 
   /**
    * Safety guard (extra, even though matcher excludes these)
-   * Prevent locale prefixing on Next.js assets + APIs + public files.
+   * Prevent locale prefixing on Next.js assets + services + public files.
    */
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
+    pathname.startsWith("/service") ||
     pathname.startsWith("/trpc") ||
     pathname.startsWith("/_vercel") ||
     pathname.includes(".")
@@ -146,7 +146,7 @@ export default function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Exclude Next.js internals + APIs + any file with extension
-    "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+    // Exclude Next.js internals + services + any file with extension
+    "/((?!service|trpc|_next|_vercel|.*\\..*).*)",
   ],
 };
