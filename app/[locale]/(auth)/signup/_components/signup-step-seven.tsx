@@ -14,20 +14,13 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
-import axiosInstance from "@/lib/axios";
-import { notifyError } from "@/helpers/helper";
+import { useOnboardingStore } from "@/store/onboarding_store";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;
-};
-
-type SocialFormValues = {
-  nidNumber: string;
-  nidFrontImg: string;
-  nidBackImg: string;
 };
 
 type FormDataWithFiles = {
@@ -36,23 +29,17 @@ type FormDataWithFiles = {
   nidBackImg?: FileList;
 };
 
-type SignedUrlResponse = {
-  success: boolean;
-  message: string;
-  signedUrl: string;
-  fileKey: string;
-  publicUrl: string;
-};
-
 const SignUpStepSeven = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step7");
   const [loading, setLoading] = useState(false);
   const userType = useAuthStore((s) => s.userType);
-  const token = useAuthStore((s) => s.token);
+  
+
+  const { nidNumber, nidFrontImg, nidBackImg, setNidInfo } = useOnboardingStore();
 
   const methods = useForm<FormDataWithFiles>({
     defaultValues: {
-      nidNumber: "",
+      nidNumber: nidNumber || "",
       nidFrontImg: undefined,
       nidBackImg: undefined,
     },
@@ -60,91 +47,18 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
     reValidateMode: "onChange",
   });
 
-  const getSignedUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/nid-documents`,
-    };
-
-    const response = await axiosInstance.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get signed URL");
-    }
-
-    return response.data.signedUrl;
-  };
-
-  const uploadToS3 = async (signedUrl: string, file: File): Promise<void> => {
-    await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-  };
-
-  const getPublicUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/nid-documents`,
-    };
-
-    const response = await axiosInstance.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get public URL");
-    }
-
-    return response.data.publicUrl;
-  };
-
-  const onSubmit = async (formData: FormDataWithFiles) => {
+  const onSubmit = (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
-      const payload: SocialFormValues = {
+      setNidInfo({
         nidNumber: formData.nidNumber,
-        nidFrontImg: "",
-        nidBackImg: "",
-      };
-
-      if (formData.nidFrontImg && formData.nidFrontImg.length > 0) {
-        const frontFile = formData.nidFrontImg[0];
-        const signedUrl = await getSignedUrl(frontFile);
-        await uploadToS3(signedUrl, frontFile);
-        payload.nidFrontImg = await getPublicUrl(frontFile);
-      }
-
-      if (formData.nidBackImg && formData.nidBackImg.length > 0) {
-        const backFile = formData.nidBackImg[0];
-        const signedUrl = await getSignedUrl(backFile);
-        await uploadToS3(signedUrl, backFile);
-        payload.nidBackImg = await getPublicUrl(backFile);
-      }
-
-      const res = await axiosInstance.patch(
-        `/${userType}/profile/onboarding`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.status === 200) {
-        nextStep();
-      }
+        nidFrontImg: formData.nidFrontImg?.[0] ? "pending-upload" : "", 
+        nidBackImg: formData.nidBackImg?.[0] ? "pending-upload" : "", 
+      });
+      nextStep();
     } catch (error: unknown) {
-      notifyError("Try again later");
+      console.error("Error in step 7:", error);
     } finally {
       setLoading(false);
     }
@@ -262,7 +176,15 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
         <div className="flex justify-end">
           <span
             className="text-light-green text-lg text-end mt-3 font-semibold cursor-pointer"
-            onClick={nextStep}
+            onClick={() => {
+              // Skip step - store empty values exactly like Step 6
+              setNidInfo({
+                nidNumber: "",
+                nidFrontImg: "",
+                nidBackImg: "",
+              });
+              nextStep();
+            }}
           >
             {t("skip")}
           </span>

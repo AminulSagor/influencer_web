@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/auth_store";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";

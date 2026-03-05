@@ -1,33 +1,37 @@
 "use client";
 
+import { ChangeEvent, KeyboardEvent, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useState, useRef, ChangeEvent, KeyboardEvent } from "react";
-import { useTranslations } from "next-intl";
-import axiosInstance from "@/lib/axios";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import Loader from "@/components/spin-loader";
-import { notifyError, notifySuccess } from "@/helpers/helper";
-import axios from "axios";
+import { useTranslations } from "next-intl";
+import { useForgotPasswordStore } from "@/store/forgot_password_store";
+import { verifyForgotPasswordOtp, requestForgotPasswordOtp } from "@/api/auth/forgot-password";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 type Props = {
   nextStep: () => void;
 };
 
 const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
-  const t = useTranslations("forgotPassword.stepTwo");
+  const t = useTranslations("forgotPassword");
   const [loading, setLoading] = useState(false);
-  const phoneNumber = useAuthStore((s) => s.phone);
   const [loading2, setLoading2] = useState(false);
-
-  const [codes, setCodes] = useState<string[]>(["", "", "", ""]);
+  const [codes, setCodes] = useState(["", "", "", ""]);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  
+  const { identifier, otp, setOtp, setOtpDigit } = useForgotPasswordStore();
+
+  useEffect(() => {
+    setCodes(otp);
+  }, [otp]);
 
   const handleChange = (index: number, value: string) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
+    if (/^\d?$/.test(value)) {
       const newCodes = [...codes];
       newCodes[index] = value;
       setCodes(newCodes);
-
+      setOtpDigit(index, value);
+      
       if (value && index < 3) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -38,67 +42,58 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
     if (e.key === "Backspace" && !codes[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    if (e.key === "ArrowLeft" && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-    if (e.key === "ArrowRight" && index < 3) {
-      inputRefs.current[index + 1]?.focus();
-    }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text/plain").trim();
-
-    if (/^\d{4}$/.test(pastedData)) {
-      const digits = pastedData.split("");
-      const newCodes = [...codes];
-
-      digits.forEach((digit, index) => {
-        if (index < 4) newCodes[index] = digit;
-      });
-
-      setCodes(newCodes);
-      inputRefs.current[3]?.focus();
-    }
+    const pastedData = e.clipboardData.getData("text").slice(0, 4);
+    const newCodes = pastedData.split("").slice(0, 4);
+    
+    const updatedCodes = [...codes];
+    newCodes.forEach((char, idx) => {
+      if (idx < 4 && /^\d$/.test(char)) {
+        updatedCodes[idx] = char;
+        setOtpDigit(idx, char);
+      }
+    });
+    
+    setCodes(updatedCodes);
+    inputRefs.current[Math.min(newCodes.length, 3)]?.focus();
   };
 
   const handleContinue = async () => {
+    if (codes.some(code => !code)) {
+      notifyError("Please enter the complete OTP");
+      return;
+    }
+
     setLoading(true);
-    const code = codes.join("");
-    const payload = { identifier: phoneNumber, otp: code };
     try {
-      const res = await axiosInstance.post(
-        "/influencer/auth/forgot-password/verify-otp",
-        payload
-      );
-      notifySuccess(res.data?.message);
+      const otpCode = codes.join("");
+      console.log("Verifying OTP:", { identifier, otp: otpCode });
+      
+      // Verify OTP with backend
+      await verifyForgotPasswordOtp(identifier, otpCode);
+      
+      // Save OTP to store for step 3
+      setOtp(codes);
+      
+      notifySuccess("OTP verified successfully!");
       nextStep();
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        notifyError(error.response?.data?.message || "Request failed");
-      } else {
-        notifyError("Server Error");
-      }
+    } catch (error: any) {
+      notifyError(error.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
   };
 
-  //resend otp
   const handleResendOtp = async () => {
     setLoading2(true);
     try {
-      const res = await axiosInstance.post("/influencer/auth/resend-otp", {
-        phone: phoneNumber,
-      });
-      notifySuccess(res.data?.message);
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        notifyError(error.response?.data?.message || "Request failed");
-      } else {
-        notifyError("Server Error");
-      }
+      await requestForgotPasswordOtp(identifier);
+      notifySuccess("OTP resent successfully!");
+    } catch (error: any) {
+      notifyError(error.message || "Failed to resend OTP");
     } finally {
       setLoading2(false);
     }
@@ -108,10 +103,10 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
     <div className="flex flex-col md:flex-row gap-6 lg:gap-8 justify-between max-w-112.5">
       <div className="flex-col items-center justify-center">
         <h1 className="text-Primary max-w-xl text-[32px] lg:text-[38px] text-center font-semibold">
-          {t("title")}
+          {t("stepTwo.title")}
         </h1>
         <p className="text-[16px] text-light-green font-normal text-center">
-          {t("subtitle")}
+          {t("stepTwo.subtitle")}
         </p>
 
         <div className="mt-8">
@@ -143,17 +138,19 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
         <Button
           className="text-white bg-light-green hover:bg-Primary cursor-pointer h-16 w-full text-[18px] mt-6"
           onClick={handleContinue}
+          disabled={loading}
         >
-          {loading ? <Loader /> : t("continue")}
+          {loading ? <Loader /> : t("stepTwo.continue")}
         </Button>
 
         <p className="text-sm mt-4 text-center text-light-green">
-          {t("resendText")}{" "}
+          {t("stepTwo.resendText")}{" "}
           <button
             className="cursor-pointer text-Primary font-semibold hover:underline "
             onClick={handleResendOtp}
+            disabled={loading2}
           >
-            {loading2 ? "Sending...." : t("resendAction")}
+            {loading2 ? "Sending...." : t("stepTwo.resendAction")}
           </button>
         </p>
       </div>

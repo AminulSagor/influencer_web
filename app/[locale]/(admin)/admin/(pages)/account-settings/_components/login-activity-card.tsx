@@ -14,7 +14,7 @@ const LoginActivityCard = () => {
   return (
     <Card>
       <div className="px-4">
-        <div className="p-4 rounded-md border border-light-green bg-green-50">
+        <div className="p-4 rounded-md border border-light-green bg-light-green-50">
           <div className="flex justify-between">
             <div className="flex items-center gap-4">
               <Button className="border-light-green" variant={"outline"}>

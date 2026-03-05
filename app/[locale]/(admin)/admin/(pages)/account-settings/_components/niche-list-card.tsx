@@ -117,7 +117,7 @@ const NicheListCard = () => {
                     <button
                       onClick={handleSaveEdit}
                       aria-label="Save"
-                      className="hover:text-green-500"
+                      className="hover:text-light-green-500"
                     >
                       <FaCheck />
                     </button>

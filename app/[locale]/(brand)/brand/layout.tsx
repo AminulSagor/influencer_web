@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import BrandShell from "./_components/brand-shell";
-import { decodeJwtPayload } from "@/helpers/helper";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
 
 export default async function Layout({
   children,

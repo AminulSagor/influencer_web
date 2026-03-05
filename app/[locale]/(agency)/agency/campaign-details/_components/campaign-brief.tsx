@@ -47,11 +47,11 @@ const CampaignBrief = () => {
             <h3 className="font-semibold text-sm">Do's and Don'ts</h3>
           </div>
           <div className="bg-emerald-50 border border-emerald-200 rounded-md p-4">
-            <h3 className="text-green-600 flex items-center gap-2 text-xl font-medium">
+            <h3 className="text-light-green-600 flex items-center gap-2 text-xl font-medium">
               <FaRegCircleCheck />
               Do's
             </h3>
-            <ul className="list-disc ml-[22px] text-sm pt-2 text-green-600">
+            <ul className="list-disc ml-[22px] text-sm pt-2 text-light-green-600">
               <li>Show authentic usage, mention eco-friendly aspects</li>
               <li>tag @styleCo in All post</li>
               <li>show products in natural lighting</li>

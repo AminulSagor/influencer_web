@@ -1,66 +1,46 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-  FormLabel,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import axiosInstance from "@/lib/axios";
-import {
-  handlePhoneFormat,
-  notifyError,
-  notifySuccess,
-} from "@/helpers/helper";
 import Loader from "@/components/spin-loader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import axios from "axios";
-
-type ForgotPasswordFormValues = {
-  identifier: string;
-};
+import { useState } from "react";
+import { useForgotPasswordStore } from "@/store/forgot_password_store";
+import { requestForgotPasswordOtp } from "@/api/auth/forgot-password";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { handlePhoneFormat } from "@/utils/phone_util";
 
 type Props = {
   nextStep: () => void;
 };
 
-const ForgotPasswordForm = ({ nextStep }: Props) => {
-  const t = useTranslations("forgotPassword");
-  const [loading, setLoading] = useState(false);
-  const setPhone = useAuthStore((s) => s.setPhone);
+type FormData = {
+  identifier: string;
+};
 
-  const methods = useForm<ForgotPasswordFormValues>({
+const ForgotPasswordForm = ({ nextStep }: Props) => {
+  const t = useTranslations("forgotPassword.stepOne");
+  const [loading, setLoading] = useState(false);
+  const { setIdentifier } = useForgotPasswordStore();
+
+  const methods = useForm<FormData>({
     defaultValues: {
       identifier: "",
     },
   });
 
-  const onSubmit = async (data: ForgotPasswordFormValues) => {
+  const onSubmit = async (data: FormData) => {
     setLoading(true);
-
-    const formatPhone = handlePhoneFormat(data.identifier);
-    setPhone(formatPhone);
-
     try {
-      const res = await axiosInstance.post("/influencer/auth/forgot-password", {
-        identifier: formatPhone,
-      });
-
-      notifySuccess(res.data?.message);
+      const formattedPhone = handlePhoneFormat(data.identifier);
+      setIdentifier(formattedPhone);
+      await requestForgotPasswordOtp(formattedPhone);
+      notifySuccess("Verification code sent successfully!");
       nextStep();
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        notifyError(error.response?.data?.message || "Request failed");
-      } else {
-        notifyError("Server Error");
-      }
+    } catch (error: any) {
+      notifyError(error.message || "Failed to send verification code");
     } finally {
       setLoading(false);
     }
@@ -79,13 +59,13 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-light-green">
-                {t("stepOne.label")}
+                {t("label")}
               </FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder={t("stepOne.placeholder")}
+                    placeholder={t("placeholder")}
                     className="pl-10 py-6 font-normal focus-visible:ring-1 w-full"
                     {...field}
                   />
@@ -101,7 +81,7 @@ const ForgotPasswordForm = ({ nextStep }: Props) => {
           className="w-full h-12 mt-2 text-lg bg-light-green text-white hover:bg-Primary"
           disabled={loading}
         >
-          {loading ? <Loader /> : t("stepOne.button")}
+          {loading ? <Loader /> : t("button")}
         </Button>
       </form>
     </Form>

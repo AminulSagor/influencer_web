@@ -14,124 +14,48 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
-import axiosInstance from "@/lib/axios";
-import { notifyError } from "@/helpers/helper";
+import { useOnboardingStore } from "@/store/onboarding_store";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;
 };
 
-type TradeLicenseFormValues = {
-  tradeLicenseNumber: string;
-  tradeLicenseImg: string;
-};
-
 type FormDataWithFiles = {
-  tradeLicenseNumber: string;
+  tradeLicenseNumber?: string;
   tradeLicenseImg?: FileList;
-};
-
-type SignedUrlResponse = {
-  success: boolean;
-  message: string;
-  signedUrl: string;
-  fileKey: string;
-  publicUrl: string;
 };
 
 const SignUpStepEight = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step8");
   const [loading, setLoading] = useState(false);
   const userType = useAuthStore((s) => s.userType);
-  const token = useAuthStore((s) => s.token);
+  
+  const { tradeLicenseNumber, tradeLicenseImg, setTradeLicenseInfo } = useOnboardingStore();
 
   const methods = useForm<FormDataWithFiles>({
     defaultValues: {
-      tradeLicenseNumber: "",
+      tradeLicenseNumber: tradeLicenseNumber || "",
       tradeLicenseImg: undefined,
     },
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
 
-  const getSignedUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/trade-license`,
-    };
-
-    const response = await axiosInstance.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get signed URL");
-    }
-
-    return response.data.signedUrl;
-  };
-
-  const uploadToS3 = async (signedUrl: string, file: File): Promise<void> => {
-    await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-  };
-
-  const getPublicUrl = async (file: File): Promise<string> => {
-    const payload = {
-      fileName: file.name,
-      fileType: file.type,
-      module: `${userType}/trade-license`,
-    };
-
-    const response = await axiosInstance.post<SignedUrlResponse>(
-      "/upload/signed-url",
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (!response.data.success) {
-      throw new Error("Failed to get public URL");
-    }
-
-    return response.data.publicUrl;
-  };
-
-  const onSubmit = async (formData: FormDataWithFiles) => {
+  const onSubmit = (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
-      const payload: TradeLicenseFormValues = {
-        tradeLicenseNumber: formData.tradeLicenseNumber,
-        tradeLicenseImg: "",
-      };
+      setTradeLicenseInfo({
+        tradeLicenseNumber: formData.tradeLicenseNumber || "",
+        tradeLicenseImg: formData.tradeLicenseImg?.[0] ? "pending-upload" : "",
+      });
 
-      if (formData.tradeLicenseImg && formData.tradeLicenseImg.length > 0) {
-        const file = formData.tradeLicenseImg[0];
-        const signedUrl = await getSignedUrl(file);
-        await uploadToS3(signedUrl, file);
-        payload.tradeLicenseImg = await getPublicUrl(file);
-      }
-
-      const res = await axiosInstance.patch(
-        `/${userType}/profile/onboarding`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.status === 200) {
-        nextStep();
-      }
+      nextStep();
     } catch (error: unknown) {
-      notifyError("Try again later");
+      console.error("Error in step 8:", error);
     } finally {
       setLoading(false);
     }
@@ -190,16 +114,10 @@ const SignUpStepEight = ({ nextStep }: Props) => {
             <FormField
               control={methods.control}
               name="tradeLicenseNumber"
-              rules={{
-                required: "Trade license number is required",
-                validate: (v) =>
-                  (v ?? "").trim().length > 0 ||
-                  "Trade license number is required",
-              }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-light-green">
-                    {t("nidLabel")}
+                    {t("nidLabel")} (optional)
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -214,13 +132,9 @@ const SignUpStepEight = ({ nextStep }: Props) => {
             />
 
             <ImageUploader<FormDataWithFiles>
-              label={t("nidFront")}
+              label={`${t("nidFront")} (optional)`}
               name="tradeLicenseImg"
               control={methods.control}
-              rules={{
-                validate: (value) =>
-                  value?.length ? true : "Trade license file is required",
-              }}
             />
 
             <Button
@@ -236,7 +150,14 @@ const SignUpStepEight = ({ nextStep }: Props) => {
         <div className="flex justify-end">
           <span
             className="text-light-green text-lg text-end mt-3 font-semibold cursor-pointer"
-            onClick={nextStep}
+            onClick={() => {
+              // Skip step - store empty values
+              setTradeLicenseInfo({
+                tradeLicenseNumber: "",
+                tradeLicenseImg: "",
+              });
+              nextStep();
+            }}
           >
             {t("skip")}
           </span>

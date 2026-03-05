@@ -71,7 +71,7 @@ const statusBadge = (status: string) => {
   switch (status) {
     case "success":
       return (
-        <Badge className="bg-green-100 text-green-700">Login Success</Badge>
+        <Badge className="bg-light-green-100 text-light-green-700">Login Success</Badge>
       );
     case "failed":
       return <Badge className="bg-red-100 text-red-600">Failed Attempt</Badge>;

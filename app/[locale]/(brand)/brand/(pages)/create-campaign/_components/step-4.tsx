@@ -28,15 +28,19 @@ import { BsEye } from "react-icons/bs";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import axiosInstance from "@/lib/axios";
+//import axiosInstance from "@/lib/axios";
 import axios from "axios";
 import Loader from "@/components/spin-loader";
-import { notifyError } from "@/helpers/helper";
-import { useToken } from "@/hooks/useGetToken";
+import { notifyError } from "@/utils/toast_util";
+//import { useToken } from "@/hooks/useGetToken";
 import {
   ApiMilestone,
   NewMilestoneForm,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { submitCampaignStepFour } from "@/api/campaign/update-step-4";
+import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
+import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
+import { buildStepFourPayload } from "@/utils/campaigns/step_4_util";
 
 type BudgetPros = {
   budget: string;
@@ -316,7 +320,7 @@ const extractNumber = (value: string) => {
 
 const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const campaignId = useCampaignStore((s) => s.campaignId);
-  const { token } = useToken();
+  //const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
   const campaignType = useCampaignStore((s) => s.campaignType);
 
@@ -538,43 +542,29 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     return "";
   };
 
-  const handleNextStep = async () => {
-    const msg = validateBeforeSubmit();
-    if (msg) {
-      notifyError(msg);
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const payload = {
-        baseBudget: extractNumber(budget),
-        milestones: buildApiMilestones(),
-      };
-      const res = await axiosInstance.patch(
-        `/campaign/${campaignId}/step-4`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+const handleNextStep = async () => {
+  const payload = buildStepFourPayload(budget, milestones);
 
-      if (res.status === 200 || res.status === 201) {
-        increaseStep();
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const message =
-          err.response?.data?.message ||
-          err.message ||
-          "Something went wrong. Please try again.";
-        notifyError(message);
-        console.log(err);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const validation = stepFourSchema.safeParse(payload);
+
+  if (!validation.success) {
+    notifyError(validation.error.issues[0]?.message || "Validation failed");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await submitCampaignStepFour(campaignId, payload);
+    increaseStep();
+  } catch (err: any) {
+    notifyError(err?.message || "Failed to save Step 4");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const METRICS = [
     {

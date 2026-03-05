@@ -16,10 +16,8 @@ const PrimaryButton = ({
   disabled = false,
 }: Props) => {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (onClick && !disabled) {
-      onClick();
-    }
+    if (disabled) return; // prevent clicks if disabled
+    onClick?.(); // call the passed onClick
   };
 
   return (
