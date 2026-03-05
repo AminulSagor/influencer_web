@@ -261,12 +261,10 @@ export default function Page() {
       ) : (
         <PlatformProfit
           campaignId={campaignId}
-          campaignStatus={campaignStatus}
           stats={stats}
           quoteState={quoteState}
           preferredInfluencers={campaign?.preferredInfluencers ?? []}
           notPreferableInfluencers={campaign?.notPreferableInfluencers ?? []}
-          onRefresh={fetchCampaign}
         />
       )}
 

@@ -18,6 +18,7 @@ import QuoteTextRow from "./quote-text-row";
 import type { Platform } from "./campaign-details-card";
 
 import { sendCampaignQuote } from "@/api/admin/campaign/send-campaign-quote";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 type QuoteState = "none" | "sent" | "confirmed";
 
@@ -104,27 +105,34 @@ export default function CampaignQuoteDetails({
         ? "Quotation Sent"
         : "Send Quote";
 
-  const handleSendQuoteClick = async () => {
-    try {
-      setSending(true);
+const handleSendQuoteClick = async () => {
+  try {
+    setSending(true);
 
-      await sendCampaignQuote({
-        campaignId,
-        proposedBaseBudget: Number(quoteAmount ?? 0),
-      });
+    await sendCampaignQuote({
+      campaignId,
+      proposedBaseBudget: Number(quoteAmount ?? 0),
+    });
 
-      // instant UI
+    notifySuccess("Quotation sent successfully");
+
+    setLocalQuoteState("sent");
+    setIsDialogOpen(true);
+
+    await onRefresh?.();
+  } catch (e: any) {
+    console.error("❌ send quote failed:", e);
+
+    if (e?.response?.status === 409) {
+      notifyError("Quotation already sent");
       setLocalQuoteState("sent");
-      setIsDialogOpen(true);
-
-      // ✅ refresh parent so backend-driven state updates
-      await onRefresh?.();
-    } catch (e) {
-      console.error("❌ send quote failed:", e);
-    } finally {
-      setSending(false);
+    } else {
+      notifyError("Failed to send quotation");
     }
-  };
+  } finally {
+    setSending(false);
+  }
+};
 
   return (
     <>

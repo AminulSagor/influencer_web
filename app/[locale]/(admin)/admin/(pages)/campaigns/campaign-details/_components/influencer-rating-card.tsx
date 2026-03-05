@@ -1,6 +1,7 @@
-import { CampaignStatusType } from "../../[id]/page";
+
 import CollapsibleCard from "./collapsible-card";
 import ClientRatingCard from "./client-rating-card";
+import { CampaignStatusType } from "@/types/admin/campaign/campaign_details_type";
 
 interface Props {
   campaignStatus: CampaignStatusType;

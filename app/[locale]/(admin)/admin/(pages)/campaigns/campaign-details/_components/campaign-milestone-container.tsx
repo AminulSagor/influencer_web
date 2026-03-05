@@ -22,13 +22,13 @@ import Link from "next/link";
 import InviteInfluencerBar from "./invite-influencer-bar";
 import InviteAgencyBar from "./invite-agency-bar";
 
-import { splitEqual } from "@/utils/admin/campaign/campaign_calculation_util";
-
 import type {
   CampaignStatusType,
   InfluencerUI,
   CampaignMilestoneApi,
 } from "@/types/admin/campaign/campaign_details_type";
+
+import { safeStr } from "@/utils/admin/campaign/number_util";
 
 const CircularProgressChart = dynamic(() => import("./circular-progress"), { ssr: false });
 
@@ -46,19 +46,13 @@ interface Props {
   availableForAgency?: number;
 }
 
-function safeStr(v: any) {
-  return String(v ?? "").trim();
-}
-
 export default function CampaignMilestoneContainer({
   campaignId,
   campaignStatus,
   isPaidAd,
-
   influencers,
   dropdownInfluencers,
   milestones,
-
   availableForInfluencers,
   availableForAgency = 0,
 }: Props) {
@@ -80,24 +74,27 @@ export default function CampaignMilestoneContainer({
     if (Array.isArray(dropdownInfluencers) && dropdownInfluencers.length > 0) {
       return dropdownInfluencers
         .map((i: any, idx: number) => {
-          const id = safeStr(i?.id) || safeStr(i?._id) || `inf-${idx + 1}`;
+          // supports object or string
+          const isString = typeof i === "string";
+          const id =
+            safeStr(isString ? `inf-${idx + 1}` : i?.id) ||
+            safeStr(isString ? "" : i?._id) ||
+            `inf-${idx + 1}`;
 
           const name =
-            safeStr(i?.name) ||
-            `${safeStr(i?.firstName)} ${safeStr(i?.lastName)}`.trim() ||
+            safeStr(isString ? i : i?.name) ||
+            `${safeStr(isString ? "" : i?.firstName)} ${safeStr(isString ? "" : i?.lastName)}`.trim() ||
             id;
 
           const imageUrl =
-            safeStr(i?.imageUrl) ||
-            safeStr(i?.profileImg) ||
-            safeStr(i?.profileImage) ||
+            safeStr(isString ? "" : i?.imageUrl) ||
+            safeStr(isString ? "" : i?.profileImg) ||
+            safeStr(isString ? "" : i?.profileImage) ||
             fallbackImg;
-
-          if (!safeStr(id)) return null;
 
           return { id, name, imageUrl } as InfluencerUI;
         })
-        .filter(Boolean) as InfluencerUI[];
+        .filter((x) => safeStr(x?.id).length > 0) as InfluencerUI[];
     }
 
     return (influencers ?? [])
@@ -105,20 +102,19 @@ export default function CampaignMilestoneContainer({
         const id = safeStr(x?.id) || `inf-${idx + 1}`;
         const name = safeStr(x?.name) || id;
         const imageUrl = safeStr(x?.imageUrl) || fallbackImg;
-
         return { id, name, imageUrl } as InfluencerUI;
       })
       .filter((x) => safeStr(x.id).length > 0);
   }, [dropdownInfluencers, influencers]);
 
-  // ✅ FIXED: compute per-influencer offer for influencer flow (NOT paid-ad/agency flow)
-  const offeredAmountPerInfluencer = useMemo(() => {
-    if (isPaidAd) return 0; // agency flow -> not used here
-    const count = milestoneInfluencers.length;
-    return splitEqual(availableForInfluencers, count).per;
-  }, [isPaidAd, availableForInfluencers, milestoneInfluencers.length]);
-
   const canInvite = campaignStatus === "pending-invitations" || campaignStatus === "active";
+
+  // ✅ FIX: milestone budget "max" should be the budget for this flow
+  // - Agency flow: availableForAgency
+  // - Influencer flow: availableForInfluencers
+  const milestoneBudgetMax = useMemo(() => {
+    return isPaidAd ? availableForAgency : availableForInfluencers;
+  }, [isPaidAd, availableForAgency, availableForInfluencers]);
 
   return (
     <div className="space-y-4 p-2">
@@ -129,8 +125,7 @@ export default function CampaignMilestoneContainer({
           ) : (
             <InviteInfluencerBar
               campaignId={campaignId}
-              availableForInfluencers={availableForInfluencers}
-              milestoneCount={milestones.length}
+              milestoneCount={(milestones ?? []).length}
             />
           )}
         </>
@@ -142,14 +137,13 @@ export default function CampaignMilestoneContainer({
         milestones={milestones}
         activeMilestoneId={activeMilestoneId}
         onSelectMilestone={(id) => setActiveMilestoneId(id)}
-        offeredAmountPerInfluencer={offeredAmountPerInfluencer}
+        offeredAmountPerInfluencer={milestoneBudgetMax} // ✅ FIX
       />
 
-      {/* ...rest of your component stays unchanged... */}
+      {/* rest unchanged */}
       {activeMilestone && (
         <div className="space-y-4">
           <Card>
-            {/* your existing UI */}
             <CardHeader className="flex gap-4">
               <CardTitle className="flex flex-1 items-center gap-6 text-Primary text-base font-semibold">
                 <div>
@@ -172,9 +166,7 @@ export default function CampaignMilestoneContainer({
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* unchanged */}
               <div className="border p-4 rounded-lg border-light-green grid grid-cols-12 gap-4 items-center bg-linear-to-r from-Secondary to-white">
-                {/* unchanged... */}
                 <div className="col-span-6 md:ml-10 flex gap-6">
                   <div className="space-y-2">
                     <Button className="w-full" variant={"outline"} disabled>
@@ -205,7 +197,6 @@ export default function CampaignMilestoneContainer({
               </div>
 
               <CollapsibleCard heading="Submission Details" badge="Completed">
-                {/* unchanged... */}
                 <div className="space-y-2">
                   <IconText className="text-base gap-2" icon={<FaUserPen />} text="Description / Update" />
                   <p>Description of the proof will be visible here</p>

@@ -24,7 +24,13 @@ import { assignAgencies } from "@/api/admin/campaign/agency/assign-agencies";
 import { calcPlatformFee, clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
 import InviteAgencyBar from "./invite-agency-bar";
-import { AgencyOptionApi, DraftAssignedAgencyItem, PreferredAgency, Row, Statistics } from "@/types/admin/campaign/agency/platform_profit_agency_type";
+import type {
+  AgencyOptionApi,
+  DraftAssignedAgencyItem,
+  PreferredAgency,
+  Row,
+  Statistics,
+} from "@/types/admin/campaign/agency/platform_profit_agency_type";
 
 type Props = {
   campaignId: string;
@@ -77,19 +83,33 @@ export default function PlatformProfitAgency({
   // ---------------- budget ----------------
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
 
-  // ✅ platform fee state (UI like screenshot)
   const [feeEdit, setFeeEdit] = useState(false);
+
+  // committed = what we show when not editing, and what persists locally
+  const [committedFeePercent, setCommittedFeePercent] = useState<number>(
+    clampPercent(platformFeePercent)
+  );
+
+  // feePercent = editable input value
   const [feePercent, setFeePercent] = useState<number>(clampPercent(platformFeePercent));
 
-  // keep in sync if prop changes
+  // adopt external prop only when not editing AND it actually changed (backend refresh scenario)
   useEffect(() => {
     if (feeEdit) return;
-    setFeePercent(clampPercent(platformFeePercent));
+
+    const next = clampPercent(platformFeePercent);
+    if (next !== clampPercent(committedFeePercent)) {
+      setCommittedFeePercent(next);
+      setFeePercent(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [platformFeePercent, feeEdit]);
 
+  const effectiveFeePercent = feeEdit ? feePercent : committedFeePercent;
+
   const { platformFeeAmount, availableBudget: availableForAgency } = useMemo(() => {
-    return calcPlatformFee(finalQuotedBudget, clampPercent(feePercent));
-  }, [finalQuotedBudget, feePercent]);
+    return calcPlatformFee(finalQuotedBudget, clampPercent(effectiveFeePercent));
+  }, [finalQuotedBudget, effectiveFeePercent]);
 
   // ---------------- agencies list ----------------
   const [allAgenciesApi, setAllAgenciesApi] = useState<AgencyOptionApi[]>([]);
@@ -180,25 +200,36 @@ export default function PlatformProfitAgency({
     setDefaultFeeMap((prev) => ({ ...next, ...prev }));
   }, [locked, loadingDraftAssignedAgencies, draftAssignedAgencies]);
 
-  // ---------------- init from draft (ONLY ONCE) ----------------
-  const [didInitFromDraft, setDidInitFromDraft] = useState(false);
+  // ---------------- SAFE init/sync from draft (agency assignments) ----------------
+  const draftSig = useMemo(() => {
+    const list = Array.isArray(draftAssignedAgencies) ? draftAssignedAgencies : [];
+    const ids = uniq(list.map(pickAgencyId).filter(Boolean)).sort();
+
+    return ids
+      .map((id) => {
+        const found = list.find((x) => pickAgencyId(x) === id);
+        return `${id}:${pickAssignedPercent(found)}`;
+      })
+      .join("|");
+  }, [draftAssignedAgencies]);
+
+  const [lastAppliedDraftSig, setLastAppliedDraftSig] = useState<string>("");
 
   useEffect(() => {
     if (locked) return;
-    if (didInitFromDraft) return;
     if (loadingDraftAssignedAgencies) return;
 
     const list = Array.isArray(draftAssignedAgencies) ? draftAssignedAgencies : [];
-    if (list.length === 0) {
-      setDidInitFromDraft(true);
-      return;
-    }
-
     const ids = uniq(list.map(pickAgencyId).filter(Boolean));
-    if (ids.length === 0) {
-      setDidInitFromDraft(true);
-      return;
-    }
+
+    // if draft is empty, don't wipe user's local rows
+    if (ids.length === 0) return;
+
+    // don't re-apply same draft repeatedly
+    if (draftSig === lastAppliedDraftSig) return;
+
+    // don't overwrite user's edits
+    if (rows.length > 0 && hasUnsavedChanges) return;
 
     setSelectedIds(ids);
 
@@ -207,7 +238,9 @@ export default function PlatformProfitAgency({
         const found = list.find((x) => pickAgencyId(x) === id);
         const info = agencyInfoMap.get(id);
 
-        const name = String(found?.agencyName ?? found?.name ?? found?.fullName ?? info?.name ?? "Agency");
+        const name = String(
+          found?.agencyName ?? found?.name ?? found?.fullName ?? info?.name ?? "Agency"
+        );
         const logo = (found?.logo ?? info?.logo ?? null) as string | null;
 
         const assignedPct = pickAssignedPercent(found);
@@ -224,21 +257,16 @@ export default function PlatformProfitAgency({
       })
     );
 
-    const sig = ids
-      .sort()
-      .map((id) => {
-        const found = list.find((x) => pickAgencyId(x) === id);
-        return `${id}:${pickAssignedPercent(found)}`;
-      })
-      .join("|");
-
-    setLastSavedSig(sig);
-    setDidInitFromDraft(true);
+    setLastSavedSig(draftSig);
+    setLastAppliedDraftSig(draftSig);
   }, [
     locked,
-    didInitFromDraft,
     loadingDraftAssignedAgencies,
     draftAssignedAgencies,
+    draftSig,
+    lastAppliedDraftSig,
+    rows.length,
+    hasUnsavedChanges,
     agencyInfoMap,
     availableForAgency,
   ]);
@@ -364,6 +392,8 @@ export default function PlatformProfitAgency({
       await assignAgencies(payload);
 
       setLastSavedSig(currentSig);
+      setLastAppliedDraftSig(currentSig);
+
       onRefreshDraft?.();
     } catch (e: any) {
       console.error("❌ assignAgencies failed:", e);
@@ -375,279 +405,280 @@ export default function PlatformProfitAgency({
 
   return (
     <>
-    <CollapsibleCard heading="Platform Profit & Agency Management">
-      <div>
-        {/* top stats */}
-        <div className="grid grid-cols-12 gap-4">
-          {/* card 1 */}
-          <div
-            className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
-              locked
-                ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
-                : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
-            )}
-          >
-            <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              ৳{moneyFmt(locked ? 0 : finalQuotedBudget)}
-            </p>
-            <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
-              Final Quoted Budget
-            </h3>
-          </div>
+      <CollapsibleCard heading="Platform Profit & Agency Management">
+        <div>
+          {/* top stats */}
+          <div className="grid grid-cols-12 gap-4">
+            {/* card 1 */}
+            <div
+              className={cn(
+                "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
+                locked
+                  ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
+                  : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
+              )}
+            >
+              <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
+                ৳{moneyFmt(locked ? 0 : finalQuotedBudget)}
+              </p>
+              <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
+                Final Quoted Budget
+              </h3>
+            </div>
 
-          {/* card 2 ✅ UI like your provided snippet + screenshot */}
-          <div
-            className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4",
-              locked
-                ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
-                : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
-            )}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1">
-                <div className="relative w-full max-w-[520px]">
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step="0.01"
-                    value={String(feeEdit ? feePercent : clampPercent(feePercent))}
-                    onChange={(e) => setFeePercent(clampPercent(Number(e.target.value || 0)))}
-                    disabled={locked}
-                    readOnly={!feeEdit}
-                    className={cn(
-                      "h-16 w-full rounded-xl border bg-white px-6 pr-14 text-[46px] font-bold leading-none",
-                      locked ? "text-gray-400" : "text-light-green",
-                      !feeEdit ? "cursor-default" : ""
-                    )}
-                  />
 
-                  <span
-                    className={cn(
-                      "absolute right-5 top-1/2 -translate-y-1/2 text-[46px] font-bold leading-none",
-                      locked ? "text-gray-400" : "text-light-green"
-                    )}
-                  >
-                    %
-                  </span>
+            {/* card 2 ✅ platform fee */}
+            <div
+              className={cn(
+                "col-span-12 md:col-span-4 rounded-lg border p-4",
+                locked
+                  ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
+                  : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1">
+                  {feeEdit ? (
+                    <div className="relative max-w-[140px]">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={feePercent}
+                        onChange={(e) => setFeePercent(clampPercent(Number(e.target.value || 0)))}
+                        className="pr-8"
+                        disabled={locked}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        %
+                      </span>
+                    </div>
+                  ) : (
+                    <p
+                      className={cn(
+                        "text-2xl font-semibold",
+                        locked ? "text-gray-400" : "text-light-green"
+                      )}
+                    >
+                      {clampPercent(committedFeePercent)}%
+                    </p>
+                  )}
+
+                  <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
+                    Target Profit / Platform Fee
+                  </h3>
+
+                  <p className={cn("text-xs", locked ? "text-gray-400" : "text-gray-500")}>
+                    ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
+                  </p>
                 </div>
 
-                <h3 className={cn("mt-3 text-xl font-semibold", locked ? "text-gray-400" : "text-Primary")}>
-                  Set Platform Charge
-                </h3>
+                {!locked && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className={cn(
+                      "mt-1 text-[20px] font-semibold hover:bg-transparent",
+                      locked ? "text-gray-400" : "text-light-green hover:opacity-80"
+                    )}
+                    onClick={() => {
+                      // enter edit
+                      if (!feeEdit) {
+                        setFeePercent(clampPercent(committedFeePercent));
+                        setFeeEdit(true);
+                        return;
+                      }
 
-                <p className={cn("mt-1 text-xs", locked ? "text-gray-400" : "text-gray-500")}>
-                  ৳{moneyFmt(locked ? 0 : platformFeeAmount)}
-                </p>
+                      // save
+                      const next = clampPercent(feePercent);
+                      setCommittedFeePercent(next);
+                      setFeeEdit(false);
+
+                      onChangePlatformFeePercent?.(next);
+                    }}
+                  >
+                    {feeEdit ? "Save" : "Edit"}
+                  </Button>
+                )}
               </div>
+            </div>
 
-              {!locked && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className={cn(
-                    "mt-3 text-[20px] font-semibold hover:bg-transparent",
-                    locked ? "text-gray-400" : "text-light-green hover:opacity-80"
-                  )}
-                  onClick={() => {
-                    if (!feeEdit) return setFeeEdit(true);
-
-                    setFeeEdit(false);
-
-                    // ✅ notify parent/backend if you wired it
-                    onChangePlatformFeePercent?.(clampPercent(feePercent));
-                  }}
-                >
-                  {feeEdit ? "Save" : "Edit"}
-                </Button>
+            {/* card 3 */}
+            <div
+              className={cn(
+                "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
+                locked
+                  ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
+                  : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
               )}
+            >
+              <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
+                ৳{moneyFmt(locked ? 0 : availableForAgency)}
+              </p>
+              <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-orange")}>
+                Available For Agency
+              </h3>
+              <p className={cn("text-sm font-normal", locked ? "text-gray-400" : "text-orange")}>amount assigned</p>
             </div>
           </div>
 
-          {/* card 3 */}
-          <div
-            className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
-              locked
-                ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
-                : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
-            )}
-          >
-            <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              ৳{moneyFmt(locked ? 0 : availableForAgency)}
-            </p>
-            <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-orange")}>
-              Available For Agency
-            </h3>
-            <p className={cn("text-sm font-normal", locked ? "text-gray-400" : "text-orange")}>
-              amount assigned
-            </p>
-          </div>
-        </div>
-
-        {locked ? (
-          <div className="py-10 text-center text-sm text-gray-400">
-            Client needs to confirm the quote first
-          </div>
-        ) : (
-          <div className="grid grid-cols-12 gap-4 mt-6">
-            {/* left */}
-            <div className="col-span-12 md:col-span-4 space-y-4">
-              <InfluencerBadges
-                title="Preferred Agency"
-                influencers={
-                  loadingPreferredAgencies
-                    ? [{ name: "Loading...", platform: "—", profileUrl: "#" }]
-                    : (preferredAgencies.map((a) => ({
+          {locked ? (
+            <div className="py-10 text-center text-sm text-gray-400">Client needs to confirm the quote first</div>
+          ) : (
+            <div className="grid grid-cols-12 gap-4 mt-6">
+              {/* left */}
+              <div className="col-span-12 md:col-span-4 space-y-4">
+                <InfluencerBadges
+                  title="Preferred Agency"
+                  influencers={
+                    loadingPreferredAgencies
+                      ? [{ name: "Loading...", platform: "—", profileUrl: "#" }]
+                      : (preferredAgencies.map((a) => ({
                         name: a.name,
                         platform: "—",
                         profileUrl: "#",
                         imageUrl: a.image ?? undefined,
                       })) as any)
-                }
-              />
-            </div>
-
-            {/* right */}
-            <div className="col-span-12 md:col-span-8">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-Primary mb-1 font-semibold">Assign Ad Agency</h2>
-                  <p className="text-xs text-gray-500">
-                    {saving ? "Saving..." : hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={handleClear} disabled={saving}>
-                    Clear
-                  </Button>
-
-                  <Button
-                    className="bg-Primary"
-                    onClick={handleSave}
-                    disabled={saving || rows.length === 0 || !hasUnsavedChanges}
-                  >
-                    Save Assignments
-                  </Button>
-                </div>
+                  }
+                />
               </div>
 
-              {/* multiselect */}
-              <div className="mt-3">
-                <MultiSelect values={selectedIds} onValuesChange={(v) => setSelectedIds(uniq(v))}>
-                  <MultiSelectTrigger className="w-full">
-                    <MultiSelectValue placeholder={loadingAgencies ? "Loading agencies..." : "Select Ad Agency"} />
-                  </MultiSelectTrigger>
+              {/* right */}
+              <div className="col-span-12 md:col-span-8">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-Primary mb-1 font-semibold">Assign Ad Agency</h2>
+                    <p className="text-xs text-gray-500">
+                      {saving ? "Saving..." : hasUnsavedChanges ? "Unsaved changes" : "All changes saved"}
+                    </p>
+                  </div>
 
-                  <MultiSelectContent>
-                    <MultiSelectGroup>
-                      {dropdownAgencies.map((a) => (
-                        <MultiSelectItem key={a.id} value={a.id}>
-                          {a.name}
-                        </MultiSelectItem>
-                      ))}
-                    </MultiSelectGroup>
-                  </MultiSelectContent>
-                </MultiSelect>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleClear} disabled={saving}>
+                      Clear
+                    </Button>
 
-              {/* table (UNCHANGED UI) */}
-              <div className="mt-4 rounded-xl border overflow-hidden">
-                <div className="bg-linear-to-r from-white to-Secondary px-5 py-3">
-                  <div className="grid grid-cols-12 items-center text-[15px] font-medium text-Primary">
-                    <div className="col-span-5">Ad Agency ({rows.length})</div>
-                    <div className="col-span-2 text-center">Default Percentage</div>
-                    <div className="col-span-2 text-center">Assign Percentage</div>
-                    <div className="col-span-3 text-center">Profit</div>
+                    <Button
+                      className="bg-Primary"
+                      onClick={handleSave}
+                      disabled={saving || rows.length === 0 || !hasUnsavedChanges}
+                    >
+                      Save Assignments
+                    </Button>
                   </div>
                 </div>
 
-                <div className="max-h-[260px] overflow-y-auto">
-                  {rows.length === 0 ? (
-                    <div className="p-5 text-sm text-gray-400">
-                      Select agencies to assign percentage/profit.
-                    </div>
-                  ) : (
-                    <div>
-                      {rows.map((r) => (
-                        <div key={r.id} className="grid grid-cols-12 items-center px-5 py-4 border-t">
-                          <div className="col-span-5 flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden" />
-                            <div className="text-[18px] font-medium text-black">{r.name}</div>
-                          </div>
+                {/* multiselect */}
+                <div className="mt-3">
+                  <MultiSelect values={selectedIds} onValuesChange={(v) => setSelectedIds(uniq(v))}>
+                    <MultiSelectTrigger className="w-full">
+                      <MultiSelectValue placeholder={loadingAgencies ? "Loading agencies..." : "Select Ad Agency"} />
+                    </MultiSelectTrigger>
 
-                          <div className="col-span-2 text-center text-[16px] text-Primary">
-                            {Number(r.defaultPercentage || 0).toFixed(0)}%
-                          </div>
-
-                          <div className="col-span-2 flex justify-center">
-                            <Input
-                              type="number"
-                              min={0}
-                              max={100}
-                              step="0.01"
-                              value={Number.isFinite(r.assignPercentage) ? String(r.assignPercentage) : "0"}
-                              onChange={(e) => updateAssignPercent(r.id, Number(e.target.value || 0))}
-                              disabled={saving}
-                              className="h-11 w-[120px] rounded-full border text-center text-Primary"
-                            />
-                          </div>
-
-                          <div className="col-span-3 flex items-center justify-center gap-3">
-                            <div className="h-11 w-11 rounded-full border bg-white grid place-items-center text-black text-lg">
-                              ৳
-                            </div>
-
-                            <div className="h-11 w-[170px] rounded-full border bg-white px-6 flex items-center justify-end font-semibold text-black text-[18px]">
-                              {moneyFmt(r.profitAmount)}
-                            </div>
-
-                            <button
-                              type="button"
-                              className="ml-2 text-Primary/70 hover:text-Primary text-xl leading-none"
-                              onClick={() => removeRow(r.id)}
-                              aria-label="Remove"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-
-                      <div className="border-t" />
-                    </div>
-                  )}
+                    <MultiSelectContent>
+                      <MultiSelectGroup>
+                        {dropdownAgencies.map((a) => (
+                          <MultiSelectItem key={a.id} value={a.id}>
+                            {a.name}
+                          </MultiSelectItem>
+                        ))}
+                      </MultiSelectGroup>
+                    </MultiSelectContent>
+                  </MultiSelect>
                 </div>
-              </div>
 
-              {rows.length > 0 && (
-                <div className="mt-3 text-right space-y-1">
-                  <p className={cn("text-sm", totalPct > 100 ? "text-red" : "text-gray-500")}>
-                    Total Percentage: {totalPct.toFixed(2)}%{totalPct > 100 ? " (exceeds 100%)" : ""}
-                  </p>
-                  <p className="font-semibold text-Primary">Total Profit: ৳{moneyFmt(totalProfit)}</p>
+                {/* table (UNCHANGED UI) */}
+                <div className="mt-4 rounded-xl border overflow-hidden">
+                  <div className="bg-linear-to-r from-white to-Secondary px-5 py-3">
+                    <div className="grid grid-cols-12 items-center text-[15px] font-medium text-Primary">
+                      <div className="col-span-5">Ad Agency ({rows.length})</div>
+                      <div className="col-span-2 text-center">Default Percentage</div>
+                      <div className="col-span-2 text-center">Assign Percentage</div>
+                      <div className="col-span-3 text-center">Profit</div>
+                    </div>
+                  </div>
 
-                  {(loadingFees || loadingAgencies || loadingDraftAssignedAgencies) && (
-                    <p className="text-xs text-gray-400">
-                      Loading{" "}
-                      {loadingAgencies ? "agencies" : ""}
-                      {loadingAgencies && (loadingFees || loadingDraftAssignedAgencies) ? " & " : ""}
-                      {loadingFees ? "default fees" : ""}
-                      {loadingFees && loadingDraftAssignedAgencies ? " & " : ""}
-                      {loadingDraftAssignedAgencies ? "draft assignments" : ""}
-                      ...
+                  <div className="max-h-[260px] overflow-y-auto">
+                    {rows.length === 0 ? (
+                      <div className="p-5 text-sm text-gray-400">Select agencies to assign percentage/profit.</div>
+                    ) : (
+                      <div>
+                        {rows.map((r) => (
+                          <div key={r.id} className="grid grid-cols-12 items-center px-5 py-4 border-t">
+                            <div className="col-span-5 flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden" />
+                              <div className="text-[18px] font-medium text-black">{r.name}</div>
+                            </div>
+
+                            <div className="col-span-2 text-center text-[16px] text-Primary">
+                              {Number(r.defaultPercentage || 0).toFixed(0)}%
+                            </div>
+
+                            <div className="col-span-2 flex justify-center">
+                              <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                step="0.01"
+                                value={Number.isFinite(r.assignPercentage) ? String(r.assignPercentage) : "0"}
+                                onChange={(e) => updateAssignPercent(r.id, Number(e.target.value || 0))}
+                                disabled={saving}
+                                className="h-11 w-[120px] rounded-full border text-center text-Primary"
+                              />
+                            </div>
+
+                            <div className="col-span-3 flex items-center justify-center gap-3">
+                              <div className="h-11 w-11 rounded-full border bg-white grid place-items-center text-black text-lg">
+                                ৳
+                              </div>
+
+                              <div className="h-11 w-[170px] rounded-full border bg-white px-6 flex items-center justify-end font-semibold text-black text-[18px]">
+                                {moneyFmt(r.profitAmount)}
+                              </div>
+
+                              <button
+                                type="button"
+                                className="ml-2 text-Primary/70 hover:text-Primary text-xl leading-none"
+                                onClick={() => removeRow(r.id)}
+                                aria-label="Remove"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="border-t" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {rows.length > 0 && (
+                  <div className="mt-3 text-right space-y-1">
+                    <p className={cn("text-sm", totalPct > 100 ? "text-red" : "text-gray-500")}>
+                      Total Percentage: {totalPct.toFixed(2)}%{totalPct > 100 ? " (exceeds 100%)" : ""}
                     </p>
-                  )}
-                </div>
-              )}
+                    <p className="font-semibold text-Primary">Total Profit: ৳{moneyFmt(totalProfit)}</p>
+
+                    {(loadingFees || loadingAgencies || loadingDraftAssignedAgencies) && (
+                      <p className="text-xs text-gray-400">
+                        Loading{" "}
+                        {loadingAgencies ? "agencies" : ""}
+                        {loadingAgencies && (loadingFees || loadingDraftAssignedAgencies) ? " & " : ""}
+                        {loadingFees ? "default fees" : ""}
+                        {loadingFees && loadingDraftAssignedAgencies ? " & " : ""}
+                        {loadingDraftAssignedAgencies ? "draft assignments" : ""}
+                        ...
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-    </CollapsibleCard>
-</>
+          )}
+        </div>
+      </CollapsibleCard>
+    </>
   );
 }
