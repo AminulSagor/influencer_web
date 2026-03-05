@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useLogout } from "@/hooks/useLogout";
 import { cn } from "@/lib/utils";
-import { SidebarItem } from "@/types/app-sidebar-types";
+import { SidebarItem } from "@/types/app_sidebar-type";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

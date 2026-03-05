@@ -28,7 +28,7 @@ type Activity = {
 const iconMap = {
   accepted: {
     icon: IoCheckmarkSharp,
-    bgColor: "bg-green-200",
+    bgColor: "bg-light-green-200",
     iconColor: "text-Primary",
     size: 25,
   },
@@ -52,7 +52,7 @@ const iconMap = {
   },
   completed: {
     icon: IoCheckmarkSharp,
-    bgColor: "bg-green-200",
+    bgColor: "bg-light-green-200",
     iconColor: "text-Primary",
     size: 25,
   },

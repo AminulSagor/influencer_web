@@ -14,10 +14,10 @@ import {
   getAssignedUserBasedText,
   toNumberSafe,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
-import { getPlatformIcon } from "@/helpers/platforms";
-import { formatDeadline } from "@/helpers/helper";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
+import { getPlatformIcon } from "@/utils/platforms_util";
+import { formatDeadline } from "@/utils/date_util";
 
 export default function CompletedCampaignsList({
   campaigns,

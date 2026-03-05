@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
+import { useOnboardingStore } from "@/store/onboarding_store";
+import { useState } from "react";
+import Loader from "@/components/spin-loader";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { submitOnboarding } from "@/api/onboarding";
+import { useAuthStore } from "@/store/auth_store";
 
 const FinalStep = () => {
   const t = useTranslations("Signup.finalStep");
   const router = useRouter();
-  const { userType, clearAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+
+  const { userType, clearAuth, token } = useAuthStore();
+  const { toPayload } = useOnboardingStore();
 
   const getDashboardPath = () => {
     const locale = window.location.pathname.split("/")[1];
@@ -26,10 +34,33 @@ const FinalStep = () => {
     }
   };
 
-  const handleGoToDashboard = () => {
-    clearAuth();
-    const dashboardPath = getDashboardPath();
-    router.push(dashboardPath);
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    try {
+      const payload = toPayload();
+      if (token === null || userType === null) {
+        notifyError("Missing token or user type. Cannot submit.");
+        setLoading(false);
+        return;
+      }
+      const response = await submitOnboarding(userType, payload, token);
+      if (response.status === 200) {
+        setTimeout(() => {
+          clearAuth();
+          const dashboardPath = getDashboardPath();
+          router.push(dashboardPath);
+        }, 1500);
+      }
+    } catch (err: any) {
+      notifyError(
+        err.message ||
+        t("errorMessage") ||
+        "Failed to complete onboarding"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,10 +115,11 @@ const FinalStep = () => {
 
       <div className="flex items-center justify-center mt-10 lg:mt-16">
         <Button
-          onClick={handleGoToDashboard}
+          onClick={handleSubmit}
           className="text-white hover:bg-Primary cursor-pointer bg-light-green h-16 px-10 text-[18px] mt-10"
+          disabled={loading}
         >
-          {t("cta")}
+          {loading ? <Loader /> : t("cta")}
         </Button>
       </div>
     </div>

@@ -7,7 +7,8 @@ import type {
   CampaignApi,
   SocialPlatform,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
-import { getPlatformIcon } from "@/helpers/platforms";
+import { getPlatformIcon } from "@/utils/platforms_util";
+//import { getPlatformIcon } from "@/helpers/platforms";
 
 type Props = {
   campaign: CampaignApi | null;

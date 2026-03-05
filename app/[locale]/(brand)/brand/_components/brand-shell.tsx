@@ -13,7 +13,7 @@ import {
   Settings,
   ShieldOff,
 } from "lucide-react";
-import type { SidebarItem } from "@/types/app-sidebar-types";
+import type { SidebarItem } from "@/types/app_sidebar-type";
 import { useLocale } from "next-intl";
 
 export default function BrandShell({

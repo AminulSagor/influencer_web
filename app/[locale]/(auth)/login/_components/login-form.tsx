@@ -1,115 +1,109 @@
-// LoginForm.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import Link from "next/link";
-import { Lock, User } from "lucide-react";
-import { useTranslations, useLocale } from "next-intl";
-import { LoginFormValues } from "@/types/auth-types";
 import { useState } from "react";
-import {
-  handlePhoneFormat,
-  notifyError,
-  notifySuccess,
-} from "@/helpers/helper";
-import Loader from "@/components/spin-loader";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { User, Lock, Loader } from "lucide-react";
 
-type UserRole = "client" | "influencer" | "agency";
-type Response = {
-  role?: string;
-  message?: string;
-  isVerified?: boolean;
-};
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-const roleRoot = {
-  client: "brand",
-  influencer: "influencer",
-  agency: "agency",
-} as const;
+import { loginSchema, LoginFormValues } from "@/schemas/auth/login_schema";
+import { login } from "@/api/auth/login";
+import { useAuthStore } from "@/store/auth_store";
+import { setToken } from "@/utils/cookies_util";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
+import { handlePhoneFormat } from "@/utils/phone_util";
+import { notifyError } from "@/utils/toast_util";
 
-function isUserRole(v: unknown): v is UserRole {
-  return v === "client" || v === "influencer" || v === "agency";
-}
 const LoginForm = () => {
   const t = useTranslations("login");
   const locale = useLocale();
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
 
+  const { setAuth } = useAuthStore();
+
   const methods = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       phone: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    const formatedPhone = handlePhoneFormat(data.phone);
-    const payload = { ...data, phone: formatedPhone };
-
+const onSubmit = async (data: LoginFormValues) => {
+  try {
     setLoading(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
 
-      const data: Response = await res.json();
-      if (res.status === 200) {
-        notifySuccess(data?.message as string);
-      }
+    const res = await login({
+      phone: handlePhoneFormat(data.phone),
+      password: data.password,
+    });
 
-      if (res.status === 401) {
-        notifyError(data?.message as string);
-      }
+    const token = res?.accessToken;
+    if (!token) throw new Error("No token returned");
 
-      const role = data.role;
+    setToken(token);
 
-      if (!isUserRole(role)) {
-        console.log("Role missing/invalid from API response");
-        return;
-      }
+    const payload = decodeJwtPayload(token);
+    if (!payload) throw new Error("Invalid token");
 
-      const root = roleRoot[role];
-      const nextPath = data.isVerified
-        ? `/${locale}/${root}/dashboard`
-        : `/${locale}/${root}/unverified`;
+    setAuth({
+      token,
+      role: payload.role,
+      phone: payload.phone,
+      email: payload.email,
+      isVerified: payload.isVerified,
+    });
 
-      router.push(nextPath);
-      router.refresh();
-    } catch (error: unknown) {
-      if (error) {
-        notifyError("Server Error");
-      }
-    } finally {
-      setLoading(false);
+    const pathMap: Record<string, string> = {
+      client: "brand",
+      admin: "admin",
+      agency: "agency",
+      influencer: "influencer",
+    };
+
+    const basePath = pathMap[payload.role || ""] || (payload.role || "");
+    const nextPath = payload.isVerified
+      ? `/${locale}/${basePath}/dashboard`
+      : `/${locale}/${basePath}/unverified`;
+
+    await router.push(nextPath);
+    router.refresh();
+  } catch (error: any) {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      notifyError("Phone Number or Password wrong");
+    } else {
+      notifyError(
+        error?.response?.data?.message || "Login failed. Please try again."
+      );
     }
-  };
+
+    methods.setError("root", {
+      message:
+        error?.response?.data?.message || "Login failed. Please try again.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   return (
     <Form {...methods}>
-      <form
-        onSubmit={methods.handleSubmit(onSubmit)}
-        className="space-y-4 mt-8"
-      >
-        {/* Phone / Email */}
+      <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-8">
         <FormField
           control={methods.control}
           name="phone"
-          rules={{ required: "Email or phone required" }}
+          rules={{ required: "Phone number required" }}
           render={({ field }) => (
             <FormItem>
               <FormControl>

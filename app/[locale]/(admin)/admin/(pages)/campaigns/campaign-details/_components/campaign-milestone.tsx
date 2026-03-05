@@ -1,376 +1,338 @@
+// app/[locale]/(admin)/admin/(pages)/campaigns/[id]/campaign-details/_components/campaign-milestone.tsx
 "use client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import {
-  campaignMilestoneData,
-  CampaignMilestoneDataType,
-  COMPLETED,
-  DECLINED,
-  IN_REVIEW,
-  PAID,
-  TODO,
-} from "./campaign-milestone-data";
-import {
-  CampaignStatusType,
-  Influencer,
-  InvitationStatusType,
-} from "../[id]/page";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { SelectValue } from "@radix-ui/react-select";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import ProgressBar from "./progress-bar";
-import { ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import type {
+  CampaignStatusType,
+  InfluencerUI,
+  CampaignMilestoneApi,
+} from "@/types/admin/campaign/campaign_details_type";
+import { money } from "@/utils/admin/campaign/campaign_calculation_util";
+import { editMilestoneAmount } from "@/api/admin/campaign/agency/edit-milstone-amount";
 
 interface Props {
-  invitationStatus: InvitationStatusType;
+  influencers: InfluencerUI[];
   campaignStatus: CampaignStatusType;
-  influencers: Influencer[];
+  milestones: CampaignMilestoneApi[];
+
+  activeMilestoneId: string | null;
+  onSelectMilestone: (id: string) => void;
+
+  // ✅ AGENCY offered amount (max). Can be number or formatted string ("149,045.5")
+  offeredAmountPerInfluencer: number | string;
 }
 
-type MilestoneStatus =
-  | typeof TODO
-  | typeof IN_REVIEW
-  | typeof DECLINED
-  | typeof PAID
-  | typeof COMPLETED;
+function safeStr(v: any) {
+  return String(v ?? "").trim();
+}
 
-const milestoneStatusStyles: Record<
-  MilestoneStatus,
-  {
-    card: string;
-    circle: string;
-    title: string;
-    badge: string;
-    amount: string;
-    ring: string;
-  }
-> = {
-  [TODO]: {
-    card: "border-gray-200 bg-linear-to-r from-white to-light-gray",
-    circle: "bg-dark-gray",
-    title: "text-dark-gray",
-    badge: "bg-dark-gray",
-    amount: "text-gray-600",
-    ring: "ring-gray-300",
-  },
-  [IN_REVIEW]: {
-    card: "border-orange-400 bg-linear-to-r from-orange/20 to-white",
-    circle: "bg-orange",
-    title: "text-orange",
-    badge: "bg-orange",
-    amount: "text-orange",
-    ring: "ring-orange",
-  },
-  [DECLINED]: {
-    card: "border-red-400 bg-linear-to-r from-red-200 to-white",
-    circle: "bg-red-600",
-    title: "text-red-600",
-    badge: "bg-red-600",
-    amount: "text-red-600",
-    ring: "ring-red-600",
-  },
-  [PAID]: {
-    card: "border-light-green bg-linear-to-r from-Secondary to-white",
-    circle: "bg-light-green",
-    title: "text-Primary",
-    badge: "bg-light-green",
-    amount: "text-light-green",
-    ring: "ring-light-green",
-  },
-  [COMPLETED]: {
-    card: "border-light-green bg-linear-to-r from-Secondary to-white",
-    circle: "bg-light-green",
-    title: "text-Primary",
-    badge: "bg-light-green",
-    amount: "text-light-green",
-    ring: "ring-light-green",
-  },
-};
+function parseBDT(raw: string) {
+  const digits = raw.replace(/[^\d]/g, "");
+  return digits ? Number(digits) : 0;
+}
 
-const CampaignMilestone = ({
-  invitationStatus,
-  campaignStatus,
+// handles: number, "149,045.5", "149045.50", "৳ 149,045.5"
+function parseLooseNumber(v: unknown): number {
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const s = String(v ?? "").trim();
+  if (!s) return 0;
+  const cleaned = s.replace(/,/g, "").replace(/[^\d.]/g, "");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function splitTotalEvenly(total: number, count: number) {
+  if (count <= 0) return [];
+  const t = Math.max(0, Math.floor(total));
+  const base = Math.floor(t / count);
+  const rem = t - base * count;
+  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
+}
+
+export default function CampaignMilestone({
   influencers,
-}: Props) => {
-  const [disabled, setDisabled] = useState(true);
+  campaignStatus,
+  milestones,
+  activeMilestoneId,
+  onSelectMilestone,
+  offeredAmountPerInfluencer,
+}: Props) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [selectedCampaignMilestone, setSelectedCampaignMilestone] =
-    useState<CampaignMilestoneDataType | null>(null);
+  const sortedMilestones = useMemo(() => {
+    const list = [...(milestones ?? [])];
+    list.sort((a: any, b: any) => Number(a?.order ?? 0) - Number(b?.order ?? 0));
 
-  const isActiveAccepted =
-    campaignStatus === "active" && invitationStatus === "accepted";
-  const isActiveSent =
-    campaignStatus === "active" && invitationStatus === "sent";
+    return list.map((m: any, idx: number) => {
+      const id = safeStr(m?.id) || `m-${idx}`;
+      const order = Number(m?.order ?? idx);
+      const title = safeStr(m?.contentTitle) || "Milestone Title";
+      const subtitle = safeStr(m?.contentQuantity) || "";
+      const day = safeStr(m?.dayLabel) || `DAY ${order + 1}`;
+
+      const amountNum = parseLooseNumber(m?.amount ?? 0);
+      const amount = Math.max(0, Math.floor(amountNum));
+
+      return { id, order, title, subtitle, day, amount };
+    });
+  }, [milestones]);
+
+  const milestoneCount = sortedMilestones.length;
+  const activeId = safeStr(activeMilestoneId);
+
+  // ✅ offered amount (max)
+  const totalBudget = useMemo(() => {
+    const n = parseLooseNumber(offeredAmountPerInfluencer);
+    return Math.max(0, n); // keep decimals for display/compare
+  }, [offeredAmountPerInfluencer]);
+
+  const [amounts, setAmounts] = useState<number[]>([]);
+
+  // snapshot for diffing/rollback
+  const serverAmountsRef = useRef<number[]>([]);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    const fromApi = sortedMilestones.map((m) => m.amount);
+    const allZero = fromApi.every((x) => Number(x ?? 0) === 0);
+
+    // if server gives all 0 but we have budget, split initially
+    const initial =
+      allZero && totalBudget > 0
+        ? splitTotalEvenly(totalBudget, milestoneCount)
+        : fromApi;
+
+    setAmounts(initial);
+    serverAmountsRef.current = fromApi;
+    initializedRef.current = true;
+  }, [sortedMilestones, totalBudget, milestoneCount]);
+
+  const milestoneInputs = useMemo(() => {
+    return sortedMilestones.slice(0, 4).map((m, idx) => ({
+      key: m.id,
+      label: `Milestone ${idx + 1}`,
+      idx,
+    }));
+  }, [sortedMilestones]);
+
+  const sum = useMemo(
+    () => amounts.reduce((a, b) => a + (Number(b) || 0), 0),
+    [amounts]
+  );
+
+  const exceedsBudget = totalBudget > 0 && sum > totalBudget;
+
+  // ✅ independent edit + clamp so total never exceeds offered
+  function onAmountChange(idx: number, raw: string) {
+    const v = parseBDT(raw);
+    const nextVal = Math.max(0, Math.floor(v));
+
+    setAmounts((prev) => {
+      const next = [...prev];
+
+      const otherSum = prev.reduce((acc, val, i) => {
+        if (i === idx) return acc;
+        return acc + (Number(val) || 0);
+      }, 0);
+
+      if (totalBudget > 0) {
+        // IMPORTANT: subtract first, then floor (so 149045.5 behaves correctly)
+        const remaining = Math.max(0, Math.floor(totalBudget - otherSum));
+        next[idx] = Math.min(nextVal, remaining);
+      } else {
+        next[idx] = nextVal;
+      }
+
+      return next;
+    });
+  }
+
+  async function saveChangedAmounts() {
+    if (!initializedRef.current) return;
+    if (exceedsBudget) return;
+
+    const ids = sortedMilestones.map((m) => m.id);
+    const server = serverAmountsRef.current;
+    const next = amounts;
+
+    const changes = ids
+      .map((id, idx) => {
+        const nextVal = Number(next[idx] ?? 0);
+        const serverVal = Number(server[idx] ?? 0);
+        if (nextVal === serverVal) return null;
+        return { milestoneId: id, amount: nextVal };
+      })
+      .filter(Boolean) as Array<{ milestoneId: string; amount: number }>;
+
+    if (changes.length === 0) return;
+
+    setSaving(true);
+    try {
+      await Promise.all(
+        changes.map((c) =>
+          editMilestoneAmount({ milestoneId: c.milestoneId, amount: c.amount })
+        )
+      );
+
+      serverAmountsRef.current = [...amounts];
+    } catch (e) {
+      console.error("❌ editMilestoneAmount failed:", e);
+      setAmounts(serverAmountsRef.current);
+      throw e;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onToggleEdit() {
+    if (saving) return;
+
+    // turning OFF edit => save
+    if (editing) {
+      try {
+        await saveChangedAmounts();
+        if (!exceedsBudget) setEditing(false);
+      } catch {
+        // keep editing open on failure
+      }
+      return;
+    }
+
+    // turning ON edit
+    setEditing(true);
+  }
+
+  // ✅ Edit should always be clickable; only Done is blocked when invalid
+  const doneDisabled = saving || (editing && exceedsBudget);
 
   return (
-    <Card>
-      <CardHeader className="flex  gap-4">
-        {/* Title */}
-        <CardTitle className="flex flex-1 items-center gap-2 text-Primary text-base font-semibold">
-          <div>
-            <Image
-              src={"/icons/milestone.svg"}
-              height={24}
-              width={24}
-              alt="svg"
-            />
-          </div>
-          Campaign Milestone
-        </CardTitle>
+    <div className="rounded-xl border bg-white">
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-3">
+          <div className="text-sm font-semibold text-Primary">Milestone Amounts</div>
 
-        {/* Progress section */}
-        {campaignStatus === "needs-quote" && (
-          <div className=" flex-1 space-y-2">
-            <div className="flex justify-between items-center">
-              <p className="text-sm font-semibold">Progress</p>
-              <p className="text-sm font-semibold text-Primary">1 of 4 Paid</p>
-            </div>
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 rounded-md px-5 bg-orange text-white hover:brightness-95 disabled:opacity-60"
+            onClick={onToggleEdit}
+            disabled={doneDisabled}
+            title={
+              editing && exceedsBudget
+                ? "Total milestone amount cannot exceed offered amount"
+                : undefined
+            }
+          >
+            {saving ? "Saving..." : editing ? "Done" : "Edit"}
+          </Button>
+        </div>
 
-            {/* Progress bar */}
-            <div className="h-2 w-full bg-light-green/30 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-light-green rounded-full transition-all duration-300"
-                style={{ width: `${70}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isActiveSent && (
-          <div className="px-2">
-            <div className="flex items-center justify-between gap-8">
-              <div className="flex-2">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Influencer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {influencers.map((influencer) => (
-                      <SelectItem key={influencer.name} value={influencer.name}>
-                        {influencer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-Primary text-lg font-semibold">
-                  Offered Amout
-                </h2>
-                <p className="text-Primary text-lg font-medium">৳ 30,000</p>
-              </div>
-              <div className="flex-1 text-orange">
-                <h2 className=" text-lg">Remaining amount to distribute</h2>
-                <p className=" text-lg font-medium">৳ 0</p>
-              </div>
-              <div className="flex-1 flex flex-col items-center justify-center gap-2">
-                <h2 className="text-Primary text-lg font-semibold">
-                  Invitation remains: 03
-                </h2>
-                <Button variant={"PrimaryGradient"} size={"lg"}>
-                  Send Invitation
-                </Button>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-Primary font-semibold">
-                  Milestone amounts
-                </h2>
-                <Button
-                  onClick={() => setDisabled(false)}
-                  className="text-white bg-orange"
-                  size={"sm"}
+        <div className="mt-3 rounded-lg border p-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            {milestoneInputs.map((m) => (
+              <div key={m.key} className="space-y-1">
+                <div className="text-xs text-Primary">{m.label}</div>
+
+                <div
+                  className={cn(
+                    "flex items-center rounded-md border px-3 py-2",
+                    editing ? "bg-white" : "bg-[rgba(248,250,252,1)]",
+                    exceedsBudget && "border-red"
+                  )}
                 >
-                  Edit
-                </Button>
-              </div>
-              <Card>
-                <div className="px-4">
-                  <div className="grid grid-cols-12 gap-4">
-                    {[1, 2, 3, 4].map((item) => (
-                      <div key={item} className="col-span-3 space-y-2">
-                        <Label>Milestone {item}</Label>
+                  <span className="text-sm text-gray-500">৳</span>
 
-                        <div className="relative">
-                          {/* Currency Symbol */}
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                            ৳
-                          </span>
-
-                          <Input
-                            disabled={disabled}
-                            type="number"
-                            placeholder="7500"
-                            className="pl-8 text-right"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {isActiveAccepted && (
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between px-2">
-              <div className="flex-1">
-                <h2>Overall Progress</h2>
-                <p className="text-orange font-semibold text-lg">
-                  46% Completed
-                </p>
-              </div>
-              <div className="flex-1">
-                <Select>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Influencer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {influencers.map((influencer) => (
-                      <SelectItem key={influencer.name} value={influencer.name}>
-                        {influencer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <ProgressBar
-              maxPaid={4}
-              minPaid={1}
-              progressPercent={20}
-              title="Progress"
-            />
-          </div>
-        )}
-
-        <Carousel className="overflow-visible">
-          <CarouselContent className="p-2 mr-1 -ml-4 pr-24">
-            {campaignMilestoneData.map((item) => {
-              const styles =
-                milestoneStatusStyles[item.status as MilestoneStatus];
-              return (
-                <CarouselItem
-                  key={item.id}
-                  className="basis-full md:basis-[34%]"
-                >
-                  <div
-                    onClick={() => {
-                      if (campaignStatus !== "needs-quote") {
-                        setSelectedCampaignMilestone(item);
-                      }
-                    }}
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={money(amounts[m.idx] ?? 0)}
+                    readOnly={!editing || saving}
+                    onChange={(e) => onAmountChange(m.idx, e.target.value)}
                     className={cn(
-                      "border border-light-green p-4 rounded-md space-y-2 cursor-pointer transition",
-                      isActiveAccepted && styles?.card,
-                      selectedCampaignMilestone?.id === item.id &&
-                        cn(
-                          "ring-2 ring-offset-1 ring-light-green",
-                          isActiveAccepted && styles?.ring
-                        )
+                      "ml-2 w-full bg-transparent text-right text-sm outline-none",
+                      (!editing || saving) && "text-gray-500"
                     )}
-                  >
-                    {/* HEADER */}
-                    <div className="flex justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center text-white bg-light-green",
-                            isActiveAccepted && styles?.circle
-                          )}
-                        >
-                          {item.id}
-                        </div>
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
 
-                        <h2
-                          className={cn(
-                            "text-base font-medium text-light-green",
-                            isActiveAccepted && styles?.title
-                          )}
-                        >
-                          {item.title}
-                        </h2>
-                      </div>
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+            <span>Entered total:</span>
+            <span className={cn("font-semibold", exceedsBudget && "text-red")}>
+              ৳ {money(sum)}
+            </span>
+          </div>
 
-                      {item.status && isActiveAccepted && (
-                        <Badge className={styles?.badge}>
-                          {item.status} <ChevronRight />
-                        </Badge>
-                      )}
-                    </div>
+          {totalBudget > 0 && (
+            <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
+              <span>Offered Amount (max):</span>
+              <span className="font-semibold">৳ {money(totalBudget)}</span>
+            </div>
+          )}
 
-                    {/* CONTENT REQUIREMENTS */}
-                    <p className="text-gray-500 text-sm">
-                      {item.contentRequirement.map((i, index) => (
-                        <span key={i}>
-                          {i}
-                          {index !== item.contentRequirement.length - 1 &&
-                            " + "}
-                        </span>
-                      ))}
-                    </p>
+          {exceedsBudget && (
+            <div className="mt-2 text-xs text-red">
+              Total milestone amount cannot exceed offered amount.
+            </div>
+          )}
+        </div>
+      </div>
 
-                    {/* FOOTER */}
+      {/* cards row */}
+      <div className="px-4 pb-4 pt-4">
+        <div className="relative">
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {sortedMilestones.map((c, idx) => {
+              const isActive = c.id === activeId;
+
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onSelectMilestone(c.id)}
+                  className={cn(
+                    "min-w-[280px] max-w-[320px] flex-1 rounded-lg border px-4 py-3 text-left",
+                    isActive ? "border-light-green" : "border-[rgba(100,116,139,0.25)]"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
                     <div
                       className={cn(
-                        "flex items-center justify-between",
-                        isActiveAccepted && styles?.amount
+                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold",
+                        isActive
+                          ? "bg-light-green text-white"
+                          : "bg-[rgba(100,116,139,0.12)] text-Primary"
                       )}
                     >
-                      {(isActiveAccepted || isActiveSent) && (
-                        <p
-                          className={cn(
-                            "text-xl font-semibold text-light-green",
-                            isActiveAccepted && styles?.amount
-                          )}
-                        >
-                          ৳ 7500
-                        </p>
-                      )}
-                      {campaignStatus === "needs-quote" && (
-                        <p className="text-xl font-semibold text-gray-600"></p>
-                      )}
-                      <p
-                        className={cn(
-                          "text-sm text-light-green",
-                          isActiveAccepted && styles?.amount
-                        )}
-                      >
-                        DAY {item.day}
-                      </p>
+                      {c.order + 1}
                     </div>
+
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-Primary">{c.title}</div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        {c.subtitle || "\u00A0"}
+                      </div>
+
+                      <div className="mt-2 text-lg font-semibold text-light-green">
+                        ৳ {money(amounts[idx] ?? 0)}
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-light-green mt-1">{c.day}</div>
                   </div>
-                </CarouselItem>
+                </button>
               );
             })}
-          </CarouselContent>
-          <CarouselPrevious variant={"ghost"} />
-          <CarouselNext variant={"ghost"} />
-        </Carousel>
-      </CardContent>
-    </Card>
-  );
-};
+          </div>
 
-export default CampaignMilestone;
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-linear-to-l from-white to-transparent" />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -7,7 +7,14 @@ import {
 } from "@/components/ui/accordion";
 import { FaFileAlt } from "react-icons/fa";
 import { FaCopyright } from "react-icons/fa6";
-const TermsAndConditions = () => {
+
+export default function TermsAndConditions({
+  reportingRequirements,
+  usageRights,
+}: {
+  reportingRequirements: string;
+  usageRights: string;
+}) {
   return (
     <div className="flex-2">
       <Accordion
@@ -25,23 +32,23 @@ const TermsAndConditions = () => {
               <h3 className="font-semibold text-base">Terms & Conditions</h3>
             </div>
           </AccordionTrigger>
+
           <AccordionContent className="flex flex-col gap-4 text-balance">
-            <div className="space-y-4">
+            <div className="space-y-2">
               <h3 className="text-Primary flex items-center gap-2 font-semibold text-sm">
                 <TbMessageReportFilled size={20} /> Reporting Requirements
               </h3>
-              <p className="text-gray-500">
-                Provide analytics screenshots 7 days post-publication. Include
-                reach, engagement, and click-through rates.
+              <p className="text-gray-500 whitespace-pre-line">
+                {reportingRequirements || "-"}
               </p>
             </div>
-            <div className="space-y-4">
+
+            <div className="space-y-2">
               <h3 className="text-Primary flex items-center gap-2 font-semibold text-sm">
                 <FaCopyright size={20} /> Usage Rights
               </h3>
-              <p className="text-gray-500">
-                Provide analytics screenshots 7 days post-publication. Include
-                reach, engagement, and click-through rates.
+              <p className="text-gray-500 whitespace-pre-line">
+                {usageRights || "-"}
               </p>
             </div>
           </AccordionContent>
@@ -49,6 +56,4 @@ const TermsAndConditions = () => {
       </Accordion>
     </div>
   );
-};
-
-export default TermsAndConditions;
+}

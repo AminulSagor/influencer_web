@@ -5,9 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,15 +18,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/spin-loader";
-import { useAuthStore } from "@/app/[locale]/(auth)/zustand-store/auth-store";
-import api from "@/lib/axios";
-import {
-  handlePhoneFormat,
-  notifyError,
-  notifySuccess,
-} from "@/helpers/helper";
 
-type UserRole = "client" | "influencer" | "agency";
+import { handlePhoneFormat } from "@/utils/phone_util";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import {
+  buildSignupSchema,
+  type SignupFormValues,
+} from "@/schemas/auth/signup_schema";
+import { UserRole } from "@/types/auth/role_type";
+import { signup } from "@/api/auth/signup";
+import { useAuthStore } from "@/store/auth_store";
 
 type Props = {
   nextStep: () => void;
@@ -41,39 +40,13 @@ type Response = {
 const SignUpStepTwo = ({ nextStep }: Props) => {
   const t = useTranslations("Signup.step2");
   const userType = useAuthStore((s) => s.userType) as UserRole;
-  const [loading, setLoading] = useState(false);
   const setPhone = useAuthStore((s) => s.setPhone);
 
-  /* ================= ZOD SCHEMA ================= */
+  const [loading, setLoading] = useState(false);
 
-  const schema = useMemo(() => {
-    return z.object({
-      brandName:
-        userType === "client"
-          ? z.string().trim().min(2, "Brand name is required").max(80)
-          : z.string().optional(),
+  const schema = useMemo(() => buildSignupSchema(userType), [userType]);
 
-      firstName: z.string().trim().min(2, "First name is required").max(50),
-      lastName: z.string().trim().min(2, "Last name is required").max(50),
-
-      email: z.string().trim().email("Invalid email address"),
-
-      // valid BD numbers: 01XXXXXXXXX, 8801XXXXXXXXX, +8801XXXXXXXXX
-      phone: z
-        .string()
-        .trim()
-        .regex(/^(?:\+?88)?01\d{9}$/, "Invalid phone number"),
-
-      password: z
-        .string()
-        .min(8, "Password must be at least 8 characters")
-        .max(64),
-    });
-  }, [userType]);
-
-  type FormValues = z.infer<typeof schema>;
-
-  const methods = useForm<FormValues>({
+  const methods = useForm<SignupFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       brandName: "",
@@ -83,23 +56,18 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
       phone: "",
       password: "",
     },
-
-    //realtime validation
     mode: "onChange",
     reValidateMode: "onChange",
     criteriaMode: "firstError",
   });
 
-  /* ================= SUBMIT ================= */
-
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+  const onSubmit: SubmitHandler<SignupFormValues> = async (data) => {
     setLoading(true);
 
     const formattedPhone = handlePhoneFormat(data.phone);
-
     setPhone(formattedPhone);
 
-    const payload: FormValues & { role: UserRole } = {
+    const payload: SignupFormValues & { role: UserRole } = {
       ...data,
       phone: formattedPhone,
       role: userType,
@@ -110,34 +78,18 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
     }
 
     try {
-      const res: Response = await api.post("/influencer/auth/signup", payload);
-      if (res.status === 201) {
-        notifySuccess(`Verification Conde Sent on ${formattedPhone}`);
-        nextStep();
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const status = error.response?.status;
-        const apiMsg =
-          (error.response?.data as { message?: string })?.message ||
-          "Something went wrong";
+    const res = await signup(payload);
 
-        if (status === 409) {
-          notifyError(apiMsg);
-          return;
-        }
-
-        notifyError(apiMsg);
-        return;
-      }
-
-      notifyError("Something went wrong");
-    } finally {
-      setLoading(false);
+    if (res.status === 201) {
+      notifySuccess(`Verification Code Sent on ${formattedPhone}`);
+      nextStep();
     }
+  } catch (error: any) {
+    notifyError(error.message);
+  } finally {
+    setLoading(false);
+  }
   };
-
-  /* ================= FIELDS ================= */
 
   const fields = [
     ...(userType === "client"
@@ -182,8 +134,6 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
     },
   ] as const;
 
-  /* ================= UI ================= */
-
   return (
     <div className="flex flex-col md:flex-row gap-8 items-start">
       <div className="w-full md:w-1/2 lg:px-8">
@@ -214,7 +164,7 @@ const SignUpStepTwo = ({ nextStep }: Props) => {
               <FormField
                 key={f.name}
                 control={methods.control}
-                name={f.name as keyof FormValues}
+                name={f.name as keyof SignupFormValues}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-light-green">
