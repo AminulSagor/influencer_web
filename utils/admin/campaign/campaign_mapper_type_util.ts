@@ -1,4 +1,4 @@
-import { Campaignservice } from "@/types/admin/campaign/campaign_service_type";
+import type { Campaignservice } from "@/types/admin/campaign/campaign_api_type";
 import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
 
 function safeDate(value?: string | null) {
