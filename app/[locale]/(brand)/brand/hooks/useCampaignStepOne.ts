@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useCampaignStore } from "../zustand-store/create-Campaign-Store";
 import { notifyError } from "@/utils/toast_util";
-import { CampaignService } from "@/api/campaign/campaign-service";
+import { CampaignService } from "@/service/campaign/campaign-service";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { CampaignType } from "@/types/campaign/step1_campaign_basic_type";
@@ -60,7 +60,7 @@ const handleSubmit = async () => {
       onSuccess?.();
     } 
   } catch (error) {
-    console.error("API call failed:", error);
+    console.error("service call failed:", error);
   } finally {
     setLoading(false);
   }

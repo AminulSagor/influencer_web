@@ -8,12 +8,12 @@ import {
   RiInstagramFill,
   RiLinkedinFill,
 } from "react-icons/ri";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 
 type CampaignSummaryCardProps = {
-  campaign: CampaignApi;
+  campaign: Campaignservice;
   label?: string;
 };
 

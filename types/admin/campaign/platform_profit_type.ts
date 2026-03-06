@@ -7,7 +7,7 @@ export type CampaignInfluencer = {
   profileImg: string | null;
 };
 
-export type AllInfluencerApiItem = {
+export type AllInfluencerserviceItem = {
   id: string;
   profileId?: string;
   firstName?: string;

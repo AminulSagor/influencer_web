@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAllCampaigns } from "@/api/admin/campaign/get-campaign";
+import { getAllCampaigns } from "@/service/admin/campaign/get-campaign";
 
 import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";
@@ -12,7 +12,7 @@ import CampaignsGrid from "./campaigns-grid";
 
 import type { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign_ui_type";
 import type { GetCampaignResponse } from "@/types/campaign/get_campaign_type";
-import { mapApiCampaignToUI } from "@/utils/admin/campaign/campaign_mapper_type_util";
+import { mapserviceCampaignToUI } from "@/utils/admin/campaign/campaign_mapper_type_util";
 
 import type { CampaignTabKey } from "@/types/admin/campaign/campaign_filter_types";
 import CampaignsStatusTabs from "./campaigns-status-tabs";
@@ -29,10 +29,10 @@ export default function CampaignsPage() {
       try {
         const res = (await getAllCampaigns({ page: 1, limit: 10 })) as GetCampaignResponse;
         const list = Array.isArray((res as any)?.data) ? (res as any).data : [];
-        const mapped: CampaignUI[] = list.map(mapApiCampaignToUI);
+        const mapped: CampaignUI[] = list.map(mapserviceCampaignToUI);
 
-        // ✅ DEBUG: see what statuses you actually have from API
-        console.log("API STATUSES:", mapped.map((x) => x.status));
+        // ✅ DEBUG: see what statuses you actually have from service
+        console.log("service STATUSES:", mapped.map((x) => x.status));
 
         setCampaigns(mapped);
       } catch (err) {

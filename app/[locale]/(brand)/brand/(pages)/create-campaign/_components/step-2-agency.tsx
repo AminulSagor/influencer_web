@@ -8,8 +8,8 @@ import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
 import { Info, X } from "lucide-react";
-import { apiClient } from "@/api/base/axios_client";
-import { campaignServiceAgency } from "@/api/campaign/agency/update-step-2";
+import { serviceClient } from "@/service/base/axios_client";
+import { campaignServiceAgency } from "@/service/campaign/agency/update-step-2";
 
 type FieldErrors = Partial<Record<"campaignNiche" | "selectedAgencies", string>>;
 
@@ -43,7 +43,7 @@ export default function StepTwoAgency() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiClient.get("/campaign/get/niches");
+        const res = await serviceClient.get("/campaign/get/niches");
         if (res.status === 200 && Array.isArray(res.data)) {
           const niches = res.data.map((n: { name: string }) => n.name);
           setCampaignNiches(niches);
@@ -60,7 +60,7 @@ export default function StepTwoAgency() {
       if (!hasMore || loadingAgencies) return;
       setLoadingAgencies(true);
       try {
-        const res = await apiClient.get("/client/agencies", { params: { page, limit } });
+        const res = await serviceClient.get("/client/agencies", { params: { page, limit } });
         const newAgencies: Agency[] = (res.data?.data || []).map((a: any) => ({
           id: a.id,
           name: a.agencyName,      // map agencyName to name
@@ -86,7 +86,7 @@ export default function StepTwoAgency() {
   const searchAgencies = async (query: string) => {
     if (!query.trim()) return;
     try {
-      const res = await apiClient.get("/client/agencies", { params: { page: 1, limit: 30, search: query } });
+      const res = await serviceClient.get("/client/agencies", { params: { page: 1, limit: 30, search: query } });
       const data: Agency[] = (res.data?.data || []).map((a: any) => ({
         id: a.id,
         name: a.agencyName,

@@ -27,7 +27,7 @@ type SubmittedReport = {
   message: string;
 };
 
-/** ✅ Dummy data (replace with API later) */
+/** ✅ Dummy data (replace with service later) */
 const dummySubmittedReports: SubmittedReport[] = [
   {
     id: "r1",
@@ -74,12 +74,12 @@ export default function MilestoneTopRow({
   const canView = !!milestone.actions?.canViewSubmittedReport;
 
   const handleSubmitReport = () => {
-    // TODO: call API later
+    // TODO: call service later
     setReportOpen(false);
     setReason("");
   };
 
-  // ✅ For now: you can switch this to API result later
+  // ✅ For now: you can switch this to service result later
   const submittedReports = dummySubmittedReports;
 
   return (

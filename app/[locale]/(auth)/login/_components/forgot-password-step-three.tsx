@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl";
 import { useForgotPasswordStore } from "@/store/forgot_password_store";
 import Loader from "@/components/spin-loader";
 import { notifySuccess, notifyError } from "@/utils/toast_util";
-import { resetPassword } from "@/api/auth/forgot-password";
+import { resetPassword } from "@/service/auth/forgot-password";
 
 type Props = {
   nextStep: () => void;
@@ -75,7 +75,7 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
         newPassword: data.password
       });
       
-      // Call API with correct parameters
+      // Call service with correct parameters
       await resetPassword(identifier, otpCode, data.confirmPassword );
       
       notifySuccess("Password reset successfully!");

@@ -11,19 +11,19 @@ import { MultiSelect, MultiSelectContent, MultiSelectGroup, MultiSelectItem, Mul
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { getAllInfluencer } from "@/api/admin/campaign/get-campaign";
+import { getAllInfluencer } from "@/service/admin/campaign/get-campaign";
 import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
 import { clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 
-import type {AssignedRow, AllInfluencerApiItem,CampaignInfluencer,InfluencerBadgeItem,QuoteState,Statistics,
+import type {AssignedRow, AllInfluencerserviceItem,CampaignInfluencer,InfluencerBadgeItem,QuoteState,Statistics,
 } from "@/types/admin/campaign/platform_profit_type";
 
 import {getDraftAssignments,deleteAssignment,patchAssignment,postAssignInfluencer,
-} from "@/api/admin/campaign/influencer-assignments";
+} from "@/service/admin/campaign/influencer-assignments";
 
 import { getGeneralSettings, patchGeneralSettings,
-} from "@/api/admin/campaign/general-settings";
-import { getCampaignByIdFromAdmin } from "@/api/admin/campaign/get-campaign";
+} from "@/service/admin/campaign/general-settings";
+import { getCampaignByIdFromAdmin } from "@/service/admin/campaign/get-campaign";
 import { CampaignStatusType } from "./campaign-milestone-data";
 
 type Props = {
@@ -132,8 +132,8 @@ export default function PlatformProfitInfluencerAssign({
   }, [notPreferableInfluencers]);
 
 
-  const [allInfluencersApi, setAllInfluencersApi] = useState<
-    AllInfluencerApiItem[]
+  const [allInfluencersservice, setAllInfluencersservice] = useState<
+    AllInfluencerserviceItem[]
   >([]);
   const [loadingInfluencers, setLoadingInfluencers] = useState(false);
 
@@ -146,10 +146,10 @@ export default function PlatformProfitInfluencerAssign({
         setLoadingInfluencers(true);
         const res: any = await getAllInfluencer();
         const list = res?.data?.data ?? res?.data ?? [];
-        setAllInfluencersApi(Array.isArray(list) ? list : []);
+        setAllInfluencersservice(Array.isArray(list) ? list : []);
       } catch (e) {
         console.error("getAllInfluencer failed", e);
-        setAllInfluencersApi([]);
+        setAllInfluencersservice([]);
       } finally {
         setLoadingInfluencers(false);
       }
@@ -157,12 +157,12 @@ export default function PlatformProfitInfluencerAssign({
   }, [locked, campaignId]);
 
   const dropdownInfluencers = useMemo(() => {
-    return (allInfluencersApi ?? []).map((i) => ({
+    return (allInfluencersservice ?? []).map((i) => ({
       id: String(i.profileId || i.id),
       name: fullName(i) || "Unknown Influencer",
       profileImg: i.profileImg ?? null,
     }));
-  }, [allInfluencersApi]);
+  }, [allInfluencersservice]);
 
   const influencerInfoById = useMemo(() => {
     const m = new Map<string, { name: string; profileImg?: string | null }>();

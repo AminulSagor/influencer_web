@@ -14,8 +14,8 @@ import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
 import {
   fetchCampaignAgencyDrafts
-} from "@/api/admin/campaign/agency/get-campaign-agency-draft";
-import { inviteAgency } from "@/api/admin/campaign/agency/send-invite-agency";
+} from "@/service/admin/campaign/agency/get-campaign-agency-draft";
+import { inviteAgency } from "@/service/admin/campaign/agency/send-invite-agency";
 import { AgencyDraftRow } from "@/types/admin/campaign/agency/agency_draft_row";
 
 function fullName(row: AgencyDraftRow) {

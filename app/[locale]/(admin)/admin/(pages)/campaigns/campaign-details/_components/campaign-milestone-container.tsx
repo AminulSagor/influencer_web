@@ -25,7 +25,7 @@ import InviteAgencyBar from "./invite-agency-bar";
 import type {
   CampaignStatusType,
   InfluencerUI,
-  CampaignMilestoneApi,
+  CampaignMilestoneservice,
 } from "@/types/admin/campaign/campaign_details_type";
 
 import { safeStr } from "@/utils/admin/campaign/number_util";
@@ -40,7 +40,7 @@ interface Props {
 
   influencers: InfluencerUI[];
   dropdownInfluencers?: any[];
-  milestones: CampaignMilestoneApi[];
+  milestones: CampaignMilestoneservice[];
 
   availableForInfluencers: number;
   availableForAgency?: number;

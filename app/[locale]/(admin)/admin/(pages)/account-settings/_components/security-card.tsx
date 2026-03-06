@@ -30,7 +30,7 @@ const SecurityCard = () => {
       return;
     }
 
-    // TODO: Replace with actual password update logic (API call etc.)
+    // TODO: Replace with actual password update logic (service call etc.)
     alert("Password updated successfully!");
     // Reset form
     setEmail("");

@@ -2,12 +2,12 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Download, Film, FileText, File, Album } from "lucide-react";
-import type { CampaignApi, CampaignAssetApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice, CampaignAssetservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-type Props = { campaign: CampaignApi | null };
+type Props = { campaign: Campaignservice | null };
 
 const ContentAssetsCard = ({ campaign }: Props) => {
-  const assets: CampaignAssetApi[] = Array.isArray(campaign?.assets) ? campaign!.assets : [];
+  const assets: CampaignAssetservice[] = Array.isArray(campaign?.assets) ? campaign!.assets : [];
   const contentAssets = assets.filter((a) => (a.category || "").toLowerCase() === "content");
 
   const getFileIcon = (fileType: string) => {

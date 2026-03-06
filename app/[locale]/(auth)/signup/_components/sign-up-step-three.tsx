@@ -16,7 +16,7 @@ import Loader from "@/components/spin-loader";
 
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 import { handlePhoneFormat } from "@/utils/phone_util";
-import { resendOtp, verifyOtp } from "@/api/auth/otp";
+import { resendOtp, verifyOtp } from "@/service/auth/otp";
 import { useAuthStore } from "@/store/auth_store";
 
 type Props = {

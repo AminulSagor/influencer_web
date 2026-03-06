@@ -48,7 +48,7 @@ export interface ClientInfo {
   socialLinks: string[];
 }
 
-export interface CampaignApi {
+export interface Campaignservice {
   id: string;
   campaignName: string;
   campaignType: string;
@@ -82,5 +82,5 @@ export interface CampaignApi {
 
 export interface GetCampaignResponse {
   success: boolean;
-  data: CampaignApi;
+  data: Campaignservice;
 }

@@ -21,7 +21,7 @@ const VerificationMethodCard = () => {
   // 🔹 Change this to false to test unverified state
   const isVerified = true;
 
-  // 🔹 Mock verified data (normally comes from API)
+  // 🔹 Mock verified data (normally comes from service)
   const verifiedData = {
     nidNumber: "1998123456789",
     tradeLicense: "TL-987654",

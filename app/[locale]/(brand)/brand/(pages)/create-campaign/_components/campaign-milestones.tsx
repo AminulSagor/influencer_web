@@ -7,9 +7,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Image from "next/image";
-import type { CampaignApi } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 
-type Props = { campaign: CampaignApi | null };
+type Props = { campaign: Campaignservice | null };
 
 const CampaignMilestones = ({ campaign }: Props) => {
   const milestones = Array.isArray(campaign?.milestones) ? campaign!.milestones : [];

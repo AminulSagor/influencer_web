@@ -4,14 +4,14 @@ import { FiInstagram } from "react-icons/fi";
 import { FaClapperboard } from "react-icons/fa6";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
 import type {
-  CampaignApi,
+  Campaignservice,
   SocialPlatform,
 } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { getPlatformIcon } from "@/utils/platforms_util";
 //import { getPlatformIcon } from "@/helpers/platforms";
 
 type Props = {
-  campaign: CampaignApi | null;
+  campaign: Campaignservice | null;
 };
 
 const PlacementConfirmCard = ({ campaign }: Props) => {

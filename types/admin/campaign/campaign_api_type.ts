@@ -1,7 +1,7 @@
 export type CampaignType = "paid_ad" | "influencer_promotion" | string;
 export type CampaignBackendStatus = "draft" | "received" | string;
 
-export interface CampaignApi {
+export interface Campaignservice {
   id: string;
   campaignName: string;
   campaignType: CampaignType;
@@ -45,6 +45,6 @@ export interface CampaignMeta {
 }
 
 export interface CampaignResponse {
-  data: CampaignApi[];   // ✅ must be array
+  data: Campaignservice[];   // ✅ must be array
   meta: CampaignMeta;
 }

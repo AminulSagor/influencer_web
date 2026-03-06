@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 
-import { getAdminCampaignById } from "@/api/admin/campaign/agency/get-campaign-agency-by-id";
-import { getAssignedAgencies } from "@/api/admin/campaign/agency/get-assigned-agencies";
+import { getAdminCampaignById } from "@/service/admin/campaign/agency/get-campaign-agency-by-id";
+import { getAssignedAgencies } from "@/service/admin/campaign/agency/get-assigned-agencies";
 
 import CampaignDetailsCard from "../campaign-details/_components/campaign-details-card";
 import CampaignMilestoneContainer from "../campaign-details/_components/campaign-milestone-container";
@@ -17,8 +17,8 @@ import InfluencerRatingCard from "../campaign-details/_components/influencer-rat
 import PlatformProfit from "../campaign-details/_components/platform-profit";
 import PlatformProfitAgency from "../campaign-details/_components/platform-profit-agency";
 
-import { getAdminAgencyProfile } from "@/api/admin/campaign/agency/get-admin-agency-profile";
-import { getAllAgencies } from "@/api/admin/users/agency/get-all-agencies";
+import { getAdminAgencyProfile } from "@/service/admin/campaign/agency/get-admin-agency-profile";
+import { getAllAgencies } from "@/service/admin/users/agency/get-all-agencies";
 
 import {
   normalize,

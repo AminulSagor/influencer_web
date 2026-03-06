@@ -8,7 +8,7 @@ import { useOnboardingStore } from "@/store/onboarding_store";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
-import { submitOnboarding } from "@/api/onboarding";
+import { submitOnboarding } from "@/service/onboarding";
 import { useAuthStore } from "@/store/auth_store";
 
 const FinalStep = () => {

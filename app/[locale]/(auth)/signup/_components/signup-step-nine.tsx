@@ -58,7 +58,7 @@ const SignUpStepNine = ({ nextStep }: Props) => {
         binNumber: formData.binNumber || "",
       });
 
-      // Move to next step - NO API CALL
+      // Move to next step - NO service CALL
       nextStep();
     } catch (error: unknown) {
       console.error("Error in step 9:", error);

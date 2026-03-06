@@ -28,8 +28,8 @@ import { z } from "zod";
 import Loader from "@/components/spin-loader";
 import { stepThreeSchema } from "@/schemas/campaign/step3_campaign_validation";
 import { notifyError } from "@/utils/toast_util";
-import { CampaignService } from "@/api/campaign/campaign-service";
-import { submitCampaignStepThree } from "@/api/campaign/update-step-3";
+import { CampaignService } from "@/service/campaign/campaign-service";
+import { submitCampaignStepThree } from "@/service/campaign/update-step-3";
 import { StepThreePayload } from "@/types/campaign/step3_campaign_type";
 
 const StepThree = () => {

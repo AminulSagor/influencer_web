@@ -130,7 +130,7 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
 
     setLoading(true);
     
-    // Simulate API delay
+    // Simulate service delay
     const timer = setTimeout(() => {
       const districtThanas = sampleThanas[districtId] || [];
       setThanas(districtThanas);
