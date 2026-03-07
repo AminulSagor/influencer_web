@@ -1,5 +1,6 @@
 import { serviceServer } from "@/service/base/axios_server";
 import {
+  ActionRequiredItem,
   ActiveJobsResponse,
   LifetimeSummaryData,
 } from "@/types/client/dashboard/dashboard-types";
@@ -20,3 +21,16 @@ export async function getLifetimeSummary(): Promise<LifetimeSummaryData> {
 
   return res.data.data;
 }
+
+export const getActionRequired = async (): Promise<ActionRequiredItem[]> => {
+  try {
+    const { data } = await serviceServer.get<
+      ServiceResponse<ActionRequiredItem[]>
+    >("/client/dashboard/action-required");
+
+    return data.data ?? [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};

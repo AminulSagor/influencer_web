@@ -25,3 +25,11 @@ export type StatsCard = {
   icon: LucideIcon | IconType;
   link?: string;
 };
+
+export type ActionRequiredItem  = {
+  type: string;
+  priority: "High" | "Medium" | "Low";
+  title: string;
+  description: string;
+  actionLink: string;
+};
