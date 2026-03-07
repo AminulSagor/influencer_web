@@ -33,3 +33,11 @@ export type ActionRequiredItem  = {
   description: string;
   actionLink: string;
 };
+
+export type UpcomingDeadlineItem = {
+  id: string;
+  campaignName: string;
+  status: string;
+  deadline: string;
+  daysLeft: number;
+};

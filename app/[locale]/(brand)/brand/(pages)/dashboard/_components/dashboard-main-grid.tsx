@@ -2,12 +2,16 @@ import WorkInProgressCard from "./work-in-progress-card";
 import UpcomingDeadline from "./upcoming-deadlines";
 import ActionRequiredCard from "./action-required-card";
 import { getActiveCampaigns } from "@/service/client/campaigns/active-campaigns";
-import { getActionRequired } from "@/service/client/dashboard";
+import {
+  getActionRequired,
+  getUpcomingDeadlines,
+} from "@/service/client/dashboard";
 
 export default async function DashboardMainGrid() {
-  const [campaigns, actionRequiredItems] = await Promise.all([
+  const [campaigns, actionRequiredItems, upcomingDeadlines] = await Promise.all([
     getActiveCampaigns(),
     getActionRequired(),
+    getUpcomingDeadlines(1, 5),
   ]);
 
   return (
@@ -19,7 +23,7 @@ export default async function DashboardMainGrid() {
 
         <div className="space-y-4 lg:col-span-2">
           <ActionRequiredCard data={actionRequiredItems} />
-          <UpcomingDeadline />
+          <UpcomingDeadline initialResponse={upcomingDeadlines} />
         </div>
       </div>
     </div>
