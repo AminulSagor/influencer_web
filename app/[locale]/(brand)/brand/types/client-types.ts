@@ -51,7 +51,9 @@ export type serviceMilestonePaidAd = {
   expectedComments: number;
 }>;
 
-export type serviceMilestone = serviceMilestoneInfluencer | serviceMilestonePaidAd;
+export type serviceMilestone =
+  | serviceMilestoneInfluencer
+  | serviceMilestonePaidAd;
 
 //respone uplaoad file
 export type SignedUrlResponse = {
@@ -179,10 +181,10 @@ export interface CampaignAssetservice {
 
 //assign infos
 interface AssignedMember {
-  id: number,
-  name : string,
-  image : string,
-  type : string
+  id: number;
+  name: string;
+  image: string;
+  type: string;
 }
 
 export interface CampaignSummary {
@@ -252,5 +254,3 @@ export interface serviceErrorResponse {
   message?: string;
   data?: unknown;
 }
-
-export type serviceResponse<T> = serviceSuccessResponse<T> | serviceErrorResponse;
