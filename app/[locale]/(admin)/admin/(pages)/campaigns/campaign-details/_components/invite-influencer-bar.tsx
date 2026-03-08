@@ -17,33 +17,28 @@ import {
 } from "@/service/admin/campaign/assignment-remain";
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
-function getAxiosErrorDebug(err: any) {
-  // Works for AxiosError and "normal" errors
-  const status = err?.response?.status;
-  const data = err?.response?.data;
-  const message = err?.message;
-  const url = err?.config?.url;
-  const method = err?.config?.method;
-  const baseURL = err?.config?.baseURL;
-  const requestData = err?.config?.data;
+type MilestoneLite = {
+  id: string;
+  order?: number;
+};
 
-  return {
-    message,
-    status,
-    url,
-    method,
-    baseURL,
-    requestData,
-    responseData: data,
-  };
+function splitTotalEvenly(total: number, count: number) {
+  if (count <= 0) return [];
+  const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
+  const base = Math.floor(safeTotal / count);
+  const rem = safeTotal - base * count;
+
+  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
 }
 
 export default function InviteInfluencerBar({
   campaignId,
   milestoneCount,
+  milestones,
 }: {
   campaignId: string;
   milestoneCount: number;
+  milestones: MilestoneLite[];
 }) {
   const [loading, setLoading] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -56,6 +51,12 @@ export default function InviteInfluencerBar({
 
   const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>("");
 
+  const sortedMilestones = useMemo(() => {
+    return [...(milestones ?? [])]
+      .filter((m) => String(m?.id ?? "").trim().length > 0)
+      .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0));
+  }, [milestones]);
+
   const loadRemaining = async () => {
     if (!campaignId) return;
 
@@ -63,12 +64,6 @@ export default function InviteInfluencerBar({
     try {
       const res = await fetchRemainingInvitations(campaignId);
       const data = res?.data;
-
-      console.groupCollapsed("✅ /remain response");
-      console.log("campaignId:", campaignId);
-      console.log("raw:", res);
-      console.log("data:", data);
-      console.groupEnd();
 
       const list = Array.isArray(data?.draftedInfluencers)
         ? (data.draftedInfluencers as RemainingInvitationInfluencer[])
@@ -79,8 +74,7 @@ export default function InviteInfluencerBar({
       setDraftedInfluencers(list);
 
       setSelectedInfluencerId((prev) => prev || list?.[0]?.id || "");
-    } catch (e) {
-      console.error("❌ fetchRemainingInvitations failed:", getAxiosErrorDebug(e));
+    } catch {
       setDraftCount(0);
       setRemainingBudget(0);
       setDraftedInfluencers([]);
@@ -103,46 +97,39 @@ export default function InviteInfluencerBar({
   const offeredAmount = Number(selectedInfluencer?.offeredAmount ?? 0);
 
   const milestoneAmount = useMemo(() => {
-    if (!milestoneCount || milestoneCount <= 0) return 0;
-    return offeredAmount / milestoneCount;
-  }, [offeredAmount, milestoneCount]);
+    const count = sortedMilestones.length || milestoneCount || 0;
+    if (count <= 0) return 0;
+    return offeredAmount / count;
+  }, [offeredAmount, sortedMilestones.length, milestoneCount]);
+
+  const milestoneSplits = useMemo(() => {
+    if (!selectedInfluencer) return [];
+    if (sortedMilestones.length === 0) return [];
+
+    const splitAmounts = splitTotalEvenly(offeredAmount, sortedMilestones.length);
+
+    return sortedMilestones.map((milestone, index) => ({
+      milestoneId: milestone.id,
+      amount: splitAmounts[index] ?? 0,
+    }));
+  }, [selectedInfluencer, sortedMilestones, offeredAmount]);
 
   const invitationRemainsText = String(draftCount).padStart(2, "0");
 
   const handleInvite = async () => {
-    // ✅ debug before request
-    console.groupCollapsed("🚀 Send Invitation click");
-    console.log("campaignId:", campaignId);
-    console.log("selectedInfluencerId:", selectedInfluencerId);
-    console.log("selectedInfluencer:", selectedInfluencer);
-    console.log("selectedAssignmentId:", selectedAssignmentId);
-    console.groupEnd();
-
-    if (!selectedAssignmentId) {
-      console.warn("⚠️ No assignmentId found for selected influencer.");
-      return;
-    }
+    if (!selectedAssignmentId) return;
+    if (milestoneSplits.length === 0) return;
 
     try {
       setInviting(true);
-      const res = await inviteAssignment(selectedAssignmentId);
 
-      console.groupCollapsed("✅ inviteAssignment success");
-      console.log("assignmentId:", selectedAssignmentId);
-      console.log("response:", res?.data ?? res);
-      console.groupEnd();
+      await inviteAssignment(selectedAssignmentId, {
+        milestoneSplits,
+      });
 
       await loadRemaining();
-    } catch (e) {
-      // ✅ show full server error payload (usually contains message/validation)
-      console.error("❌ inviteAssignment failed:", getAxiosErrorDebug(e));
-
-      // Optional: pretty-print response body if present
-      const serverMsg =
-        (e as any)?.response?.data?.message ??
-        (e as any)?.response?.data?.error ??
-        null;
-      if (serverMsg) console.error("🧾 server message:", serverMsg);
+    } catch {
+      // optional: show toast later
     } finally {
       setInviting(false);
     }
@@ -151,7 +138,6 @@ export default function InviteInfluencerBar({
   return (
     <div className="px-2">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-8">
-        {/* dropdown */}
         <div className="md:flex-[2]">
           <Select
             value={selectedInfluencerId}
@@ -185,7 +171,6 @@ export default function InviteInfluencerBar({
           )}
         </div>
 
-        {/* offered */}
         <div className="md:flex-1">
           <h2 className="text-Primary text-sm md:text-lg font-semibold">
             Offered Amount:
@@ -195,7 +180,6 @@ export default function InviteInfluencerBar({
           </p>
         </div>
 
-        {/* remaining */}
         <div className="md:flex-1 text-orange">
           <h2 className="text-sm md:text-lg">Remaining amount to distribute:</h2>
           <p className="text-sm md:text-lg font-medium">
@@ -203,7 +187,6 @@ export default function InviteInfluencerBar({
           </p>
         </div>
 
-        {/* CTA */}
         <div className="md:flex-1 flex flex-col items-start md:items-center md:justify-center gap-2">
           <h2 className="text-Primary text-sm md:text-lg font-semibold">
             Invitation Remains: {invitationRemainsText}
@@ -217,7 +200,8 @@ export default function InviteInfluencerBar({
               inviting ||
               !selectedAssignmentId ||
               draftedInfluencers.length === 0 ||
-              selectedInfluencerId === "__none"
+              selectedInfluencerId === "__none" ||
+              milestoneSplits.length === 0
             }
             onClick={handleInvite}
           >

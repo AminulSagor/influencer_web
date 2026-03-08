@@ -28,11 +28,14 @@ import {
   getCampaignTypeFlags,
   getPlatformListFromMilestones,
   getInfluencerAvatars,
-  getAssignedInfluencersForPayment,
   computeFinancials,
 } from "@/utils/admin/campaign/campaign_page_util";
 
 type PreferredAgency = { id: string; name: string; image?: string | null };
+
+function safeStr(v: unknown) {
+  return String(v ?? "").trim();
+}
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +49,9 @@ export default function Page() {
 
   const [assignedAgenciesDraft, setAssignedAgenciesDraft] = useState<any[]>([]);
   const [loadingAssignedAgencies, setLoadingAssignedAgencies] = useState(false);
+
+  const [assignedInfluencerOfferTotal, setAssignedInfluencerOfferTotal] =
+    useState<number>(0);
 
   const fetchCampaign = useCallback(async () => {
     if (!campaignId) return;
@@ -65,73 +71,70 @@ export default function Page() {
       const res = await getAssignedAgencies(campaignId);
       const list = res?.data?.data ?? [];
       setAssignedAgenciesDraft(Array.isArray(list) ? list : []);
-    } catch (e) {
-      console.error("❌ getAssignedAgencies failed:", e);
+    } catch {
       setAssignedAgenciesDraft([]);
     } finally {
       setLoadingAssignedAgencies(false);
     }
   }, [campaignId]);
 
-  const fetchPreferredAgenciesFromSuggested = useCallback(async (suggestedIds: string[]) => {
-    const ids = Array.from(new Set((suggestedIds ?? []).map((x) => String(x).trim()))).filter(Boolean);
+  const fetchPreferredAgenciesFromSuggested = useCallback(
+    async (suggestedIds: string[]) => {
+      const ids = Array.from(
+        new Set((suggestedIds ?? []).map((x) => String(x).trim()))
+      ).filter(Boolean);
 
-    if (ids.length === 0) {
-      setPreferredAgencies([]);
-      return;
-    }
-
-    setLoadingPreferredAgencies(true);
-
-    try {
-      const agencyMap = new Map<string, { name: string; image: string | null }>();
-      try {
-        const agenciesRes: any = await getAllAgencies();
-        const list = agenciesRes?.data?.data ?? agenciesRes?.data ?? agenciesRes ?? [];
-        (Array.isArray(list) ? list : []).forEach((a: any) => {
-          const id = String(a?.id ?? "").trim();
-          if (!id) return;
-          agencyMap.set(id, {
-            name: String(a?.agencyName ?? a?.fullName ?? "Agency"),
-            image: a?.logo ?? null,
-          });
-        });
-      } catch (e) {
-        console.warn("⚠️ getAllAgencies failed for preferred fallback:", e);
+      if (ids.length === 0) {
+        setPreferredAgencies([]);
+        return;
       }
 
+      setLoadingPreferredAgencies(true);
 
-      const results = await Promise.all(
-        ids.map(async (profileId) => {
-          try {
-            const res = await getAdminAgencyProfile(profileId);
-            return {
-              id: String(res?.data?.profileid ?? profileId),
-              name: String(res?.data?.name ?? "Agency"),
-              image: res?.data?.image ?? null,
-            };
-          } catch (e: any) {
-            if (e?.response?.status === 404) {
+      try {
+        const agencyMap = new Map<string, { name: string; image: string | null }>();
+
+        try {
+          const agenciesRes: any = await getAllAgencies();
+          const list =
+            agenciesRes?.data?.data ?? agenciesRes?.data ?? agenciesRes ?? [];
+
+          (Array.isArray(list) ? list : []).forEach((a: any) => {
+            const id = String(a?.id ?? "").trim();
+            if (!id) return;
+
+            agencyMap.set(id, {
+              name: String(a?.agencyName ?? a?.fullName ?? "Agency"),
+              image: a?.logo ?? null,
+            });
+          });
+        } catch {}
+
+        const results = await Promise.all(
+          ids.map(async (profileId) => {
+            try {
+              const res = await getAdminAgencyProfile(profileId);
+              return {
+                id: String(res?.data?.profileid ?? profileId),
+                name: String(res?.data?.name ?? "Agency"),
+                image: res?.data?.image ?? null,
+              };
+            } catch {
               const fallback = agencyMap.get(profileId);
               return fallback
                 ? { id: profileId, name: fallback.name, image: fallback.image }
                 : { id: profileId, name: "Agency", image: null };
             }
+          })
+        );
 
-            console.warn("⚠️ getAdminAgencyProfile failed:", profileId, e?.response?.data ?? e);
-            const fallback = agencyMap.get(profileId);
-            return fallback
-              ? { id: profileId, name: fallback.name, image: fallback.image }
-              : { id: profileId, name: "Agency", image: null };
-          }
-        })
-      );
-
-      setPreferredAgencies(results);
-    } finally {
-      setLoadingPreferredAgencies(false);
-    }
-  }, []);
+        setPreferredAgencies(results);
+      } finally {
+        setLoadingPreferredAgencies(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     fetchCampaign();
@@ -165,7 +168,10 @@ export default function Page() {
     [campaign, rawStatus, rawQuoteStatus, waitingFor]
   );
 
-  const campaignStatus = useMemo(() => mapCampaignStatus(campaign?.status), [campaign?.status]);
+  const campaignStatus = useMemo(
+    () => mapCampaignStatus(campaign?.status),
+    [campaign?.status]
+  );
 
   const { isPaidAd } = useMemo(() => getCampaignTypeFlags(campaign), [campaign]);
 
@@ -190,10 +196,31 @@ export default function Page() {
     [campaign?.preferredInfluencers]
   );
 
-  const assignedInfluencersForPayment = useMemo(
-    () => getAssignedInfluencersForPayment(campaign?.preferredInfluencers ?? []),
-    [campaign?.preferredInfluencers]
-  );
+  const assignedInfluencersForPayment = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        avatarUrl?: string | null;
+      }
+    >();
+
+    (campaign?.milestones ?? []).forEach((m: any) => {
+      const profileId = safeStr(m?.assignedToInfluencerId);
+      if (!profileId) return;
+
+      if (!map.has(profileId)) {
+        map.set(profileId, {
+          id: profileId,
+          name: safeStr(m?.influencerName) || "Unknown Influencer",
+          avatarUrl: m?.influencerImage ?? "/avatar-fallback.png",
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [campaign?.milestones]);
 
   const stats = useMemo(
     () => [
@@ -205,6 +232,7 @@ export default function Page() {
   );
 
   const useAgencyProfitUI = isPaidAd || rawStatus === "pending_agency";
+  const isActiveInfluencerCampaign = !isPaidAd && campaignStatus === "active";
 
   if (loading || !campaign) return <div>Loading...</div>;
 
@@ -252,7 +280,11 @@ export default function Page() {
           stats={stats}
           quoteState={quoteState}
           platformFeePercent={platformFeePercent}
-          preferredAgencies={preferredAgencies.map((a) => ({ id: a.id, name: a.name, image: a.image }))}
+          preferredAgencies={preferredAgencies.map((a) => ({
+            id: a.id,
+            name: a.name,
+            image: a.image,
+          }))}
           loadingPreferredAgencies={loadingPreferredAgencies}
           draftAssignedAgencies={assignedAgenciesDraft}
           loadingDraftAssignedAgencies={loadingAssignedAgencies}
@@ -263,8 +295,17 @@ export default function Page() {
           campaignId={campaignId}
           stats={stats}
           quoteState={quoteState}
+          campaignStatus={campaignStatus}
           preferredInfluencers={campaign?.preferredInfluencers ?? []}
           notPreferableInfluencers={campaign?.notPreferableInfluencers ?? []}
+          onAssignedOfferTotalChange={setAssignedInfluencerOfferTotal}
+        />
+      )}
+
+      {isActiveInfluencerCampaign && (
+        <InfluencerPaymentMethod
+          campaignStatus={campaignStatus}
+          assignedInfluencers={assignedInfluencersForPayment}
         />
       )}
 
@@ -277,14 +318,8 @@ export default function Page() {
         milestones={campaign?.milestones ?? []}
         availableForInfluencers={availableForInfluencers}
         availableForAgency={availableForAgency}
+        assignedInfluencerOfferTotal={assignedInfluencerOfferTotal}
       />
-
-      {campaignStatus === "active" && (
-        <InfluencerPaymentMethod
-          campaignStatus={campaignStatus}
-          assignedInfluencers={assignedInfluencersForPayment}
-        />
-      )}
 
       <CampaignTermsCard
         campaignGoals={campaign?.campaignGoals ?? ""}
