@@ -1,19 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import type {
-  CampaignMilestoneservice,
-  CampaignSummary,
-} from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import ListShell from "../list-shell";
-import {
-  formatBDT,
-  formatDateLabel,
-  getAssignedUserBasedText,
-  toNumberSafe,
-} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { getPlatformIcon } from "@/utils/platforms_util";
@@ -23,7 +14,7 @@ export default function CompletedCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignSummary[];
+  campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
   return (
@@ -41,20 +32,18 @@ export default function CompletedCampaignsList({
   );
 }
 
-// placeholder until backend provides rating
 function fakeRatingFromId(id: string) {
   const n = Array.from(id).reduce((a, ch) => a + ch.charCodeAt(0), 0);
-  return 2 + (n % 4); // 2..5
+  return 2 + (n % 4);
 }
 
-function CompletedCard({ c }: { c: CampaignSummary }) {
+function CompletedCard({ c }: { c: CampaignOverView }) {
   const rating = fakeRatingFromId(c.id);
 
   const campaignType =
     c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
-
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
 
   return (
@@ -69,9 +58,7 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
 
         <div className="flex gap-2 items-center">
           <AvatarStack users={c.assignedTo} />
-          {isAssigned ? (
-            ""
-          ) : (
+          {!isAssigned && (
             <p className="text-xs text-dark-gray">{assignText}</p>
           )}
         </div>
@@ -113,7 +100,7 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
               className={
                 i < rating
                   ? "text-yellow-400 text-6xl"
-                  : " text-6xl text-muted-foreground"
+                  : "text-6xl text-muted-foreground"
               }
             >
               ★

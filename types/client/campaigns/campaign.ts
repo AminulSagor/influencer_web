@@ -11,3 +11,4 @@ export type Campaign = {
     type: string;
   }[];
 };
+

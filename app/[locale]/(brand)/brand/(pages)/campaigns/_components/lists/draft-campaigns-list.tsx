@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
@@ -15,7 +15,7 @@ export default function DraftCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignSummary[];
+  campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
   return (
@@ -27,7 +27,7 @@ export default function DraftCampaignsList({
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-10 mt-6">
         {campaigns.map((c) => (
           <div key={c.id}>
-            <DraftCard c={c}/>
+            <DraftCard c={c} />
           </div>
         ))}
       </div>
@@ -35,9 +35,7 @@ export default function DraftCampaignsList({
   );
 }
 
-//============drafted card start=============//
-
-function DraftCard({ c }: { c: CampaignSummary }) {
+function DraftCard({ c }: { c: CampaignOverView }) {
   const campaignType =
     c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
 
@@ -56,6 +54,7 @@ function DraftCard({ c }: { c: CampaignSummary }) {
 
     return "";
   })();
+
   return (
     <Card className="py-8">
       <CardContent className="space-y-4 lg:px-3 xl:px-6">
@@ -67,7 +66,8 @@ function DraftCard({ c }: { c: CampaignSummary }) {
         </div>
 
         <div className="text-muted-foreground text-sm flex gap-4 items-center">
-          <AvatarStack users={c.assignedTo} /> {assignmentText}
+          <AvatarStack users={c.assignedTo} />
+          {assignmentText}
         </div>
 
         <div className="flex items-center gap-4">

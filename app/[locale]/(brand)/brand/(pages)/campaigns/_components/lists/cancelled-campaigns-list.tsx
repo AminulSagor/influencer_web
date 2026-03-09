@@ -1,6 +1,6 @@
 "use client";
 
-import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 import ListShell from "../list-shell";
@@ -13,7 +13,7 @@ export default function CancelledCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignSummary[];
+  campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
   return (
@@ -31,13 +31,13 @@ export default function CancelledCampaignsList({
   );
 }
 
-function CancelledCard({ c }: { c: CampaignSummary }) {
+function CancelledCard({ c }: { c: CampaignOverView }) {
   const campaignType =
     c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
-
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
+
   return (
     <Card className="bg-white shadow-sm opacity-70 py-8">
       <CardContent className="space-y-4">
