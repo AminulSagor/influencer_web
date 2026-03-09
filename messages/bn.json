@@ -546,6 +546,20 @@
        "View Campaign Details" : "ক্যাম্পেইন বিস্তারিত দেখুন",
        "Completed On": "শেষ হয়েছে",
        "Search By Job name, client name": "ক্যাম্পেইন খুঁজুন"
+    },
+    "explore": {
+    "title": "এক্সপ্লোর",
+    "description": "ইনফ্লুয়েন্সার, এজেন্সি এবং আরও অনেক কিছু জানুন",
+    "tabs": {
+      "influencer": "ইনফ্লুয়েন্সার",
+      "adAgencies": "অ্যাড এজেন্সি"
+    },
+    "pagination": {
+      "page": "পৃষ্ঠা",
+      "of": "এর মধ্যে",
+      "previous": "পূর্ববর্তী",
+      "next": "পরবর্তী"
+    }
     }
   }
 }

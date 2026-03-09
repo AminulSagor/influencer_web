@@ -2,12 +2,14 @@
 
 import { ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Props = {
   activeType: ExploreType;
 };
 
 export default function ExploreTabs({ activeType }: Props) {
+  const t = useTranslations("brand.explore");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -30,7 +32,7 @@ export default function ExploreTabs({ activeType }: Props) {
             : ""
         }`}
       >
-        Influencer
+        {t("tabs.influencer")}
       </button>
 
       <button
@@ -42,7 +44,7 @@ export default function ExploreTabs({ activeType }: Props) {
             : ""
         }`}
       >
-        Ad Agencies
+        {t("tabs.adAgencies")}
       </button>
     </div>
   );

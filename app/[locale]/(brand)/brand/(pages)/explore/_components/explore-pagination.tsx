@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
+import { useTranslations } from "next-intl";
 
 type Props = {
   currentPage: number;
@@ -17,6 +18,7 @@ export default function ExplorePagination({
   activeType,
   limit,
 }: Props) {
+  const t = useTranslations("brand.explore");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,11 +38,11 @@ export default function ExplorePagination({
     <div className="mt-16 flex justify-end text-sm text-dark-gray">
       <div className="flex items-center gap-4 md:gap-9">
         <div className="flex items-center gap-2">
-          <span>Page</span>
+          <span>{t("pagination.page")}</span>
           <span className="flex h-8 w-12 items-center justify-center rounded-lg border border-light-green bg-Secondary/70">
             {currentPage}
           </span>
-          <span>of</span>
+          <span>{t("pagination.of")}</span>
           <span>{totalPages}</span>
         </div>
 
@@ -50,7 +52,7 @@ export default function ExplorePagination({
             onClick={() => goToPage(currentPage - 1)}
             disabled={isPreviousDisabled}
           >
-            Previous
+            {t("pagination.previous")}
           </PrimaryButton>
 
           <PrimaryButton
@@ -58,7 +60,7 @@ export default function ExplorePagination({
             onClick={() => goToPage(currentPage + 1)}
             disabled={isNextDisabled}
           >
-            Next
+            {t("pagination.next")}
           </PrimaryButton>
         </div>
       </div>

@@ -546,7 +546,21 @@
           "View Campaign Details": "View Campaign Details",
           "Completed On": "Completed On",
           "Search By Job name, client name" : "Search By Job name, client name..."
-      }
+    },
+    "explore": {
+    "title": "Explore",
+    "description": "Know your Influencers, Agencies and more",
+    "tabs": {
+      "influencer": "Influencer",
+      "adAgencies": "Ad Agencies"
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next"
+    }
+    }
   }
 }
 
