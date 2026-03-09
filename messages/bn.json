@@ -560,6 +560,33 @@
       "previous": "পূর্ববর্তী",
       "next": "পরবর্তী"
     }
+    },
+     "profile": {
+    "logout": "লগ আউট",
+    "verified": "যাচাইকৃত",
+    "unverified": "যাচাইকরণ হয়নি",
+    "information": {
+      "email": "ইমেইল",
+      "contact": "যোগাযোগ",
+      "website": "ওয়েবসাইট"
+    },
+     "common": {
+      "edit": "এডিট",
+      "cancel": "বাতিল",
+      "save": "সেভ"
+    },
+     "brandAssets": {
+      "title": "ব্র্যান্ড অ্যাসেটস",
+      "website": "ওয়েবসাইট",
+      "websitePlaceholder": "ওয়েবসাইট লিংক দিন",
+      "socialHandles": "সোশ্যাল হ্যান্ডেলস",
+      "chooseHandle": "হ্যান্ডেল নির্বাচন করুন",
+      "profileLink": "প্রোফাইল লিংক",
+      "select": "নির্বাচন করুন",
+      "linkPlaceholder": "লিংক দিন",
+      "addAnother": "আরও একটি ব্র্যান্ড অ্যাসেট যোগ করুন",
+      "updateSuccess": "ব্র্যান্ড অ্যাসেট সফলভাবে আপডেট হয়েছে"
+    }
     }
   }
 }

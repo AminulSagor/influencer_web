@@ -560,6 +560,33 @@
       "previous": "Previous",
       "next": "Next"
     }
+    },
+    "profile": {
+    "logout": "Log Out",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "information": {
+      "email": "Email",
+      "contact": "Contact",
+      "website": "Website"
+     },
+     "common": {
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+     "brandAssets": {
+      "title": "Brand Assets",
+      "website": "Website",
+      "websitePlaceholder": "Enter website link",
+      "socialHandles": "Social Handles",
+      "chooseHandle": "Choose Handle",
+      "profileLink": "Profile Link",
+      "select": "Select",
+      "linkPlaceholder": "Enter the link",
+      "addAnother": "Add Another Brand Asset",
+      "updateSuccess": "Brand assets updated successfully"
+    }
     }
   }
 }
