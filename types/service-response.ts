@@ -4,13 +4,16 @@ export type PaginationMeta = {
   limit: number;
   totalPages?: number;
 };
+
 export type ServiceResponse<T, M = undefined> = {
   success: boolean;
   data: T;
   meta?: M;
   message?: string;
 };
-export type ServiceResult<T> = {
+
+export type ServiceResult<T, M = undefined> = {
   data: T | null;
+  meta?: M | null;
   error: string | null;
 };
