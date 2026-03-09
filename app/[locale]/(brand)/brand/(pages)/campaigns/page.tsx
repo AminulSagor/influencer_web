@@ -214,7 +214,7 @@ export default function CampaignsPage() {
     <Card>
       <CardHeader className="pb-4">
         <div className="grid lg:grid-cols-2 gap-4 items-center">
-          <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 justify-between">
+          <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 justify-between items-start">
             <div>
               <CardTitle className="truncate text-lg font-bold text-Primary">
                 Campaigns
