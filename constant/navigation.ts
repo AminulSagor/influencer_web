@@ -8,9 +8,9 @@ import {
   Settings,
   ShieldOff,
 } from "lucide-react";
-
 import type { SidebarItem } from "@/types/app_sidebar-type";
 
+//----------------client panel---------------------------//
 export const verifiedSidebarItems: SidebarItem[] = [
   { title: "Dashboard", url: "/brand/dashboard", icon: LayoutDashboard },
   { title: "Campaigns", url: "/brand/campaigns", icon: BriefcaseBusiness },
@@ -45,3 +45,5 @@ export function getBrandSidebarItems(
     url: `/${locale}${item.url}`,
   }));
 }
+
+//----------------------others---------------------//
