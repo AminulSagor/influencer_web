@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Notification from "@/app/[locale]/(brand)/brand/_components/notification";
 import { BrandProfile } from "@/types/client/profile/profile";
 import { getProfile } from "@/service/client/profile/profile";
+import Link from "next/link";
 
 export default function TopBar() {
   const [profile, setProfile] = useState<BrandProfile | null>(null);
@@ -55,7 +56,10 @@ export default function TopBar() {
       <div className="flex gap-6 items-center">
         <Notification />
 
-        <div className="flex items-center gap-3">
+        <Link
+          href={"/brand/account-settings"}
+          className="flex items-center gap-3"
+        >
           <Avatar>
             <AvatarImage src={profileImg} alt={brandName} />
             <AvatarFallback>{fallbackText}</AvatarFallback>
@@ -67,7 +71,7 @@ export default function TopBar() {
               {error ? error : "Client"}
             </p>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );
