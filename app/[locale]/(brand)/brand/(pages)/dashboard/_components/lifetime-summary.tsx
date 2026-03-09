@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
 import { LifetimeSummaryData } from "@/types/client/dashboard/dashboard-types";
+import Link from "next/link";
 
 interface LifetimeSummaryProps {
   data: LifetimeSummaryData;
@@ -47,7 +48,9 @@ export default function LifetimeSummary({ data }: LifetimeSummaryProps) {
               <p className="text-sm font-medium">
                 {t("summary.totalJobsCompleted")}
               </p>
-              <ChevronRight size={14} />
+              <Link href={"/brand/campaigns?tab=completed"}>
+                <ChevronRight size={18} />
+              </Link>
             </div>
           </div>
         </div>
@@ -61,7 +64,9 @@ export default function LifetimeSummary({ data }: LifetimeSummaryProps) {
               <p className="text-sm font-medium">
                 {t("summary.totalJobsDeclined")}
               </p>
-              <ChevronRight size={14} />
+              <Link href={"/brand/campaigns?tab=cancelled"}>
+                <ChevronRight size={18} />
+              </Link>
             </div>
           </div>
         </div>
