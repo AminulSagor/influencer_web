@@ -1,228 +1,129 @@
-"use client";
+import AgencyExploreSection from "@/app/[locale]/(brand)/brand/(pages)/explore/_components/agency-explore-section";
+import ExploreHeader from "@/app/[locale]/(brand)/brand/(pages)/explore/_components/explore-header";
+import ExploreTabs from "@/app/[locale]/(brand)/brand/(pages)/explore/_components/explore-tabs";
+import InfluencerExploreSection from "@/app/[locale]/(brand)/brand/(pages)/explore/_components/influencer-explore-section";
 import {
-  agencies,
-  influencers,
-} from "@/app/[locale]/(brand)/brand/(pages)/explore/data";
-import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
+  ExploreSearchParams,
+  ExploreType,
+  ExplorePagination as ExplorePaginationType,
+} from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search, Music, Star, StarHalf } from "lucide-react";
-import React, { JSX, useState } from "react";
-import { FaInstagram, FaYoutube } from "react-icons/fa6";
+import { getAgencies, getInfluencers } from "@/service/client/users";
 
-const ExplorePage = () => {
-  const [type, setType] = useState<string>("influencer");
+type PageProps = {
+  searchParams: Promise<ExploreSearchParams>;
+};
 
-  // Platform icon mapping
-  const getPlatformIcon = (platform: string) => {
-    const iconSize = 18;
+const DEFAULT_LIMIT = 10;
 
-    const platformIcons: Record<string, JSX.Element> = {
-      instagram: <FaInstagram size={iconSize} />,
-      youtube: <FaYoutube size={iconSize} />,
-      tiktok: <Music size={iconSize} />,
-    };
+export default async function ExplorePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const type = resolveType(params.type);
+  const { page, limit } = resolvePagination(params.page, params.limit);
 
-    return platformIcons[platform];
-  };
+  if (type === "ad-agencies") {
+    const response = await getAgencies(page, limit);
+    const agencies = response.data ?? [];
+    const meta = response.meta;
+
+    const currentCount = agencies.length;
+    const total = meta?.total ?? currentCount;
+    const totalPages = resolveTotalPages(
+      total,
+      meta?.limit ?? limit,
+      meta?.totalPages,
+    );
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <ExploreHeader />
+            <ExploreTabs activeType={type} />
+          </div>
+        </CardHeader>
+
+        <div className="w-full border border-light-gray" />
+
+        <CardContent className="space-y-4">
+          <AgencyExploreSection
+            agencies={agencies}
+            total={total}
+            currentPage={page}
+            totalPages={totalPages}
+            limit={limit}
+            activeType={type}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const response = await getInfluencers(page, limit);
+  const influencers = response.data ?? [];
+  const meta = response.meta;
+
+  const currentCount = influencers.length;
+  const total = meta?.total ?? currentCount;
+  const totalPages = resolveTotalPages(
+    total,
+    meta?.limit ?? limit,
+    meta?.totalPages,
+  );
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row gap-4 justify-between">
-          <div>
-            <h1 className="text-Primary text-lg font-semibold">Explore</h1>
-            <p className="text-dark-gray text-sm">
-              Know your Influencers, Agencies and more{" "}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setType("influencer")}
-              className={`cursor-pointer ${
-                type === "influencer"
-                  ? "bg-light-green rounded-full p-2 px-4 text-white"
-                  : ""
-              }`}
-            >
-              Influencer
-            </button>
-            <button
-              onClick={() => setType("ad-agencies")}
-              className={`cursor-pointer ${
-                type === "ad-agencies"
-                  ? "bg-light-green rounded-full p-2 px-4 text-white"
-                  : ""
-              }`}
-            >
-              Ad Agencies
-            </button>
-          </div>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <ExploreHeader />
+          <ExploreTabs activeType={type} />
         </div>
       </CardHeader>
-      <div className="border border-light-gray w-full" />
 
-      <CardContent>
-        {type === "influencer" ? (
-          <div className="space-y-4">
-            {/* searching */}
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="relative w-[360px] max-w-full">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search By Influencer Name"
-                  className="h-10 rounded-lg pl-9 placeholder:text-sm"
-                />
-              </div>
+      <div className="w-full border border-light-gray" />
 
-              {/* Showing */}
-              <div className="text-xs text-muted-foreground">
-                Showing 24 of 200 Results
-              </div>
-            </div>
-
-            {/* influencer */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-start mt-8">
-              {influencers.map((influencer) => (
-                <div
-                  key={influencer.id}
-                  className="bg-linear-to-b from-Primary/90 to-light-green rounded-md p-3 text-white/90 flex flex-col items-center relative"
-                >
-                  {/* Profile Image */}
-                  <div className="bg-white w-18 h-18 shadow-md rounded-full" />
-
-                  {/* Name */}
-                  <h2 className="text-lg font-semibold text-center mt-2">
-                    {influencer.name}
-                  </h2>
-
-                  {/* Platform Icons */}
-                  <div className="flex gap-1.5 mt-3">
-                    {influencer.socials.map((social, index) => (
-                      <div key={index}>{getPlatformIcon(social.platform)}</div>
-                    ))}
-                  </div>
-
-                  {/* type */}
-                  <div className="flex text-xs mt-0.5">
-                    {influencer.types?.map((v, index) => (
-                      <span key={index}>{v} , </span>
-                    ))}
-                  </div>
-
-                  {/* Rating */}
-                  <div className="mt-4">
-                    <RatingStars rating={influencer.rating} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* pagination */}
-            <div className="flex justify-end text-dark-gray text-sm mt-16">
-              <div className="flex gap-9 items-center">
-                <div className="flex gap-2 items-center">
-                  <span>Page</span>
-                  <span className="border h-8 flex items-center justify-center w-12  rounded-lg border-light-green bg-Secondary/70">
-                    1
-                  </span>
-                  <span>of</span>
-                  <span>5</span>
-                </div>
-
-                <PrimaryButton className="px-5">Next</PrimaryButton>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* searching */}
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="relative w-[360px] max-w-full">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search By Brand Name"
-                  className="h-10 rounded-lg pl-9"
-                />
-              </div>
-
-              {/* Showing */}
-              <div className="text-xs text-muted-foreground">
-                Showing 24 of 200 Results
-              </div>
-            </div>
-
-            {/* agencies grid - you'll need to add similar for agencies */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-start mt-8">
-              {agencies.map((agency) => (
-                <div
-                  key={agency.id}
-                  className="bg-linear-to-b from-Primary/90 to-light-green rounded-md p-3 text-white/90 flex flex-col items-center relative"
-                >
-                  {/* Profile Image */}
-                  <div className="bg-white w-18 h-18 shadow-md rounded-full" />
-
-                  {/* Name */}
-                  <h2 className="text-lg font-semibold text-center mt-2">
-                    {agency.name}
-                  </h2>
-
-                  <h2 className="text-sm">{agency.category}</h2>
-
-                  {/* Rating */}
-                  <div className="mt-6">
-                    <RatingStars rating={agency.rating} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* pagination */}
-            <div className="flex justify-end text-dark-gray text-sm mt-16">
-              <div className="flex gap-9 items-center">
-                <div className="flex gap-2 items-center">
-                  <span>Page</span>
-                  <span className="border h-8 flex items-center justify-center w-12  rounded-lg border-light-green bg-Secondary/70">
-                    1
-                  </span>
-                  <span>of</span>
-                  <span>5</span>
-                </div>
-
-                <PrimaryButton className="px-5">Next</PrimaryButton>
-              </div>
-            </div>
-          </div>
-        )}
+      <CardContent className="space-y-4">
+        <InfluencerExploreSection
+          influencers={influencers}
+          total={total}
+          currentPage={page}
+          totalPages={totalPages}
+          limit={limit}
+          activeType={type}
+        />
       </CardContent>
     </Card>
   );
-};
+}
 
-export default ExplorePage;
+function resolveType(type?: string): ExploreType {
+  return type === "ad-agencies" ? "ad-agencies" : "influencer";
+}
 
-// Rating component
-const RatingStars = ({ rating }: { rating: number }) => {
-  const stars = [];
+function resolvePagination(
+  page?: string,
+  limit?: string,
+): ExplorePaginationType {
+  const parsedPage = Number(page);
+  const parsedLimit = Number(limit);
 
-  for (let i = 1; i <= 5; i++) {
-    if (i <= Math.floor(rating)) {
-      stars.push(
-        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-      );
-    } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
-      stars.push(
-        <StarHalf key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-      );
-    } else {
-      stars.push(<Star key={i} className="w-4 h-4 text-white/60" />);
-    }
+  return {
+    page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+    limit:
+      Number.isFinite(parsedLimit) && parsedLimit > 0
+        ? parsedLimit
+        : DEFAULT_LIMIT,
+  };
+}
+
+function resolveTotalPages(
+  total = 0,
+  limit = DEFAULT_LIMIT,
+  totalPages?: number,
+) {
+  if (typeof totalPages === "number" && totalPages > 0) {
+    return totalPages;
   }
 
-  return (
-    <div className="flex items-center gap-1">
-      <div className="flex">{stars}</div>
-      <span className="text-sm font-medium">{rating.toFixed(1)}</span>
-    </div>
-  );
-};
+  return Math.max(1, Math.ceil(total / limit));
+}
