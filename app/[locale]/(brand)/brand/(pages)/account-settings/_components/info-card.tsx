@@ -1,39 +1,74 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import React from "react";
+import { getProfile } from "@/service/client/profile/profile";
+import { BrandProfile } from "@/types/client/profile/profile";
+import { useTranslations } from "next-intl";
 
 const InformationCard = () => {
-  type ContactType = "Email" | "Contact" | "website";
-  type ContactItem = {
-    type: ContactType;
-    value: string;
-  };
-  const contactInfos: ContactItem[] = [
+  const t = useTranslations("brand.profile");
+  const [profile, setProfile] = useState<BrandProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      const result = await getProfile();
+
+      if (!isMounted) return;
+
+      if (typeof result === "string") {
+        setError(result);
+        setProfile(null);
+        return;
+      }
+
+      setProfile(result);
+      setError(null);
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const contactInfos = [
     {
-      type: "Email",
-      value: "salman_khan@email.com",
+      key: "email",
+      label: t("information.email"),
+      value: profile?.email || "-",
     },
     {
-      type: "Contact",
-      value: "+8801234567890",
+      key: "contact",
+      label: t("information.contact"),
+      value: profile?.phone || "-",
     },
     {
-      type: "website",
-      value: "styleCo.com",
+      key: "website",
+      label: t("information.website"),
+      value: profile?.website || "-",
     },
   ];
+
   return (
     <Card className="w-full">
       <CardContent>
         <div className="space-y-4">
           {contactInfos.map((info) => (
-            <div key={info.type} className="flex items-center gap-2">
+            <div key={info.key} className="flex items-center gap-2">
               <span className="h-8 w-8 rounded-full bg-light-gray" />
               <div className="text-xs">
-                <h2 className="text-light-green ">{info.type}</h2>
+                <h2 className="text-light-green">{info.label}</h2>
                 <p>{info.value}</p>
               </div>
             </div>
           ))}
+
+          {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
       </CardContent>
     </Card>
