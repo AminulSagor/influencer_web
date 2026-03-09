@@ -1,7 +1,12 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useMemo, useState } from "react";
+import { Bell, Search } from "lucide-react";
+import { toast } from "sonner";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -18,332 +23,649 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
-import { useState } from "react";
 
-/* ================= TYPES ================= */
+import { notifyDueClient } from "@/service/admin/finance/notify-due-client";
+import {
+  exportBrandPendingPayments,
+  exportPendingClearance,
+} from "@/service/admin/finance/export-pending-clearance";
 
-type UserRole = "agency" | "influencer" | "brand";
+import type {
+  AmountSortType,
+  BrandPendingPaymentItem,
+  BrandPendingPaymentResponse,
+  PendingClearanceItem,
+  PendingClearanceResponse,
+  PendingPaymentType,
+} from "@/types/admin/finance/finance_pending_completed_type";
 
-type PayeeInfo = {
-  id: string;
-  name: string;
-  role: "Agency" | "Influencer" | "Brand";
-  avatar?: string;
+type PendingTabKey = "agency" | "influencer" | "brand";
+
+type Props = {
+  tabsData: {
+    agency: PendingClearanceResponse;
+    influencer: PendingClearanceResponse;
+    brand: BrandPendingPaymentResponse;
+  };
 };
 
-type CampaignInfo = {
-  id: string;
-  title: string;
-  milestone: string;
-  dateTime: string;
+const formatCurrency = (amount?: number) => {
+  if (!amount) return "৳0";
+  return `৳${new Intl.NumberFormat("en-BD", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
 };
 
-type PendingPayment = {
-  id: string;
-  tab: UserRole;
-  payee?: PayeeInfo;
-  brandName?: string;
-  lastPaid?: string;
-  paymentType?: string;
-  campaign: CampaignInfo;
-  amount?: number;
-  paid?: number;
-  due?: number;
+const formatDate = (date?: string) => {
+  if (!date) return "-";
+  return new Intl.DateTimeFormat("en-BD", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  }).format(new Date(date));
 };
 
-/* ================= MOCK DATA ================= */
+const formatDateTimeSmall = (date?: string) => {
+  if (!date) return "-";
+  return new Intl.DateTimeFormat("en-BD", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(date));
+};
 
-const pendingPayments: PendingPayment[] = [
-  {
-    id: "1",
-    tab: "influencer",
-    payee: {
-      id: "u1",
-      name: "Rafsan the chotobhai",
-      role: "Influencer",
-    },
-    paymentType: "Partial Payment",
-    campaign: {
-      id: "c1",
-      title: "Summer Sale Fashion",
-      milestone: "Milestone Reached",
-      dateTime: "13-05-25 at 2:30 PM",
-    },
-    amount: 25000,
-  },
-  {
-    id: "2",
-    tab: "agency",
-    payee: {
-      id: "u2",
-      name: "Growthify Agency",
-      role: "Agency",
-    },
-    paymentType: "Final Payment",
-    campaign: {
-      id: "c2",
-      title: "Tech Launch 2025",
-      milestone: "Campaign Completed",
-      dateTime: "15-05-25 at 6:00 PM",
-    },
-    amount: 60000,
-  },
-  {
-    id: "3",
-    tab: "brand",
-    brandName: "Venus Fashion Ltd",
-    lastPaid: "13-April-25",
-    campaign: {
-      id: "c3",
-      title: "Eid Special Campaign",
-      milestone: "Invoice Generated",
-      dateTime: "12-05-25 at 11:15 AM",
-    },
-    paid: 50000,
-    due: 25000,
-  },
-  {
-    id: "4",
-    tab: "influencer",
-    payee: {
-      id: "u3",
-      name: "Nafisa Rahman",
-      role: "Influencer",
-    },
-    paymentType: "Milestone Payment",
-    campaign: {
-      id: "c4",
-      title: "Skincare Awareness",
-      milestone: "50% Engagement Target",
-      dateTime: "14-05-25 at 9:45 PM",
-    },
-    amount: 18000,
-  },
-  {
-    id: "5",
-    tab: "brand",
-    brandName: "TechNova BD",
-    lastPaid: "02-May-25",
-    campaign: {
-      id: "c5",
-      title: "Gadget Review Blast",
-      milestone: "Pending Clearance",
-      dateTime: "16-05-25 at 4:10 PM",
-    },
-    paid: 70000,
-    due: 30000,
-  },
-];
+const formatPaymentType = (value?: string) => {
+  if (!value) return "-";
 
-/* ================= COMPONENT ================= */
+  const map: Record<string, string> = {
+    partialpayment: "Partial Payment",
+    milestonepayment: "Milestone Payment",
+  };
 
-const PendingTab = () => {
-  const [activeTab, setActiveTab] = useState<UserRole>("agency");
+  return map[value.toLowerCase()] || value;
+};
 
-  const filteredData = pendingPayments.filter((item) => item.tab === activeTab);
+const getTabApiValue = (tab: Exclude<PendingTabKey, "brand">) => {
+  if (tab === "agency") return "agencypayout";
+  return "influencerpayout";
+};
+
+const downloadCsv = (
+  rows: Record<string, string | number | null>[],
+  fileName: string
+) => {
+  if (!rows.length) {
+    toast.error("No data available to export.");
+    return;
+  }
+
+  const headers = Object.keys(rows[0]);
+
+  const escapeCsv = (value: string | number | null | undefined) => {
+    const stringValue = value == null ? "" : String(value);
+    const escaped = stringValue.replace(/"/g, '""');
+    return `"${escaped}"`;
+  };
+
+  const csv = [
+    headers.map(escapeCsv).join(","),
+    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(",")),
+  ].join("\n");
+
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+};
+
+const PendingTab = ({ tabsData }: Props) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const activeTab =
+    (searchParams.get("pendingTab") as PendingTabKey | null) ?? "agency";
+  const querySearch = searchParams.get("pendingSearch") ?? "";
+  const paymentType =
+    (searchParams.get("pendingPaymentType") as PendingPaymentType | null) ?? "";
+  const amountSort =
+    (searchParams.get("pendingAmountSort") as AmountSortType | null) ?? "";
+  const dateRange = searchParams.get("pendingDateRange") ?? "all";
+
+  const [search, setSearch] = useState(querySearch);
+  const [notifyingKey, setNotifyingKey] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    setSearch(querySearch);
+  }, [querySearch]);
+
+  const setPendingParams = (
+    updates: Record<string, string | undefined>,
+    resetPage = true
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    if (resetPage) {
+      params.delete("pendingPage");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (search !== querySearch) {
+        setPendingParams({
+          pendingSearch: search || undefined,
+        });
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search, querySearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentRes = tabsData[activeTab];
+  const currentData = currentRes?.data ?? [];
+  const currentMeta = currentRes?.meta;
+
+  const filteredData = useMemo(() => currentData, [currentData]);
+
+  const currentRowIds = useMemo(() => {
+    if (activeTab === "brand") {
+      return (filteredData as BrandPendingPaymentItem[]).map(
+        (item) => item.campaignId
+      );
+    }
+
+    return (filteredData as PendingClearanceItem[]).map((item) => item.id);
+  }, [activeTab, filteredData]);
+
+  const allSelected =
+    currentRowIds.length > 0 &&
+    currentRowIds.every((id) => selectedIds.includes(id));
+
+  const someSelected =
+    currentRowIds.some((id) => selectedIds.includes(id)) && !allSelected;
+
+  const toggleRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !currentRowIds.includes(id))
+      );
+      return;
+    }
+
+    setSelectedIds((prev) => Array.from(new Set([...prev, ...currentRowIds])));
+  };
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [activeTab, querySearch, paymentType, amountSort, dateRange]);
+
+  const handleNotifyClient = async (
+    clientId: string,
+    campaignId: string
+  ) => {
+    const key = `${clientId}-${campaignId}`;
+
+    try {
+      setNotifyingKey(key);
+
+      const res = await notifyDueClient({
+        clientId,
+        campaignId,
+      });
+
+      toast.success(res.message || "Notification sent successfully.");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to send notification.";
+
+      toast.error(
+        Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage
+      );
+    } finally {
+      setNotifyingKey(null);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+
+      const now = new Date().toISOString().slice(0, 10);
+
+      if (activeTab === "brand") {
+        const res = await exportBrandPendingPayments({
+          search: querySearch || undefined,
+          amountSort: amountSort || undefined,
+          dateFrom: searchParams.get("pendingDateFrom") || undefined,
+          dateTo: searchParams.get("pendingDateTo") || undefined,
+        });
+
+        downloadCsv(res.data, `brand-pending-payments-${now}.csv`);
+        toast.success(res.message || "Brand pending export ready.");
+        return;
+      }
+
+      const res = await exportPendingClearance({
+        search: querySearch || undefined,
+        tab: getTabApiValue(activeTab),
+        paymentType: paymentType || undefined,
+        amountSort: amountSort || undefined,
+        dateFrom: searchParams.get("pendingDateFrom") || undefined,
+        dateTo: searchParams.get("pendingDateTo") || undefined,
+      });
+
+      downloadCsv(res.data, `${activeTab}-pending-clearance-${now}.csv`);
+      toast.success(res.message || "Pending clearance export ready.");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to export data.";
+
+      toast.error(
+        Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const tabLabelMap: Record<PendingTabKey, string> = {
+    agency: "Agency Payout",
+    influencer: "Influencer Payouts",
+    brand: "Brand Payments",
+  };
 
   return (
-    <TabsContent value="pending" className="space-y-4">
-      <Card>
-        <CardHeader className="border-b flex items-center justify-between">
-          <div className="space-y-2">
-            <CardTitle className="text-Primary">
+    <TabsContent value="pending" className="mt-4">
+      <Card className="overflow-hidden rounded-[18px] border border-[#d6d6d6] shadow-none">
+        <CardHeader className="flex flex-row items-start justify-between border-b px-8 py-5">
+          <div>
+            <CardTitle className="text-[28px] font-semibold text-Primary">
               Pending Payment Approval
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="mt-1 text-sm text-[#9b9b9b]">
               Process different types of payment
             </CardDescription>
           </div>
 
-          <div className="flex gap-2">
-            {(["agency", "influencer", "brand"] as UserRole[]).map((tab) => (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? "default" : "outline"}
-                className={
-                  activeTab === tab
-                    ? "bg-light-green text-white hover:bg-light-green"
-                    : "border-light-green text-light-green"
-                }
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Button>
-            ))}
+          <div className="flex items-center gap-2 rounded-full bg-white">
+            {(["agency", "influencer", "brand"] as PendingTabKey[]).map(
+              (tab) => {
+                const active = activeTab === tab;
+
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() =>
+                      setPendingParams({
+                        pendingTab: tab,
+                        pendingPaymentType:
+                          tab === "brand" ? undefined : paymentType || undefined,
+                      })
+                    }
+                    className={[
+                      "rounded-full px-5 py-2 text-xs font-medium transition",
+                      active
+                        ? "bg-light-green text-white shadow-sm"
+                        : "bg-transparent text-[#2b2b2b] hover:bg-[#f3f6ea]",
+                    ].join(" ")}
+                  >
+                    {tabLabelMap[tab]}
+                  </button>
+                );
+              }
+            )}
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-2">
-          {/* SEARCH */}
-          <div className="flex justify-between items-center gap-4 mx-2">
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                size={18}
-              />
-              <Input placeholder="Search by campaign name" className="pl-10" />
-            </div>
+        <CardContent className="space-y-4 px-4 py-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a7a7a7]" />
+            <Input
+              placeholder="Search by campaign name, Agency/Influencer name, phone number, email..."
+              className="h-11 rounded-[10px] border-[#cfcfcf] pl-10 text-sm placeholder:text-[#b1b1b1]"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          {/* BULK BAR */}
-          <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
-                {filteredData.length} selected
+          <div className="flex items-center justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
+                {selectedIds.length} Selected
               </div>
 
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
-                  <SelectValue placeholder="Bulk Actions" />
+              <Button
+                type="button"
+                onClick={handleExport}
+                disabled={isExporting}
+                className="h-9 rounded-[8px] bg-light-green px-5 text-xs font-medium text-white hover:bg-light-green"
+              >
+                {isExporting ? "Exporting..." : "Export"}
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {activeTab !== "brand" && (
+                <Select
+                  value={paymentType || "all"}
+                  onValueChange={(value) =>
+                    setPendingParams({
+                      pendingPaymentType:
+                        value === "all" ? undefined : value,
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-9 w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                    <SelectValue placeholder="Payment Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Payment Types</SelectItem>
+                    <SelectItem value="partialpayment">
+                      Partial Payment
+                    </SelectItem>
+                    <SelectItem value="milestonepayment">
+                      Milestone Payment
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+
+              <Select
+                value={amountSort || "all"}
+                onValueChange={(value) =>
+                  setPendingParams({
+                    pendingAmountSort:
+                      value === "all" ? undefined : value,
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                  <SelectValue placeholder="Amount" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="delete">Delete</SelectItem>
+                  <SelectItem value="all">Amount</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={dateRange}
+                onValueChange={(value) =>
+                  setPendingParams({
+                    pendingDateRange: value === "all" ? undefined : value,
+                    pendingDateFrom:
+                      value === "last30"
+                        ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+                        : value === "thisMonth"
+                        ? new Date(
+                            new Date().getFullYear(),
+                            new Date().getMonth(),
+                            1
+                          ).toISOString()
+                        : undefined,
+                    pendingDateTo:
+                      value === "all" ? undefined : new Date().toISOString(),
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 w-[155px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="last30">Last 30 Days</SelectItem>
+                  <SelectItem value="thisMonth">This Month</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <Select>
-              <SelectTrigger className="bg-white border border-light-green text-sm">
-                <SelectValue placeholder="Nov 20 - Dec 20" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">Nov 20 - Dec 20</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
-          {/* TABLE */}
-          <div className="rounded-md overflow-hidden border mt-2">
-            {(activeTab === "agency" || activeTab === "influencer") && (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-light-green hover:bg-light-green">
-                    <TableHead className="w-[40px]">
-                      <Checkbox />
-                    </TableHead>
-                    <TableHead className="text-white">Payee Info</TableHead>
-                    <TableHead className="text-white">Payment Type</TableHead>
-                    <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">Amount</TableHead>
-                    <TableHead className="text-white text-right">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+          {(activeTab === "agency" || activeTab === "influencer") && (
+            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
+              <div className="grid grid-cols-[52px_1.7fr_1.1fr_1.8fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={
+                      allSelected ? true : someSelected ? "indeterminate" : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all rows"
+                  />
+                </div>
+                <div>Payee Info</div>
+                <div>Payment Type</div>
+                <div>Campaign</div>
+                <div>Amount</div>
+                <div className="text-right pr-3">Action</div>
+              </div>
 
-                <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
+              <div className="divide-y divide-[#e5e5e5]">
+                {(filteredData as PendingClearanceItem[]).map((item) => {
+                  const selected = selectedIds.includes(item.id);
 
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar>
-                            <AvatarImage src={item.payee?.avatar || "/"} />
-                            <AvatarFallback>
-                              {item.payee?.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p>{item.payee?.name}</p>
-                            <p className="text-xs text-gray-400">
-                              {item.payee?.role}
-                            </p>
-                          </div>
+                  return (
+                    <div
+                      key={item.id}
+                      className={[
+                        "grid grid-cols-[52px_1.7fr_1.1fr_1.8fr_0.9fr_1fr] items-center px-2 py-3 transition",
+                        selected ? "bg-[#f5f6eb]" : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleRow(item.id)}
+                          aria-label={`Select ${item.payeeName}`}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-7 w-7 bg-[#a7d08c]">
+                          <AvatarImage src="/" />
+                          <AvatarFallback className="bg-[#a7d08c] text-[11px] text-white">
+                            {item.payeeName?.charAt(0) || "P"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-medium text-[#222]">
+                            {item.payeeName}
+                          </p>
+                          <p className="text-[10px] capitalize leading-4 text-[#9a9a9a]">
+                            {item.type}
+                          </p>
                         </div>
-                      </TableCell>
+                      </div>
 
-                      <TableCell>{item.paymentType}</TableCell>
+                      <div className="text-[13px] text-[#222]">
+                        {formatPaymentType(item.transactionType)}
+                      </div>
 
-                      <TableCell>
-                        <p className="font-semibold">{item.campaign.title}</p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.milestone}
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-medium text-[#222]">
+                          {item.campaign}
                         </p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.dateTime}
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          Milestone Reached:
                         </p>
-                      </TableCell>
-
-                      <TableCell className="text-light-green font-semibold">
-                        ৳{item.amount?.toLocaleString()}
-                      </TableCell>
-
-                      <TableCell className="text-right">
-                        <Button variant="lightGreen">Process Payment</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-
-            {activeTab === "brand" && (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-light-green hover:bg-light-green">
-                    <TableHead className="w-[40px]">
-                      <Checkbox />
-                    </TableHead>
-                    <TableHead className="text-white">Brand Name</TableHead>
-                    <TableHead className="text-white">Last Paid</TableHead>
-                    <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">Paid</TableHead>
-                    <TableHead className="text-white">Due Amount</TableHead>
-                    <TableHead className="text-white text-right">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox />
-                      </TableCell>
-
-                      <TableCell>{item.brandName}</TableCell>
-                      <TableCell>{item.lastPaid}</TableCell>
-
-                      <TableCell>
-                        <p className="font-semibold">{item.campaign.title}</p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.milestone}
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          {formatDateTimeSmall(item.milestoneReachedDate)}
                         </p>
-                        <p className="text-xs text-gray-400">
-                          {item.campaign.dateTime}
+                      </div>
+
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.amountRequested)}
+                      </div>
+
+                      <div className="flex justify-end pr-2">
+                        <Button
+                          variant="lightGreen"
+                          className="h-8 rounded-[8px] px-4 text-[11px] font-medium"
+                        >
+                          Process Payment
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredData.length === 0 && (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No pending {activeTab} payments found.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "brand" && (
+            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
+              <div className="grid grid-cols-[52px_1.5fr_0.9fr_1.6fr_0.9fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={
+                      allSelected ? true : someSelected ? "indeterminate" : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all rows"
+                  />
+                </div>
+                <div>Brand Name</div>
+                <div>Last Paid</div>
+                <div>Campaign</div>
+                <div>Paid</div>
+                <div>Due Amount</div>
+                <div className="text-right pr-3">Action</div>
+              </div>
+
+              <div className="divide-y divide-[#e5e5e5]">
+                {(filteredData as BrandPendingPaymentItem[]).map((item) => {
+                  const rowKey = `${item.clientId}-${item.campaignId}`;
+                  const isLoading = notifyingKey === rowKey;
+                  const selected = selectedIds.includes(item.campaignId);
+
+                  return (
+                    <div
+                      key={item.campaignId}
+                      className={[
+                        "grid grid-cols-[52px_1.5fr_0.9fr_1.6fr_0.9fr_0.9fr_1fr] items-center px-2 py-3 transition",
+                        selected ? "bg-[#f5f6eb]" : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleRow(item.campaignId)}
+                          aria-label={`Select ${item.brandName}`}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={item.profileImage || "/"} />
+                          <AvatarFallback className="bg-[#a7d08c] text-[11px] text-white">
+                            {item.brandName?.charAt(0) || "B"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-medium text-[#222]">
+                            {item.brandName}
+                          </p>
+                          <p className="text-[10px] capitalize leading-4 text-[#9a9a9a]">
+                            {item.role}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-[13px] text-[#222]">
+                        {formatDate(item.lastCampaignPaidDate)}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-medium text-[#222]">
+                          {item.campaignName}
                         </p>
-                      </TableCell>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          Milestone Reached:
+                        </p>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          {formatDateTimeSmall(item.milestoneLastUpdatedAt)}
+                        </p>
+                      </div>
 
-                      <TableCell className="text-light-green font-semibold">
-                        ৳{item.paid?.toLocaleString()}
-                      </TableCell>
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.lastPaidAmount)}
+                      </div>
 
-                      <TableCell className="text-orange font-semibold">
-                        ৳{item.due?.toLocaleString()}
-                      </TableCell>
+                      <div className="text-[15px] font-semibold text-orange">
+                        {formatCurrency(item.dueAmount)}
+                      </div>
 
-                      <TableCell className="text-right">
-                        <Button variant="orange">Notify</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+                      <div className="flex justify-end pr-2">
+                        <Button
+                          variant="orange"
+                          onClick={() =>
+                            handleNotifyClient(item.clientId, item.campaignId)
+                          }
+                          disabled={isLoading}
+                          className="h-8 rounded-[8px] px-4 text-[11px] font-medium"
+                        >
+                          <Bell className="mr-1 h-3 w-3" />
+                          {isLoading ? "Sending..." : "Notify"}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredData.length === 0 && (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No pending brand payments found.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end text-sm text-muted-foreground">
+            Page {currentMeta?.page ?? 1} of {currentMeta?.totalPages ?? 1}
           </div>
         </CardContent>
       </Card>

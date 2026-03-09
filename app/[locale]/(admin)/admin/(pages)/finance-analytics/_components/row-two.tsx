@@ -1,16 +1,26 @@
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PendingTab from "./pending-tab";
 import CompletedTab from "./completed-tab";
+import type {
+  BrandPendingPaymentResponse,
+  CompletedPaymentResponse,
+  PendingClearanceResponse,
+} from "@/types/admin/finance/finance_pending_completed_type";
 
-const RowTwo = () => {
+type Props = {
+  pendingTabs: {
+    agency: PendingClearanceResponse;
+    influencer: PendingClearanceResponse;
+    brand: BrandPendingPaymentResponse;
+  };
+  completedTabs: {
+    agency: CompletedPaymentResponse;
+    influencer: CompletedPaymentResponse;
+    brand: CompletedPaymentResponse;
+  };
+};
+
+const RowTwo = ({ pendingTabs, completedTabs }: Props) => {
   return (
     <div className="col-span-12">
       <Tabs defaultValue="pending">
@@ -22,14 +32,15 @@ const RowTwo = () => {
             Pending Clearance
           </TabsTrigger>
           <TabsTrigger
-            className="data-[state=active]:bg-light-green data-[state=active]:text-white"
             value="completed"
+            className="data-[state=active]:bg-light-green data-[state=active]:text-white"
           >
             Completed
           </TabsTrigger>
         </TabsList>
-        <PendingTab />
-        <CompletedTab />
+
+        <PendingTab tabsData={pendingTabs} />
+        <CompletedTab tabsData={completedTabs} />
       </Tabs>
     </div>
   );

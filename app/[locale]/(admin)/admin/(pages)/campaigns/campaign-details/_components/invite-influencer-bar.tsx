@@ -11,15 +11,17 @@ import {
 } from "@/components/ui/select";
 
 import { inviteAssignment } from "@/service/admin/campaign/invite-assignment";
+import { getCampaignByIdFromAdmin } from "@/service/admin/campaign/get-campaign";
 import {
   fetchRemainingInvitations,
   RemainingInvitationInfluencer,
 } from "@/service/admin/campaign/assignment-remain";
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
-type MilestoneLite = {
+type CampaignMilestoneLite = {
   id: string;
   order?: number;
+  campaignId?: string;
 };
 
 function roundMoney(n: number) {
@@ -41,19 +43,16 @@ function splitTotalEvenly(total: number, count: number) {
 
 export default function InviteInfluencerBar({
   campaignId,
-  milestoneCount,
-  milestones,
   selectedInfluencerId,
   onSelectedInfluencerChange,
 }: {
   campaignId: string;
-  milestoneCount: number;
-  milestones: MilestoneLite[];
   selectedInfluencerId: string;
   onSelectedInfluencerChange: (id: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [inviting, setInviting] = useState(false);
+  const [campaignLoading, setCampaignLoading] = useState(false);
 
   const [draftCount, setDraftCount] = useState<number>(0);
   const [remainingBudget, setRemainingBudget] = useState<number>(0);
@@ -61,11 +60,40 @@ export default function InviteInfluencerBar({
     RemainingInvitationInfluencer[]
   >([]);
 
+  const [campaignMasterId, setCampaignMasterId] = useState<string>("");
+  const [campaignMilestones, setCampaignMilestones] = useState<
+    CampaignMilestoneLite[]
+  >([]);
+
   const sortedMilestones = useMemo(() => {
-    return [...(milestones ?? [])]
+    return [...campaignMilestones]
       .filter((m) => String(m?.id ?? "").trim().length > 0)
       .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0));
-  }, [milestones]);
+  }, [campaignMilestones]);
+
+  const loadCampaign = async () => {
+    if (!campaignId) return;
+
+    setCampaignLoading(true);
+    try {
+      const res = await getCampaignByIdFromAdmin(campaignId);
+      const data = res?.data;
+
+      setCampaignMasterId(String(data?.id ?? campaignId));
+
+      const milestones = Array.isArray(data?.milestones)
+        ? (data.milestones as CampaignMilestoneLite[])
+        : [];
+
+      setCampaignMilestones(milestones);
+    } catch (error) {
+      console.error("❌ loadCampaign failed:", error);
+      setCampaignMasterId(campaignId);
+      setCampaignMilestones([]);
+    } finally {
+      setCampaignLoading(false);
+    }
+  };
 
   const loadRemaining = async () => {
     if (!campaignId) return;
@@ -89,7 +117,8 @@ export default function InviteInfluencerBar({
       ) {
         onSelectedInfluencerChange(list?.[0]?.id || "");
       }
-    } catch {
+    } catch (error) {
+      console.error("❌ loadRemaining failed:", error);
       setDraftCount(0);
       setRemainingBudget(0);
       setDraftedInfluencers([]);
@@ -100,6 +129,7 @@ export default function InviteInfluencerBar({
   };
 
   useEffect(() => {
+    loadCampaign();
     loadRemaining();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);
@@ -112,10 +142,10 @@ export default function InviteInfluencerBar({
   const offeredAmount = roundMoney(Number(selectedInfluencer?.offeredAmount ?? 0));
 
   const milestoneAmount = useMemo(() => {
-    const count = sortedMilestones.length || milestoneCount || 0;
+    const count = sortedMilestones.length;
     if (count <= 0) return 0;
     return roundMoney(offeredAmount / count);
-  }, [offeredAmount, sortedMilestones.length, milestoneCount]);
+  }, [offeredAmount, sortedMilestones.length]);
 
   const milestoneSplits = useMemo(() => {
     if (!selectedInfluencer) return [];
@@ -124,26 +154,41 @@ export default function InviteInfluencerBar({
     const splitAmounts = splitTotalEvenly(offeredAmount, sortedMilestones.length);
 
     return sortedMilestones.map((milestone, index) => ({
+      // this is the MASTER milestone id from getCampaignById
       milestoneId: milestone.id,
       amount: splitAmounts[index] ?? 0,
     }));
   }, [selectedInfluencer, sortedMilestones, offeredAmount]);
 
+  const validMilestoneSplits = useMemo(() => {
+    return milestoneSplits.filter(
+      (item) => String(item.milestoneId).trim().length > 0
+    );
+  }, [milestoneSplits]);
+
   const invitationRemainsText = String(draftCount).padStart(2, "0");
 
   const handleInvite = async () => {
     if (!selectedAssignmentId) return;
-    if (milestoneSplits.length === 0) return;
+    if (!campaignMasterId) return;
+    if (validMilestoneSplits.length === 0) return;
 
     try {
       setInviting(true);
 
+      console.log("📤 invite payload", {
+        campaignId: campaignMasterId,
+        assignmentId: selectedAssignmentId,
+        milestoneSplits: validMilestoneSplits,
+      });
+
       await inviteAssignment(selectedAssignmentId, {
-        milestoneSplits,
+        milestoneSplits: validMilestoneSplits,
       });
 
       await loadRemaining();
-    } catch {
+    } catch (error) {
+      console.error("❌ inviteAssignment failed:", error);
     } finally {
       setInviting(false);
     }
@@ -159,7 +204,11 @@ export default function InviteInfluencerBar({
           >
             <SelectTrigger className="w-full">
               <SelectValue
-                placeholder={loading ? "Loading..." : "Select Influencer"}
+                placeholder={
+                  loading || campaignLoading
+                    ? "Loading..."
+                    : "Select Influencer"
+                }
               />
             </SelectTrigger>
 
@@ -211,11 +260,13 @@ export default function InviteInfluencerBar({
             size={"lg"}
             disabled={
               loading ||
+              campaignLoading ||
               inviting ||
               !selectedAssignmentId ||
+              !campaignMasterId ||
               draftedInfluencers.length === 0 ||
               selectedInfluencerId === "__none" ||
-              milestoneSplits.length === 0
+              validMilestoneSplits.length === 0
             }
             onClick={handleInvite}
           >
