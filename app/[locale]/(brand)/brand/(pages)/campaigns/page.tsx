@@ -1,18 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   STATUS_QUERY,
   TAB_TITLE,
   type CampaignTabKey,
 } from "./_lib/campaign-status";
+import {
+  BUDGETING_STATUS_QUERY,
+  type BudgetingFilter,
+} from "./_lib/budgeting-status";
 
 import { useMyCampaignsByStatus } from "@/app/[locale]/(brand)/brand/hooks/useMyCampaignsByStatus";
 import {
   filterBySearch,
-  paginate,
   sortCampaigns,
   type CampaignSortValue,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
@@ -34,14 +38,92 @@ import { CAMPAIGN_TAB_ITEMS } from "@/app/[locale]/(brand)/brand/(pages)/campaig
 
 const PER_PAGE = 6;
 
-export default function CampaignsPage() {
-  const [activeTab, setActiveTab] = useState<CampaignTabKey>("active");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<CampaignSortValue>("budget_desc");
+const VALID_TABS: CampaignTabKey[] = [
+  "active",
+  "budgeting_quoting",
+  "completed",
+  "draft",
+  "cancelled",
+];
 
-  const status = STATUS_QUERY[activeTab];
-  const { data, loading, error } = useMyCampaignsByStatus(status);
+const VALID_BUDGETING_FILTERS: BudgetingFilter[] = [
+  "all",
+  "budget_pending",
+  "quotation_received",
+];
+
+const VALID_SORTS: CampaignSortValue[] = ["budget_asc", "budget_desc"];
+
+function parseTab(value: string | null): CampaignTabKey {
+  if (value && VALID_TABS.includes(value as CampaignTabKey)) {
+    return value as CampaignTabKey;
+  }
+
+  return "active";
+}
+
+function parseBudgetingFilter(value: string | null): BudgetingFilter {
+  if (value && VALID_BUDGETING_FILTERS.includes(value as BudgetingFilter)) {
+    return value as BudgetingFilter;
+  }
+
+  return "all";
+}
+
+function parseSort(value: string | null): CampaignSortValue {
+  if (value && VALID_SORTS.includes(value as CampaignSortValue)) {
+    return value as CampaignSortValue;
+  }
+
+  return "budget_desc";
+}
+
+function parsePage(value: string | null): number {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 1;
+  }
+
+  return parsed;
+}
+
+export default function CampaignsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const activeTab = parseTab(searchParams.get("tab"));
+  const budgetingFilter = parseBudgetingFilter(searchParams.get("subTab"));
+  const searchQuery = searchParams.get("q") ?? "";
+  const currentPage = parsePage(searchParams.get("page"));
+  const sortBy = parseSort(searchParams.get("sort"));
+
+  const updateQueryParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const status =
+    activeTab === "budgeting_quoting"
+      ? BUDGETING_STATUS_QUERY[budgetingFilter]
+      : STATUS_QUERY[activeTab];
+
+  const { data, meta, loading, error } = useMyCampaignsByStatus(
+    status,
+    currentPage,
+    PER_PAGE,
+  );
 
   const filteredCampaigns = useMemo(
     () => filterBySearch(data, searchQuery),
@@ -53,45 +135,78 @@ export default function CampaignsPage() {
     [filteredCampaigns, sortBy],
   );
 
-  const pagination = useMemo(
-    () => paginate(sortedCampaigns, currentPage, PER_PAGE),
-    [sortedCampaigns, currentPage],
-  );
+  const total = meta.total ?? 0;
+  const totalPages = meta.totalPages ?? 1;
+  const safePage = Math.min(Math.max(currentPage, 1), Math.max(totalPages, 1));
+
+  const currentItemsCount = sortedCampaigns.length;
+  const start = total === 0 ? 0 : (safePage - 1) * PER_PAGE + 1;
+  const end = total === 0 ? 0 : start + currentItemsCount - 1;
 
   const resultText =
-    pagination.total === 0
+    total === 0
       ? "Showing 0 Of 0 Results"
-      : `Showing ${pagination.end} Of ${pagination.total} Results`;
+      : `Showing ${end} Of ${total} Results`;
 
   const sortLabel = sortBy === "budget_desc" ? "High To Low" : "Low To High";
 
   const handleTabChange = (nextTab: CampaignTabKey) => {
-    setActiveTab(nextTab);
-    setSearchQuery("");
-    setCurrentPage(1);
+    if (nextTab === "budgeting_quoting") {
+      updateQueryParams({
+        tab: nextTab,
+        subTab: activeTab === "budgeting_quoting" ? budgetingFilter : "all",
+        q: null,
+        page: "1",
+      });
+
+      return;
+    }
+
+    updateQueryParams({
+      tab: nextTab,
+      subTab: null,
+      q: null,
+      page: "1",
+    });
+  };
+
+  const handleBudgetingFilterChange = (nextFilter: BudgetingFilter) => {
+    updateQueryParams({
+      tab: "budgeting_quoting",
+      subTab: nextFilter,
+      page: "1",
+    });
   };
 
   const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
+    updateQueryParams({
+      q: value.trim() ? value : null,
+      page: "1",
+    });
   };
 
   const handleSortToggle = () => {
-    setSortBy((prev) =>
-      prev === "budget_desc" ? "budget_asc" : "budget_desc",
-    );
-    setCurrentPage(1);
+    const nextSort = sortBy === "budget_desc" ? "budget_asc" : "budget_desc";
+
+    updateQueryParams({
+      sort: nextSort,
+      page: "1",
+    });
   };
 
   const handleNextPage = () => {
-    if (currentPage < pagination.totalPages) {
-      setCurrentPage((prev) => prev + 1);
+    if (safePage < totalPages) {
+      updateQueryParams({
+        page: String(safePage + 1),
+      });
     }
   };
 
   const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
+    if (safePage > 1) {
+      updateQueryParams({
+        page: String(safePage - 1),
+      });
     }
   };
 
@@ -117,7 +232,7 @@ export default function CampaignsPage() {
           <CampaignTabs
             items={CAMPAIGN_TAB_ITEMS}
             activeTab={activeTab}
-            activeCount={data.length}
+            activeCount={meta.total ?? data.length}
             onChange={handleTabChange}
           />
         </div>
@@ -142,14 +257,16 @@ export default function CampaignsPage() {
 
         <CampaignListSection
           tab={activeTab}
-          campaigns={pagination.paged}
+          campaigns={sortedCampaigns}
           loading={loading}
+          budgetingFilter={budgetingFilter}
+          onBudgetingFilterChange={handleBudgetingFilterChange}
         />
 
         <div className="mt-10">
           <PageFooterPagination
-            page={currentPage}
-            totalPages={pagination.totalPages}
+            page={safePage}
+            totalPages={totalPages}
             onNext={handleNextPage}
             onPrev={handlePrevPage}
           />
