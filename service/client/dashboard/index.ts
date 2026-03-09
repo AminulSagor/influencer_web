@@ -3,9 +3,14 @@ import {
   ActionRequiredItem,
   ActiveJobsResponse,
   LifetimeSummaryData,
+  QuotingJobsResponse,
   UpcomingDeadlineItem,
 } from "@/types/client/dashboard/dashboard-types";
-import { ServiceResponse, PaginationMeta } from "@/types/service-response";
+import {
+  ServiceResponse,
+  PaginationMeta,
+  ServiceResult,
+} from "@/types/service-response";
 
 //total jobs
 export async function getActiveJobsTotal(): Promise<number> {
@@ -61,6 +66,25 @@ export const getUpcomingDeadlines = async (
         totalPages: 1,
       },
       message: "Failed to fetch upcoming deadlines",
+    };
+  }
+};
+
+//pending campaigns
+export const getPendingCampaigns = async (): Promise<ServiceResult<number>> => {
+  try {
+    const { data } = await serviceServer.get<
+      ServiceResponse<QuotingJobsResponse, PaginationMeta>
+    >("/campaign/my-campaigns?status=quoting");
+
+    return {
+      data: data.meta?.total ?? 0,
+      error: null,
+    };
+  } catch {
+    return {
+      data: null,
+      error: "Failed to load pending campaigns",
     };
   }
 };

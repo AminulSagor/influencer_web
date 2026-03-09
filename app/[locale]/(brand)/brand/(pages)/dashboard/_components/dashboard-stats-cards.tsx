@@ -1,18 +1,23 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Briefcase } from "lucide-react";
+import { Briefcase, ChevronRight } from "lucide-react";
 import { IoIosHourglass } from "react-icons/io";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { StatsCard } from "@/types/client/dashboard/dashboard-types";
 
+type Props = {
+  activeJobsTotal: number;
+  pendingCampaings: number | null;
+  pendingCampaignsError?: string | null;
+};
+
 export default function DashboardStatsCards({
   activeJobsTotal,
-}: {
-  activeJobsTotal: number;
-}) {
+  pendingCampaings,
+  pendingCampaignsError,
+}: Props) {
   const t = useTranslations("brand.dashboard");
 
   const dashboardCards: StatsCard[] = [
@@ -24,7 +29,11 @@ export default function DashboardStatsCards({
     },
     {
       title: t("cards.Pending"),
-      value: "120",
+      value: pendingCampaignsError
+        ? "Error"
+        : pendingCampaings !== null
+          ? String(pendingCampaings)
+          : "-",
       icon: IoIosHourglass,
     },
   ];
