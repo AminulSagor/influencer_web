@@ -45,14 +45,15 @@ import {
 import { getCampaignByIdFromAdmin } from "@/service/admin/campaign/get-campaign";
 import type { CampaignStatusType } from "@/types/admin/campaign/campaign_details_type";
 
+
 type Props = {
   campaignId: string;
   stats: Statistics[];
   quoteState: QuoteState;
   campaignStatus: CampaignStatusType;
 
-  preferredInfluencers?: CampaignInfluencer[];
-  notPreferableInfluencers?: CampaignInfluencer[];
+  preferredInfluencers?: string[];
+  notPreferableInfluencers?: string[];
 
   onAssignedOfferTotalChange?: (value: number) => void;
 };
