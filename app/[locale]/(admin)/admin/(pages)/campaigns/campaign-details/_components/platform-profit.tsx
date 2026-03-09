@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 
 import CollapsibleCard from "./collapsible-card";
@@ -25,7 +25,6 @@ import { clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 import type {
   AssignedRow,
   AllInfluencerserviceItem,
-  CampaignInfluencer,
   InfluencerBadgeItem,
   QuoteState,
   Statistics,
@@ -45,7 +44,6 @@ import {
 import { getCampaignByIdFromAdmin } from "@/service/admin/campaign/get-campaign";
 import type { CampaignStatusType } from "@/types/admin/campaign/campaign_details_type";
 
-
 type Props = {
   campaignId: string;
   stats: Statistics[];
@@ -59,19 +57,16 @@ type Props = {
 };
 
 const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
-
-const fullName = (i: {
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-}) => {
-  if (i?.name && i.name.trim()) return i.name.trim();
-  return `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
-};
+const EPSILON = 0.0001;
 
 function toNum(v: any) {
   const n = Number(String(v ?? "0").replace(/,/g, "").trim());
   return Number.isFinite(n) ? n : 0;
+}
+
+function roundTo(value: number, decimals = 4) {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
 }
 
 export default function PlatformProfitInfluencerAssign({
@@ -85,7 +80,6 @@ export default function PlatformProfitInfluencerAssign({
 }: Props) {
   const isQuoteConfirmed =
     quoteState === "confirmed" ||
-    quoteState === "accepted" ||
     campaignStatus === "active" ||
     campaignStatus === "completed" ||
     campaignStatus === "paid";
@@ -114,7 +108,6 @@ export default function PlatformProfitInfluencerAssign({
         const platformFee =
           sRes?.data?.data?.platformFee ??
           sRes?.data?.platformFee ??
-          sRes?.data?.data?.platformFee ??
           "2";
 
         setPlatformFeePercent(clampPercent(toNum(platformFee)));
@@ -137,16 +130,16 @@ export default function PlatformProfitInfluencerAssign({
   }, [locked, campaignId]);
 
   const preferredList: InfluencerBadgeItem[] = useMemo(() => {
-    return (preferredInfluencers ?? []).map((i) => ({
-      name: fullName(i) || "Unknown Influencer",
+    return (preferredInfluencers ?? []).map((name) => ({
+      name: String(name || "Unknown Influencer"),
       platform: "—",
       profileUrl: "#",
     }));
   }, [preferredInfluencers]);
 
   const notPreferredList: InfluencerBadgeItem[] = useMemo(() => {
-    return (notPreferableInfluencers ?? []).map((i) => ({
-      name: fullName(i) || "Unknown Influencer",
+    return (notPreferableInfluencers ?? []).map((name) => ({
+      name: String(name || "Unknown Influencer"),
       platform: "—",
       profileUrl: "#",
     }));
@@ -178,7 +171,10 @@ export default function PlatformProfitInfluencerAssign({
   const dropdownInfluencers = useMemo(() => {
     return (allInfluencersservice ?? []).map((i) => ({
       id: String(i.profileId || i.id),
-      name: fullName(i) || "Unknown Influencer",
+      name:
+        (typeof i?.name === "string" && i.name.trim()) ||
+        `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() ||
+        "Unknown Influencer",
       profileImg: i.profileImg ?? null,
     }));
   }, [allInfluencersservice]);
@@ -195,8 +191,6 @@ export default function PlatformProfitInfluencerAssign({
   const [rows, setRows] = useState<AssignedRow[]>([]);
   const [loadingDraft, setLoadingDraft] = useState(false);
 
-  const lastAutoSplitKeyRef = useRef<string>("");
-
   const loadDraftAssignments = useCallback(async () => {
     if (!campaignId) return;
 
@@ -212,20 +206,19 @@ export default function PlatformProfitInfluencerAssign({
           name: String(a.assigneeName ?? "Unknown Influencer"),
           profileImg: a.assigneeImage ?? null,
 
-          percentage: clampPercent(toNum(a.percentage)),
+          percentage: roundTo(clampPercent(toNum(a.percentage)), 4),
           offerAmount: Math.max(0, Math.round(toNum(a.offeredAmount))),
 
           assignmentId: a.assignmentId ?? null,
           isAssigned: true,
 
-          committedPercentage: clampPercent(toNum(a.percentage)),
+          committedPercentage: roundTo(clampPercent(toNum(a.percentage)), 4),
           committedOfferAmount: Math.max(0, Math.round(toNum(a.offeredAmount))),
         })
       );
 
       setRows(mapped);
       setSelectedIds(mapped.map((x) => x.influencerId));
-      lastAutoSplitKeyRef.current = "";
     } catch {
     } finally {
       setLoadingDraft(false);
@@ -307,55 +300,73 @@ export default function PlatformProfitInfluencerAssign({
 
     if (!allUnassignedUntouched) return;
 
-    const assignedPct = assignedRows.reduce(
-      (sum, r) => sum + clampPercent(r.percentage),
+    const assignedAmount = assignedRows.reduce(
+      (sum, r) => sum + Math.max(0, Math.round(Number(r.offerAmount) || 0)),
       0
     );
 
-    const remainingPct = Math.max(0, 100 - assignedPct);
-    const eachPct = clampPercent(remainingPct / unassignedRows.length);
-    const eachAmount = Math.round((availableForInfluencers * eachPct) / 100);
+    const remainingAmount = Math.max(0, availableForInfluencers - assignedAmount);
+    const count = unassignedRows.length;
 
-    setRows((prev) =>
-      prev.map((r) => {
+    const baseAmount = Math.floor(remainingAmount / count);
+    const remainder = remainingAmount % count;
+
+    setRows((prev) => {
+      let unassignedIndex = 0;
+
+      return prev.map((r) => {
         if (r.isAssigned) return r;
         if (Number(r.percentage ?? 0) !== 0 || Number(r.offerAmount ?? 0) !== 0) {
           return r;
         }
 
+        const amount = baseAmount + (unassignedIndex < remainder ? 1 : 0);
+        unassignedIndex++;
+
+        const percentage =
+          availableForInfluencers > 0
+            ? roundTo((amount / availableForInfluencers) * 100, 4)
+            : 0;
+
         return {
           ...r,
-          percentage: eachPct,
-          offerAmount: eachAmount,
+          percentage,
+          offerAmount: amount,
         };
-      })
-    );
+      });
+    });
   }, [locked, rows, availableForInfluencers]);
 
   const totalPct = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.percentage) || 0), 0),
+    () => roundTo(rows.reduce((s, r) => s + (Number(r.percentage) || 0), 0), 4),
     [rows]
   );
 
   const totalAmount = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.offerAmount) || 0), 0),
+    () =>
+      rows.reduce(
+        (s, r) => s + Math.max(0, Math.round(Number(r.offerAmount) || 0)),
+        0
+      ),
     [rows]
   );
 
-  const exceeds100 = totalPct > 100;
+  const exceedsPercentage = totalPct > 100 + EPSILON;
+  const exceedsAmount = totalAmount > availableForInfluencers;
+  const hasOverflow = exceedsPercentage || exceedsAmount;
 
   const rowIsDirty = useCallback((r: AssignedRow) => {
-    const p = clampPercent(r.percentage);
+    const p = roundTo(clampPercent(r.percentage), 4);
     const a = Math.round(Number(r.offerAmount) || 0);
 
     return (
-      p !== clampPercent(r.committedPercentage) ||
+      p !== roundTo(clampPercent(r.committedPercentage), 4) ||
       a !== Math.round(Number(r.committedOfferAmount) || 0)
     );
   }, []);
 
   const updatePercent = (id: string, nextPctRaw: number) => {
-    const pct = clampPercent(nextPctRaw);
+    const pct = roundTo(clampPercent(nextPctRaw), 4);
     const amount = Math.round((availableForInfluencers * pct) / 100);
 
     setRows((prev) =>
@@ -369,7 +380,7 @@ export default function PlatformProfitInfluencerAssign({
     const amt = Math.max(0, Math.round(Number(nextAmountRaw) || 0));
     const pct =
       availableForInfluencers > 0
-        ? clampPercent((amt / availableForInfluencers) * 100)
+        ? roundTo(clampPercent((amt / availableForInfluencers) * 100), 4)
         : 0;
 
     setRows((prev) =>
@@ -385,12 +396,12 @@ export default function PlatformProfitInfluencerAssign({
   };
 
   const confirmRow = async (r: AssignedRow) => {
-    if (!campaignId || exceeds100) return;
+    if (!campaignId || hasOverflow) return;
 
     const payloadPost = {
       campaignId,
       influencerId: r.influencerId,
-      percentage: clampPercent(r.percentage),
+      percentage: roundTo(clampPercent(r.percentage), 4),
       offerAmount: Math.round(Number(r.offerAmount) || 0),
     };
 
@@ -621,7 +632,7 @@ export default function PlatformProfitInfluencerAssign({
         ) : (
           <div className="grid grid-cols-12 gap-4 mt-6">
             <div className="col-span-12 md:col-span-4 space-y-4">
-              <InfluencerBadges title="Preffered" influencers={preferredList} />
+              <InfluencerBadges title="Preferred" influencers={preferredList} />
               <InfluencerBadges title="Not Preferable" influencers={notPreferredList} />
             </div>
 
@@ -674,7 +685,7 @@ export default function PlatformProfitInfluencerAssign({
                     rows.map((r) => {
                       const dirty = r.isAssigned ? rowIsDirty(r) : true;
                       const showTick = dirty;
-                      const canConfirm = !exceeds100 && !r.saving && !r.deleting;
+                      const canConfirm = !hasOverflow && !r.saving && !r.deleting;
 
                       return (
                         <div
@@ -703,7 +714,7 @@ export default function PlatformProfitInfluencerAssign({
                               onChange={(e) => updatePercent(r.influencerId, toNum(e.target.value))}
                               className={cn(
                                 "h-10 w-[140px] rounded-full border text-center text-Primary",
-                                exceeds100 ? "border-red-600" : ""
+                                hasOverflow ? "border-red-600" : ""
                               )}
                               disabled={!!r.saving || !!r.deleting}
                             />
@@ -718,7 +729,7 @@ export default function PlatformProfitInfluencerAssign({
                               onChange={(e) => updateAmount(r.influencerId, toNum(e.target.value))}
                               className={cn(
                                 "h-10 w-[170px] rounded-full border text-center text-black",
-                                exceeds100 ? "border-red-600" : ""
+                                hasOverflow ? "border-red-600" : ""
                               )}
                               disabled={!!r.saving || !!r.deleting}
                             />
@@ -737,7 +748,13 @@ export default function PlatformProfitInfluencerAssign({
                                 onClick={() => confirmRow(r)}
                                 disabled={!canConfirm}
                                 aria-label="Confirm"
-                                title={exceeds100 ? "Total percentage exceeds 100%" : "Confirm"}
+                                title={
+                                  exceedsAmount
+                                    ? "Total amount exceeds available budget"
+                                    : exceedsPercentage
+                                    ? "Total percentage exceeds 100%"
+                                    : "Confirm"
+                                }
                               >
                                 <Check className="h-5 w-5" />
                               </button>
@@ -768,14 +785,25 @@ export default function PlatformProfitInfluencerAssign({
 
               {rows.length > 0 && (
                 <div className="mt-3 text-right space-y-1">
-                  <p className={cn("text-sm", totalPct > 100 ? "text-red-600" : "text-gray-500")}>
+                  <p
+                    className={cn(
+                      "text-sm",
+                      exceedsPercentage || exceedsAmount ? "text-red-600" : "text-gray-500"
+                    )}
+                  >
                     Total Percentage: {totalPct.toFixed(2)}%
-                    {totalPct > 100 ? " (exceeds 100%)" : ""}
+                    {exceedsPercentage ? " (exceeds 100%)" : ""}
                   </p>
 
-                  {exceeds100 && (
+                  {exceedsPercentage && (
                     <p className="text-sm text-red-600 font-medium">
                       Total percentage exceeds 100%. Please adjust before assigning.
+                    </p>
+                  )}
+
+                  {exceedsAmount && (
+                    <p className="text-sm text-red-600 font-medium">
+                      Total amount exceeds available influencer budget. Please adjust before assigning.
                     </p>
                   )}
 

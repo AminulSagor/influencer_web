@@ -14,24 +14,26 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FaEdit, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
-import { createNiche } from "@/service/admin/settings/create-niche";
+import { createProductType } from "@/service/admin/settings/create-productType";
 import { deleteListItem } from "@/service/admin/settings/delete-list-items";
 import { updateListItem } from "@/service/admin/settings/update-list-item";
 
-type NicheItem = {
+type ProductTypeItem = {
   id: string;
   name: string;
 };
 
 type Props = {
-  initialNiches: NicheItem[];
+  initialProductTypes: ProductTypeItem[];
 };
 
-const NicheListCard = ({ initialNiches }: Props) => {
+const ProductTypes = ({ initialProductTypes }: Props) => {
   const router = useRouter();
 
-  const [niches, setNiches] = useState<NicheItem[]>(initialNiches || []);
-  const [newNiche, setNewNiche] = useState("");
+  const [productTypes, setProductTypes] = useState<ProductTypeItem[]>(
+    initialProductTypes || []
+  );
+  const [newProductType, setNewProductType] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -39,15 +41,17 @@ const NicheListCard = ({ initialNiches }: Props) => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleAdd = async () => {
-    const trimmed = newNiche.trim();
+    const trimmed = newProductType.trim();
     if (!trimmed) return;
 
     try {
       setIsAdding(true);
 
-      const created = await createNiche({ name: trimmed });
+      const created = await createProductType({
+        name: trimmed,
+      });
 
-      setNiches((prev) => [
+      setProductTypes((prev) => [
         ...prev,
         {
           id: created.id,
@@ -55,8 +59,8 @@ const NicheListCard = ({ initialNiches }: Props) => {
         },
       ]);
 
-      setNewNiche("");
-      toast.success("Niche added");
+      setNewProductType("");
+      toast.success("Product type added");
       router.refresh();
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -71,8 +75,8 @@ const NicheListCard = ({ initialNiches }: Props) => {
         }
       }
 
-      console.error("Failed to create niche:", error);
-      toast.error("Failed to add niche");
+      console.error("Failed to create product type:", error);
+      toast.error("Failed to add product type");
     } finally {
       setIsAdding(false);
     }
@@ -84,18 +88,18 @@ const NicheListCard = ({ initialNiches }: Props) => {
 
       await deleteListItem(itemId);
 
-      setNiches((prev) => prev.filter((item) => item.id !== itemId));
+      setProductTypes((prev) => prev.filter((item) => item.id !== itemId));
 
       if (editingIndex === index) {
         setEditingIndex(null);
         setEditingValue("");
       }
 
-      toast.success("Niche deleted");
+      toast.success("Product type deleted");
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete niche:", error);
-      toast.error("Failed to delete niche");
+      console.error("Failed to delete product type:", error);
+      toast.error("Failed to delete product type");
     } finally {
       setDeletingId(null);
     }
@@ -103,7 +107,7 @@ const NicheListCard = ({ initialNiches }: Props) => {
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
-    setEditingValue(niches[index].name);
+    setEditingValue(productTypes[index].name);
   };
 
   const handleCancelEdit = () => {
@@ -117,7 +121,7 @@ const NicheListCard = ({ initialNiches }: Props) => {
     const trimmed = editingValue.trim();
     if (!trimmed) return;
 
-    const currentItem = niches[editingIndex];
+    const currentItem = productTypes[editingIndex];
     if (!currentItem) return;
 
     try {
@@ -127,7 +131,7 @@ const NicheListCard = ({ initialNiches }: Props) => {
         name: trimmed,
       });
 
-      setNiches((prev) =>
+      setProductTypes((prev) =>
         prev.map((item) =>
           item.id === currentItem.id ? updated.data : item
         )
@@ -135,7 +139,7 @@ const NicheListCard = ({ initialNiches }: Props) => {
 
       setEditingIndex(null);
       setEditingValue("");
-      toast.success("Niche updated");
+      toast.success("Product type updated");
       router.refresh();
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -150,8 +154,8 @@ const NicheListCard = ({ initialNiches }: Props) => {
         }
       }
 
-      console.error("Failed to update niche:", error);
-      toast.error("Failed to update niche");
+      console.error("Failed to update product type:", error);
+      toast.error("Failed to update product type");
     } finally {
       setUpdatingId(null);
     }
@@ -160,16 +164,16 @@ const NicheListCard = ({ initialNiches }: Props) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Niche List</CardTitle>
-        <CardDescription>Create and manage Niche List</CardDescription>
+        <CardTitle>Product Types</CardTitle>
+        <CardDescription>Create and manage product types</CardDescription>
       </CardHeader>
 
       <CardContent>
         <div className="flex items-center justify-between gap-2">
           <Input
-            value={newNiche}
-            onChange={(e) => setNewNiche(e.target.value)}
-            placeholder="Add new niche"
+            value={newProductType}
+            onChange={(e) => setNewProductType(e.target.value)}
+            placeholder="Add new product type"
             disabled={isAdding}
           />
           <Button
@@ -182,19 +186,21 @@ const NicheListCard = ({ initialNiches }: Props) => {
         </div>
 
         <div className="mt-4 space-y-2">
-          {niches.length === 0 && (
-            <p className="text-center text-gray-500">No niches added yet.</p>
+          {productTypes.length === 0 && (
+            <p className="text-center text-gray-500">
+              No product types added yet.
+            </p>
           )}
 
-          {niches.map((niche, index) => {
+          {productTypes.map((productType, index) => {
             const isEditing = editingIndex === index;
-            const isDeleting = deletingId === niche.id;
-            const isUpdating = updatingId === niche.id;
+            const isDeleting = deletingId === productType.id;
+            const isUpdating = updatingId === productType.id;
 
             return (
               <div
-                key={niche.id}
-                className="flex items-center justify-between rounded-full border bg-Secondary p-2 text-light-green"
+                key={productType.id}
+                className="flex items-center justify-between rounded-full border p-2 bg-Secondary text-light-green"
               >
                 {isEditing ? (
                   <Input
@@ -204,12 +210,16 @@ const NicheListCard = ({ initialNiches }: Props) => {
                     autoFocus
                     disabled={isUpdating}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSaveEdit();
-                      if (e.key === "Escape") handleCancelEdit();
+                      if (e.key === "Enter") {
+                        handleSaveEdit();
+                      }
+                      if (e.key === "Escape") {
+                        handleCancelEdit();
+                      }
                     }}
                   />
                 ) : (
-                  <p className="text-sm">{niche.name}</p>
+                  <p className="text-sm">{productType.name}</p>
                 )}
 
                 <div className="flex gap-2">
@@ -246,7 +256,7 @@ const NicheListCard = ({ initialNiches }: Props) => {
                         <FaEdit />
                       </button>
                       <button
-                        onClick={() => handleDelete(niche.id, index)}
+                        onClick={() => handleDelete(productType.id, index)}
                         aria-label="Delete"
                         className="hover:text-red-500 disabled:opacity-50"
                         type="button"
@@ -266,4 +276,4 @@ const NicheListCard = ({ initialNiches }: Props) => {
   );
 };
 
-export default NicheListCard;
+export default ProductTypes;

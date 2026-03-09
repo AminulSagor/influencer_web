@@ -21,17 +21,34 @@ interface Props {
   readOnlyAmounts?: boolean;
 }
 
+const MONEY_EPSILON = 0.009;
+
 function safeStr(v: any) {
   return String(v ?? "").trim();
 }
 
+function roundMoney(n: number) {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+}
+
 function parseBDT(raw: string) {
-  const digits = raw.replace(/[^\d]/g, "");
-  return digits ? Number(digits) : 0;
+  const cleaned = String(raw ?? "")
+    .replace(/,/g, "")
+    .replace(/[^\d.]/g, "");
+
+  const parts = cleaned.split(".");
+  const normalized =
+    parts.length <= 1
+      ? parts[0] || ""
+      : `${parts[0] || "0"}.${(parts[1] || "").slice(0, 2)}`;
+
+  const num = Number(normalized);
+  return Number.isFinite(num) ? roundMoney(num) : 0;
 }
 
 function parseLooseNumber(v: unknown): number {
-  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  if (typeof v === "number") return Number.isFinite(v) ? roundMoney(v) : 0;
 
   const s = String(v ?? "").trim();
   if (!s) return 0;
@@ -39,16 +56,7 @@ function parseLooseNumber(v: unknown): number {
   const cleaned = s.replace(/,/g, "").replace(/[^\d.]/g, "");
   const n = Number(cleaned);
 
-  return Number.isFinite(n) ? n : 0;
-}
-
-function splitTotalEvenly(total: number, count: number) {
-  if (count <= 0) return [];
-  const t = Math.max(0, Math.floor(total));
-  const base = Math.floor(t / count);
-  const rem = t - base * count;
-
-  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
+  return Number.isFinite(n) ? roundMoney(n) : 0;
 }
 
 export default function CampaignMilestone({
@@ -62,6 +70,10 @@ export default function CampaignMilestone({
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [amounts, setAmounts] = useState<number[]>([]);
+
+  const serverAmountsRef = useRef<number[]>([]);
+  const initializedRef = useRef(false);
 
   const sortedMilestones = useMemo(() => {
     const list = [...(milestones ?? [])];
@@ -71,49 +83,42 @@ export default function CampaignMilestone({
     );
 
     return list.map((m: any, idx: number) => {
-      const id = safeStr(m?.id) || `m-${idx}`;
+      const id = safeStr(m?.id) || safeStr(m?.masterMilestoneId) || `m-${idx}`;
       const order = Number(m?.order ?? idx);
-      const title = safeStr(m?.contentTitle) || "Milestone Title";
-      const subtitle = safeStr(m?.contentQuantity) || "";
+      const title =
+        safeStr(m?.contentTitle) ||
+        safeStr(m?.title) ||
+        "Milestone Title";
+
+      const subtitle =
+        safeStr(m?.contentQuantity) ||
+        safeStr(m?.platform) ||
+        "";
+
       const day =
         safeStr(m?.dayLabel) ||
         (Number.isFinite(Number(m?.deliveryDays))
           ? `DAY ${Number(m?.deliveryDays)}`
           : `DAY ${order + 1}`);
 
-      const amountNum = parseLooseNumber(m?.amount ?? 0);
-      const amount = Math.max(0, Math.floor(amountNum));
+      const amount = Math.max(0, roundMoney(parseLooseNumber(m?.amount ?? 0)));
 
       return { id, order, title, subtitle, day, amount };
     });
   }, [milestones]);
 
-  const milestoneCount = sortedMilestones.length;
-  const activeId = safeStr(activeMilestoneId);
-
   const totalBudget = useMemo(() => {
-    const n = parseLooseNumber(offeredAmountPerInfluencer);
-    return Math.max(0, n);
+    return Math.max(0, roundMoney(parseLooseNumber(offeredAmountPerInfluencer)));
   }, [offeredAmountPerInfluencer]);
 
-  const [amounts, setAmounts] = useState<number[]>([]);
-
-  const serverAmountsRef = useRef<number[]>([]);
-  const initializedRef = useRef(false);
+  const activeId = safeStr(activeMilestoneId);
 
   useEffect(() => {
-    const fromService = sortedMilestones.map((m) => m.amount);
-    const allZero = fromService.every((x) => Number(x ?? 0) === 0);
-
-    const initial =
-      allZero && totalBudget > 0
-        ? splitTotalEvenly(totalBudget, milestoneCount)
-        : fromService;
-
-    setAmounts(initial);
-    serverAmountsRef.current = fromService;
+    const fromBackend = sortedMilestones.map((m) => roundMoney(m.amount));
+    setAmounts(fromBackend);
+    serverAmountsRef.current = fromBackend;
     initializedRef.current = true;
-  }, [sortedMilestones, totalBudget, milestoneCount]);
+  }, [sortedMilestones]);
 
   useEffect(() => {
     if (readOnlyAmounts && editing) {
@@ -129,42 +134,30 @@ export default function CampaignMilestone({
     }));
   }, [sortedMilestones]);
 
-  const sum = useMemo(
-    () => amounts.reduce((a, b) => a + (Number(b) || 0), 0),
-    [amounts]
-  );
+  const sum = useMemo(() => {
+    return roundMoney(amounts.reduce((a, b) => a + (Number(b) || 0), 0));
+  }, [amounts]);
 
-  const exceedsBudget = totalBudget > 0 && sum > totalBudget;
+  const isGreaterThanTotal = sum - totalBudget > MONEY_EPSILON;
+  const isLessThanTotal = totalBudget - sum > MONEY_EPSILON;
+  const isTotalMismatch = Math.abs(sum - totalBudget) > MONEY_EPSILON;
 
   function onAmountChange(idx: number, raw: string) {
     if (readOnlyAmounts) return;
 
-    const v = parseBDT(raw);
-    const nextVal = Math.max(0, Math.floor(v));
+    const nextVal = Math.max(0, roundMoney(parseBDT(raw)));
 
     setAmounts((prev) => {
       const next = [...prev];
-
-      const otherSum = prev.reduce((acc, val, i) => {
-        if (i === idx) return acc;
-        return acc + (Number(val) || 0);
-      }, 0);
-
-      if (totalBudget > 0) {
-        const remaining = Math.max(0, Math.floor(totalBudget - otherSum));
-        next[idx] = Math.min(nextVal, remaining);
-      } else {
-        next[idx] = nextVal;
-      }
-
-      return next;
+      next[idx] = nextVal;
+      return next.map((v) => roundMoney(v));
     });
   }
 
   async function saveChangedAmounts() {
     if (!initializedRef.current) return;
-    if (exceedsBudget) return;
     if (readOnlyAmounts) return;
+    if (isTotalMismatch) return;
 
     const ids = sortedMilestones.map((m) => m.id);
     const server = serverAmountsRef.current;
@@ -172,9 +165,10 @@ export default function CampaignMilestone({
 
     const changes = ids
       .map((id, idx) => {
-        const nextVal = Number(next[idx] ?? 0);
-        const serverVal = Number(server[idx] ?? 0);
-        if (nextVal === serverVal) return null;
+        const nextVal = roundMoney(Number(next[idx] ?? 0));
+        const serverVal = roundMoney(Number(server[idx] ?? 0));
+
+        if (Math.abs(nextVal - serverVal) <= MONEY_EPSILON) return null;
 
         return { milestoneId: id, amount: nextVal };
       })
@@ -208,7 +202,7 @@ export default function CampaignMilestone({
     if (editing) {
       try {
         await saveChangedAmounts();
-        if (!exceedsBudget) setEditing(false);
+        if (!isTotalMismatch) setEditing(false);
       } catch {}
       return;
     }
@@ -216,7 +210,7 @@ export default function CampaignMilestone({
     setEditing(true);
   }
 
-  const doneDisabled = saving || (editing && exceedsBudget);
+  const doneDisabled = saving || (editing && isTotalMismatch);
 
   return (
     <div className="rounded-xl border bg-white">
@@ -230,12 +224,12 @@ export default function CampaignMilestone({
             <Button
               type="button"
               size="sm"
-              className="h-8 rounded-md px-5 bg-orange text-white hover:brightness-95 disabled:opacity-60"
+              className="h-8 rounded-md bg-orange px-5 text-white hover:brightness-95 disabled:opacity-60"
               onClick={onToggleEdit}
               disabled={doneDisabled}
               title={
-                editing && exceedsBudget
-                  ? "Total milestone amount cannot exceed offered amount"
+                editing && isTotalMismatch
+                  ? "Total milestone amount must be exactly equal to offered amount"
                   : undefined
               }
             >
@@ -256,14 +250,14 @@ export default function CampaignMilestone({
                     editing && !readOnlyAmounts
                       ? "bg-white"
                       : "bg-[rgba(248,250,252,1)]",
-                    exceedsBudget && "border-red"
+                    isTotalMismatch && "border-red"
                   )}
                 >
                   <span className="text-sm text-gray-500">৳</span>
 
                   <input
                     type="text"
-                    inputMode="numeric"
+                    inputMode="decimal"
                     value={money(amounts[m.idx] ?? 0)}
                     readOnly={readOnlyAmounts || !editing || saving}
                     onChange={(e) => onAmountChange(m.idx, e.target.value)}
@@ -279,21 +273,27 @@ export default function CampaignMilestone({
 
           <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
             <span>Entered total:</span>
-            <span className={cn("font-semibold", exceedsBudget && "text-red")}>
+            <span className={cn("font-semibold", isTotalMismatch && "text-red")}>
               ৳ {money(sum)}
             </span>
           </div>
 
           {totalBudget > 0 && (
             <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
-              <span>Offered Amount (max):</span>
+              <span>Required total:</span>
               <span className="font-semibold">৳ {money(totalBudget)}</span>
             </div>
           )}
 
-          {exceedsBudget && !readOnlyAmounts && (
+          {isGreaterThanTotal && !readOnlyAmounts && (
             <div className="mt-2 text-xs text-red">
               Total milestone amount cannot exceed offered amount.
+            </div>
+          )}
+
+          {isLessThanTotal && !readOnlyAmounts && (
+            <div className="mt-2 text-xs text-red">
+              Total milestone amount cannot be less than offered amount.
             </div>
           )}
         </div>
@@ -320,7 +320,7 @@ export default function CampaignMilestone({
                   <div className="flex items-start gap-3">
                     <div
                       className={cn(
-                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold",
+                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
                         isActive
                           ? "bg-light-green text-white"
                           : "bg-[rgba(100,116,139,0.12)] text-Primary"
@@ -342,7 +342,7 @@ export default function CampaignMilestone({
                       </div>
                     </div>
 
-                    <div className="text-xs text-light-green mt-1">{c.day}</div>
+                    <div className="mt-1 text-xs text-light-green">{c.day}</div>
                   </div>
                 </button>
               );

@@ -22,23 +22,35 @@ type MilestoneLite = {
   order?: number;
 };
 
+function roundMoney(n: number) {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+}
+
 function splitTotalEvenly(total: number, count: number) {
   if (count <= 0) return [];
-  const safeTotal = Math.max(0, Math.floor(Number(total) || 0));
-  const base = Math.floor(safeTotal / count);
-  const rem = safeTotal - base * count;
 
-  return Array.from({ length: count }, (_, i) => base + (i < rem ? 1 : 0));
+  const totalCents = Math.max(0, Math.round((Number(total) || 0) * 100));
+  const baseCents = Math.floor(totalCents / count);
+  const rem = totalCents - baseCents * count;
+
+  return Array.from({ length: count }, (_, i) =>
+    roundMoney((baseCents + (i < rem ? 1 : 0)) / 100)
+  );
 }
 
 export default function InviteInfluencerBar({
   campaignId,
   milestoneCount,
   milestones,
+  selectedInfluencerId,
+  onSelectedInfluencerChange,
 }: {
   campaignId: string;
   milestoneCount: number;
   milestones: MilestoneLite[];
+  selectedInfluencerId: string;
+  onSelectedInfluencerChange: (id: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -48,8 +60,6 @@ export default function InviteInfluencerBar({
   const [draftedInfluencers, setDraftedInfluencers] = useState<
     RemainingInvitationInfluencer[]
   >([]);
-
-  const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>("");
 
   const sortedMilestones = useMemo(() => {
     return [...(milestones ?? [])]
@@ -70,15 +80,20 @@ export default function InviteInfluencerBar({
         : [];
 
       setDraftCount(Number(data?.draftCount ?? list.length ?? 0));
-      setRemainingBudget(Number(data?.remainingBudget ?? 0));
+      setRemainingBudget(roundMoney(Number(data?.remainingBudget ?? 0)));
       setDraftedInfluencers(list);
 
-      setSelectedInfluencerId((prev) => prev || list?.[0]?.id || "");
+      if (
+        !selectedInfluencerId ||
+        !list.some((x) => x.id === selectedInfluencerId)
+      ) {
+        onSelectedInfluencerChange(list?.[0]?.id || "");
+      }
     } catch {
       setDraftCount(0);
       setRemainingBudget(0);
       setDraftedInfluencers([]);
-      setSelectedInfluencerId("");
+      onSelectedInfluencerChange("");
     } finally {
       setLoading(false);
     }
@@ -94,12 +109,12 @@ export default function InviteInfluencerBar({
   }, [draftedInfluencers, selectedInfluencerId]);
 
   const selectedAssignmentId = selectedInfluencer?.assignmentId ?? "";
-  const offeredAmount = Number(selectedInfluencer?.offeredAmount ?? 0);
+  const offeredAmount = roundMoney(Number(selectedInfluencer?.offeredAmount ?? 0));
 
   const milestoneAmount = useMemo(() => {
     const count = sortedMilestones.length || milestoneCount || 0;
     if (count <= 0) return 0;
-    return offeredAmount / count;
+    return roundMoney(offeredAmount / count);
   }, [offeredAmount, sortedMilestones.length, milestoneCount]);
 
   const milestoneSplits = useMemo(() => {
@@ -129,7 +144,6 @@ export default function InviteInfluencerBar({
 
       await loadRemaining();
     } catch {
-      // optional: show toast later
     } finally {
       setInviting(false);
     }
@@ -141,7 +155,7 @@ export default function InviteInfluencerBar({
         <div className="md:flex-[2]">
           <Select
             value={selectedInfluencerId}
-            onValueChange={setSelectedInfluencerId}
+            onValueChange={onSelectedInfluencerChange}
           >
             <SelectTrigger className="w-full">
               <SelectValue
@@ -172,23 +186,23 @@ export default function InviteInfluencerBar({
         </div>
 
         <div className="md:flex-1">
-          <h2 className="text-Primary text-sm md:text-lg font-semibold">
+          <h2 className="text-Primary text-sm font-semibold md:text-lg">
             Offered Amount:
           </h2>
-          <p className="text-Primary text-sm md:text-lg font-medium">
+          <p className="text-Primary text-sm font-medium md:text-lg">
             ৳ {money(offeredAmount)}
           </p>
         </div>
 
-        <div className="md:flex-1 text-orange">
+        <div className="text-orange md:flex-1">
           <h2 className="text-sm md:text-lg">Remaining amount to distribute:</h2>
-          <p className="text-sm md:text-lg font-medium">
+          <p className="text-sm font-medium md:text-lg">
             ৳ {money(remainingBudget)}
           </p>
         </div>
 
-        <div className="md:flex-1 flex flex-col items-start md:items-center md:justify-center gap-2">
-          <h2 className="text-Primary text-sm md:text-lg font-semibold">
+        <div className="flex flex-col items-start gap-2 md:flex-1 md:items-center md:justify-center">
+          <h2 className="text-Primary text-sm font-semibold md:text-lg">
             Invitation Remains: {invitationRemainsText}
           </h2>
 
