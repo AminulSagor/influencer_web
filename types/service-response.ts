@@ -10,3 +10,7 @@ export type ServiceResponse<T, M = undefined> = {
   meta?: M;
   message?: string;
 };
+export type ServiceResult<T> = {
+  data: T | null;
+  error: string | null;
+};
