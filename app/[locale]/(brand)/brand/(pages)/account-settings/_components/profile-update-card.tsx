@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Accordion,
   AccordionContent,
@@ -8,198 +9,350 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, MapPin, Phone, Upload } from "lucide-react";
+import Loader from "@/components/spin-loader";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { getProfile } from "@/service/client/profile/profile";
+import { BrandProfile } from "@/types/client/profile/profile";
+import ProfilePhotoSection from "./profile-photo-section";
+import ProfileBasicInfoSection from "./profile-basic-info-section";
+import ProfileFormSection from "./profile-form-section";
+import { profileUpdateSchema } from "@/schemas/client/profile-update.schema";
+import { updateClientProfile } from "@/service/client/profile/update-profile";
+import { updateClientProfileAddress } from "@/service/client/profile/update-profile-address";
+import { getSignedUrl } from "@/service/client/upload/get-signed-url";
+import { uploadFileToS3 } from "@/service/client/upload/upload-file-to-s3";
+
+export type ProfileFormState = {
+  brandName: string;
+  firstName: string;
+  lastName: string;
+  profileImg: string;
+  thana: string;
+  zilla: string;
+  fullAddress: string;
+};
+
+const defaultForm: ProfileFormState = {
+  brandName: "",
+  firstName: "",
+  lastName: "",
+  profileImg: "",
+  thana: "",
+  zilla: "",
+  fullAddress: "",
+};
 
 const ProfileUpdateCard = () => {
+  const t = useTranslations("brand.profile");
+  const [profile, setProfile] = useState<BrandProfile | null>(null);
+  const [form, setForm] = useState<ProfileFormState>(defaultForm);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProfileFormState, string>>
+  >({});
+
+  const setFormFromProfile = (data: BrandProfile) => {
+    setForm({
+      brandName: data.brandName || "",
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      profileImg: data.profileImg || "",
+      thana: data.thana || "",
+      zilla: data.zilla || "",
+      fullAddress: data.fullAddress || "",
+    });
+    setPreviewImage(data.profileImg || "");
+    setSelectedFile(null);
+    setErrors({});
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      setIsLoading(true);
+      const result = await getProfile();
+
+      if (!isMounted) return;
+
+      if (typeof result === "string") {
+        notifyError(result);
+        setProfile(null);
+        setIsLoading(false);
+        return;
+      }
+
+      setProfile(result);
+      setFormFromProfile(result);
+      setIsLoading(false);
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleChange = (field: keyof ProfileFormState, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing && profile) {
+      setFormFromProfile(profile);
+    }
+    setIsEditing((prev) => !prev);
+  };
+
+  const handleImageSelect = (file: File | null) => {
+    setSelectedFile(file);
+
+    if (!file) {
+      setPreviewImage(profile?.profileImg || "");
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setPreviewImage(localUrl);
+  };
+
+  const handleRemoveImage = () => {
+    if (!isEditing || isSaving) return;
+
+    setSelectedFile(null);
+    setPreviewImage("");
+    setForm((prev) => ({
+      ...prev,
+      profileImg: "",
+    }));
+  };
+
+  const handleSave = async () => {
+    const validation = profileUpdateSchema.safeParse({
+      ...form,
+      profileImg: form.profileImg || previewImage || "",
+    });
+
+    if (!validation.success) {
+      const fieldErrors: Partial<Record<keyof ProfileFormState, string>> = {};
+
+      validation.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0];
+        if (
+          typeof fieldName === "string" &&
+          !fieldErrors[fieldName as keyof ProfileFormState]
+        ) {
+          fieldErrors[fieldName as keyof ProfileFormState] = issue.message;
+        }
+      });
+
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
+    setIsSaving(true);
+
+    let finalProfileImg = form.profileImg || "";
+
+    if (selectedFile) {
+      const signedUrlResult = await getSignedUrl({
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        module: "brandguru/client/docs",
+      });
+
+      if (typeof signedUrlResult === "string") {
+        notifyError(t("messages.signedUrlFailed"));
+        setIsSaving(false);
+        return;
+      }
+
+      const uploadResult = await uploadFileToS3(
+        signedUrlResult.signedUrl,
+        selectedFile,
+      );
+
+      if (uploadResult !== true) {
+        notifyError(t("messages.uploadFailed"));
+        setIsSaving(false);
+        return;
+      }
+
+      finalProfileImg = signedUrlResult.publicUrl;
+    } else if (!previewImage) {
+      finalProfileImg = "";
+    }
+
+    const profileResult = await updateClientProfile({
+      brandName: form.brandName.trim(),
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      profileImg: finalProfileImg,
+    });
+
+    if (profileResult !== "success") {
+      notifyError(t("messages.profileUpdateFailed"));
+      setIsSaving(false);
+      return;
+    }
+
+    const addressResult = await updateClientProfileAddress({
+      thana: form.thana.trim(),
+      zilla: form.zilla.trim(),
+      fullAddress: form.fullAddress.trim(),
+    });
+
+    if (addressResult !== "success") {
+      notifyError(t("messages.addressUpdateFailed"));
+      setIsSaving(false);
+      return;
+    }
+
+    const updatedProfile: BrandProfile | null = profile
+      ? {
+          ...profile,
+          brandName: form.brandName.trim(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          profileImg: finalProfileImg,
+          thana: form.thana.trim(),
+          zilla: form.zilla.trim(),
+          fullAddress: form.fullAddress.trim(),
+        }
+      : null;
+
+    if (updatedProfile) {
+      setProfile(updatedProfile);
+      setForm({
+        brandName: updatedProfile.brandName || "",
+        firstName: updatedProfile.firstName || "",
+        lastName: updatedProfile.lastName || "",
+        profileImg: updatedProfile.profileImg || "",
+        thana: updatedProfile.thana || "",
+        zilla: updatedProfile.zilla || "",
+        fullAddress: updatedProfile.fullAddress || "",
+      });
+      setPreviewImage(updatedProfile.profileImg || "");
+      setSelectedFile(null);
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        profileImg: finalProfileImg,
+      }));
+      setPreviewImage(finalProfileImg);
+      setSelectedFile(null);
+    }
+
+    setIsEditing(false);
+    setIsSaving(false);
+    notifySuccess(t("messages.updateSuccess"));
+
+    const refreshed = await getProfile();
+
+    if (typeof refreshed !== "string") {
+      setProfile((prev) => {
+        if (!prev) return refreshed;
+
+        return {
+          ...refreshed,
+          brandName: prev.brandName,
+          firstName: prev.firstName,
+          lastName: prev.lastName,
+          profileImg: prev.profileImg,
+          thana: prev.thana,
+          zilla: prev.zilla,
+          fullAddress: prev.fullAddress,
+        };
+      });
+    }
+  };
+
   return (
-    <Card className="py-0 relative bg-white">
+    <Card className="relative bg-white py-0">
       <CardContent className="py-4">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
-            {/* Header */}
-
             <AccordionTrigger className="py-0 hover:no-underline">
-              <div className="flex items-center justify-between w-full pr-28">
-                <h1 className="font-semibold text-base text-Primary">
-                  Profile
+              <div className="flex w-full items-center justify-between pr-28">
+                <h1 className="text-base font-semibold text-Primary">
+                  {t("title")}
                 </h1>
               </div>
             </AccordionTrigger>
 
             <Button
               type="button"
-              className="rounded-full text-xs px-8 bg-light-green text-white hover:bg-light-green/90 absolute top-4 right-14 h-7"
+              onClick={isEditing ? handleSave : handleEditToggle}
+              disabled={isLoading || isSaving}
+              className="absolute top-4 right-14 h-7 rounded-full bg-light-green px-8 text-xs text-white hover:bg-light-green/90 disabled:opacity-60"
             >
-              Edit Profile
+              {isSaving ? (
+                <Loader className="h-4 w-4 border-white border-t-transparent" />
+              ) : isEditing ? (
+                t("actions.saveProfile")
+              ) : (
+                t("actions.editProfile")
+              )}
             </Button>
 
-            <AccordionContent className="pb-6 pt-4">
-              {/* Top section: avatar + brand info */}
-              <div className="flex gap-8">
-                {/* Left: Avatar */}
-                <div className="flex flex-col items-center gap-3 min-w-[180px]">
-                  <div className="h-36 w-36 rounded-full bg-light-green/15 border border-dashed border-light-green/60 grid place-items-center">
-                    <div className="h-10 w-10 rounded-full bg-light-green/20 grid place-items-center">
-                      <Upload className="w-5 h-5 text-Primary/70" />
-                    </div>
+            <AccordionContent className="pt-4 pb-6">
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader className="h-8 w-8" />
+                </div>
+              ) : (
+                <div className="space-y-10">
+                  <div className="flex gap-8">
+                    <ProfilePhotoSection
+                      imageUrl={previewImage}
+                      brandName={form.brandName}
+                      isEditing={isEditing}
+                      isSaving={isSaving}
+                      onFileSelect={handleImageSelect}
+                      onRemove={handleRemoveImage}
+                    />
+
+                    <ProfileBasicInfoSection
+                      brandName={form.brandName}
+                      firstName={form.firstName}
+                      lastName={form.lastName}
+                      country={profile?.country || ""}
+                      thana={form.thana}
+                      zilla={form.zilla}
+                      fullAddress={form.fullAddress}
+                      email={profile?.email || ""}
+                      phone={profile?.phone || ""}
+                    />
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-7 px-8 rounded-full text-xs border-light-green/40 text-Primary hover:bg-light-green/10"
-                  >
-                    Remove
-                  </Button>
-
-                  <Button
-                    type="button"
-                    className="h-7 px-8 rounded-full text-xs bg-light-green text-white hover:bg-light-green/90"
-                  >
-                    Upload Photo
-                  </Button>
-                </div>
-
-                {/* Right: Info */}
-                <div className="flex-1">
-                  <div className="space-y-1">
-                    <h2 className="text-Primary text-2xl font-semibold">
-                      Style Co.
-                    </h2>
-                    <p className="text-Primary font-medium leading-none">
-                      Salman Khan
-                    </p>
-                    <p className="text-Primary/60 text-xs leading-none">
-                      Brand Manager
-                    </p>
-                  </div>
-
-                  <div className="mt-6 space-y-3 text-sm">
-                    <div className="flex items-start gap-3">
-                      <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
-                        <MapPin className="w-4 h-4 text-light-green" />
-                      </span>
-                      <div>
-                        <p className="text-light-green font-medium">
-                          Bangladesh
-                        </p>
-                        <p className="text-Primary/50 text-xs">
-                          Swarupkathi, Dhaka
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
-                        <Mail className="w-4 h-4 text-light-green" />
-                      </span>
-                      <p className="text-Primary/70 text-sm">
-                        salmanKhan@email.com
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="h-9 w-9 rounded-full bg-light-green/15 grid place-items-center">
-                        <Phone className="w-4 h-4 text-light-green" />
-                      </span>
-                      <p className="text-Primary/70 text-sm">+8801234567890</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Form */}
-              <div className="mt-10 space-y-6">
-                {/* row 1 */}
-                <div className="grid md:grid-cols-3 gap-8">
-                  <Field label="First Name" required>
-                    <Input
-                      placeholder="Enter First Name"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="Email Address" required>
-                    <Input
-                      defaultValue="grow_big@gmail.com"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="Thana" required>
-                    <Input
-                      defaultValue="Dhaka"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-                </div>
-
-                {/* row 2 */}
-                <div className="grid md:grid-cols-3 gap-8">
-                  <Field label="Last Name" required>
-                    <Input
-                      placeholder="Enter Last Name"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="Phone Number" required>
-                    <Input
-                      defaultValue="+8801234567890"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="Zilla" required>
-                    <Input
-                      defaultValue="Dhaka"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-                </div>
-
-                {/* full address */}
-                <Field label="Full Address" required>
-                  <textarea
-                    placeholder="Enter Full Address"
-                    className="w-full min-h-[110px] rounded-md border border-light-green/25 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-light-green/30"
+                  <ProfileFormSection
+                    form={form}
+                    isEditing={isEditing}
+                    isSaving={isSaving}
+                    email={profile?.email || ""}
+                    phone={profile?.phone || ""}
+                    nidNumber={profile?.nidNumber || ""}
+                    binNumber={profile?.binNumber || ""}
+                    errors={errors}
+                    onChange={handleChange}
                   />
-                </Field>
-
-                {/* row 3 */}
-                <div className="grid md:grid-cols-3 gap-8">
-                  <Field label="NID Number" required>
-                    <Input
-                      defaultValue="123123123123123"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="BIN Number" required>
-                    <Input
-                      defaultValue="12312312312312"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
-
-                  <Field label="Secondary Phone Number (Optional)">
-                    <Input
-                      defaultValue="+8801234567890"
-                      className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                    />
-                  </Field>
                 </div>
-
-                {/* website */}
-                <Field label="Website">
-                  <Input
-                    placeholder="Enter Website Name"
-                    className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-                  />
-                </Field>
-              </div>
+              )}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -209,23 +362,3 @@ const ProfileUpdateCard = () => {
 };
 
 export default ProfileUpdateCard;
-
-/** Small helper to match SS label style */
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium text-light-green">
-        {label} {required ? "*" : ""}
-      </p>
-      {children}
-    </div>
-  );
-}

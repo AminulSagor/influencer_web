@@ -586,7 +586,47 @@
       "linkPlaceholder": "Enter the link",
       "addAnother": "Add Another Brand Asset",
       "updateSuccess": "Brand assets updated successfully"
-    }
+    },
+    "title": "Profile",
+    "actions": {
+        "editProfile": "Edit Profile",
+        "saveProfile": "Save Profile"
+      },
+    "photo": {
+        "remove": "Remove",
+        "upload": "Upload Photo"
+      },
+    "basicInfo": {
+        "role": "Brand Manager"
+      },
+    "fields": {
+        "brandName": "Brand Name",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "emailAddress": "Email Address",
+        "phoneNumber": "Phone Number",
+        "thana": "Thana",
+        "zilla": "Zilla",
+        "nidNumber": "NID Number",
+        "binNumber": "BIN Number",
+        "fullAddress": "Full Address"
+      },
+    "placeholders": {
+        "brandName": "Enter Brand Name",
+        "firstName": "Enter First Name",
+        "lastName": "Enter Last Name",
+        "thana": "Enter Thana",
+        "zilla": "Enter Zilla",
+        "fullAddress": "Enter Full Address"
+      },
+    "messages": {
+        "invalidForm": "Invalid form data",
+        "signedUrlFailed": "Failed to generate upload URL",
+        "uploadFailed": "Failed to upload image",
+        "profileUpdateFailed": "Failed to update profile",
+        "addressUpdateFailed": "Failed to update address",
+        "updateSuccess": "Profile updated successfully"
+      }
     }
   }
 }
