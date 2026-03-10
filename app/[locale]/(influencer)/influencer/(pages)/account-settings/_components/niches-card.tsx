@@ -26,7 +26,7 @@ export default function NichesCard() {
 
         {/* Action */}
         <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-          {t("Add another Niche")}
+          {t("+ Add another Niche")}
         </button>
       </CollapseCard>
     </div>

@@ -7,6 +7,7 @@ import {
   Upload,
   XCircle,
   FileText,
+  Loader2,
 } from "lucide-react";
 import {
   Accordion,
@@ -17,6 +18,9 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { updateNid } from "@/service/influencer/nid/nid_service";
+import { toast } from "sonner";
 
 type UploadKey = "frontNid" | "backNid";
 
@@ -27,10 +31,14 @@ type UploadState = {
 
 const MAX_MB = 2;
 const MAX_BYTES = MAX_MB * 1024 * 1024;
-const ACCEPT = "image/png,image/jpeg,application/pdf";
+const ACCEPT = "image/png,image/jpeg,image/jpg,application/pdf,.png,.jpg,.jpeg,.pdf";
 
 export default function VerificationMethodsCard() {
   const [nidNumber, setNidNumber] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState<
+    Partial<Record<UploadKey, number>>
+  >({});
 
   const [uploads, setUploads] = React.useState<Record<UploadKey, UploadState>>({
     frontNid: { file: null },
@@ -40,6 +48,11 @@ export default function VerificationMethodsCard() {
   const [errors, setErrors] = React.useState<
     Partial<Record<UploadKey, string>>
   >({});
+
+  const { upload } = useFileUpload({
+    module: "brandguru/influencer/docs",
+    showToast: false, // We'll handle toasts manually
+  });
 
   React.useEffect(() => {
     return () => {
@@ -52,8 +65,8 @@ export default function VerificationMethodsCard() {
 
   const validateFile = (file: File) => {
     if (file.size > MAX_BYTES) return `Max ${MAX_MB}MB allowed`;
-    const okTypes = ["image/png", "image/jpeg", "application/pdf"];
-    if (!okTypes.includes(file.type)) return "Only PNG, JPEG, PDF allowed";
+    const okTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"];
+    if (!okTypes.includes(file.type)) return "Only PNG, JPG, PDF allowed";
     return null;
   };
 
@@ -100,6 +113,75 @@ export default function VerificationMethodsCard() {
     if (file) setUpload(key, file);
   };
 
+  // Submit NID verification - uploads files ONLY when submitting
+  const handleSubmit = async () => {
+    // Validation
+    if (!nidNumber.trim()) {
+      toast.error("Please enter your NID number");
+      return;
+    }
+
+    if (!uploads.frontNid.file || !uploads.backNid.file) {
+      toast.error("Please select both NID documents");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Uploading documents...");
+
+    try {
+      // Upload front NID
+      console.log("Uploading front NID:", uploads.frontNid.file.name);
+      setUploadProgress({ frontNid: 0 });
+      const frontResult = await upload(uploads.frontNid.file);
+      if (!frontResult) throw new Error("Failed to upload front NID");
+      console.log("Front NID uploaded:", frontResult.publicUrl);
+      setUploadProgress((p) => ({ ...p, frontNid: 100 }));
+
+      // Upload back NID
+      console.log("Uploading back NID:", uploads.backNid.file.name);
+      setUploadProgress((p) => ({ ...p, backNid: 0 }));
+      const backResult = await upload(uploads.backNid.file);
+      if (!backResult) throw new Error("Failed to upload back NID");
+      console.log("Back NID uploaded:", backResult.publicUrl);
+      setUploadProgress((p) => ({ ...p, backNid: 100 }));
+
+      // Update toast
+      toast.loading("Submitting verification...", { id: toastId });
+
+      // Submit to backend
+      const payload = {
+        nidNumber: nidNumber.trim(),
+        nidFrontImg: frontResult.publicUrl,
+        nidBackImg: backResult.publicUrl,
+      };
+      console.log("Submitting NID to backend:", payload);
+      
+      const response = await updateNid(payload);
+      console.log("Backend response:", response);
+
+      if (response.success) {
+        toast.success(response.message || "NID submitted successfully", {
+          id: toastId,
+        });
+        // Reset form on success
+        setNidNumber("");
+        setUploads({ frontNid: { file: null }, backNid: { file: null } });
+        setUploadProgress({});
+      } else {
+        toast.error(response.message || "Failed to update NID", { id: toastId });
+      }
+    } catch (error) {
+      console.error("Error submitting NID:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to submit NID verification";
+      toast.error(errorMessage, { id: toastId });
+    } finally {
+      setIsSubmitting(false);
+      setUploadProgress({});
+    }
+  };
+
   return (
     <Card className="py-0 relative">
       <CardContent className="py-4 px-6">
@@ -138,6 +220,9 @@ export default function VerificationMethodsCard() {
                     placeholder="Enter your NID Number"
                     className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Must be 10, 13, or 17 digits
+                  </p>
                 </div>
 
                 {/* Front side */}
@@ -152,6 +237,8 @@ export default function VerificationMethodsCard() {
                   onDrop={onDrop("frontNid")}
                   onDragOver={(e) => e.preventDefault()}
                   onChange={(f) => setUpload("frontNid", f)}
+                  isUploading={isSubmitting && uploadProgress.frontNid !== undefined}
+                  progress={uploadProgress.frontNid}
                 />
 
                 {/* Back side */}
@@ -166,7 +253,25 @@ export default function VerificationMethodsCard() {
                   onDrop={onDrop("backNid")}
                   onDragOver={(e) => e.preventDefault()}
                   onChange={(f) => setUpload("backNid", f)}
+                  isUploading={isSubmitting && uploadProgress.backNid !== undefined}
+                  progress={uploadProgress.backNid}
                 />
+              </div>
+
+              {/* Submit Button */}
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    isSubmitting || 
+                    !nidNumber.trim() || 
+                    !uploads.frontNid.file || 
+                    !uploads.backNid.file
+                  }
+                  className="bg-orange hover:bg-orange/90 text-white px-8"
+                >
+                  {isSubmitting ? "Processing..." : "Submit for Verification"}
+                </Button>
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -189,6 +294,8 @@ function UploadBoxUI({
   onDrop,
   onDragOver,
   onChange,
+  isUploading,
+  progress,
 }: {
   label: string;
   state: UploadState;
@@ -200,6 +307,8 @@ function UploadBoxUI({
   onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
   onChange: (file: File | null) => void;
+  isUploading?: boolean;
+  progress?: number;
 }) {
   const hasFile = !!state.file;
 
@@ -219,7 +328,7 @@ function UploadBoxUI({
         className={[
           "w-full rounded-lg border border-dashed",
           "bg-muted/30",
-          "min-h-[140px]",
+          "min-h-35",
           "flex items-center justify-center",
           "cursor-pointer select-none",
           "transition",
@@ -241,45 +350,56 @@ function UploadBoxUI({
             <div className="h-11 w-11 rounded-full bg-black/5 grid place-items-center">
               <Upload className="h-5 w-5 text-black/40" />
             </div>
-            <p className="text-xs text-black/50">PNG, JPEG, PDF (Max 2MB)</p>
+            <p className="text-xs text-black/50">PNG, JPG, PDF (Max 2MB)</p>
           </div>
         ) : (
           <div className="w-full px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-black/70 truncate">
-                  Uploaded
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-3 py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-orange" />
+                <p className="text-xs text-black/60">
+                  Uploading... {progress ? `${progress}%` : ""}
                 </p>
-                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5" />
-                  <span className="truncate">{state.file?.name}</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-blue-600 truncate">
+                      ✓ Selected
+                    </p>
+                    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span className="truncate">{state.file?.name}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove();
+                    }}
+                    className="h-9 w-9 p-0 hover:bg-black/5"
+                    aria-label="Remove file"
+                    title="Remove"
+                  >
+                    <XCircle className="h-4 w-4 text-black/40" />
+                  </Button>
                 </div>
-              </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove();
-                }}
-                className="h-9 w-9 p-0 hover:bg-black/5"
-                aria-label="Remove file"
-                title="Remove"
-              >
-                <XCircle className="h-4 w-4 text-black/40" />
-              </Button>
-            </div>
-
-            {state.previewUrl && (
-              <div className="mt-3 rounded-md overflow-hidden border border-black/10">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={state.previewUrl}
-                  alt="Preview"
-                  className="w-full h-28 object-cover"
-                />
-              </div>
+                {state.previewUrl && (
+                  <div className="mt-3 rounded-md overflow-hidden border border-black/10">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={state.previewUrl}
+                      alt="Preview"
+                      className="w-full h-28 object-cover"
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
