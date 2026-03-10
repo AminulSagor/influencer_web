@@ -658,15 +658,39 @@
       "editDocuments": "Edit Documents",
       "saveDocuments": "Save Documents"
     }
-  },
-  "messages_v": {
-    "uploadFailed": "File upload failed",
-    "nidUpdateFailed": "Failed to update NID",
-    "tradeLicenseUpdateFailed": "Failed to update trade license",
-    "tinUpdateFailed": "Failed to update TIN",
-    "binUpdateFailed": "Failed to update BIN",
-    "updateSuccess": "Verification documents updated successfully"
-  }   
+      },
+      "messages_v": {
+        "uploadFailed": "File upload failed",
+        "nidUpdateFailed": "Failed to update NID",
+        "tradeLicenseUpdateFailed": "Failed to update trade license",
+        "tinUpdateFailed": "Failed to update TIN",
+        "binUpdateFailed": "Failed to update BIN",
+        "updateSuccess": "Verification documents updated successfully"
+      }   
+    },
+    "analytics": {
+      "topCampaign": "Top Campaign",
+      "topInfluencer": "Top Influencer",
+      "notAvailable": "Not available",
+      "budgetUnavailable": "Budget unavailable",
+      "dateUnavailable": "Date unavailable",
+      "jobsCompleted": "{count} Jobs Completed",
+      "noInfluencerData": "No influencer data available",
+      "recentTransactions": "Recent Transactions",
+      "recentTransactionsSubtitle": "Browse and manage your earnings of each campaigns",
+      "searchPlaceholder": "Search by campaign name",
+      "showingResults": "Showing {showing} of {total} Results",
+      "sort": "Sort",
+      "lowToHigh": "Low To High",
+      "highToLow": "High To Low",
+      "viewCampaignDetails": "View Campaign Details",
+      "page": "Page",
+      "of": "of",
+      "prev": "Prev",
+      "next": "Next",
+      "loading": "Loading...",
+      "noTransactionsFound": "No transactions found",
+      "paymentForCampaign": "Payment For \"{campaignName}\""
     }
   }
 }
