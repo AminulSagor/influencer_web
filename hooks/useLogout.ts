@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { removeToken } from "@/utils/cookies_util";
 
 export function useLogout() {
   const router = useRouter();
@@ -13,11 +14,9 @@ export function useLogout() {
     if (loading) return;
 
     setLoading(true);
+
     try {
-      await fetch("/service/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      removeToken();
 
       router.push(`/${locale}/login`);
       router.refresh();
