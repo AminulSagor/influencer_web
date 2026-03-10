@@ -42,7 +42,7 @@ const AnalyticsPage = () => {
         timeLabel: formatDateTimeLabel(item.date, locale),
         amountLabel: formatCurrencyBDT(item.amount),
         onViewDetails: () => {
-          router.push(`/${locale}/brand/campaigns/${item.campaignId}`);
+          router.push(`/${locale}/brand/campaign-details/${item.campaignId}`);
         },
       })) ?? []
     );
