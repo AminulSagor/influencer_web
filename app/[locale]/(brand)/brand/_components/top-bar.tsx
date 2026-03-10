@@ -1,41 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Notification from "@/app/[locale]/(brand)/brand/_components/notification";
-import { BrandProfile } from "@/types/client/profile/profile";
-import { getProfile } from "@/service/client/profile/profile";
+
 import Link from "next/link";
+import { useProfileStore } from "@/store/client-profile-store";
 
 export default function TopBar() {
-  const [profile, setProfile] = useState<BrandProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const profile = useProfileStore((state) => state.profile);
+  const fetchProfile = useProfileStore((state) => state.fetchProfile);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      const result = await getProfile();
-
-      if (!isMounted) return;
-
-      if (typeof result === "string") {
-        setError(result);
-        setProfile(null);
-        return;
-      }
-
-      setProfile(result);
-      setError(null);
-    };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    if (!profile) {
+      fetchProfile();
+    }
+  }, [profile, fetchProfile]);
 
   const brandName = profile?.brandName || "StyleCo.";
   const profileImg = profile?.profileImg || "";
@@ -68,7 +49,7 @@ export default function TopBar() {
           <div>
             <h2 className="text-xl font-semibold">{brandName}</h2>
             <p className="text-xs font-medium text-muted-foreground ml-1">
-              {error ? error : "Client"}
+              Client
             </p>
           </div>
         </Link>

@@ -1,40 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getProfile } from "@/service/client/profile/profile";
-import { BrandProfile } from "@/types/client/profile/profile";
 import { useTranslations } from "next-intl";
+import { useProfileStore } from "@/store/client-profile-store";
+import Loader from "@/components/spin-loader";
 
 const InformationCard = () => {
   const t = useTranslations("brand.profile");
-  const [profile, setProfile] = useState<BrandProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const profile = useProfileStore((state) => state.profile);
+  const isLoading = useProfileStore((state) => state.isLoading);
+  const fetchProfile = useProfileStore((state) => state.fetchProfile);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadProfile = async () => {
-      const result = await getProfile();
-
-      if (!isMounted) return;
-
-      if (typeof result === "string") {
-        setError(result);
-        setProfile(null);
-        return;
-      }
-
-      setProfile(result);
-      setError(null);
-    };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    if (!profile) {
+      fetchProfile();
+    }
+  }, [profile, fetchProfile]);
 
   const contactInfos = [
     {
@@ -57,19 +39,23 @@ const InformationCard = () => {
   return (
     <Card className="w-full">
       <CardContent>
-        <div className="space-y-4">
-          {contactInfos.map((info) => (
-            <div key={info.key} className="flex items-center gap-2">
-              <span className="h-8 w-8 rounded-full bg-light-gray" />
-              <div className="text-xs">
-                <h2 className="text-light-green">{info.label}</h2>
-                <p>{info.value}</p>
+        {isLoading && !profile ? (
+          <div className="flex min-h-[140px] items-center justify-center">
+            <Loader className="h-8 w-8 border-light-green border-t-transparent" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {contactInfos.map((info) => (
+              <div key={info.key} className="flex items-center gap-2">
+                <span className="h-8 w-8 rounded-full bg-light-gray" />
+                <div className="text-xs">
+                  <h2 className="text-light-green">{info.label}</h2>
+                  <p>{info.value}</p>
+                </div>
               </div>
-            </div>
-          ))}
-
-          {error && <p className="text-xs text-red-500">{error}</p>}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

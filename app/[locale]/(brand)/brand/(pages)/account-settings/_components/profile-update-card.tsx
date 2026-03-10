@@ -12,7 +12,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/spin-loader";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
-import { getProfile } from "@/service/client/profile/profile";
 import { BrandProfile } from "@/types/client/profile/profile";
 import ProfilePhotoSection from "./profile-photo-section";
 import ProfileBasicInfoSection from "./profile-basic-info-section";
@@ -22,6 +21,7 @@ import { updateClientProfile } from "@/service/client/profile/update-profile";
 import { updateClientProfileAddress } from "@/service/client/profile/update-profile-address";
 import { getSignedUrl } from "@/service/client/upload/get-signed-url";
 import { uploadFileToS3 } from "@/service/client/upload/upload-file-to-s3";
+import { useProfileStore } from "@/store/client-profile-store";
 
 export type ProfileFormState = {
   brandName: string;
@@ -45,7 +45,11 @@ const defaultForm: ProfileFormState = {
 
 const ProfileUpdateCard = () => {
   const t = useTranslations("brand.profile");
-  const [profile, setProfile] = useState<BrandProfile | null>(null);
+
+  const profile = useProfileStore((state) => state.profile);
+  const setProfile = useProfileStore((state) => state.setProfile);
+  const fetchProfile = useProfileStore((state) => state.fetchProfile);
+
   const [form, setForm] = useState<ProfileFormState>(defaultForm);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState("");
@@ -76,19 +80,21 @@ const ProfileUpdateCard = () => {
 
     const loadProfile = async () => {
       setIsLoading(true);
-      const result = await getProfile();
+
+      if (!profile) {
+        await fetchProfile();
+      }
 
       if (!isMounted) return;
 
-      if (typeof result === "string") {
-        notifyError(result);
-        setProfile(null);
+      const latestProfile = useProfileStore.getState().profile;
+
+      if (!latestProfile) {
         setIsLoading(false);
         return;
       }
 
-      setProfile(result);
-      setFormFromProfile(result);
+      setFormFromProfile(latestProfile);
       setIsLoading(false);
     };
 
@@ -97,7 +103,7 @@ const ProfileUpdateCard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [profile, fetchProfile]);
 
   const handleChange = (field: keyof ProfileFormState, value: string) => {
     setForm((prev) => ({
@@ -152,6 +158,7 @@ const ProfileUpdateCard = () => {
 
       validation.error.issues.forEach((issue) => {
         const fieldName = issue.path[0];
+
         if (
           typeof fieldName === "string" &&
           !fieldErrors[fieldName as keyof ProfileFormState]
@@ -238,17 +245,7 @@ const ProfileUpdateCard = () => {
 
     if (updatedProfile) {
       setProfile(updatedProfile);
-      setForm({
-        brandName: updatedProfile.brandName || "",
-        firstName: updatedProfile.firstName || "",
-        lastName: updatedProfile.lastName || "",
-        profileImg: updatedProfile.profileImg || "",
-        thana: updatedProfile.thana || "",
-        zilla: updatedProfile.zilla || "",
-        fullAddress: updatedProfile.fullAddress || "",
-      });
-      setPreviewImage(updatedProfile.profileImg || "");
-      setSelectedFile(null);
+      setFormFromProfile(updatedProfile);
     } else {
       setForm((prev) => ({
         ...prev,
@@ -262,24 +259,8 @@ const ProfileUpdateCard = () => {
     setIsSaving(false);
     notifySuccess(t("messages.updateSuccess"));
 
-    const refreshed = await getProfile();
-
-    if (typeof refreshed !== "string") {
-      setProfile((prev) => {
-        if (!prev) return refreshed;
-
-        return {
-          ...refreshed,
-          brandName: prev.brandName,
-          firstName: prev.firstName,
-          lastName: prev.lastName,
-          profileImg: prev.profileImg,
-          thana: prev.thana,
-          zilla: prev.zilla,
-          fullAddress: prev.fullAddress,
-        };
-      });
-    }
+    // optional silent sync
+    fetchProfile();
   };
 
   return (
