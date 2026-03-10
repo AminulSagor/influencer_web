@@ -691,6 +691,22 @@
       "loading": "Loading...",
       "noTransactionsFound": "No transactions found",
       "paymentForCampaign": "Payment For \"{campaignName}\""
+    },
+     "reports": {
+      "title": "Report Log",
+      "subtitle": "View reports on your works, manage and resolve them",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "searchPlaceholder": "Search By Campaign Name",
+      "showAll": "Show All",
+      "showingResults": "{total} results",
+      "loading": "Loading...",
+      "noReportsFound": "No reports found",
+      "page": "Page",
+      "of": "Of",
+      "prev": "Prev",
+      "next": "Next",
+      "viewDetails": "View Details"
     }
   }
 }
