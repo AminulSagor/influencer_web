@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Accordion,
   AccordionContent,
@@ -8,418 +9,664 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, XCircle, FileText, ExternalLink } from "lucide-react";
-
-type UploadFieldKey =
-  | "nidFront"
-  | "nidBack"
-  | "tradeLicense"
-  | "tinCertificate";
-
-type UploadFileState = {
-  file?: File | null;
-  previewUrl?: string; // image preview only
-};
-
-const MAX_MB = 2;
-const MAX_BYTES = MAX_MB * 1024 * 1024;
-
-const ACCEPT = {
-  imagesAndPdf: "image/png,image/jpeg,application/pdf",
-};
+import { Input } from "@/components/ui/input";
+import Loader from "@/components/spin-loader";
+import { ExternalLink } from "lucide-react";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { useProfileStore } from "@/store/client-profile-store";
+import { BrandProfile } from "@/types/client/profile/profile";
+import { updateClientBin } from "@/service/client/profile/update-bin";
+import { updateClientNid } from "@/service/client/profile/update-nid";
+import { updateClientTin } from "@/service/client/profile/update-tin";
+import { updateClientTradeLicense } from "@/service/client/profile/update-trade-license";
+import { clientNidUpdateSchema } from "@/schemas/client/client-nid-update.schema";
+import { clientTinUpdateSchema } from "@/schemas/client/client-tin-update.schema";
+import { clientBinUpdateSchema } from "@/schemas/client/client-bin-update.schema";
+import { clientTradeLicenseUpdateSchema } from "@/schemas/client/client-trade-license-update.schema";
+import VerificationBanner from "./verification-banner";
+import VerificationField from "./verification-field";
+import VerificationUploadBox from "./verification-upload-box";
+import {
+  EMPTY_UPLOAD_STATE,
+  ACCEPT,
+  DEFAULT_FORM,
+} from "../_lib/verification-methods.constants";
+import {
+  createPreviewUrl,
+  getFileNameFromUrl,
+  mapProfileToForm,
+  mapProfileToUploads,
+  mapZodIssuesToErrors,
+  normalizeText,
+  validateFile,
+  isUploadChanged,
+  getPreviewUrlFromExistingUrl,
+} from "../_lib/verification-methods.helpers";
+import { uploadVerificationFile } from "../_lib/upload-verification-file";
+import {
+  FieldErrors,
+  UploadErrors,
+  UploadFieldKey,
+  UploadItemState,
+  VerificationFormState,
+} from "@/types/client/profile/verification-methods.type";
 
 export default function VerificationMethodsCard() {
-  const [nidNumber, setNidNumber] = React.useState("");
-  const [tradeLicenseNumber, setTradeLicenseNumber] = React.useState("");
-  const [tinNumber, setTinNumber] = React.useState("");
-  const [binNumber, setBinNumber] = React.useState("");
+  const t = useTranslations("brand.profile");
+  const profile = useProfileStore((state) => state.profile);
+  const setProfile = useProfileStore((state) => state.setProfile);
+  const fetchProfile = useProfileStore((state) => state.fetchProfile);
 
-  const [uploads, setUploads] = React.useState<Record<UploadFieldKey, UploadFileState>>({
-    nidFront: {},
-    nidBack: {},
-    tradeLicense: {},
-    tinCertificate: {},
+  const [form, setForm] = useState<VerificationFormState>(DEFAULT_FORM);
+  const [initialForm, setInitialForm] =
+    useState<VerificationFormState>(DEFAULT_FORM);
+
+  const [uploads, setUploads] = useState<
+    Record<UploadFieldKey, UploadItemState>
+  >({
+    nidFront: EMPTY_UPLOAD_STATE,
+    nidBack: EMPTY_UPLOAD_STATE,
+    tradeLicense: EMPTY_UPLOAD_STATE,
+    tinCertificate: EMPTY_UPLOAD_STATE,
   });
 
-  const [errors, setErrors] = React.useState<Partial<Record<UploadFieldKey, string>>>(
-    {}
-  );
+  const [initialUploads, setInitialUploads] = useState<
+    Record<UploadFieldKey, UploadItemState>
+  >({
+    nidFront: EMPTY_UPLOAD_STATE,
+    nidBack: EMPTY_UPLOAD_STATE,
+    tradeLicense: EMPTY_UPLOAD_STATE,
+    tinCertificate: EMPTY_UPLOAD_STATE,
+  });
 
-  const [bannerError, setBannerError] = React.useState<string | null>(
-    "Verification Required. Please Provide Documents"
-  );
+  const [formErrors, setFormErrors] = useState<FieldErrors>({});
+  const [uploadErrors, setUploadErrors] = useState<UploadErrors>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  React.useEffect(() => {
-    return () => {
-      // cleanup previews
-      Object.values(uploads).forEach((u) => {
-        if (u.previewUrl) URL.revokeObjectURL(u.previewUrl);
-      });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const hydrateFromProfile = (data: BrandProfile) => {
+    const nextForm = mapProfileToForm(data);
+    const nextUploads = mapProfileToUploads(data);
 
-  const validateFile = (file: File) => {
-    if (file.size > MAX_BYTES) return `Max ${MAX_MB}MB allowed`;
-    const okTypes = [
-      "image/png",
-      "image/jpeg",
-      "application/pdf",
-    ];
-    if (!okTypes.includes(file.type)) return "Only PNG, JPEG, PDF allowed";
-    return null;
+    setForm(nextForm);
+    setInitialForm(nextForm);
+    setUploads(nextUploads);
+    setInitialUploads(nextUploads);
+    setFormErrors({});
+    setUploadErrors({});
   };
 
-  const setUpload = (key: UploadFieldKey, file: File | null) => {
-    setErrors((p) => ({ ...p, [key]: undefined }));
+  useEffect(() => {
+    let isMounted = true;
 
-    if (!file) {
-      setUploads((prev) => {
-        const old = prev[key];
-        if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
-        return { ...prev, [key]: {} };
-      });
-      return;
-    }
+    const loadProfile = async () => {
+      setIsLoading(true);
 
-    const err = validateFile(file);
-    if (err) {
-      setErrors((p) => ({ ...p, [key]: err }));
-      return;
-    }
+      if (!profile) {
+        await fetchProfile();
+      }
 
-    const isImage = file.type.startsWith("image/");
-    const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
+      if (!isMounted) return;
 
+      const latestProfile = useProfileStore.getState().profile;
+      if (latestProfile) {
+        hydrateFromProfile(latestProfile);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [profile, fetchProfile]);
+
+  const handleChange = (field: keyof VerificationFormState, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    setFormErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
+
+  const updateUploadState = (key: UploadFieldKey, next: UploadItemState) => {
     setUploads((prev) => {
-      const old = prev[key];
-      if (old?.previewUrl) URL.revokeObjectURL(old.previewUrl);
+      const prevItem = prev[key];
+      if (prevItem.previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(prevItem.previewUrl);
+      }
+
       return {
         ...prev,
-        [key]: { file, previewUrl },
+        [key]: next,
       };
     });
   };
 
-  const onDrop =
-    (key: UploadFieldKey) => (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const file = e.dataTransfer.files?.[0];
-      if (file) setUpload(key, file);
-    };
+  const handleSelectFile = (key: UploadFieldKey, file: File | null) => {
+    setUploadErrors((prev) => ({
+      ...prev,
+      [key]: "",
+    }));
 
-  const openFileDialog = (key: UploadFieldKey) => {
-    const input = document.getElementById(`file-${key}`) as HTMLInputElement | null;
-    input?.click();
+    if (!file) {
+      const existingUrl = initialUploads[key].existingUrl;
+      updateUploadState(key, {
+        file: null,
+        existingUrl,
+        previewUrl: getPreviewUrlFromExistingUrl(existingUrl),
+      });
+      return;
+    }
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setUploadErrors((prev) => ({
+        ...prev,
+        [key]: validationError,
+      }));
+      return;
+    }
+
+    updateUploadState(key, {
+      file,
+      existingUrl: "",
+      previewUrl: createPreviewUrl(file),
+    });
   };
 
-  const UploadedBadge = ({ name }: { name: string }) => (
-    <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-      <FileText className="h-3.5 w-3.5" />
-      <span className="truncate">{name}</span>
-    </div>
+  const handleRemoveFile = (key: UploadFieldKey) => {
+    if (!isEditing || isSaving) return;
+
+    updateUploadState(key, {
+      file: null,
+      existingUrl: "",
+      previewUrl: "",
+    });
+
+    setUploadErrors((prev) => ({
+      ...prev,
+      [key]: "",
+    }));
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    if (profile) {
+      hydrateFromProfile(profile);
+    }
+    setIsEditing(false);
+  };
+
+  const hasNidChanged = useMemo(
+    () =>
+      normalizeText(form.nidNumber) !== normalizeText(initialForm.nidNumber) ||
+      isUploadChanged(uploads.nidFront, initialUploads.nidFront) ||
+      isUploadChanged(uploads.nidBack, initialUploads.nidBack),
+    [form.nidNumber, initialForm.nidNumber, uploads, initialUploads],
   );
 
+  const hasTradeLicenseChanged = useMemo(
+    () =>
+      normalizeText(form.tradeLicenseNumber) !==
+        normalizeText(initialForm.tradeLicenseNumber) ||
+      isUploadChanged(uploads.tradeLicense, initialUploads.tradeLicense),
+    [
+      form.tradeLicenseNumber,
+      initialForm.tradeLicenseNumber,
+      uploads.tradeLicense,
+      initialUploads.tradeLicense,
+    ],
+  );
+
+  const hasTinChanged = useMemo(
+    () =>
+      normalizeText(form.tinNumber) !== normalizeText(initialForm.tinNumber) ||
+      isUploadChanged(uploads.tinCertificate, initialUploads.tinCertificate),
+    [
+      form.tinNumber,
+      initialForm.tinNumber,
+      uploads.tinCertificate,
+      initialUploads.tinCertificate,
+    ],
+  );
+
+  const hasBinChanged = useMemo(
+    () =>
+      normalizeText(form.binNumber) !== normalizeText(initialForm.binNumber),
+    [form.binNumber, initialForm.binNumber],
+  );
+
+  const hasAnyChange =
+    hasNidChanged || hasTradeLicenseChanged || hasTinChanged || hasBinChanged;
+
+  const handleSave = async () => {
+    if (!profile) return;
+
+    setFormErrors({});
+    setUploadErrors({});
+    setIsSaving(true);
+
+    try {
+      let nextProfile: BrandProfile = { ...profile };
+
+      if (hasNidChanged) {
+        let nidFrontImg = uploads.nidFront.existingUrl;
+        let nidBackImg = uploads.nidBack.existingUrl;
+
+        if (uploads.nidFront.file) {
+          const uploadedUrl = await uploadVerificationFile(
+            uploads.nidFront.file,
+            "brandguru/client/profile",
+          );
+          if (!uploadedUrl) {
+            notifyError(t("messages_v.uploadFailed"));
+            return;
+          }
+          nidFrontImg = uploadedUrl;
+        }
+
+        if (uploads.nidBack.file) {
+          const uploadedUrl = await uploadVerificationFile(
+            uploads.nidBack.file,
+            "brandguru/client/profile",
+          );
+          if (!uploadedUrl) {
+            notifyError(t("messages_v.uploadFailed"));
+            return;
+          }
+          nidBackImg = uploadedUrl;
+        }
+
+        const nidPayload = {
+          nidNumber: normalizeText(form.nidNumber),
+          nidFrontImg,
+          nidBackImg,
+        };
+
+        const validation = clientNidUpdateSchema.safeParse(nidPayload);
+
+        if (!validation.success) {
+          const mapped = mapZodIssuesToErrors(validation.error.issues, {
+            nidFrontImg: "nidFront",
+            nidBackImg: "nidBack",
+          });
+          setFormErrors((prev) => ({ ...prev, ...mapped.formErrors }));
+          setUploadErrors((prev) => ({ ...prev, ...mapped.uploadErrors }));
+          return;
+        }
+
+        const result = await updateClientNid(validation.data);
+
+        if (result !== "success") {
+          notifyError(t("messages_v.nidUpdateFailed"));
+          return;
+        }
+
+        nextProfile = {
+          ...nextProfile,
+          nidNumber: nidPayload.nidNumber,
+          nidFrontImg: nidPayload.nidFrontImg,
+          nidBackImg: nidPayload.nidBackImg,
+        };
+      }
+
+      if (hasTradeLicenseChanged) {
+        let tradeLicenseImg = uploads.tradeLicense.existingUrl;
+
+        if (uploads.tradeLicense.file) {
+          const uploadedUrl = await uploadVerificationFile(
+            uploads.tradeLicense.file,
+            "brandguru/client/docs",
+          );
+          if (!uploadedUrl) {
+            notifyError(t("messages_v.uploadFailed"));
+            return;
+          }
+          tradeLicenseImg = uploadedUrl;
+        }
+
+        const tradeLicensePayload = {
+          tradeLicenseNumber: normalizeText(form.tradeLicenseNumber),
+          tradeLicenseImg,
+        };
+
+        const validation =
+          clientTradeLicenseUpdateSchema.safeParse(tradeLicensePayload);
+
+        if (!validation.success) {
+          const mapped = mapZodIssuesToErrors(validation.error.issues, {
+            tradeLicenseImg: "tradeLicense",
+          });
+          setFormErrors((prev) => ({ ...prev, ...mapped.formErrors }));
+          setUploadErrors((prev) => ({ ...prev, ...mapped.uploadErrors }));
+          return;
+        }
+
+        const result = await updateClientTradeLicense(validation.data);
+
+        if (result !== "success") {
+          notifyError(t("messages_v.tradeLicenseUpdateFailed"));
+          return;
+        }
+
+        nextProfile = {
+          ...nextProfile,
+          tradeLicenseNumber: tradeLicensePayload.tradeLicenseNumber,
+          tradeLicenseImg: tradeLicensePayload.tradeLicenseImg,
+        };
+      }
+
+      if (hasTinChanged) {
+        let tinImage = uploads.tinCertificate.existingUrl;
+
+        if (uploads.tinCertificate.file) {
+          const uploadedUrl = await uploadVerificationFile(
+            uploads.tinCertificate.file,
+            "brandguru/client/docs",
+          );
+          if (!uploadedUrl) {
+            notifyError(t("messages_v.uploadFailed"));
+            return;
+          }
+          tinImage = uploadedUrl;
+        }
+
+        const tinPayload = {
+          tinNumber: normalizeText(form.tinNumber),
+          tinImage,
+        };
+
+        const validation = clientTinUpdateSchema.safeParse(tinPayload);
+
+        if (!validation.success) {
+          const mapped = mapZodIssuesToErrors(validation.error.issues, {
+            tinImage: "tinCertificate",
+          });
+          setFormErrors((prev) => ({ ...prev, ...mapped.formErrors }));
+          setUploadErrors((prev) => ({ ...prev, ...mapped.uploadErrors }));
+          return;
+        }
+
+        const result = await updateClientTin(validation.data);
+
+        if (result !== "success") {
+          notifyError(t("messages_v.tinUpdateFailed"));
+          return;
+        }
+
+        nextProfile = {
+          ...nextProfile,
+          tinNumber: tinPayload.tinNumber,
+          tinImage: tinPayload.tinImage,
+        };
+      }
+
+      if (hasBinChanged) {
+        const binPayload = {
+          binNumber: normalizeText(form.binNumber),
+        };
+
+        const validation = clientBinUpdateSchema.safeParse(binPayload);
+
+        if (!validation.success) {
+          const mapped = mapZodIssuesToErrors(validation.error.issues);
+          setFormErrors((prev) => ({ ...prev, ...mapped.formErrors }));
+          setUploadErrors((prev) => ({ ...prev, ...mapped.uploadErrors }));
+          return;
+        }
+
+        const result = await updateClientBin(validation.data);
+
+        if (result !== "success") {
+          notifyError(t("messages_v.binUpdateFailed"));
+          return;
+        }
+
+        nextProfile = {
+          ...nextProfile,
+          binNumber: binPayload.binNumber,
+        };
+      }
+
+      setProfile(nextProfile);
+      hydrateFromProfile(nextProfile);
+      setIsEditing(false);
+      notifySuccess(t("messages_v.updateSuccess"));
+      fetchProfile();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <Card className="py-0 relative">
-      <CardContent className="py-4 px-6">
+    <Card className="relative py-0">
+      <CardContent className="px-6 py-4">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
-            {/* Header */}
             <AccordionTrigger className="py-0 hover:no-underline">
-              <div className="flex items-center justify-between w-full pr-16">
-                <h1 className="font-semibold text-base text-orange">
-                  Verification Methods
+              <div className="flex w-full items-center justify-between pr-16">
+                <h1 className="text-base font-semibold text-orange">
+                  {t("verification.title")}
                 </h1>
               </div>
             </AccordionTrigger>
 
-            {/* small external icon in title area*/}
-            <a
-              href="#"
-              onClick={(e) => e.preventDefault()}
-              className="absolute top-4.5 left-[210px] hidden md:inline-flex text-dark-gray hover:text-orange"
-              aria-label="Open verification info"
-              title="Open"
+            <button
+              type="button"
+              className="absolute top-4.5 left-[210px] hidden text-dark-gray hover:text-orange md:inline-flex"
+              aria-label={t("verification.open")}
+              title={t("verification.open")}
             >
               <ExternalLink className="h-4 w-4" />
-            </a>
+            </button>
+
+            <div className="absolute top-4 right-6 flex items-center gap-3">
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={isLoading || isSaving}
+                  className="h-7 rounded-full border-orange px-6 text-xs text-orange hover:bg-orange/5"
+                >
+                  {t("actions.cancel")}
+                </Button>
+              )}
+
+              <Button
+                type="button"
+                onClick={isEditing ? handleSave : handleEdit}
+                disabled={isLoading || (isEditing && !hasAnyChange) || isSaving}
+                className="h-7 rounded-full bg-orange px-8 text-xs text-white hover:bg-orange/90"
+              >
+                {isSaving ? (
+                  <Loader className="h-4 w-4 border-white border-t-transparent" />
+                ) : isEditing ? (
+                  t("verification.actions.saveDocuments")
+                ) : (
+                  t("verification.actions.editDocuments")
+                )}
+              </Button>
+            </div>
 
             <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
-                {/* Banner */}
-                {bannerError && (
-                  <div className="w-full rounded-lg bg-red-50 border border-red-100 px-4 py-3 flex items-center gap-3">
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    <p className="text-sm text-red-500 font-medium">
-                      {bannerError}
-                    </p>
-                  </div>
-                )}
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader className="h-8 w-8" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <VerificationBanner
+                    isVerified={profile?.isVerified ?? false}
+                  />
 
-                {/* GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Column 1 */}
-                  <div className="space-y-4">
-                    <FieldOrange label="Your NID Number">
-                      <Input
-                        value={nidNumber}
-                        onChange={(e) => setNidNumber(e.target.value)}
-                        placeholder="Enter your NID Number"
-                        className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <div className="space-y-4">
+                      <VerificationField
+                        label={t("verification.fields.nidNumber")}
+                        error={formErrors.nidNumber}
+                      >
+                        <Input
+                          value={form.nidNumber}
+                          onChange={(e) =>
+                            handleChange("nidNumber", e.target.value)
+                          }
+                          disabled={!isEditing || isSaving}
+                          placeholder={t("verification.placeholders.nidNumber")}
+                          className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                        />
+                      </VerificationField>
+
+                      <VerificationUploadBox
+                        title={t("verification.fields.nidFront")}
+                        hint={t("verification.uploadHint")}
+                        inputId="file-nidFront"
+                        accept={ACCEPT}
+                        isEditing={isEditing}
+                        isSaving={isSaving}
+                        file={uploads.nidFront.file}
+                        previewUrl={uploads.nidFront.previewUrl}
+                        existingUrl={uploads.nidFront.existingUrl}
+                        error={uploadErrors.nidFront}
+                        onPick={(file) => handleSelectFile("nidFront", file)}
+                        onRemove={() => handleRemoveFile("nidFront")}
+                        uploadedName={
+                          uploads.nidFront.file?.name ||
+                          getFileNameFromUrl(uploads.nidFront.existingUrl)
+                        }
                       />
-                    </FieldOrange>
 
-                    <UploadBox
-                      title="Front Side of NID"
-                      orange
-                      fileState={uploads.nidFront}
-                      error={errors.nidFront}
-                      onPick={() => openFileDialog("nidFront")}
-                      onRemove={() => setUpload("nidFront", null)}
-                      onDrop={onDrop("nidFront")}
-                      onDragOver={(e) => e.preventDefault()}
-                      accept={ACCEPT.imagesAndPdf}
-                      inputId="file-nidFront"
-                      onChange={(f) => setUpload("nidFront", f)}
-                      UploadedBadge={UploadedBadge}
-                    />
-
-                    <UploadBox
-                      title="Back Side of NID"
-                      orange
-                      fileState={uploads.nidBack}
-                      error={errors.nidBack}
-                      onPick={() => openFileDialog("nidBack")}
-                      onRemove={() => setUpload("nidBack", null)}
-                      onDrop={onDrop("nidBack")}
-                      onDragOver={(e) => e.preventDefault()}
-                      accept={ACCEPT.imagesAndPdf}
-                      inputId="file-nidBack"
-                      onChange={(f) => setUpload("nidBack", f)}
-                      UploadedBadge={UploadedBadge}
-                    />
-                  </div>
-
-                  {/* Column 2 */}
-                  <div className="space-y-4">
-                    <FieldOrange label="Your Trade License Number">
-                      <Input
-                        value={tradeLicenseNumber}
-                        onChange={(e) => setTradeLicenseNumber(e.target.value)}
-                        placeholder="Enter your Trade License Number"
-                        className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                      <VerificationUploadBox
+                        title={t("verification.fields.nidBack")}
+                        hint={t("verification.uploadHint")}
+                        inputId="file-nidBack"
+                        accept={ACCEPT}
+                        isEditing={isEditing}
+                        isSaving={isSaving}
+                        file={uploads.nidBack.file}
+                        previewUrl={uploads.nidBack.previewUrl}
+                        existingUrl={uploads.nidBack.existingUrl}
+                        error={uploadErrors.nidBack}
+                        onPick={(file) => handleSelectFile("nidBack", file)}
+                        onRemove={() => handleRemoveFile("nidBack")}
+                        uploadedName={
+                          uploads.nidBack.file?.name ||
+                          getFileNameFromUrl(uploads.nidBack.existingUrl)
+                        }
                       />
-                    </FieldOrange>
+                    </div>
 
-                    <UploadBox
-                      title="Upload Trade License"
-                      orange
-                      fileState={uploads.tradeLicense}
-                      error={errors.tradeLicense}
-                      onPick={() => openFileDialog("tradeLicense")}
-                      onRemove={() => setUpload("tradeLicense", null)}
-                      onDrop={onDrop("tradeLicense")}
-                      onDragOver={(e) => e.preventDefault()}
-                      accept={ACCEPT.imagesAndPdf}
-                      inputId="file-tradeLicense"
-                      onChange={(f) => setUpload("tradeLicense", f)}
-                      UploadedBadge={UploadedBadge}
-                    />
-                  </div>
+                    <div className="space-y-4">
+                      <VerificationField
+                        label={t("verification.fields.tradeLicenseNumber")}
+                        error={formErrors.tradeLicenseNumber}
+                      >
+                        <Input
+                          value={form.tradeLicenseNumber}
+                          onChange={(e) =>
+                            handleChange("tradeLicenseNumber", e.target.value)
+                          }
+                          disabled={!isEditing || isSaving}
+                          placeholder={t(
+                            "verification.placeholders.tradeLicenseNumber",
+                          )}
+                          className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                        />
+                      </VerificationField>
 
-                  {/* Column 3 */}
-                  <div className="space-y-4">
-                    <FieldOrange label="Your TIN Number">
-                      <Input
-                        value={tinNumber}
-                        onChange={(e) => setTinNumber(e.target.value)}
-                        placeholder="Enter your TIN Number"
-                        className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                      <VerificationUploadBox
+                        title={t("verification.fields.tradeLicense")}
+                        hint={t("verification.uploadHint")}
+                        inputId="file-tradeLicense"
+                        accept={ACCEPT}
+                        isEditing={isEditing}
+                        isSaving={isSaving}
+                        file={uploads.tradeLicense.file}
+                        previewUrl={uploads.tradeLicense.previewUrl}
+                        existingUrl={uploads.tradeLicense.existingUrl}
+                        error={uploadErrors.tradeLicense}
+                        onPick={(file) =>
+                          handleSelectFile("tradeLicense", file)
+                        }
+                        onRemove={() => handleRemoveFile("tradeLicense")}
+                        uploadedName={
+                          uploads.tradeLicense.file?.name ||
+                          getFileNameFromUrl(uploads.tradeLicense.existingUrl)
+                        }
                       />
-                    </FieldOrange>
+                    </div>
 
-                    <UploadBox
-                      title="Upload TIN Certificate"
-                      orange
-                      fileState={uploads.tinCertificate}
-                      error={errors.tinCertificate}
-                      onPick={() => openFileDialog("tinCertificate")}
-                      onRemove={() => setUpload("tinCertificate", null)}
-                      onDrop={onDrop("tinCertificate")}
-                      onDragOver={(e) => e.preventDefault()}
-                      accept={ACCEPT.imagesAndPdf}
-                      inputId="file-tinCertificate"
-                      onChange={(f) => setUpload("tinCertificate", f)}
-                      UploadedBadge={UploadedBadge}
-                    />
+                    <div className="space-y-4">
+                      <VerificationField
+                        label={t("verification.fields.tinNumber")}
+                        error={formErrors.tinNumber}
+                      >
+                        <Input
+                          value={form.tinNumber}
+                          onChange={(e) =>
+                            handleChange("tinNumber", e.target.value)
+                          }
+                          disabled={!isEditing || isSaving}
+                          placeholder={t("verification.placeholders.tinNumber")}
+                          className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                        />
+                      </VerificationField>
 
-                    <FieldOrange label="Your BIN Number">
-                      <Input
-                        value={binNumber}
-                        onChange={(e) => setBinNumber(e.target.value)}
-                        placeholder="Enter your BIN Number"
-                        className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                      <VerificationUploadBox
+                        title={t("verification.fields.tinCertificate")}
+                        hint={t("verification.uploadHint")}
+                        inputId="file-tinCertificate"
+                        accept={ACCEPT}
+                        isEditing={isEditing}
+                        isSaving={isSaving}
+                        file={uploads.tinCertificate.file}
+                        previewUrl={uploads.tinCertificate.previewUrl}
+                        existingUrl={uploads.tinCertificate.existingUrl}
+                        error={uploadErrors.tinCertificate}
+                        onPick={(file) =>
+                          handleSelectFile("tinCertificate", file)
+                        }
+                        onRemove={() => handleRemoveFile("tinCertificate")}
+                        uploadedName={
+                          uploads.tinCertificate.file?.name ||
+                          getFileNameFromUrl(uploads.tinCertificate.existingUrl)
+                        }
                       />
-                    </FieldOrange>
+
+                      <VerificationField
+                        label={t("verification.fields.binNumber")}
+                        error={formErrors.binNumber}
+                      >
+                        <Input
+                          value={form.binNumber}
+                          onChange={(e) =>
+                            handleChange("binNumber", e.target.value)
+                          }
+                          disabled={!isEditing || isSaving}
+                          placeholder={t("verification.placeholders.binNumber")}
+                          className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                        />
+                      </VerificationField>
+                    </div>
                   </div>
                 </div>
-
-                {/* Footer note (optional, keeps SS clean) */}
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    className="rounded-full px-8 text-xs bg-orange text-white hover:bg-orange/90"
-                    onClick={() => {
-                      // demo: clear banner if fields are filled
-                      setBannerError(null);
-                    }}
-                  >
-                    Save Documents
-                  </Button>
-                </div>
-              </div>
+              )}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
       </CardContent>
     </Card>
-  );
-}
-
-/* ----------------------- Small helpers ----------------------- */
-
-function FieldOrange({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold text-orange">{label}</p>
-      {children}
-    </div>
-  );
-}
-
-function UploadBox({
-  title,
-  orange,
-  fileState,
-  error,
-  onPick,
-  onRemove,
-  onDrop,
-  onDragOver,
-  accept,
-  inputId,
-  onChange,
-  UploadedBadge,
-}: {
-  title: string;
-  orange?: boolean;
-  fileState: UploadFileState;
-  error?: string;
-  onPick: () => void;
-  onRemove: () => void;
-  onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
-  accept: string;
-  inputId: string;
-  onChange: (file: File | null) => void;
-  UploadedBadge: React.FC<{ name: string }>;
-}) {
-  const hasFile = !!fileState.file;
-
-  return (
-    <div className="space-y-2">
-      <p className={`text-xs font-semibold ${orange ? "text-orange" : ""}`}>
-        {title}
-      </p>
-
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={onPick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") onPick();
-        }}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        className={[
-          "w-full rounded-lg border border-dashed",
-          "bg-muted/30",
-          "min-h-[140px]",
-          "flex items-center justify-center",
-          "cursor-pointer select-none",
-          "transition",
-          "hover:bg-muted/40",
-          "focus:outline-none focus:ring-2 focus:ring-orange/20",
-          "border-black/10",
-        ].join(" ")}
-      >
-        {/* Hidden input */}
-        <input
-          id={inputId}
-          type="file"
-          accept={accept}
-          className="hidden"
-          onChange={(e) => onChange(e.target.files?.[0] ?? null)}
-        />
-
-        {!hasFile ? (
-          <div className="flex flex-col items-center gap-3 text-center px-4">
-            <div className="h-11 w-11 rounded-full bg-black/5 grid place-items-center">
-              <Upload className="h-5 w-5 text-black/40" />
-            </div>
-            <p className="text-xs text-black/50">PNG, JPEG, PDF (Max 2MB)</p>
-          </div>
-        ) : (
-          <div className="w-full px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-black/70 truncate">
-                  Uploaded
-                </p>
-                <UploadedBadge name={fileState.file?.name ?? ""} />
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove();
-                }}
-                className="h-9 w-9 p-0 hover:bg-black/5"
-                aria-label="Remove file"
-                title="Remove"
-              >
-                <XCircle className="h-4 w-4 text-black/40" />
-              </Button>
-            </div>
-
-            {fileState.previewUrl && (
-              <div className="mt-3 rounded-md overflow-hidden border border-black/10">
-                {/* image preview */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={fileState.previewUrl}
-                  alt="Preview"
-                  className="w-full h-28 object-cover"
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {error && <p className="text-xs text-red-500">{error}</p>}
-    </div>
   );
 }

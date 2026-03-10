@@ -628,8 +628,45 @@
         "profileUpdateFailed": "Failed to update profile",
         "addressUpdateFailed": "Failed to update address",
         "updateSuccess": "Profile updated successfully"
-      }
-      
+      },
+      "verification": {
+    "title": "Verification Methods",
+    "open": "Open verification info",
+    "uploaded": "Uploaded",
+    "uploadHint": "PNG, JPEG, PDF (Max 2MB)",
+    "banner": {
+      "verified": "Verification Completed",
+      "unverified": "Verification Required. Please Provide Documents"
+    },
+    "fields": {
+      "nidNumber": "Your NID Number",
+      "nidFront": "Front Side of NID",
+      "nidBack": "Back Side of NID",
+      "tradeLicenseNumber": "Your Trade License Number",
+      "tradeLicense": "Upload Trade License",
+      "tinNumber": "Your TIN Number",
+      "tinCertificate": "Upload TIN Certificate",
+      "binNumber": "Your BIN Number"
+    },
+    "placeholders": {
+      "nidNumber": "Enter your NID Number",
+      "tradeLicenseNumber": "Enter your Trade License Number",
+      "tinNumber": "Enter your TIN Number",
+      "binNumber": "Enter your BIN Number"
+    },
+    "actions": {
+      "editDocuments": "Edit Documents",
+      "saveDocuments": "Save Documents"
+    }
+  },
+  "messages_v": {
+    "uploadFailed": "File upload failed",
+    "nidUpdateFailed": "Failed to update NID",
+    "tradeLicenseUpdateFailed": "Failed to update trade license",
+    "tinUpdateFailed": "Failed to update TIN",
+    "binUpdateFailed": "Failed to update BIN",
+    "updateSuccess": "Verification documents updated successfully"
+  }   
     }
   }
 }

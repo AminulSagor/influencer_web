@@ -628,8 +628,45 @@
         "profileUpdateFailed": "প্রোফাইল আপডেট ব্যর্থ হয়েছে",
         "addressUpdateFailed": "ঠিকানা আপডেট ব্যর্থ হয়েছে",
         "updateSuccess": "প্রোফাইল সফলভাবে আপডেট হয়েছে"
-      }
-      
+      },
+      "verification": {
+    "title": "যাচাইকরণ পদ্ধতি",
+    "open": "যাচাইকরণ তথ্য খুলুন",
+    "uploaded": "আপলোড হয়েছে",
+    "uploadHint": "PNG, JPEG, PDF (সর্বোচ্চ 2MB)",
+    "banner": {
+      "verified": "যাচাইকরণ সম্পন্ন হয়েছে",
+      "unverified": "যাচাইকরণ প্রয়োজন। অনুগ্রহ করে ডকুমেন্ট প্রদান করুন"
+    },
+    "fields": {
+      "nidNumber": "আপনার এনআইডি নম্বর",
+      "nidFront": "এনআইডির সামনের অংশ",
+      "nidBack": "এনআইডির পেছনের অংশ",
+      "tradeLicenseNumber": "আপনার ট্রেড লাইসেন্স নম্বর",
+      "tradeLicense": "ট্রেড লাইসেন্স আপলোড করুন",
+      "tinNumber": "আপনার টিআইএন নম্বর",
+      "tinCertificate": "টিআইএন সার্টিফিকেট আপলোড করুন",
+      "binNumber": "আপনার বিআইএন নম্বর"
+    },
+    "placeholders": {
+      "nidNumber": "আপনার এনআইডি নম্বর লিখুন",
+      "tradeLicenseNumber": "আপনার ট্রেড লাইসেন্স নম্বর লিখুন",
+      "tinNumber": "আপনার টিআইএন নম্বর লিখুন",
+      "binNumber": "আপনার বিআইএন নম্বর লিখুন"
+    },
+    "actions": {
+      "editDocuments": "ডকুমেন্ট সম্পাদনা করুন",
+      "saveDocuments": "ডকুমেন্ট সংরক্ষণ করুন"
+    }
+  },
+  "messages_v": {
+    "uploadFailed": "ফাইল আপলোড ব্যর্থ হয়েছে",
+    "nidUpdateFailed": "এনআইডি আপডেট করা যায়নি",
+    "tradeLicenseUpdateFailed": "ট্রেড লাইসেন্স আপডেট করা যায়নি",
+    "tinUpdateFailed": "টিআইএন আপডেট করা যায়নি",
+    "binUpdateFailed": "বিআইএন আপডেট করা যায়নি",
+    "updateSuccess": "যাচাইকরণ ডকুমেন্ট সফলভাবে আপডেট হয়েছে"
+  }
     }
   }
 }
