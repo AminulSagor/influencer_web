@@ -28,7 +28,7 @@ function isRemoteImage(url: string) {
 
 export default function InfluencerGrid({ influencers }: Props) {
   return (
-    <div className="mt-8 grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+    <div className="mt-8 grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {influencers.map((influencer) => {
         const avatarSrc = influencer.avatar?.trim() || "";
         const niches = influencer.niches ?? [];
