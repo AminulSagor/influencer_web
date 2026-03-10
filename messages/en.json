@@ -590,7 +590,8 @@
     "title": "Profile",
     "actions": {
         "editProfile": "Edit Profile",
-        "saveProfile": "Save Profile"
+        "saveProfile": "Save Profile",
+        "cancel": "Cancel"
       },
     "photo": {
         "remove": "Remove",
@@ -609,7 +610,8 @@
         "zilla": "Zilla",
         "nidNumber": "NID Number",
         "binNumber": "BIN Number",
-        "fullAddress": "Full Address"
+        "fullAddress": "Full Address",
+        "website" : "Website"
       },
     "placeholders": {
         "brandName": "Enter Brand Name",
@@ -627,6 +629,7 @@
         "addressUpdateFailed": "Failed to update address",
         "updateSuccess": "Profile updated successfully"
       }
+      
     }
   }
 }

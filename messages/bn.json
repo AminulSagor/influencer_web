@@ -590,7 +590,8 @@
     "title": "প্রোফাইল",
       "actions": {
         "editProfile": "প্রোফাইল এডিট",
-        "saveProfile": "প্রোফাইল সেভ"
+        "saveProfile": "প্রোফাইল সেভ",
+        "cancel": "বাতিল"
       },
       "photo": {
         "remove": "রিমুভ",
@@ -609,7 +610,8 @@
         "zilla": "জেলা",
         "nidNumber": "এনআইডি নম্বর",
         "binNumber": "বিন নম্বর",
-        "fullAddress": "পূর্ণ ঠিকানা"
+        "fullAddress": "পূর্ণ ঠিকানা",
+        "website" : "ওয়েবসাইট"
       },
       "placeholders": {
         "brandName": "ব্র্যান্ড নাম লিখুন",
@@ -627,6 +629,7 @@
         "addressUpdateFailed": "ঠিকানা আপডেট ব্যর্থ হয়েছে",
         "updateSuccess": "প্রোফাইল সফলভাবে আপডেট হয়েছে"
       }
+      
     }
   }
 }

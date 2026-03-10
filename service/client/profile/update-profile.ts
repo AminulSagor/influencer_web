@@ -5,6 +5,7 @@ export type UpdateClientProfileBody = {
   firstName: string;
   lastName: string;
   profileImg: string;
+  website: string;
 };
 
 export const updateClientProfile = async (

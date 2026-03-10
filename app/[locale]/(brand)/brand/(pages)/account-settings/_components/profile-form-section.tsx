@@ -94,11 +94,7 @@ const ProfileFormSection = ({
           />
         </ProfileField>
 
-        <ProfileField
-          label={t("fields.thana")}
-          required
-          error={errors.thana}
-        >
+        <ProfileField label={t("fields.thana")} required error={errors.thana}>
           <Input
             value={form.thana}
             onChange={(e) => onChange("thana", e.target.value)}
@@ -110,11 +106,7 @@ const ProfileFormSection = ({
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
-        <ProfileField
-          label={t("fields.zilla")}
-          required
-          error={errors.zilla}
-        >
+        <ProfileField label={t("fields.zilla")} required error={errors.zilla}>
           <Input
             value={form.zilla}
             onChange={(e) => onChange("zilla", e.target.value)}
@@ -152,6 +144,16 @@ const ProfileFormSection = ({
           disabled={isDisabled}
           placeholder={t("placeholders.fullAddress")}
           className="min-h-[110px] w-full rounded-md border border-light-green/25 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-light-green/30 disabled:bg-muted/30"
+        />
+      </ProfileField>
+
+      <ProfileField label={t("fields.website")} error={errors.website}>
+        <Input
+          value={form.website}
+          onChange={(e) => onChange("website", e.target.value)}
+          disabled={isDisabled}
+          placeholder={t("fields.website")}
+          className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
         />
       </ProfileField>
     </div>

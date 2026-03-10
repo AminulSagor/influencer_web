@@ -31,6 +31,7 @@ export type ProfileFormState = {
   thana: string;
   zilla: string;
   fullAddress: string;
+  website: string;
 };
 
 const defaultForm: ProfileFormState = {
@@ -41,6 +42,7 @@ const defaultForm: ProfileFormState = {
   thana: "",
   zilla: "",
   fullAddress: "",
+  website: "",
 };
 
 const ProfileUpdateCard = () => {
@@ -69,6 +71,7 @@ const ProfileUpdateCard = () => {
       thana: data.thana || "",
       zilla: data.zilla || "",
       fullAddress: data.fullAddress || "",
+      website: data.website || "",
     });
     setPreviewImage(data.profileImg || "");
     setSelectedFile(null);
@@ -118,10 +121,20 @@ const ProfileUpdateCard = () => {
   };
 
   const handleEditToggle = () => {
-    if (isEditing && profile) {
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (profile) {
       setFormFromProfile(profile);
+    } else {
+      setForm(defaultForm);
+      setPreviewImage("");
+      setSelectedFile(null);
+      setErrors({});
     }
-    setIsEditing((prev) => !prev);
+
+    setIsEditing(false);
   };
 
   const handleImageSelect = (file: File | null) => {
@@ -210,6 +223,7 @@ const ProfileUpdateCard = () => {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       profileImg: finalProfileImg,
+      website: form.website.trim(),
     });
 
     if (profileResult !== "success") {
@@ -240,6 +254,7 @@ const ProfileUpdateCard = () => {
           thana: form.thana.trim(),
           zilla: form.zilla.trim(),
           fullAddress: form.fullAddress.trim(),
+          website: form.website.trim(),
         }
       : null;
 
@@ -250,6 +265,7 @@ const ProfileUpdateCard = () => {
       setForm((prev) => ({
         ...prev,
         profileImg: finalProfileImg,
+        website: form.website.trim(),
       }));
       setPreviewImage(finalProfileImg);
       setSelectedFile(null);
@@ -259,7 +275,6 @@ const ProfileUpdateCard = () => {
     setIsSaving(false);
     notifySuccess(t("messages.updateSuccess"));
 
-    // optional silent sync
     fetchProfile();
   };
 
@@ -276,20 +291,34 @@ const ProfileUpdateCard = () => {
               </div>
             </AccordionTrigger>
 
-            <Button
-              type="button"
-              onClick={isEditing ? handleSave : handleEditToggle}
-              disabled={isLoading || isSaving}
-              className="absolute top-4 right-14 h-7 rounded-full bg-light-green px-8 text-xs text-white hover:bg-light-green/90 disabled:opacity-60"
-            >
-              {isSaving ? (
-                <Loader className="h-4 w-4 border-white border-t-transparent" />
-              ) : isEditing ? (
-                t("actions.saveProfile")
-              ) : (
-                t("actions.editProfile")
+            <div className="absolute top-4 right-14 flex items-center gap-3">
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isLoading || isSaving}
+                  className="h-7 rounded-full border-light-green px-6 text-xs text-light-green hover:bg-light-green/5 disabled:opacity-60"
+                >
+                  {t("actions.cancel")}
+                </Button>
               )}
-            </Button>
+
+              <Button
+                type="button"
+                onClick={isEditing ? handleSave : handleEditToggle}
+                disabled={isLoading || isSaving}
+                className="h-7 rounded-full bg-light-green px-8 text-xs text-white hover:bg-light-green/90 disabled:opacity-60"
+              >
+                {isSaving ? (
+                  <Loader className="h-4 w-4 border-white border-t-transparent" />
+                ) : isEditing ? (
+                  t("actions.saveProfile")
+                ) : (
+                  t("actions.editProfile")
+                )}
+              </Button>
+            </div>
 
             <AccordionContent className="pt-4 pb-6">
               {isLoading ? (
