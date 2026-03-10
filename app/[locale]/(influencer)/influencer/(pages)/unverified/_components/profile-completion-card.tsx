@@ -9,10 +9,54 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { BadgeCheck, Check, Clock3, HelpCircle } from "lucide-react";
+import { InfluencerProfileData } from "@/types/influencer/profile_type";
 
 type Status = "done" | "pending";
 
-export default function ProfileCompletionCard() {
+interface ProfileCompletionCardProps {
+  profileData: InfluencerProfileData | null;
+}
+
+export default function ProfileCompletionCard({ profileData }: ProfileCompletionCardProps) {
+  // Determine completion statuses based on profile data
+  const profilePictureStatus: Status = profileData?.profileImg ? "done" : "pending";
+  const nichesStatus: Status = profileData?.niches && profileData.niches.length > 0 ? "done" : "pending";
+  const websiteStatus: Status = profileData?.website ? "done" : "pending";
+  const bioStatus: Status = profileData?.bio ? "done" : "pending";
+
+  // Calculate progress percentage
+  const totalSteps = 4;
+  const completedSteps = [
+    profilePictureStatus,
+    nichesStatus,
+    websiteStatus,
+    bioStatus
+  ].filter(status => status === "done").length;
+  const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
+
+  // Determine subtitle messages
+  const getProfilePictureSubtitle = () => {
+    if (profilePictureStatus === "done") return "Looking good!";
+    return "Pending";
+  };
+
+  const getNichesSubtitle = () => {
+    if (nichesStatus === "done" && profileData?.niches) {
+      return `${profileData.niches.length} niche(s) added`;
+    }
+    return "Pending";
+  };
+
+  const getWebsiteSubtitle = () => {
+    if (websiteStatus === "done") return "Website added";
+    return "Pending";
+  };
+
+  const getBioSubtitle = () => {
+    if (bioStatus === "done") return "Bio added";
+    return "Pending";
+  };
+
   return (
     <Card className="py-0 relative bg-white">
       <CardContent className="py-5 px-6">
@@ -34,7 +78,10 @@ export default function ProfileCompletionCard() {
             <AccordionContent className="pt-4 pb-2">
               {/* Progress bar */}
               <div className="h-3 rounded-full bg-light-green/15 overflow-hidden">
-                <div className="h-full w-[36%] bg-light-green rounded-full" />
+                <div 
+                  className="h-full bg-light-green rounded-full transition-all duration-500" 
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
 
               {/* Timeline container with continuous vertical line */}
@@ -46,34 +93,34 @@ export default function ProfileCompletionCard() {
                   {/* Timeline items container */}
                   <div className="relative space-y-7 z-10">
                     <ProfileItem
-                      status="done"
+                      status={profilePictureStatus}
                       title="Add Profile Picture"
-                      sub="That's How We Are Going To Reach You"
+                      sub={getProfilePictureSubtitle()}
                       isFirst={true}
                       isLast={false}
                       showHelp={false}
                     />
                     <ProfileItem 
-                      status="pending" 
+                      status={nichesStatus} 
                       title="Add Niches" 
-                      sub="Pending" 
-                      isFirst={false}
+                      sub={getNichesSubtitle()} 
+                      isFirst={profilePictureStatus === "done"}
                       isLast={false}
                       showHelp 
                     />
                     <ProfileItem 
-                      status="pending" 
+                      status={websiteStatus} 
                       title="Add Website" 
-                      sub="Pending" 
-                      isFirst={false}
+                      sub={getWebsiteSubtitle()} 
+                      isFirst={nichesStatus === "done"}
                       isLast={false}
                       showHelp 
                     />
                     <ProfileItem 
-                      status="pending" 
+                      status={bioStatus} 
                       title="Add Bio" 
-                      sub="Pending" 
-                      isFirst={false}
+                      sub={getBioSubtitle()} 
+                      isFirst={websiteStatus === "done"}
                       isLast={true}
                       showHelp={false}
                     />

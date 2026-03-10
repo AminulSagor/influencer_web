@@ -54,7 +54,7 @@ export default function SocialLinksCard() {
 
         {/* Add button */}
         <button className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC]">
-          {t("Add another social link")}
+          {t("+ Add another social link")}
         </button>
       </CollapseCard>
     </div>
