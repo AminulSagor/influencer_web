@@ -4,12 +4,25 @@ import { useMemo } from "react";
 import { useMyCampaignsByStatus } from "@/app/[locale]/(brand)/brand/hooks/useMyCampaignsByStatus";
 
 export function useBudgetingAndQuotingCounts(enabled: boolean) {
-  const allResult = useMyCampaignsByStatus(enabled ? "quoting" : "");
+  const page = 1;
+  const limit = 1;
+
+  const allResult = useMyCampaignsByStatus(
+    enabled ? "quoting" : "",
+    page,
+    limit,
+  );
+
   const budgetPendingResult = useMyCampaignsByStatus(
     enabled ? "budget_pending" : "",
+    page,
+    limit,
   );
+
   const quotationReceivedResult = useMyCampaignsByStatus(
     enabled ? "quotation_received" : "",
+    page,
+    limit,
   );
 
   return useMemo(
