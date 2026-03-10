@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Card,
   CardContent,
@@ -9,31 +10,39 @@ import {
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, Dot } from "recharts";
+import { DashboardProfitOverviewItem } from "@/types/admin/dashboard/dashboard_profit_overview_type";
 
-const chartData = [
-  { date: "7/11", earning: 20 },
-  { date: "8/11", earning: 50 },
-  { date: "9/11", earning: 10 },
-  { date: "10/11", earning: 8 },
-  { date: "12/11", earning: 50 },
-  { date: "13/11", earning: 80 },
-];
+type Props = {
+  profitOverviewData: DashboardProfitOverviewItem[];
+};
 
-export const description = "A line chart";
 const chartConfig = {
-  earning: {
-    label: "Earning",
+  profit: {
+    label: "Profit",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
-const EarningOverviewCard = () => {
+const formatYAxis = (value: number) => {
+  if (value >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
+  if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
+  if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+  return `${value}`;
+};
+
+const formatTooltipValue = (value: number) => {
+  return new Intl.NumberFormat("en-BD", {
+    style: "currency",
+    currency: "BDT",
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+const EarningOverviewCard = ({ profitOverviewData }: Props) => {
   return (
     <Card>
       <CardHeader>
@@ -41,43 +50,54 @@ const EarningOverviewCard = () => {
           <CardTitle className="text-[#2D5016]">Profit Overview</CardTitle>
         </div>
       </CardHeader>
+
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="h-[320px] w-full">
           <LineChart
             accessibilityLayer
-            data={chartData}
+            data={profitOverviewData}
             margin={{
               right: 20,
               top: 20,
+              left: 12,
             }}
           >
-            {/* Custom Cartesian Grid */}
             <CartesianGrid
-              stroke="#dedede" // Light gray grid lines
-              strokeDasharray="6 6" // Dashed grid lines
-              vertical={true} // Disable vertical lines
-              horizontal={true} // Enable horizontal grid lines
+              stroke="#dedede"
+              strokeDasharray="6 6"
+              vertical
+              horizontal
             />
+
             <XAxis
               dataKey="date"
-              stroke="#2D5016" // Change the axis line color
-              tick={{ fill: "#2D5016" }} // Change the color of the tick labels (data)
-              tickLine={false} // Optional: To remove the tick lines (vertical lines from the axis)
-              axisLine={{ stroke: "#2D5016" }} // Optional: If you want to customize the axis line itself
+              stroke="#2D5016"
+              tick={{ fill: "#2D5016", fontSize: 12 }}
+              tickLine={false}
+              axisLine={{ stroke: "#2D5016" }}
             />
+
             <YAxis
-              dataKey="earning"
-              stroke="#2D5016" // Change the axis line color
-              tick={{ fill: "#2D5016" }} // Change the color of the tick labels (data)
-              tickLine={false} // Optional: To remove the tick lines (horizontal lines from the axis)
-              axisLine={{ stroke: "#2D5016" }} // Optional: If you want to customize the axis line itself
+              dataKey="profit"
+              stroke="#2D5016"
+              tick={{ fill: "#2D5016", fontSize: 12 }}
+              tickLine={false}
+              axisLine={{ stroke: "#2D5016" }}
+              tickFormatter={formatYAxis}
             />
+
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent
+                  hideLabel
+                  formatter={(value) => formatTooltipValue(Number(value))}
+                />
+              }
             />
+
             <Line
-              dataKey="earning"
+              dataKey="profit"
               type="natural"
               stroke="#2D5016"
               strokeWidth={2}
@@ -86,8 +106,9 @@ const EarningOverviewCard = () => {
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="justify-center text-[#2D5016] text-sm font-medium ">
-        Earning in Thousands
+
+      <CardFooter className="justify-center text-sm font-medium text-[#2D5016]">
+        Profit Overview - Lifetime
       </CardFooter>
     </Card>
   );
