@@ -98,7 +98,7 @@ export default function middleware(req: NextRequest) {
 
   const root = role ? roleRoot[role] : null;
   const DASHBOARD = root ? `/${locale}/${root}/dashboard` : LOGIN;
-  const UNVERIFIED = root ? `/${locale}/brand/unverified` : LOGIN;
+  const UNVERIFIED = root ? `/${locale}/${root}/unverified` : LOGIN;
   const ACCOUNT_SETTINGS = root
     ? `/${locale}/${root}/account-settings`
     : LOGIN;
