@@ -10,6 +10,5 @@ export const login = async (payload: LoginPayload) => {
     payload
   );
 
-
   return response.data;
 };
