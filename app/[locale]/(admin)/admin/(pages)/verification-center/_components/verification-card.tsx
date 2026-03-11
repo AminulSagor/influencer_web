@@ -7,6 +7,7 @@ interface Props {
   isSelected?: boolean;
   onClick?: () => void;
 }
+
 const VerificationCard = ({
   status,
   count,
@@ -18,16 +19,24 @@ const VerificationCard = ({
     <div
       onClick={onClick}
       className={cn(
-        "rounded-md px-4 py-3 space-y-4 cursor-pointer transition-all duration-500",
+        "cursor-pointer rounded-[18px] border px-7 py-5 transition-all duration-300",
         isSelected
-          ? "bg-linear-to-r from-Primary to-light-green text-white-two"
-          : "bg-linear-to-r from-white to-Secondary border border-light-green text-Primary"
+          ? "border-transparent bg-gradient-to-r from-Primary to-light-green text-white"
+          : "border-light-green bg-gradient-to-r from-white to-Secondary text-Primary"
       )}
     >
-      <h2 className="text-xl font-semibold">{label}</h2>
-      <div className="flex items-center justify-between">
-        <p>{count}</p>
-        <p>{status}</p>
+      <h2 className="text-[18px] font-medium">{label}</h2>
+
+      <div className="mt-8 flex items-end justify-between">
+        <p className="text-[20px] font-bold">{count}</p>
+        <p
+          className={cn(
+            "text-[14px]",
+            isSelected ? "text-white" : "text-light-green"
+          )}
+        >
+          {status}
+        </p>
       </div>
     </div>
   );

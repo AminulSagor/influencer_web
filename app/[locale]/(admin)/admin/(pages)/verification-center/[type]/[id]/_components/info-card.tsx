@@ -2,11 +2,12 @@ import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { VerificationStatus } from "../../../_components/verification-data";
 import { FaInstagram, FaTiktok, FaTwitter } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 interface Props {
   name: string;
   location: string;
+  image?: string | null;
   socialHandles?: {
     instagram?: string;
     tiktok?: string;
@@ -18,25 +19,37 @@ interface Props {
 const SOCIAL_CONFIG = {
   instagram: {
     icon: FaInstagram,
-    baseUrl: "https://instagram.com/",
   },
   tiktok: {
     icon: FaTiktok,
-    baseUrl: "https://tiktok.com/@",
   },
   twitter: {
     icon: FaTwitter,
-    baseUrl: "https://twitter.com/",
   },
 };
 
-const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
+const InfoCard = ({
+  location,
+  name,
+  socialHandles,
+  verifiedStatus,
+  image,
+}: Props) => {
   return (
-    <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green text-white h-full flex  flex-col">
+    <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green text-white h-full flex flex-col">
       <div className="flex items-center justify-between gap-6">
-        {/* Left */}
         <div className="flex items-center gap-4">
-          <div className="w-[80px] aspect-square rounded-full bg-gray-200" />
+          <div className="w-[80px] aspect-square rounded-full bg-gray-200 overflow-hidden shrink-0 relative">
+            {image ? (
+              <Image
+                src={image}
+                alt={name}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            ) : null}
+          </div>
 
           <div>
             <h2 className="text-lg font-semibold">{name}</h2>
@@ -45,7 +58,6 @@ const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
           </div>
         </div>
 
-        {/* Right - Social handles */}
         <div className="flex flex-col gap-1">
           {socialHandles &&
             Object.entries(socialHandles).map(([key, value]) => {
@@ -55,19 +67,17 @@ const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
               if (!config) return null;
 
               const Icon = config.icon;
-              const username = value.replace("@", "");
 
               return (
                 <p
                   key={key}
-                  className="flex items-center gap-2  px-3 py-2 rounded-md "
+                  className="flex items-center gap-2 px-3 py-2 rounded-md"
                 >
                   <Icon className="text-lg" />
-                  <span className="text-sm">{value}</span>
+                  <span className="text-sm break-all">{value}</span>
                 </p>
               );
             })}
-          <Button> Log Out</Button>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { ChevronLeftCircle } from "lucide-react";
 import { FaArrowCircleLeft } from "react-icons/fa";
 
 interface VerificationBreadcrumbProps {
-  type: "agency" | "influencer";
+  type: "agency" | "influencer" | "brand";
   name?: string;
 }
 

@@ -1,12 +1,14 @@
 import { Badge } from "@/components/ui/badge";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { FaInstagram, FaTiktok, FaTwitter } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   name: string;
   location: string;
+  image?: string | null;
+  role?: string;
   socialHandles?: {
     instagram?: string;
     tiktok?: string;
@@ -18,35 +20,57 @@ interface Props {
 const SOCIAL_CONFIG = {
   instagram: {
     icon: FaInstagram,
-    baseUrl: "https://instagram.com/",
   },
   tiktok: {
     icon: FaTiktok,
-    baseUrl: "https://tiktok.com/@",
   },
   twitter: {
     icon: FaTwitter,
-    baseUrl: "https://twitter.com/",
   },
 };
 
-const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
+const formatRole = (role?: string) => {
+  if (!role) return "User";
+
+  return role
+    .split("_")
+    .map((item) => item.charAt(0).toUpperCase() + item.slice(1).toLowerCase())
+    .join(" ");
+};
+
+const InfoCard = ({
+  location,
+  name,
+  socialHandles,
+  verifiedStatus,
+  image,
+  role,
+}: Props) => {
   return (
-    <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green text-white h-full flex  flex-col">
+    <div className="p-5 rounded-xl bg-linear-to-r from-Primary to-light-green text-white h-full flex flex-col justify-between">
       <div className="flex items-center justify-between gap-6">
-        {/* Left */}
         <div className="flex items-center gap-4">
-          <div className="w-[80px] aspect-square rounded-full bg-gray-200" />
+          <Avatar className="w-24 h-24 border-4 border-white/30">
+            <AvatarImage src={image ?? ""} />
+            <AvatarFallback className="text-2xl text-Primary">
+              {name?.[0]?.toUpperCase() ?? "U"}
+            </AvatarFallback>
+          </Avatar>
 
           <div>
-            <h2 className="text-lg font-semibold">{name}</h2>
-            <p className="text-sm">{location}</p>
-            <Badge className="mt-1">{verifiedStatus}</Badge>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              {name}
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-white" />
+            </h2>
+            <p className="text-sm opacity-90">{formatRole(role)}</p>
+            <p className="text-sm opacity-90">{location}</p>
+            <Badge className="mt-2 bg-white text-Primary hover:bg-white">
+              {verifiedStatus}
+            </Badge>
           </div>
         </div>
 
-        {/* Right - Social handles */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2 min-w-[180px]">
           {socialHandles &&
             Object.entries(socialHandles).map(([key, value]) => {
               if (!value) return null;
@@ -55,19 +79,21 @@ const InfoCard = ({ location, name, socialHandles, verifiedStatus }: Props) => {
               if (!config) return null;
 
               const Icon = config.icon;
-              const username = value.replace("@", "");
 
               return (
-                <p
-                  key={key}
-                  className="flex items-center gap-2  px-3 py-2 rounded-md "
-                >
+                <p key={key} className="flex items-center gap-2 text-sm">
                   <Icon className="text-lg" />
-                  <span className="text-sm">{value}</span>
+                  <span className="truncate">{value}</span>
                 </p>
               );
             })}
-          <Button> Log Out</Button>
+
+          <Button
+            variant="secondary"
+            className="mt-2 bg-white text-Primary hover:bg-white/90 h-8"
+          >
+            Log Out
+          </Button>
         </div>
       </div>
     </div>

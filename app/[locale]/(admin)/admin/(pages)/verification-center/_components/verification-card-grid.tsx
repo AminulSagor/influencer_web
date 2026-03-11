@@ -1,30 +1,28 @@
 "use client";
-import VerificationCard from "./verification-card";
 
-type VerificationCardDataType = {
-  id: number;
-  label: "Influencer" | "Brand" | "Agency";
-  count: number;
-  status: "Pending";
-};
+import VerificationCard from "./verification-card";
+import type {
+  VerificationCardDataType,
+  VerificationTabKey,
+} from "@/service/admin/verification-center/get-pending-profiles";
 
 interface Props {
   data: VerificationCardDataType[];
-  selectedId: number | null;
-  onSelect: (id: number) => void;
+  selectedKey: VerificationTabKey;
+  onSelect: (key: VerificationTabKey) => void;
 }
 
-const VerificationCardGrid = ({ data, selectedId, onSelect }: Props) => {
+const VerificationCardGrid = ({ data, selectedKey, onSelect }: Props) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {data.map(({ id, label, count, status }) => (
+      {data.map(({ id, label, count, status, key }) => (
         <VerificationCard
           key={id}
           label={label}
           count={count}
           status={status}
-          isSelected={selectedId === id}
-          onClick={() => onSelect(id)}
+          isSelected={selectedKey === key}
+          onClick={() => onSelect(key)}
         />
       ))}
     </div>

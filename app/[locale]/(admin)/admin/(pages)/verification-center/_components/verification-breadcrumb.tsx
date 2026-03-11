@@ -3,63 +3,30 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ChevronLeftCircle } from "lucide-react";
+import Link from "next/link";
 import { FaArrowCircleLeft } from "react-icons/fa";
 
-interface VerificationBreadcrumbProps {
-  type: "agency" | "influencer";
-  name?: string;
-}
-
-const VerificationBreadcrumb = ({
-  type,
-  name,
-}: VerificationBreadcrumbProps) => {
-  const typeLabel = type === "agency" ? "Verify Agency" : "Verify Influencer";
-
-  const typePath =
-    type === "agency"
-      ? "/verification-center/agency"
-      : "/verification-center/influencer";
-
+const VerificationBreadcrumb = () => {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-4">
-        <div className="text-Primary">
+        <Link href="/admin" className="text-Primary">
           <FaArrowCircleLeft size={35} />
-        </div>
+        </Link>
+
         <div>
-          {/* Title */}
           <h2 className="font-bold text-Primary text-2xl">
             Verification Center
           </h2>
 
-          {/* Breadcrumb under h2 */}
           <Breadcrumb>
             <BreadcrumbList className="text-sm text-muted-foreground">
               <BreadcrumbItem>
-                <BreadcrumbLink href="/verification-center">
+                <BreadcrumbLink href="/admin/verification-center">
                   Verification Center
                 </BreadcrumbLink>
               </BreadcrumbItem>
-
-              <BreadcrumbSeparator />
-
-              <BreadcrumbItem>
-                <BreadcrumbLink href={typePath}>{typeLabel}</BreadcrumbLink>
-              </BreadcrumbItem>
-
-              {name && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{name}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </>
-              )}
             </BreadcrumbList>
           </Breadcrumb>
         </div>

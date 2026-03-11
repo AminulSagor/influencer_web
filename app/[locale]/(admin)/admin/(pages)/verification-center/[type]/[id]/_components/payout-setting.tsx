@@ -1,19 +1,31 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import Image from "next/image";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 import CollapsibleCard from "./collapsible-card";
-import { VerificationStatus } from "../../../_components/verification-data";
+import RejectReasonModal from "./reject-reason-modal";
+
 import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-interface PayoutSettings {
-  id: number;
-  type: "Bank Account" | "Bkash";
+import { approveRejectPayout } from "@/service/admin/verification-center/influencer/approve-reject-payout";
+import { approveRejectAgencyPayout } from "@/service/admin/verification-center/agency/approve-reject-payout";
+
+type VerificationStatus = "Pending" | "Rejected" | "Accepted" | "Approved";
+type PayoutType = "Bank Account" | "Bkash";
+type VerificationType = "influencer" | "agency";
+
+interface PayoutSettingsItem {
+  id: number | string;
+  type: PayoutType;
   bankName?: string;
   accountHolder?: string;
   accountNumber?: string;
@@ -21,125 +33,412 @@ interface PayoutSettings {
   branchName?: string;
   phoneNumber?: string;
   status: VerificationStatus;
+  rejectReason?: string | null;
+}
+
+interface NormalizedPayoutSettingsItem extends PayoutSettingsItem {
+  bankSequence: number | null;
 }
 
 interface Props {
-  payoutSettings: PayoutSettings[];
+  userId: string;
+  payoutSettings: PayoutSettingsItem[];
+  verificationType?: VerificationType;
 }
 
-const PayoutSettings = ({ payoutSettings }: Props) => {
-  let bankAccountCount = 0;
+const normalizeStatus = (status?: string | null): VerificationStatus => {
+  const value = (status ?? "").trim().toLowerCase();
+
+  if (value === "approved") return "Approved";
+  if (value === "accepted") return "Accepted";
+  if (value === "rejected") return "Rejected";
+  return "Pending";
+};
+
+const statusBadgeClassMap: Record<
+  Exclude<VerificationStatus, "Pending">,
+  string
+> = {
+  Approved: "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]",
+  Accepted: "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]",
+  Rejected: "bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]",
+};
+
+const PayoutSettings = ({
+  userId,
+  payoutSettings,
+  verificationType = "influencer",
+}: Props) => {
+  const [openIds, setOpenIds] = useState<(number | string)[]>([]);
+  const [items, setItems] = useState<PayoutSettingsItem[]>(payoutSettings);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<PayoutSettingsItem | null>(
+    null
+  );
+  const [loadingId, setLoadingId] = useState<number | string | null>(null);
+
+  const normalizedItems = useMemo<NormalizedPayoutSettingsItem[]>(() => {
+    let bankCounter = 0;
+
+    return items.map((item, index) => {
+      const type: PayoutType = item.type === "Bkash" ? "Bkash" : "Bank Account";
+
+      if (type === "Bank Account") {
+        bankCounter += 1;
+      }
+
+      return {
+        ...item,
+        id: item.id ?? `${type}-${index}`,
+        type,
+        status: normalizeStatus(item.status),
+        bankSequence: type === "Bank Account" ? bankCounter : null,
+      };
+    });
+  }, [items]);
+
+  const toggleOpen = (id: number | string) => {
+    setOpenIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const updateLocalItem = (
+    id: number | string,
+    status: VerificationStatus,
+    rejectReason?: string | null
+  ) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, status, rejectReason: rejectReason ?? null }
+          : item
+      )
+    );
+  };
+
+  const submitAction = async ({
+    payoutType,
+    accountNo,
+    status,
+    rejectReason,
+  }: {
+    payoutType: "bank" | "mobile";
+    accountNo: string;
+    status: "approved" | "rejected";
+    rejectReason?: string;
+  }) => {
+    if (verificationType === "agency") {
+      return approveRejectAgencyPayout({
+        userId,
+        payoutType,
+        accountNo,
+        status,
+        rejectReason,
+      });
+    }
+
+    return approveRejectPayout({
+      userId,
+      payoutType,
+      accountNo,
+      status,
+      rejectReason,
+    });
+  };
+
+  const handleApprove = async (payout: PayoutSettingsItem) => {
+    const accountNo =
+      payout.type === "Bank Account"
+        ? payout.accountNumber ?? ""
+        : payout.phoneNumber ?? "";
+
+    if (!accountNo) return;
+
+    try {
+      setLoadingId(payout.id);
+
+      await submitAction({
+        payoutType: payout.type === "Bank Account" ? "bank" : "mobile",
+        accountNo,
+        status: "approved",
+      });
+
+      updateLocalItem(payout.id, "Approved");
+    } catch (error) {
+      console.error("approve payout failed", error);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleRejectSubmit = async (reason: string) => {
+    if (!selectedItem) return;
+
+    const accountNo =
+      selectedItem.type === "Bank Account"
+        ? selectedItem.accountNumber ?? ""
+        : selectedItem.phoneNumber ?? "";
+
+    if (!accountNo) return;
+
+    try {
+      setLoadingId(selectedItem.id);
+
+      await submitAction({
+        payoutType: selectedItem.type === "Bank Account" ? "bank" : "mobile",
+        accountNo,
+        status: "rejected",
+        rejectReason: reason,
+      });
+
+      updateLocalItem(selectedItem.id, "Rejected", reason);
+      setRejectOpen(false);
+      setSelectedItem(null);
+    } catch (error) {
+      console.error("reject payout failed", error);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
-    <CollapsibleCard heading="Payout Settings">
-      <div className="space-y-3">
-        {payoutSettings.map((payout) => {
-          if (payout.type === "Bank Account") {
-            bankAccountCount += 1;
-          }
+    <>
+      <CollapsibleCard heading="Payout Settings">
+        <div className="space-y-3">
+          {normalizedItems.map((payout) => {
+            const isFirstBank =
+              payout.type === "Bank Account" && payout.bankSequence === 1;
 
-          const isFirstBank =
-            payout.type === "Bank Account" && bankAccountCount === 1;
-          const isSecondOrMoreBank =
-            payout.type === "Bank Account" && bankAccountCount > 1;
+            const isSecondOrMoreBank =
+              payout.type === "Bank Account" &&
+              !!payout.bankSequence &&
+              payout.bankSequence > 1;
 
-          // Border & Background classes
-          const borderClass = isSecondOrMoreBank
-            ? "border-orange"
-            : "border-light-green";
+            const borderClass = isSecondOrMoreBank
+              ? "border-orange"
+              : "border-light-green";
 
-          const bgClass = isSecondOrMoreBank
-            ? "bg-gradient-to-r from-white to-orange/20"
-            : "bg-linear-to-r from-white to-Secondary";
+            const bgClass = isSecondOrMoreBank
+              ? "bg-gradient-to-r from-white to-orange/20"
+              : "bg-linear-to-r from-white to-Secondary";
 
-          // Text color class
-          const textClass = isSecondOrMoreBank
-            ? "text-orange"
-            : "text-light-green";
+            const textClass = isSecondOrMoreBank
+              ? "text-orange"
+              : "text-light-green";
 
-          // Button variant
-          const buttonVariant =
-            payout.type === "Bank Account"
-              ? isFirstBank
-                ? "lightGreen"
-                : "orange"
-              : payout.status === "Approved"
-              ? "lightGreen"
-              : "outline";
+            const normalizedStatusValue = payout.status.toLowerCase();
+            const isPending = normalizedStatusValue === "pending";
+            const isOpen = openIds.includes(payout.id);
+            const isLoading = loadingId === payout.id;
 
-          return (
-            <Item
-              key={payout.id}
-              className={`border ${borderClass} ${bgClass}`}
-              variant="outline"
-            >
-              <ItemContent>
-                {payout.type === "Bank Account" ? (
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <div className="relative w-10 aspect-square">
-                        <Image
-                          src={
-                            isFirstBank
-                              ? "/icons/bank-icon.svg"
-                              : "/icons/bank-icon-2.svg"
-                          }
-                          fill
-                          alt="Bank"
-                        />
+            const approvedBtnVariant =
+              payout.type === "Bank Account" && isSecondOrMoreBank
+                ? "orange"
+                : "lightGreen";
+
+            return (
+              <div
+                key={payout.id}
+                className={cn("rounded-md border", borderClass, bgClass)}
+              >
+                <Item
+                  className="border-0 bg-transparent shadow-none"
+                  variant="outline"
+                >
+                  <ItemContent className="min-w-0 flex-1">
+                    {payout.type === "Bank Account" ? (
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="shrink-0">
+                          <div className="relative w-10 aspect-square">
+                            <Image
+                              src={
+                                isFirstBank
+                                  ? "/icons/bank-icon.svg"
+                                  : "/icons/bank-icon-2.svg"
+                              }
+                              fill
+                              alt="Bank"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="min-w-0">
+                          <ItemTitle className={textClass}>
+                            Bank Account no. {payout.bankSequence}
+                          </ItemTitle>
+
+                          <div>
+                            <p className="text-xs text-gray-400">
+                              {payout.bankName || "N/A"}
+                            </p>
+                            <p className={cn(textClass, "line-clamp-1")}>
+                              Account No. {payout.accountNumber || "N/A"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <ItemTitle className={textClass}>
-                        Bank Account no. {bankAccountCount}
-                      </ItemTitle>
-                      <div>
-                        <p className="text-xs text-gray-400">
-                          {payout.bankName}
-                        </p>
-                        <p className={cn(textClass, "line-clamp-1")}>
-                          Account No. {payout.accountNumber}
-                        </p>
+                    ) : (
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="shrink-0">
+                          <div className="relative w-8 aspect-square">
+                            <Image
+                              className="object-contain"
+                              src="/icons/bkash-icon.svg"
+                              fill
+                              alt="Bkash"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="min-w-0">
+                          <ItemTitle className="text-light-green">
+                            {payout.phoneNumber || "N/A"}
+                          </ItemTitle>
+
+                          <div>
+                            <p className="text-xs text-gray-400">Bkash</p>
+                            <p className="text-light-green line-clamp-1">
+                              {payout.accountHolder || "N/A"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <div className="relative w-8 aspect-square">
-                        <Image
-                          className="object-contain"
-                          src={"/icons/bkash-icon.svg"}
-                          fill
-                          alt="Bank"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <ItemTitle className="text-light-green">
-                        {payout.phoneNumber}
-                      </ItemTitle>
-                      <div>
-                        <p className="text-xs text-gray-400">Bkash</p>
-                        <p className="text-light-green">
-                          {payout.accountHolder}
-                        </p>
-                      </div>
+                    )}
+                  </ItemContent>
+
+                  <ItemActions className="shrink-0 flex items-center gap-3">
+                    {isPending ? (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="min-w-[92px]"
+                          disabled={isLoading}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedItem(payout);
+                            setRejectOpen(true);
+                          }}
+                        >
+                          {isLoading ? "Please wait..." : "Reject"}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant={approvedBtnVariant}
+                          size="sm"
+                          className="min-w-[92px]"
+                          disabled={isLoading}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            void handleApprove(payout);
+                          }}
+                        >
+                          {isLoading ? "Please wait..." : "Approve"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className={cn(
+                          "min-w-[92px] border-0",
+                          statusBadgeClassMap[
+                            payout.status as Exclude<VerificationStatus, "Pending">
+                          ]
+                        )}
+                      >
+                        {payout.status}
+                      </Button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => toggleOpen(payout.id)}
+                      className="text-gray-500"
+                    >
+                      {isOpen ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </button>
+                  </ItemActions>
+                </Item>
+
+                {isOpen && (
+                  <div className="px-4 pb-4">
+                    <div className="rounded-md bg-white/60 p-4 text-sm space-y-2">
+                      {payout.type === "Bank Account" ? (
+                        <>
+                          <div>
+                            <p className="text-gray-400 text-xs">
+                              Bank Account Holder
+                            </p>
+                            <p>{payout.accountHolder || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">
+                              Bank Account Number
+                            </p>
+                            <p>{payout.accountNumber || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">
+                              Routing Number
+                            </p>
+                            <p>{payout.routingNumber || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Branch Name</p>
+                            <p>{payout.branchName || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Bank Name</p>
+                            <p>{payout.bankName || "N/A"}</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="text-gray-400 text-xs">
+                              Mobile Banking
+                            </p>
+                            <p>Bkash</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Phone Number</p>
+                            <p>{payout.phoneNumber || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">
+                              Account Holder
+                            </p>
+                            <p>{payout.accountHolder || "N/A"}</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
-              </ItemContent>
+              </div>
+            );
+          })}
+        </div>
+      </CollapsibleCard>
 
-              <ItemActions>
-                <Button variant={buttonVariant} size="sm">
-                  {payout.status}
-                </Button>
-              </ItemActions>
-            </Item>
-          );
-        })}
-      </div>
-    </CollapsibleCard>
+      <RejectReasonModal
+        open={rejectOpen}
+        onOpenChange={setRejectOpen}
+        title="Write Reject Reason"
+        loading={!!selectedItem && loadingId === selectedItem.id}
+        onSubmit={handleRejectSubmit}
+      />
+    </>
   );
 };
 

@@ -18,7 +18,7 @@ import PlatformProfit from "../campaign-details/_components/platform-profit";
 import PlatformProfitAgency from "../campaign-details/_components/platform-profit-agency";
 
 import { getAdminAgencyProfile } from "@/service/admin/campaign/agency/get-admin-agency-profile";
-import { getAllAgencies } from "@/service/admin/users/agency/get-all-agencies";
+import { getAllAgencies } from "@/service/admin/campaign/agency/get-all-agencies";
 
 import {
   normalize,
