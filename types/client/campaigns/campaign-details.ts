@@ -97,7 +97,7 @@ export interface CampaignMilestone {
   influencerCountry?: string | null;
 }
 
-export type AssetCategory = "brand" | "content" | string;
+export type AssetCategory = "brand" | "content";
 
 export interface CampaignAsset {
   id: string;

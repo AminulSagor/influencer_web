@@ -1,80 +1,164 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card";
 import { Download, Film, FileText, File, Album, Link2 } from "lucide-react";
-import React from "react";
-import type { Campaignservice, CampaignAssetservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import {
+  CampaignAsset,
+  CampaignDetails,
+} from "@/types/client/campaigns/campaign-details";
 
 type Props = {
-  campaign: Campaignservice;
+  campaign: CampaignDetails;
 };
 
-const getFileIcon = (asset: CampaignAssetservice) => {
-  const mime = (asset.mimeType ?? asset.assetType ?? "").toLowerCase();
-  if (mime.includes("http") || asset.fileUrl?.startsWith("http")) {
-    // link types also use fileUrl - but keep normal icon if mime matches
+const ITEMS_PER_PAGE = 3;
+
+const chunkArray = <T,>(items: T[], size: number): T[][] => {
+  if (!items.length) return [];
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
   }
+  return chunks;
+};
+
+const getFileIcon = (asset: CampaignAsset) => {
+  const mime = (asset.mimeType ?? asset.assetType ?? "").toLowerCase();
+  const assetType = (asset.assetType ?? "").toLowerCase();
+
+  if (
+    assetType.includes("link") ||
+    mime.includes("link") ||
+    mime.includes("url")
+  ) {
+    return <Link2 size={20} />;
+  }
+
   if (mime.startsWith("image")) return <Album size={20} />;
   if (mime.startsWith("video")) return <Film size={20} />;
   if (mime.includes("pdf")) return <FileText size={20} />;
-  if (asset.assetType?.toLowerCase().includes("link")) return <Link2 size={20} />;
+
   return <File size={20} />;
 };
 
 const getFileSize = (sizeStr: string | null) => {
   const size = Number(sizeStr ?? 0);
+
   if (!Number.isFinite(size) || size <= 0) return null;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
 };
 
-function AssetList({ assets }: { assets: CampaignAssetservice[] }) {
-  if (!assets.length) {
-    return <p className="text-sm text-black/50">No assets uploaded.</p>;
-  }
+function AssetSliderSection({
+  title,
+  assets,
+}: {
+  title: string;
+  assets: CampaignAsset[];
+}) {
+  const pages = useMemo(() => chunkArray(assets, ITEMS_PER_PAGE), [assets]);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const safePageIndex =
+    pages.length === 0 ? 0 : Math.min(pageIndex, Math.max(pages.length - 1, 0));
+
+  const currentPage = pages[safePageIndex] ?? [];
 
   return (
-    <div className="space-y-3">
-      {assets.map((asset) => {
-        const ext = asset.fileName?.split(".").pop()?.toUpperCase();
-        const sizeLabel = getFileSize(asset.fileSize);
-        const meta = [ext, sizeLabel].filter(Boolean).join(" - ");
+    <CollapseCard title={title} icon={<Download size={20} />}>
+      {!assets.length ? (
+        <p className="text-sm text-black/50">No assets uploaded.</p>
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-3">
+            {currentPage.map((asset) => {
+              const ext = asset.fileName?.split(".").pop()?.toUpperCase();
+              const sizeLabel = getFileSize(asset.fileSize);
 
-        return (
-          <a
-            key={asset.id}
-            href={asset.fileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex justify-between bg-linear-to-r from-white to-light-green/30 items-center rounded-xl py-3 px-4 text-sm border-light-green border hover:bg-light-green/20 transition"
-          >
-            <div className="flex gap-3 items-center">
-              <span className="text-light-green">{getFileIcon(asset)}</span>
-              <div className="text-sm">
-                <p className="text-light-green">{asset.fileName}</p>
-                <p className="text-xs text-light-green">{meta || asset.assetType}</p>
-              </div>
+              const meta = [ext, sizeLabel].filter(Boolean).join(" - ");
+
+              return (
+                <a
+                  key={asset.id}
+                  href={asset.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-light-green bg-linear-to-r from-white to-light-green/30 px-4 py-3 text-sm transition hover:bg-light-green/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-light-green">
+                      {getFileIcon(asset)}
+                    </span>
+
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-light-green">
+                        {asset.fileName}
+                      </p>
+                      <p className="text-xs text-light-green/80">
+                        {meta || asset.assetType}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="shrink-0 text-light-green">
+                    <Download size={20} />
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+
+          {pages.length > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {pages.map((_, index) => {
+                const isActive = index === safePageIndex;
+
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Go to page ${index + 1}`}
+                    onClick={() => setPageIndex(index)}
+                    className={`h-2.5 w-2.5 rounded-full transition ${
+                      isActive ? "bg-light-green" : "bg-black/15"
+                    }`}
+                  />
+                );
+              })}
             </div>
-          </a>
-        );
-      })}
-    </div>
+          )}
+        </div>
+      )}
+    </CollapseCard>
   );
 }
 
 export default function AssetsCard({ campaign }: Props) {
-  const contentAssets = (campaign.assets ?? []).filter((a) => a.category === "content");
-  const brandAssets = (campaign.assets ?? []).filter((a) => a.category === "brand");
+  const contentAssets = (campaign.assets ?? []).filter(
+    (asset) => asset.category === "content",
+  );
+
+  const brandAssets = (campaign.assets ?? []).filter(
+    (asset) => asset.category === "brand",
+  );
+
+  const isInfluencerPromotion =
+    campaign.campaignType === "influencer_promotion";
+
+  if (isInfluencerPromotion) {
+    return (
+      <div className="grid grid-cols-1 gap-4">
+        <AssetSliderSection title="Content Assets" assets={contentAssets} />
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <CollapseCard title="Content Assets" icon={<Download size={20} />}>
-        <AssetList assets={contentAssets} />
-      </CollapseCard>
-
-      <CollapseCard title="Brand Assets" icon={<Download size={20} />}>
-        <AssetList assets={brandAssets} />
-      </CollapseCard>
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <AssetSliderSection title="Content Assets" assets={contentAssets} />
+      <AssetSliderSection title="Brand Assets" assets={brandAssets} />
     </div>
   );
 }
