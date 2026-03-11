@@ -170,7 +170,7 @@ function BudgetingAndQuotingCampaignCard({
         </div>
 
         <SecondaryButton className="w-full text-Primary px-2 py-2">
-          <Link href={`/brand/campaign-details-influencer/${campaign.id}`}>
+          <Link href={`/brand/campaign-details/${campaign.id}`}>
             View Campaign Details
           </Link>
         </SecondaryButton>
