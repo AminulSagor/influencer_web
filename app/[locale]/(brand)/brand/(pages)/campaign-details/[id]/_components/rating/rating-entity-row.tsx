@@ -1,0 +1,66 @@
+"use client";
+
+import { ChevronDown, ChevronRight } from "lucide-react";
+import RatingAvatar from "./rating-avatar";
+import RatingStars from "./rating-stars";
+import { formatRatedText } from "./rating-card.utils";
+import { RateableEntity } from "./rating-card.types";
+
+type RatingEntityRowProps = {
+  entity: RateableEntity;
+  value: number;
+  expanded: boolean;
+  onExpand: () => void;
+  onChange: (value: number) => void;
+};
+
+export default function RatingEntityRow({
+  entity,
+  value,
+  expanded,
+  onExpand,
+  onChange,
+}: RatingEntityRowProps) {
+  return (
+    <div className="overflow-hidden rounded-[18px] bg-[#5D8238] text-white">
+      <div className="flex items-center gap-4 px-5 py-4">
+        <RatingAvatar name={entity.name} image={entity.image} />
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[18px] font-semibold">{entity.name}</p>
+
+          {!expanded && value > 0 && (
+            <div className="mt-1">
+              <RatingStars value={value} readonly size={20} />
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onExpand}
+          className="flex items-center gap-1 text-[16px] font-medium text-white/95"
+        >
+          <span>Rate</span>
+          {expanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+
+      {expanded && (
+        <div className="px-5 pb-6 pt-2">
+          <div className="flex flex-col items-center justify-center">
+            <RatingStars value={value} onChange={onChange} size={42} />
+
+            <p className="mt-4 text-center text-[18px] font-semibold text-white">
+              You&apos;ve Rated {formatRatedText(value)}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

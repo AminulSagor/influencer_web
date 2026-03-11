@@ -11,22 +11,33 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
 
 type QuoteDetailsCardProps = {
-  campaign: Campaignservice;
+  campaign: CampaignDetails;
   onPayDue?: (amount: number) => void;
 };
 
-const toNumber = (v?: string | null) => {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n : 0;
+type PaymentPreset = "full" | "min" | null;
+
+const toNumber = (value?: string | number | null) => {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const formatBDT = (n: number) => `৳${n.toLocaleString("en-US")}`;
+const formatBDT = (value: number) => `৳${value.toLocaleString("en-US")}`;
 
-const PercentChip = ({
+const clampAmount = (value: number, max: number) => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(Math.max(value, 0), Math.max(max, 0));
+};
+
+const parseNumericInput = (raw: string) => {
+  const digits = raw.replace(/[^\d]/g, "");
+  return digits ? Number(digits) : 0;
+};
+
+function PercentChip({
   label,
   active,
   onClick,
@@ -34,62 +45,134 @@ const PercentChip = ({
   label: string;
   active?: boolean;
   onClick?: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={[
-      "rounded-full px-4 py-2 text-xs sm:text-sm transition",
-      "bg-[#EFEFEF] text-black",
-      active ? "ring-2 ring-light-green/70" : "",
-    ].join(" ")}
-  >
-    {label}
-  </button>
-);
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-full px-4 py-2 text-xs sm:text-sm transition",
+        active
+          ? "bg-Secondary ring-2 ring-light-green/70 text-Primary"
+          : "bg-[#EFEFEF] text-black hover:bg-[#E8E8E8]",
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+}
 
-export default function QuoteDetailsCard({ campaign, onPayDue }: QuoteDetailsCardProps) {
+function SummaryRow({
+  label,
+  value,
+  valueClassName = "font-semibold text-light-green",
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <p>{label}</p>
+      <p className={valueClassName}>{value}</p>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="my-3 h-px w-full bg-black/15" />;
+}
+
+function StatusButton({
+  label,
+  disabled = true,
+  className = "",
+}: {
+  label: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      className={[
+        "w-full rounded-md border border-light-gray py-2 text-sm",
+        disabled
+          ? "cursor-not-allowed bg-[#EFEFEF] text-black/70"
+          : "cursor-pointer",
+        className,
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+}
+
+function PaymentMethodButton() {
+  return (
+    <button
+      type="button"
+      className="mt-3 flex w-full items-center justify-between rounded-md border border-light-gray bg-white px-4 py-3"
+    >
+      <span className="text-sm text-Primary sm:text-base">
+        Credit / Debit Card
+      </span>
+      <span className="text-black/80">▾</span>
+    </button>
+  );
+}
+
+export default function QuoteDetailsCard({
+  campaign,
+  onPayDue,
+}: QuoteDetailsCardProps) {
+  const [payAmount, setPayAmount] = React.useState(0);
+  const [activePreset, setActivePreset] = React.useState<PaymentPreset>(null);
+
   const baseBudget = toNumber(campaign.baseBudget);
   const vatAmount = toNumber(campaign.vatAmount);
   const totalCost = toNumber(campaign.totalBudget);
+  const availableBudgetForExecution = toNumber(
+    campaign.availableBudgetForExecution,
+  );
 
-  // If backend provides paid amount later, plug it here.
-  // For now:
-  const paidAmount = campaign.paymentStatus === "full" ? totalCost : 0;
+  const isPending = campaign.paymentStatus === "pending";
+  const isPartial = campaign.paymentStatus === "partial";
+  const isPaid = campaign.paymentStatus === "paid";
+
+  const paidAmount = isPaid
+    ? totalCost
+    : isPartial
+      ? Math.max(totalCost - availableBudgetForExecution, 0)
+      : 0;
 
   const dueAmount = Math.max(totalCost - paidAmount, 0);
-
-  const isConfirmed = campaign.paymentStatus === "confirmed";
-  const isPartial = campaign.paymentStatus === "partial";
-  const isFull = campaign.paymentStatus === "full";
-  const isPending = campaign.paymentStatus === "pending";
-
-  const canPay = (isConfirmed || isPartial) && dueAmount > 0;
-
-  // ------- Pay Due dialog -------
-  const [payAmount, setPayAmount] = React.useState<number>(0);
-  const [activePreset, setActivePreset] = React.useState<null | "full" | "min">(null);
+  const canPay = (isPartial || isPending) && dueAmount > 0;
 
   React.useEffect(() => {
-    setPayAmount(Math.min(Math.max(0, dueAmount), dueAmount));
+    setPayAmount(dueAmount);
+    setActivePreset(null);
   }, [dueAmount]);
 
-  const clamp = (v: number) => {
-    const max = Math.max(dueAmount, 0);
-    if (!Number.isFinite(v)) return 0;
-    return Math.min(Math.max(v, 0), max);
+  const handlePreset = (
+    percent: number,
+    preset: Exclude<PaymentPreset, null>,
+  ) => {
+    setActivePreset(preset);
+    setPayAmount(
+      clampAmount(Math.round((dueAmount * percent) / 100), dueAmount),
+    );
   };
 
-  const setPercent = (pct: number) => {
-    const max = Math.max(dueAmount, 0);
-    setPayAmount(clamp(Math.round((max * pct) / 100)));
-  };
-
-  const onAmountInput = (raw: string) => {
+  const handleAmountInput = (raw: string) => {
     setActivePreset(null);
-    const digits = raw.replace(/[^\d]/g, "");
-    const val = digits ? Number(digits) : 0;
-    setPayAmount(clamp(val));
+    setPayAmount(clampAmount(parseNumericInput(raw), dueAmount));
+  };
+
+  const handlePayNow = () => {
+    if (payAmount <= 0) return;
+    onPayDue?.(payAmount);
   };
 
   return (
@@ -97,100 +180,76 @@ export default function QuoteDetailsCard({ campaign, onPayDue }: QuoteDetailsCar
       <CardContent>
         <h2 className="font-semibold text-Primary">Quote Details</h2>
 
-        <div className="mt-2 rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 overflow-x-auto no-scrollbar">
+        <div className="mt-2 overflow-x-auto rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 no-scrollbar">
           <div className="text-sm">
             <div className="flex gap-4">
-              <div className="space-y-2 flex-1">
-                <div className="flex justify-between">
-                  <p>Base Campaign Budget</p>
-                  <p className="font-semibold text-light-green">{formatBDT(baseBudget)}</p>
-                </div>
+              <div className="flex-1 space-y-2">
+                <SummaryRow
+                  label="Base Campaign Budget"
+                  value={formatBDT(baseBudget)}
+                />
 
-                <div className="flex justify-between">
-                  <p>VAT/Tax</p>
-                  <p className="font-semibold text-light-green">{formatBDT(vatAmount)}</p>
-                </div>
+                <SummaryRow label="VAT/Tax" value={formatBDT(vatAmount)} />
 
-                <div className="my-3 h-px w-full bg-black/15" />
+                <Divider />
 
-                <div className="flex justify-between items-center">
-                  <p>Total Campaign Cost</p>
-                  <p className="text-2xl font-semibold tracking-tight text-light-green">
-                    {formatBDT(totalCost)}
-                  </p>
-                </div>
+                <SummaryRow
+                  label="Total Campaign Cost"
+                  value={formatBDT(totalCost)}
+                  valueClassName="text-2xl font-semibold tracking-tight text-light-green"
+                />
 
-                {(isConfirmed || isPartial || isFull) && (
+                {(isPartial || isPaid) && (
                   <>
-                    <div className="mt-2 flex justify-between">
-                      <p>Paid</p>
-                      <p className="font-semibold text-light-green">
-                        {formatBDT(paidAmount)}
-                      </p>
-                    </div>
+                    <div className="mt-2" />
+                    <SummaryRow label="Paid" value={formatBDT(paidAmount)} />
 
-                    <div className="my-3 h-px w-full bg-black/15" />
+                    <Divider />
 
-                    <div className="flex justify-between items-center">
-                      <p>Due</p>
-                      <p className="text-2xl font-semibold tracking-tight text-light-green">
-                        {formatBDT(dueAmount)}
-                      </p>
-                    </div>
+                    <SummaryRow
+                      label="Due"
+                      value={formatBDT(dueAmount)}
+                      valueClassName="text-2xl font-semibold tracking-tight text-light-green"
+                    />
                   </>
                 )}
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-Secondary shrink-0">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-Secondary">
                 <span className="text-xl font-semibold text-Primary">৳</span>
               </div>
             </div>
 
-            {/* Status-wise button */}
-            {isPending && (
-              <div className="mt-4">
-                <button
-                  className="bg-[#EFEFEF] border border-light-gray text-black/70 text-sm w-full rounded-md py-2 cursor-not-allowed"
-                  disabled
-                >
-                  Budget Pending
-                </button>
-              </div>
-            )}
+            <div className="mt-4">
+              {isPending && !canPay && <StatusButton label="Budget Pending" />}
 
-            {(isConfirmed || isPartial) && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button
-                    disabled={!canPay}
-                    className={[
-                      "mt-3 text-sm w-full rounded-md py-2 cursor-pointer border border-light-gray",
-                      canPay
-                        ? "bg-light-green text-white"
-                        : "bg-[#EFEFEF] text-black/60 cursor-not-allowed",
-                    ].join(" ")}
-                  >
-                    {canPay ? "Pay Due" : "No Due"}
-                  </button>
-                </DialogTrigger>
+              {(isPending || isPartial) && canPay && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full rounded-md border border-light-gray bg-light-green py-2 text-sm text-white"
+                    >
+                      Pay Due
+                    </button>
+                  </DialogTrigger>
 
-                {canPay && (
-                  <DialogContent className="sm:max-w-md p-0">
+                  <DialogContent className="p-0 sm:max-w-md">
                     <div className="p-6 sm:p-7">
                       <DialogHeader>
-                        <DialogTitle className="text-center text-Primary text-xl sm:text-2xl font-semibold">
+                        <DialogTitle className="text-center text-xl font-semibold text-Primary sm:text-2xl">
                           Fund Your Campaign
                         </DialogTitle>
                       </DialogHeader>
 
                       <div className="mt-5 rounded-xl bg-linear-to-r from-Primary to-light-green px-5 py-4 text-white">
-                        <p className="text-sm sm:text-base font-medium truncate text-center">
+                        <p className="truncate text-center text-sm font-medium sm:text-base">
                           {campaign.campaignName}
                         </p>
 
                         <div className="mt-4 text-center">
                           <p className="text-sm text-white/90">Total Due</p>
-                          <p className="mt-1 text-3xl sm:text-4xl font-semibold tracking-tight">
+                          <p className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
                             {formatBDT(dueAmount)}
                           </p>
                         </div>
@@ -198,72 +257,52 @@ export default function QuoteDetailsCard({ campaign, onPayDue }: QuoteDetailsCar
 
                       <div className="mt-6">
                         <Input
-                          value={payAmount ? payAmount.toLocaleString("en-US") : ""}
-                          onChange={(e) => onAmountInput(e.target.value)}
+                          value={
+                            payAmount ? payAmount.toLocaleString("en-US") : ""
+                          }
+                          onChange={(e) => handleAmountInput(e.target.value)}
                           inputMode="numeric"
                           placeholder="0"
-                          className="h-12 text-center text-lg sm:text-xl border-light-gray focus-visible:ring-1"
+                          className="h-12 border-light-gray text-center text-lg focus-visible:ring-1 sm:text-xl"
                         />
                       </div>
 
-                      <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+                      <div className="mt-4 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                         <PercentChip
                           label="Pay In Full (100%)"
                           active={activePreset === "full"}
-                          onClick={() => {
-                            setActivePreset("full");
-                            setPercent(100);
-                          }}
+                          onClick={() => handlePreset(100, "full")}
                         />
                         <PercentChip
                           label="Pay Minimum (50%)"
                           active={activePreset === "min"}
-                          onClick={() => {
-                            setActivePreset("min");
-                            setPercent(50);
-                          }}
+                          onClick={() => handlePreset(50, "min")}
                         />
                       </div>
 
                       <div className="mt-8">
-                        <p className="text-Primary font-semibold text-sm sm:text-base">
+                        <p className="text-sm font-semibold text-Primary sm:text-base">
                           Payment Method
                         </p>
-
-                        <button
-                          type="button"
-                          className="mt-3 w-full rounded-md border border-light-gray bg-white px-4 py-3 flex items-center justify-between"
-                        >
-                          <span className="text-Primary text-sm sm:text-base">
-                            Credit / Debit Card
-                          </span>
-                          <span className="text-black/80">▾</span>
-                        </button>
+                        <PaymentMethodButton />
                       </div>
 
                       <PrimaryButton
                         className="mt-6 w-full"
-                        onClick={() => onPayDue?.(payAmount)}
+                        onClick={handlePayNow}
                         disabled={payAmount <= 0}
                       >
                         Pay Now ৳ {payAmount.toLocaleString("en-US")}
                       </PrimaryButton>
                     </div>
                   </DialogContent>
-                )}
-              </Dialog>
-            )}
+                </Dialog>
+              )}
 
-            {isFull && (
-              <div className="mt-4">
-                <button
-                  className="bg-[#EFEFEF] border border-light-gray text-black/70 text-sm w-full rounded-md py-2 cursor-not-allowed"
-                  disabled
-                >
-                  Fully Paid
-                </button>
-              </div>
-            )}
+              {isPartial && dueAmount <= 0 && <StatusButton label="No Due" />}
+
+              {isPaid && <StatusButton label="Fully Paid" />}
+            </div>
           </div>
         </div>
       </CardContent>

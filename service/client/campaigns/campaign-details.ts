@@ -1,14 +1,14 @@
 import { AxiosError } from "axios";
 import { serviceServer } from "@/service/base/axios_server";
-import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { redirect } from "next/navigation";
 import { ServiceResponse } from "@/types/service-response";
+import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
 
 export const getCampaignDetails = async (
   id: string,
-): Promise<Campaignservice | null> => {
+): Promise<CampaignDetails | null> => {
   try {
-    const { data } = await serviceServer.get<ServiceResponse<Campaignservice>>(
+    const { data } = await serviceServer.get<ServiceResponse<CampaignDetails>>(
       `/campaign/${id}`,
     );
 
