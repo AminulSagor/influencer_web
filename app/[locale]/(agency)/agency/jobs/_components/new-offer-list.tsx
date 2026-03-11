@@ -1,339 +1,251 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+"use client";
+
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { JSX } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { BsFillCalendarDateFill } from "react-icons/bs";
-import { FaClock } from "react-icons/fa";
-import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
-// data/new-offers.ts
-export const newOffers = [
-  {
-    id: 1,
-    title: "Summer Fashion Campaign",
-    clientName: "StyleCo",
-    avatar: "/avatars/avatar-1.png",
-    isNew: true,
-    platforms: ["instagram", "youtube"],
-    totalBudget: 115000,
-    profit: 11000,
-    deadline: "Dec 15, 2025",
-    duration: "14 days",
-    timeLeft: "12H : 00M",
-    requoteText: "Request to requote within 12 Dec, 2025, 12:00pm",
-  },
-  {
-    id: 2,
-    title: "Winter Jacket Launch",
-    clientName: "NorthWear",
-    avatar: "/avatars/avatar-2.png",
-    isNew: true,
-    platforms: ["instagram", "tiktok"],
-    totalBudget: 85000,
-    profit: 12750,
-    deadline: "Jan 05, 2026",
-    duration: "10 days",
-    timeLeft: "18H : 45M",
-    requoteText: "Request to requote within 02 Jan, 2026, 9:00am",
-  },
-  {
-    id: 3,
-    title: "Smartphone Review Series",
-    clientName: "TechNova",
-    avatar: "/avatars/avatar-3.png",
-    isNew: false,
-    platforms: ["youtube"],
-    totalBudget: 240000,
-    profit: 36000,
-    deadline: "Dec 28, 2025",
-    duration: "21 days",
-    timeLeft: "2D : 6H",
-    requoteText: "Request to requote within 26 Dec, 2025, 6:00pm",
-  },
-  {
-    id: 4,
-    title: "Organic Skincare Promotion",
-    clientName: "GlowPure",
-    avatar: "/avatars/avatar-4.png",
-    isNew: true,
-    platforms: ["instagram"],
-    totalBudget: 67000,
-    profit: 10050,
-    deadline: "Dec 20, 2025",
-    duration: "7 days",
-    timeLeft: "6H : 30M",
-    requoteText: "Request to requote within 19 Dec, 2025, 3:00pm",
-  },
-  {
-    id: 5,
-    title: "Fitness App Growth Campaign",
-    clientName: "FitTrack",
-    avatar: "/avatars/avatar-5.png",
-    isNew: false,
-    platforms: ["instagram", "youtube", "tiktok"],
-    totalBudget: 190000,
-    profit: 28500,
-    deadline: "Jan 12, 2026",
-    duration: "30 days",
-    timeLeft: "3D : 12H",
-    requoteText: "Request to requote within 08 Jan, 2026, 10:00am",
-  },
-  {
-    id: 6,
-    title: "Luxury Watch Brand Awareness",
-    clientName: "ChronoLux",
-    avatar: "/avatars/avatar-6.png",
-    isNew: true,
-    platforms: ["youtube", "instagram"],
-    totalBudget: 320000,
-    profit: 48000,
-    deadline: "Feb 01, 2026",
-    duration: "20 days",
-    timeLeft: "5D : 4H",
-    requoteText: "Request to requote within 28 Jan, 2026, 11:00am",
-  },
-  {
-    id: 7,
-    title: "Travel Vlog Sponsorship",
-    clientName: "Wanderly",
-    avatar: "/avatars/avatar-7.png",
-    isNew: false,
-    platforms: ["youtube"],
-    totalBudget: 150000,
-    profit: 22500,
-    deadline: "Jan 18, 2026",
-    duration: "15 days",
-    timeLeft: "1D : 20H",
-    requoteText: "Request to requote within 16 Jan, 2026, 4:00pm",
-  },
-  {
-    id: 8,
-    title: "Food Delivery App Promo",
-    clientName: "QuickBite",
-    avatar: "/avatars/avatar-8.png",
-    isNew: true,
-    platforms: ["instagram", "tiktok"],
-    totalBudget: 72000,
-    profit: 10800,
-    deadline: "Dec 22, 2025",
-    duration: "5 days",
-    timeLeft: "9H : 10M",
-    requoteText: "Request to requote within 21 Dec, 2025, 8:00pm",
-  },
-  {
-    id: 9,
-    title: "Gaming Gear Launch",
-    clientName: "PixelForge",
-    avatar: "/avatars/avatar-9.png",
-    isNew: false,
-    platforms: ["youtube", "tiktok"],
-    totalBudget: 210000,
-    profit: 31500,
-    deadline: "Jan 25, 2026",
-    duration: "18 days",
-    timeLeft: "4D : 2H",
-    requoteText: "Request to requote within 22 Jan, 2026, 5:00pm",
-  },
-  {
-    id: 10,
-    title: "Online Course Promotion",
-    clientName: "SkillNest",
-    avatar: "/avatars/avatar-10.png",
-    isNew: true,
-    platforms: ["instagram", "youtube"],
-    totalBudget: 98000,
-    profit: 14700,
-    deadline: "Dec 30, 2025",
-    duration: "12 days",
-    timeLeft: "1D : 6H",
-    requoteText: "Request to requote within 28 Dec, 2025, 2:00pm",
-  },
-  {
-    id: 11,
-    title: "Home Decor Brand Boost",
-    clientName: "UrbanNest",
-    avatar: "/avatars/avatar-11.png",
-    isNew: false,
-    platforms: ["instagram"],
-    totalBudget: 56000,
-    profit: 8400,
-    deadline: "Jan 08, 2026",
-    duration: "8 days",
-    timeLeft: "22H : 40M",
-    requoteText: "Request to requote within 06 Jan, 2026, 1:00pm",
-  },
-  {
-    id: 12,
-    title: "AI SaaS Product Launch",
-    clientName: "CloudMind",
-    avatar: "/avatars/avatar-12.png",
-    isNew: true,
-    platforms: ["youtube", "linkedin"],
-    totalBudget: 400000,
-    profit: 60000,
-    deadline: "Feb 10, 2026",
-    duration: "25 days",
-    timeLeft: "7D : 10H",
-    requoteText: "Request to requote within 06 Feb, 2026, 12:00pm",
-  },
-  {
-    id: 13,
-    title: "E-commerce Flash Sale",
-    clientName: "DealHub",
-    avatar: "/avatars/avatar-13.png",
-    isNew: false,
-    platforms: ["instagram", "facebook"],
-    totalBudget: 134000,
-    profit: 20100,
-    deadline: "Dec 27, 2025",
-    duration: "6 days",
-    timeLeft: "16H : 55M",
-    requoteText: "Request to requote within 26 Dec, 2025, 6:30pm",
-  },
-  {
-    id: 14,
-    title: "Music Streaming App Push",
-    clientName: "BeatFlow",
-    avatar: "/avatars/avatar-14.png",
-    isNew: true,
-    platforms: ["tiktok", "instagram"],
-    totalBudget: 89000,
-    profit: 13350,
-    deadline: "Jan 02, 2026",
-    duration: "9 days",
-    timeLeft: "11H : 15M",
-    requoteText: "Request to requote within 31 Dec, 2025, 10:00am",
-  },
-  {
-    id: 15,
-    title: "Fintech Wallet Awareness",
-    clientName: "PaySphere",
-    avatar: "/avatars/avatar-15.png",
-    isNew: false,
-    platforms: ["youtube", "instagram"],
-    totalBudget: 275000,
-    profit: 41250,
-    deadline: "Feb 05, 2026",
-    duration: "28 days",
-    timeLeft: "6D : 18H",
-    requoteText: "Request to requote within 01 Feb, 2026, 3:00pm",
-  },
-];
+import { FaFacebookF } from "react-icons/fa";
+import { RiInstagramFill, RiLinkedinFill, RiYoutubeFill } from "react-icons/ri";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import type { NewJobOfferItem } from "@/types/agency/new-job-offers";
 
-const platformIcons: Record<string, JSX.Element> = {
-  instagram: <RiInstagramFill size={30} className="fill-light-green" />,
-  youtube: <RiYoutubeFill size={30} className="fill-light-green" />,
-  tiktok: <AiFillTikTok size={30} className="fill-light-green" />,
+type NewOfferListProps = {
+  items: NewJobOfferItem[];
+  loading: boolean;
+  error: string;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 };
 
-const NewOfferList = () => {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {newOffers.map((offer) => (
-        <Card key={offer.id} className="relative overflow-hidden">
-          {offer.isNew && (
-            <Badge className="absolute top-0 right-0 rounded-bl-lg rounded-tr-none rounded-tl-none rounded-br-none bg-light-green text-white px-3 py-1 text-xs">
-              New
-            </Badge>
-          )}
+const platformIcons: Record<string, JSX.Element> = {
+  instagram: <RiInstagramFill size={18} className="fill-light-green" />,
+  youtube: <RiYoutubeFill size={18} className="fill-light-green" />,
+  tiktok: <AiFillTikTok size={18} className="fill-light-green" />,
+  facebook: <FaFacebookF size={14} className="fill-light-green" />,
+  linkedin: <RiLinkedinFill size={18} className="fill-light-green" />,
+};
 
-          <CardHeader>
-            <CardTitle className="text-Primary">{offer.title}</CardTitle>
+const formatCurrency = (value: number) => {
+  return `৳${Math.round(value).toLocaleString("en-US")}`;
+};
 
-            <CardDescription className="flex items-center gap-4">
-              <Avatar>
-                <AvatarImage src={offer.avatar} />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <p className="text-yellow-600 text-sm font-medium">
-                {offer.clientName}
-              </p>
-            </CardDescription>
+const formatDate = (value: string) => {
+  const date = new Date(value);
 
-            <CardContent className="p-0 space-y-4">
-              {/* Platforms */}
-              <div className="flex items-center gap-6">
-                <p className="text-muted-foreground text-sm font-medium">
-                  Platforms
-                </p>
-                <div className="flex gap-2">
-                  {offer.platforms.map((p) => (
-                    <span key={p}>{platformIcons[p]}</span>
-                  ))}
-                </div>
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+const getDurationText = (days: number) => {
+  return `${days} Days`;
+};
+
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length === 0) return "NA";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+};
+
+const getProfitAmount = (
+  totalBudget: number,
+  percentage: number
+) => {
+  return (totalBudget * percentage) / 100;
+};
+
+const NewOfferList = ({
+  items,
+  loading,
+  error,
+  page,
+  totalPages,
+  onPageChange,
+}: NewOfferListProps) => {
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="overflow-hidden rounded-2xl">
+            <CardContent className="p-5">
+              <div className="animate-pulse space-y-4">
+                <div className="h-5 w-3/4 rounded bg-muted" />
+                <div className="h-8 w-1/2 rounded bg-muted" />
+                <div className="h-28 rounded bg-muted" />
+                <div className="h-12 rounded bg-muted" />
+                <div className="h-10 rounded bg-muted" />
               </div>
-
-              {/* Budget */}
-              <div className="border border-light-green rounded-lg bg-linear-to-r from-Secondary to-white px-4 py-2 space-y-2">
-                <p className="text-Primary text-xs font-semibold">
-                  Total Budget
-                </p>
-                <p className="text-light-green text-2xl font-semibold">
-                  ৳{offer.totalBudget.toLocaleString()}
-                </p>
-                <Separator className="bg-light-green/60" />
-                <p className="text-Primary text-sm font-semibold">
-                  Your Profit (15%) : ৳{offer.profit.toLocaleString()}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Platform fee 2% included
-                </p>
-              </div>
-
-              {/* Deadline */}
-              <div className="space-y-1">
-                <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <FaClock /> Deadline
-                  </p>
-                  <p className="text-yellow-600 text-sm">{offer.deadline}</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="flex items-center gap-1 text-sm text-yellow-600">
-                    <BsFillCalendarDateFill /> Duration
-                  </p>
-                  <p className="text-yellow-600 text-sm">{offer.duration}</p>
-                </div>
-              </div>
-
-              {/* Timer */}
-              <div className="text-center">
-                <p className="text-yellow-600 font-semibold text-3xl">
-                  {offer.timeLeft}
-                </p>
-                <p className="text-Primary text-sm font-semibold">
-                  Left to requote
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button className="flex-1 bg-light-green text-white">
-                  Accept Quote
-                </Button>
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link href={`/agency/campaign-details/${offer.id}`}>
-                    View Details
-                  </Link>
-                </Button>
-              </div>
-
-              <p className="text-xs text-muted-foreground text-center">
-                {offer.requoteText}
-              </p>
             </CardContent>
-          </CardHeader>
-        </Card>
-      ))}
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <div className="rounded-xl border border-dashed p-10 text-center">
+        <p className="text-sm font-medium text-Primary">No job offers found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        {items.map((offer) => {
+          const profitAmount = getProfitAmount(
+            offer.financials.availableBudgetForExecution,
+            offer.financials.adminOfferedServiceFeePercent
+          );
+
+          return (
+            <Card key={offer.id} className="relative overflow-hidden rounded-2xl">
+              <Badge className="absolute right-0 top-0 rounded-bl-lg rounded-br-none rounded-tl-none rounded-tr-none bg-light-green px-3 py-1 text-xs text-white">
+                New
+              </Badge>
+
+              <CardHeader className="pb-2">
+                <CardTitle className="line-clamp-2 text-[22px] font-semibold text-Primary">
+                  {offer.campaignName}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={offer.client.profileImg ?? ""} />
+                    <AvatarFallback>
+                      {getInitials(offer.client.brandName)}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <p className="text-sm font-medium text-yellow-600">
+                    {offer.client.brandName}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Platforms
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {offer.platforms.map((platform) =>
+                      platformIcons[platform] ? (
+                        <span
+                          key={platform}
+                          className="flex h-7 w-7 items-center justify-center rounded-md bg-light-green/10"
+                        >
+                          {platformIcons[platform]}
+                        </span>
+                      ) : null
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2 rounded-lg border border-light-green bg-gradient-to-r from-Secondary to-white px-4 py-3">
+                  <p className="text-xs font-semibold text-Primary">
+                    Total Budget
+                  </p>
+
+                  <p className="text-3xl font-semibold text-light-green">
+                    {formatCurrency(offer.financials.availableBudgetForExecution)}
+                  </p>
+
+                  <Separator className="bg-light-green/60" />
+
+                  <p className="text-sm font-semibold text-Primary">
+                    Your Profit ({offer.financials.adminOfferedServiceFeePercent}%)
+                    : {formatCurrency(profitAmount)}
+                  </p>
+
+                  <p className="text-xs text-muted-foreground">
+                    Platform fee {formatCurrency(offer.financials.adminPlatformFee)} included
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <p className="flex items-center gap-1 text-sm text-yellow-600">
+                      <BsFillCalendarDateFill className="text-xs" />
+                      Deadline
+                    </p>
+                    <p className="text-sm text-yellow-600">
+                      {formatDate(offer.schedule.deadline)}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <p className="flex items-center gap-1 text-sm text-yellow-600">
+                      <BsFillCalendarDateFill className="text-xs" />
+                      Duration
+                    </p>
+                    <p className="text-sm text-yellow-600">
+                      {getDurationText(offer.schedule.duration)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button className="flex-1 bg-light-green text-white hover:bg-light-green/90">
+                    Accept Quote
+                  </Button>
+
+                  <Button variant="outline" className="flex-1" asChild>
+                    <Link href={`/${locale}/agency/campaign-details/${offer.id}`}>
+                      View Details
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-end gap-3">
+        <span className="text-sm text-muted-foreground">Page</span>
+
+        <span className="flex h-8 min-w-8 items-center justify-center rounded-full border border-light-green bg-Secondary px-3 text-sm text-Primary">
+          {page}
+        </span>
+
+        <span className="text-sm text-muted-foreground">Of {totalPages}</span>
+
+        <Button
+          type="button"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="rounded-full bg-light-green text-white hover:bg-light-green/90"
+        >
+          Next
+        </Button>
+      </div>
     </div>
   );
 };

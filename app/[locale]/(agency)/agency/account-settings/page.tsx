@@ -1,4 +1,7 @@
-import { Card } from "@/components/ui/card";
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import BasicInfoCard from "./_components/basic-info-card";
 import NicheCard from "./_components/niche-card";
 import ProfileCompletionCard from "./_components/profile-completion-card";
@@ -7,49 +10,66 @@ import SocialLinksCard from "./_components/social-links-card";
 import ProfileCard from "./_components/profile-card";
 import PayoutSettingsCard from "./_components/payout-settings-card";
 import VerificationMethodCard from "./_components/verification-method-card";
-import Link from "next/link";
+import { getAgencyProfile } from "@/service/agency/account-settings";
+import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
 const page = () => {
+  const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAgencyProfile = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getAgencyProfile();
+        setProfile(response);
+      } catch (error) {
+        console.error("Failed to load agency profile:", error);
+        setProfile(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAgencyProfile();
+  }, []);
+
   return (
-    <div className="p-4 space-y-4">
-      {/* row 1 */}
+    <div className="space-y-4 p-4">
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-6">
-          <BasicInfoCard />
+          <BasicInfoCard profile={profile} isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-6">
           <Link href={"/agency/account-settings/verification-checklist"}>
-            <ProfileCompletionCard />
+            <ProfileCompletionCard profile={profile} isLoading={isLoading} />
           </Link>
         </div>
       </div>
-      {/* row 2 */}
+
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-4">
-          <ServiceFeeCard />
+          <ServiceFeeCard profile={profile} isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <NicheCard />
+          <NicheCard profile={profile} isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <SocialLinksCard />
+          <SocialLinksCard profile={profile} isLoading={isLoading} />
         </div>
       </div>
-
-      {/* row 3 */}
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-8">
-          <ProfileCard />
+          <ProfileCard profile={profile} isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <PayoutSettingsCard />
+          <PayoutSettingsCard profile={profile} isLoading={isLoading} />
         </div>
       </div>
 
-      {/* row 4 */}
       <div>
-        <VerificationMethodCard />
+        <VerificationMethodCard profile={profile} isLoading={isLoading} />
       </div>
     </div>
   );

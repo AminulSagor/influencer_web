@@ -1,40 +1,89 @@
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { BsFillQuestionCircleFill } from "react-icons/bs";
 import { PiInstagramLogoFill, PiYoutubeLogoFill } from "react-icons/pi";
+import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
-const BasicInfoCard = () => {
+type BasicInfoCardProps = {
+  profile: AgencyProfileResponse | null;
+  isLoading: boolean;
+};
+
+const getPlatformHandle = (
+  profile: AgencyProfileResponse | null,
+  platform: string
+) => {
+  const matched = profile?.socialLinks.find(
+    (item) => item.platform.toLowerCase() === platform.toLowerCase()
+  );
+
+  if (!matched?.url) return "";
+
+  try {
+    const url = new URL(matched.url);
+    return url.pathname.replace(/\//g, "") || matched.url;
+  } catch {
+    return matched.url;
+  }
+};
+
+const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
+  const fullName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || "";
+  const location = [profile?.address?.thana, profile?.address?.zilla]
+    .filter(Boolean)
+    .join(", ");
+
+  const instagramHandle = getPlatformHandle(profile, "Instagram");
+  const youtubeHandle = getPlatformHandle(profile, "YouTube");
+
   return (
-    <div className="col-span-12 md:col-span-6 bg-linear-to-r from-Primary to-light-green border p-4 rounded-xl">
+    <div className="rounded-xl border bg-linear-to-r from-Primary to-light-green p-4">
       <div className="flex justify-between gap-6">
-        <div className="flex flex-col gap-2 justify-center items-center flex-1">
-          <div className="w-[100px] h-[100px] rounded-full bg-off-white"></div>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2">
+          <div className="relative h-[100px] w-[100px] overflow-hidden rounded-full bg-off-white">
+            {profile?.logo ? (
+              <Image
+                src={profile.logo}
+                alt={profile.agencyName || "Agency logo"}
+                fill
+                className="object-cover"
+              />
+            ) : null}
+          </div>
 
-          <div className="bg-off-white px-4 py-1 rounded-lg inline-block text-sm font-semibold">
-            Unverified
+          <div className="inline-block rounded-lg bg-off-white px-4 py-1 text-sm font-semibold">
+            {profile?.isVerified ? "Verified" : "Unverified"}
           </div>
 
           <div>
-            <h2 className="text-off-white text-lg font-semibold flex items-center justify-center gap-1">
-              GrowBig <BsFillQuestionCircleFill />
+            <h2 className="flex items-center justify-center gap-1 text-lg font-semibold text-off-white">
+              {isLoading ? "Loading..." : profile?.agencyName || "-"}{" "}
+              <BsFillQuestionCircleFill />
             </h2>
-            <p className="text-light-green/40">Dhaka, Bangladesh</p>
+            <p className="text-light-green/40">
+              {isLoading ? "Loading..." : location || "-"}
+            </p>
           </div>
         </div>
-        <div className="flex-1 flex flex-col justify-between">
+
+        <div className="flex flex-1 flex-col justify-between">
           <div className="space-y-2">
             <p className="flex items-center gap-2 text-lg text-off-white">
               <PiInstagramLogoFill size={28} />
-              @GrowBig
+              {isLoading ? "Loading..." : instagramHandle || "-"}
             </p>
             <p className="flex items-center gap-2 text-lg text-off-white">
               <PiYoutubeLogoFill size={28} />
-              GrowBig
+              {isLoading ? "Loading..." : youtubeHandle || fullName || "-"}
             </p>
           </div>
+
           <div>
             <Button
-              className="w-full hover:bg-off-white/90 hover:text-light-green bg-off-white text-light-green"
-              size={"sm"}
+              className="w-full bg-off-white text-light-green hover:bg-off-white/90 hover:text-light-green"
+              size="sm"
+              type="button"
             >
               Log out
             </Button>

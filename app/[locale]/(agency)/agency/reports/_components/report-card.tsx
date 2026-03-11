@@ -1,5 +1,11 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useEffect, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
+import { FaCheckCircle, FaClock, FaFlag } from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 import {
   Card,
   CardContent,
@@ -7,14 +13,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
-import { FaFlag, FaClock, FaCheckCircle } from "react-icons/fa";
-import { RiUser2Fill } from "react-icons/ri";
-import { FiClock, FiSearch } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
+import { getReports } from "@/service/agency/reports";
+import type {
+  ReportItem,
+  ReportsMeta,
+  ReportStatus,
+} from "@/types/agency/reports";
 
-type ReportStatus = "Flagged" | "Pending" | "Resolved";
+const LIMIT = 4;
+
+const defaultMeta: ReportsMeta = {
+  total: 0,
+  page: 1,
+  limit: LIMIT,
+  totalPages: 1,
+};
+
 const STATUS_CONFIG: Record<
   ReportStatus,
   {
@@ -24,6 +39,12 @@ const STATUS_CONFIG: Record<
     badgeText: string;
     cardBg: string;
     cardBorder: string;
+    summaryBg: string;
+    summaryBorder: string;
+    summaryText: string;
+    summaryActiveBg: string;
+    summaryActiveText: string;
+    summaryActiveRing: string;
   }
 > = {
   Flagged: {
@@ -33,197 +54,199 @@ const STATUS_CONFIG: Record<
     badgeText: "text-white",
     cardBg: "bg-rose-100",
     cardBorder: "border-rose-300",
+    summaryBg: "bg-rose-100",
+    summaryBorder: "border-rose-300",
+    summaryText: "text-rose-600",
+    summaryActiveBg: "bg-rose-600",
+    summaryActiveText: "text-white",
+    summaryActiveRing: "ring-rose-300",
   },
   Pending: {
     Icon: FaClock,
-    badgeBg: "bg-yellow-500",
-    badgeBorder: "border-yellow-500",
+    badgeBg: "bg-orange",
+    badgeBorder: "border-orange",
     badgeText: "text-white",
     cardBg: "bg-yellow-100/40",
     cardBorder: "border-yellow-300",
+    summaryBg: "bg-yellow-100/40",
+    summaryBorder: "border-yellow-300",
+    summaryText: "text-orange",
+    summaryActiveBg: "bg-orange",
+    summaryActiveText: "text-white",
+    summaryActiveRing: "ring-orange/30",
   },
   Resolved: {
     Icon: FaCheckCircle,
-    badgeBg: "bg-light-green-600",
-    badgeBorder: "border-light-green-600",
+    badgeBg: "bg-[#7A9B57]",
+    badgeBorder: "border-[#7A9B57]",
     badgeText: "text-white",
-    cardBg: "bg-light-green-100",
-    cardBorder: "border-light-green-300",
+    cardBg: "bg-[#EEF7F0]",
+    cardBorder: "border-[#9BC27B]",
+    summaryBg: "bg-[#EEF7F0]",
+    summaryBorder: "border-[#9BC27B]",
+    summaryText: "text-[#7A9B57]",
+    summaryActiveBg: "bg-[#7A9B57]",
+    summaryActiveText: "text-white",
+    summaryActiveRing: "ring-[#7A9B57]/30",
   },
 };
 
-const reportsData = [
-  { id: 1, tag: "Flagged", count: 3 },
-  { id: 2, tag: "Pending", count: 20 },
-  { id: 3, tag: "Resolved", count: 10 },
-];
-
-interface ReportItem {
-  id: number;
-  status: ReportStatus;
-  campaign: string;
-  milestone: string;
-  time: string;
-  description: string;
-  company: string;
-  date: string;
-}
-
-const reportItems: ReportItem[] = [
-  {
-    id: 1,
-    status: "Flagged",
-    campaign: "Summer Fashion Campaign",
-    milestone: "Milestone 1",
-    time: "2 hours ago",
-    description: "Audio Quality does not meet requirements...",
-    company: "StyleCo.",
-    date: "Dec 15, 2025",
-  },
-  {
-    id: 2,
-    status: "Pending",
-    campaign: "Winter Fest",
-    milestone: "Milestone 2",
-    time: "Yesterday",
-    description: "Pending review for visual content",
-    company: "StyleCo.",
-    date: "Dec 10, 2025",
-  },
-  {
-    id: 3,
-    status: "Resolved",
-    campaign: "Spring Launch",
-    milestone: "Milestone 3",
-    time: "Last week",
-    description: "Issue resolved successfully",
-    company: "StyleCo.",
-    date: "Dec 1, 2025",
-  },
-
-  // ➕ New items
-  {
-    id: 4,
-    status: "Flagged",
-    campaign: "Autumn Collection",
-    milestone: "Milestone 1",
-    time: "3 hours ago",
-    description: "Video resolution is below required standard",
-    company: "UrbanWear",
-    date: "Dec 16, 2025",
-  },
-  {
-    id: 5,
-    status: "Pending",
-    campaign: "Black Friday Deals",
-    milestone: "Milestone 2",
-    time: "5 hours ago",
-    description: "Awaiting brand approval",
-    company: "DealMart",
-    date: "Dec 16, 2025",
-  },
-  {
-    id: 6,
-    status: "Resolved",
-    campaign: "New Year Blast",
-    milestone: "Milestone 1",
-    time: "2 days ago",
-    description: "Copyright issue resolved",
-    company: "PromoHub",
-    date: "Dec 14, 2025",
-  },
-  {
-    id: 7,
-    status: "Flagged",
-    campaign: "Fitness Gear Launch",
-    milestone: "Milestone 3",
-    time: "1 day ago",
-    description: "Incorrect product placement detected",
-    company: "FitPro",
-    date: "Dec 14, 2025",
-  },
-  {
-    id: 8,
-    status: "Pending",
-    campaign: "Tech Gadget Review",
-    milestone: "Milestone 1",
-    time: "2 days ago",
-    description: "Waiting for technical validation",
-    company: "TechZone",
-    date: "Dec 13, 2025",
-  },
-  {
-    id: 9,
-    status: "Resolved",
-    campaign: "Beauty Essentials",
-    milestone: "Milestone 2",
-    time: "3 days ago",
-    description: "Content updated as requested",
-    company: "GlowUp",
-    date: "Dec 12, 2025",
-  },
-  {
-    id: 10,
-    status: "Flagged",
-    campaign: "Travel Vlog Series",
-    milestone: "Milestone 1",
-    time: "4 days ago",
-    description: "Missing brand mention in video",
-    company: "Travelio",
-    date: "Dec 11, 2025",
-  },
-  {
-    id: 11,
-    status: "Pending",
-    campaign: "Gaming Marathon",
-    milestone: "Milestone 2",
-    time: "5 days ago",
-    description: "Review in progress",
-    company: "GameX",
-    date: "Dec 10, 2025",
-  },
-  {
-    id: 12,
-    status: "Resolved",
-    campaign: "Eco Products Promo",
-    milestone: "Milestone 1",
-    time: "6 days ago",
-    description: "All compliance checks passed",
-    company: "GreenLife",
-    date: "Dec 9, 2025",
-  },
-  {
-    id: 13,
-    status: "Flagged",
-    campaign: "Luxury Watches",
-    milestone: "Milestone 2",
-    time: "1 week ago",
-    description: "Brand logo not visible clearly",
-    company: "TimeLux",
-    date: "Dec 8, 2025",
-  },
-  {
-    id: 14,
-    status: "Resolved",
-    campaign: "Food Festival",
-    milestone: "Milestone 3",
-    time: "1 week ago",
-    description: "Issue fixed and approved",
-    company: "Foodies",
-    date: "Dec 7, 2025",
-  },
-];
-
 const ReportCard = () => {
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [meta, setMeta] = useState<ReportsMeta>(defaultMeta);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState<ReportStatus | null>(null);
 
-  // Filter reports by activeFilter
-  const filteredReports = activeFilter
-    ? reportItems.filter((item) => item.status === activeFilter)
-    : reportItems;
+  const [flaggedCount, setFlaggedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [resolvedCount, setResolvedCount] = useState(0);
+
+  const resetToDefaultView = () => {
+    setActiveFilter(null);
+    setSearchInput("");
+    setDebouncedSearch("");
+    setPage(1);
+  };
+
+  useEffect(() => {
+    const handleReset = () => {
+      resetToDefaultView();
+    };
+
+    window.addEventListener("reports-reset", handleReset);
+
+    return () => {
+      window.removeEventListener("reports-reset", handleReset);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+      setPage(1);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchReports = async () => {
+      try {
+        setIsLoading(true);
+
+        const response = await getReports({
+          page,
+          limit: LIMIT,
+          search: debouncedSearch,
+          status: activeFilter ?? undefined,
+        });
+
+        if (!isMounted) return;
+
+        if (response.success) {
+          setReports(response.data);
+          setMeta({
+            total: response.meta.total,
+            page: response.meta.page,
+            limit: LIMIT,
+            totalPages: response.meta.totalPages,
+          });
+        } else {
+          setReports([]);
+          setMeta(defaultMeta);
+        }
+      } catch (error) {
+        console.error("Failed to load reports:", error);
+
+        if (!isMounted) return;
+
+        setReports([]);
+        setMeta(defaultMeta);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchReports();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page, debouncedSearch, activeFilter]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCounts = async () => {
+      try {
+        const [flaggedResponse, pendingResponse, resolvedResponse] =
+          await Promise.all([
+            getReports({ page: 1, limit: 1, status: "Flagged" }),
+            getReports({ page: 1, limit: 1, status: "Pending" }),
+            getReports({ page: 1, limit: 1, status: "Resolved" }),
+          ]);
+
+        if (!isMounted) return;
+
+        setFlaggedCount(flaggedResponse.meta.total ?? 0);
+        setPendingCount(pendingResponse.meta.total ?? 0);
+        setResolvedCount(resolvedResponse.meta.total ?? 0);
+      } catch (error) {
+        console.error("Failed to load report counts:", error);
+
+        if (!isMounted) return;
+
+        setFlaggedCount(0);
+        setPendingCount(0);
+        setResolvedCount(0);
+      }
+    };
+
+    fetchCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const reportsSummary = useMemo(
+    () => [
+      { id: 1, tag: "Flagged" as ReportStatus, count: flaggedCount },
+      { id: 2, tag: "Pending" as ReportStatus, count: pendingCount },
+      { id: 3, tag: "Resolved" as ReportStatus, count: resolvedCount },
+    ],
+    [flaggedCount, pendingCount, resolvedCount]
+  );
+
+  const handleFilterClick = (status: ReportStatus) => {
+    setPage(1);
+    setActiveFilter((previous) => (previous === status ? null : status));
+  };
+
+  const handlePrevious = () => {
+    if (page <= 1 || isLoading) return;
+    setPage((previous) => previous - 1);
+  };
+
+  const handleNext = () => {
+    if (page >= meta.totalPages || isLoading) return;
+    setPage((previous) => previous + 1);
+  };
+
+  const isPreviousDisabled = page <= 1 || isLoading;
+  const isNextDisabled = page >= meta.totalPages || isLoading;
+
   return (
     <Card>
-      <CardHeader className="border-b space-y-4">
+      <CardHeader className="space-y-4 border-b">
         <div className="space-y-2">
           <CardTitle>Report Log</CardTitle>
           <CardDescription>
@@ -231,57 +254,63 @@ const ReportCard = () => {
           </CardDescription>
         </div>
 
-        <div className="flex justify-between gap-4">
-          {reportsData.map((report) => {
-            const isActive = report.tag === activeFilter;
+        <div className="flex flex-col gap-4 md:flex-row">
+          {reportsSummary.map((report) => {
+            const config = STATUS_CONFIG[report.tag];
+            const isActive = activeFilter === report.tag;
+
             return (
-              <div
+              <button
                 key={report.id}
-                onClick={() => setActiveFilter(report.tag as ReportStatus)}
+                type="button"
+                onClick={() => handleFilterClick(report.tag)}
                 className={cn(
-                  "cursor-pointer border flex-1 rounded-lg p-2 space-y-4 select-none transition-colors duration-200",
-                  report.tag === "Flagged" &&
-                    "bg-rose-100 border-rose-300 text-rose-600",
-                  report.tag === "Pending" &&
-                    "bg-yellow-100 border-yellow-300 text-yellow-600",
-                  report.tag === "Resolved" &&
-                    "bg-light-green-100 border-light-green-300 text-light-green-600",
+                  "flex-1 rounded-lg border p-3 text-left transition-colors duration-200",
+                  config.summaryBg,
+                  config.summaryBorder,
+                  config.summaryText,
                   isActive &&
-                    cn(
-                      "ring-2 ring-offset-1",
-                      report.tag === "Flagged" &&
-                        "ring-rose-400 bg-rose-500 text-white",
-                      report.tag === "Pending" &&
-                        "ring-yellow-400 bg-yellow-600/80 text-white",
-                      report.tag === "Resolved" &&
-                        "ring-green-400 bg-light-green-600 text-white"
-                    )
+                  cn(
+                    "ring-2 ring-offset-1",
+                    config.summaryActiveBg,
+                    config.summaryActiveText,
+                    config.summaryActiveRing
+                  )
                 )}
               >
                 <h2 className="text-xl">{report.tag}</h2>
                 <p className="text-2xl font-medium">{report.count}</p>
-              </div>
+              </button>
             );
           })}
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-4">
-          <div className="w-[40%] relative">
-            <FiSearch
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <Input className="pl-10" placeholder="Search By Campaign Name" />
+      <CardContent className="space-y-4 pt-6">
+        <div className="relative w-full md:w-[40%]">
+          <FiSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          <Input
+            className="pl-10"
+            placeholder="Search By Campaign Name"
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="flex min-h-[220px] items-center justify-center text-sm text-gray-500">
+            Loading reports...
           </div>
-
-          {filteredReports.length === 0 && (
-            <p className="text-center text-gray-500">No reports found</p>
-          )}
-
+        ) : reports.length === 0 ? (
+          <div className="flex min-h-[220px] items-center justify-center rounded-lg border border-dashed text-sm text-gray-500">
+            No reports found
+          </div>
+        ) : (
           <div className="space-y-4">
-            {filteredReports.map((item) => {
+            {reports.map((item) => {
               const {
                 Icon,
                 badgeBg,
@@ -293,55 +322,95 @@ const ReportCard = () => {
 
               return (
                 <div
-                  key={item.id}
+                  key={item.reportId}
                   className={cn(
-                    "border p-2 rounded-lg space-y-2",
+                    "rounded-[20px] border p-6",
                     cardBg,
                     cardBorder
                   )}
                 >
-                  <div>
-                    <h2 className="text-Primary text-lg font-semibold">
-                      {item.campaign}
+                  <div className="space-y-1">
+                    <h2 className="text-[20px] font-semibold leading-tight text-Primary md:text-[22px]">
+                      {item.campaignName}
                     </h2>
-                    <p className="text-light-green text-sm font-medium">
-                      {item.milestone}
+
+                    <p className="text-[15px] font-medium text-light-green md:text-[16px]">
+                      {item.milestoneTitle}
                     </p>
-                    <p className="text-xs text-gray-400 font-light">
-                      {item.time}
+
+                    <p className="text-sm text-gray-400">
+                      Time not available
                     </p>
                   </div>
 
-                  <div className="border bg-white p-4 rounded-lg">
-                    <p className="text-gray-700 text-sm">{item.description}</p>
+                  <div className="mt-5 rounded-[18px] border border-gray-200 bg-white px-4 py-6">
+                    <p className="text-sm text-gray-500 md:text-base">
+                      {item.issueSummary}
+                    </p>
                   </div>
 
-                  <div className="flex justify-between items-center">
+                  <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <div className="space-y-2 text-orange">
-                      <p className="flex items-center gap-1 text-sm">
-                        <RiUser2Fill />
-                        {item.company}
-                      </p>
-                      <p className="flex items-center gap-1 text-sm">
-                        <FaClock />
-                        {item.date}
-                      </p>
+                      <div className="flex items-center gap-2 text-sm md:text-base">
+                        <span>👤</span>
+                        <span>Brand name not available</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm md:text-base">
+                        <span>🕒</span>
+                        <span>Date not available</span>
+                      </div>
                     </div>
-                    <div
-                      className={cn(
-                        "border flex items-center gap-2 px-4 rounded-full text-sm py-1",
-                        badgeBg,
-                        badgeBorder,
-                        badgeText
-                      )}
-                    >
-                      <Icon />
-                      {item.status} <ChevronRight size={14} />
+
+                    <div className="flex items-center justify-end gap-2">
+                      <div
+                        className={cn(
+                          "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm",
+                          badgeBg,
+                          badgeBorder,
+                          badgeText
+                        )}
+                      >
+                        <Icon className="size-4" />
+                        {item.status}
+                      </div>
+
+                      <ChevronRight size={14} className="text-gray-600" />
                     </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex items-center gap-2 text-gray-500">
+            <span>Page</span>
+            <div className="flex h-9 min-w-10 items-center justify-center rounded-2xl border border-light-green bg-Secondary px-3 text-Primary">
+              {meta.page}
+            </div>
+            <span>Of {meta.totalPages}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={handlePrevious}
+              disabled={isPreviousDisabled}
+              className="bg-[#7A9B57] text-white hover:bg-[#6d8e4d] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Previous
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleNext}
+              disabled={isNextDisabled}
+              className="bg-[#7A9B57] text-white hover:bg-[#6d8e4d] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+            </Button>
           </div>
         </div>
       </CardContent>

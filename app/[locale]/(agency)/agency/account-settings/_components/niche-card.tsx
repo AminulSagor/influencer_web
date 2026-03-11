@@ -9,98 +9,62 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import React, { useState } from "react";
 import { BiSolidEdit } from "react-icons/bi";
 import { FaCheckCircle } from "react-icons/fa";
+import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
-const NicheCard = () => {
-  const [niches, setNiches] = useState<string[]>([
-    "Lifestyle",
-    "Skincare",
-    "Vlogging",
-  ]);
+type NicheCardProps = {
+  profile: AgencyProfileResponse | null;
+  isLoading: boolean;
+};
 
-  const [open, setOpen] = useState(false);
-  const [newNiche, setNewNiche] = useState("");
-
-  const handleAddNiche = () => {
-    if (!newNiche.trim()) return;
-
-    setNiches((prev) => [...prev, newNiche.trim()]);
-    setNewNiche("");
-    setOpen(false);
-  };
-
+const NicheCard = ({ profile, isLoading }: NicheCardProps) => {
   return (
-    <>
-      <Card>
-        <div className="px-4">
-          <Accordion type="single" collapsible defaultValue="item-1">
-            <AccordionItem value="item-1">
-              <AccordionTrigger className="text-md p-0 hover:no-underline mb-4 text-Primary font-semibold">
-                <p className="flex items-center gap-2">
-                  Niche <BiSolidEdit size={20} />
-                </p>
-              </AccordionTrigger>
+    <Card>
+      <div className="px-4">
+        <Accordion type="single" collapsible defaultValue="item-1">
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="mb-4 p-0 text-md font-semibold text-Primary hover:no-underline">
+              <p className="flex items-center gap-2">
+                Niche <BiSolidEdit size={20} />
+              </p>
+            </AccordionTrigger>
 
-              <AccordionContent>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {niches.map((niche, index) => (
+            <AccordionContent>
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {isLoading ? (
+                    <Badge className="bg-Secondary px-4 py-1 text-Primary">
+                      Loading...
+                    </Badge>
+                  ) : profile?.niches?.length ? (
+                    profile.niches.map((item, index) => (
                       <Badge
-                        key={index}
-                        className="bg-Secondary text-Primary px-4 py-1 flex items-center gap-2"
+                        key={`${item.niche}-${index}`}
+                        className="flex items-center gap-2 bg-Secondary px-4 py-1 text-Primary"
                       >
                         <FaCheckCircle />
-                        {niche}
+                        {item.niche}
                       </Badge>
-                    ))}
-                  </div>
-
-                  <Button
-                    onClick={() => setOpen(true)}
-                    className="bg-transparent border border-dashed border-light-green text-light-green hover:bg-light-green hover:text-white w-full"
-                    size="sm"
-                  >
-                    + Add another Niche
-                  </Button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No niches found.</p>
+                  )}
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </Card>
 
-      {/* Dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Niche</DialogTitle>
-          </DialogHeader>
-
-          <Input
-            placeholder="Enter niche name"
-            value={newNiche}
-            onChange={(e) => setNewNiche(e.target.value)}
-          />
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddNiche}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+                <Button
+                  className="w-full border border-dashed border-light-green bg-transparent text-light-green hover:bg-light-green hover:text-white"
+                  size="sm"
+                  type="button"
+                >
+                  + Add another Niche
+                </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </Card>
   );
 };
 
