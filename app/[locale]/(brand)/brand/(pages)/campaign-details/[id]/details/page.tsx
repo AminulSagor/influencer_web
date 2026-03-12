@@ -1,5 +1,8 @@
 import CampaignDetailsContent from "../_components/campaign-details-content";
-import { getCachedCampaignDetails } from "../_lib/get-campaign-details";
+import {
+  getCachedCampaignDetails,
+  getCachedClientCampaignDetails,
+} from "../_lib/get-campaign-details";
 
 type PageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -7,7 +10,11 @@ type PageProps = {
 
 export default async function DetailsPage({ params }: PageProps) {
   const { id } = await params;
-  const campaign = await getCachedCampaignDetails(id);
+
+  const [campaign, clientCampaignDetails] = await Promise.all([
+    getCachedCampaignDetails(id),
+    getCachedClientCampaignDetails(id),
+  ]);
 
   if (!campaign) {
     return (
@@ -17,5 +24,10 @@ export default async function DetailsPage({ params }: PageProps) {
     );
   }
 
-  return <CampaignDetailsContent campaign={campaign} />;
+  return (
+    <CampaignDetailsContent
+      campaign={campaign}
+      assignedInfluencers={clientCampaignDetails?.assignedInfluencers ?? []}
+    />
+  );
 }

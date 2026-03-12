@@ -1,3 +1,5 @@
+import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
+
 export type CampaignType = "paid_ad" | "influencer_promotion";
 
 export type CampaignStatus =
@@ -158,4 +160,5 @@ export interface CampaignDetails {
 
   createdAt: string;
   agencyOfferId: string | null;
+  assignedInfluencers?: CampaignAssignedInfluencer[];
 }
