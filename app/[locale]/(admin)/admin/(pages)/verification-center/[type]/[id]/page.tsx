@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 import ApprovalProgress from "./_components/approval-progress";
@@ -122,6 +121,8 @@ const Page = async ({ params }: Props) => {
   const normalizedTypeKey = typeKey === "Client" ? "Brand" : typeKey;
 
   let verificationUserId = "";
+  let initialIsVerified = false;
+  let initialRejectReason: string | null = null;
 
   let profile:
     | {
@@ -235,6 +236,8 @@ const Page = async ({ params }: Props) => {
     if (!data?.userId) notFound();
 
     verificationUserId = data.userId;
+    initialIsVerified = !!data.isVerified;
+    initialRejectReason = data.verificationRejectReason ?? null;
 
     const primaryAddress = data.addresses?.[0];
     const location = [
@@ -267,7 +270,11 @@ const Page = async ({ params }: Props) => {
       bio: data.bio || "N/A",
       image: data.profileImg || null,
       profileCompletionPercent: data.isOnboardingComplete ? 100 : 0,
-      verifiedStatus: data.isVerified ? "Approved" : "Unverified",
+      verifiedStatus: data.isVerified
+        ? "Approved"
+        : data.verificationRejectReason
+          ? "Rejected"
+          : "Unverified",
       socialHandles: {
         instagram: instagram || undefined,
         tiktok: tiktok || undefined,
@@ -380,6 +387,8 @@ const Page = async ({ params }: Props) => {
     if (!data?.userId) notFound();
 
     verificationUserId = data.userId;
+    initialIsVerified = !!data.isVerified;
+    initialRejectReason = data.verificationRejectReason ?? null;
 
     const location = [data.address?.thana, data.address?.zilla]
       .filter(Boolean)
@@ -403,7 +412,11 @@ const Page = async ({ params }: Props) => {
       bio: data.agencyBio || "N/A",
       image: data.logo || null,
       profileCompletionPercent: data.isOnboardingComplete ? 100 : 0,
-      verifiedStatus: data.isVerified ? "Approved" : "Unverified",
+      verifiedStatus: data.isVerified
+        ? "Approved"
+        : data.verificationRejectReason
+          ? "Rejected"
+          : "Unverified",
       socialHandles: {
         instagram: instagram || undefined,
         tiktok: tiktok || undefined,
@@ -515,6 +528,8 @@ const Page = async ({ params }: Props) => {
     if (!data?.userId) notFound();
 
     verificationUserId = data.userId;
+    initialIsVerified = !!data.isVerified;
+    initialRejectReason = data.verificationRejectReason ?? null;
 
     const location = [data.thana, data.zilla, data.country]
       .filter(Boolean)
@@ -538,7 +553,11 @@ const Page = async ({ params }: Props) => {
       bio: data.website || data.fullAddress || "N/A",
       image: data.profileImg || null,
       profileCompletionPercent: data.isOnboardingComplete ? 100 : 0,
-      verifiedStatus: data.isVerified ? "Approved" : "Unverified",
+      verifiedStatus: data.isVerified
+        ? "Approved"
+        : data.verificationRejectReason
+          ? "Rejected"
+          : "Unverified",
       socialHandles: {
         instagram: instagram || undefined,
         tiktok: tiktok || undefined,
@@ -618,14 +637,14 @@ const Page = async ({ params }: Props) => {
   const isBrand = normalizedTypeKey === "Brand";
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <VerificationDetailsBreadcrumb
         type={normalizedTypeKey}
         name={profile.name}
       />
 
-      <div className="grid grid-cols-12 gap-4 items-stretch">
-        <div className="col-span-12 md:col-span-6 h-full">
+      <div className="grid grid-cols-12 items-stretch gap-4">
+        <div className="col-span-12 h-full md:col-span-6">
           <InfoCard
             name={profile.name}
             location={profile.location}
@@ -635,7 +654,7 @@ const Page = async ({ params }: Props) => {
           />
         </div>
 
-        <div className="col-span-12 md:col-span-6 h-full">
+        <div className="col-span-12 h-full md:col-span-6">
           <ProfileCompletionCard
             bioText={profile.bio}
             progress={profile.profileCompletionPercent}
@@ -645,7 +664,12 @@ const Page = async ({ params }: Props) => {
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12">
-          <ApprovalProgress steps={approvalSteps} />
+          <ApprovalProgress
+            userId={verificationUserId}
+            steps={approvalSteps}
+            initialIsVerified={initialIsVerified}
+            initialRejectReason={initialRejectReason}
+          />
         </div>
       </div>
 
@@ -705,8 +729,8 @@ const Page = async ({ params }: Props) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-12 gap-4 items-start">
-            <div className="col-span-12 lg:col-span-8 space-y-4">
+          <div className="grid grid-cols-12 items-start gap-4">
+            <div className="col-span-12 space-y-4 lg:col-span-8">
               <NidInfoCard
                 userId={verificationUserId}
                 verificationType="client"
@@ -735,7 +759,7 @@ const Page = async ({ params }: Props) => {
               />
             </div>
 
-            <div className="col-span-12 lg:col-span-4 space-y-4">
+            <div className="col-span-12 space-y-4 lg:col-span-4">
               <VerificationActionDocumentCard
                 userId={verificationUserId}
                 verificationType="client"
@@ -786,7 +810,7 @@ const Page = async ({ params }: Props) => {
             />
           </div>
 
-          <div className="col-span-12 md:col-span-8 space-y-4">
+          <div className="col-span-12 space-y-4 md:col-span-8">
             <NidInfoCard
               userId={verificationUserId}
               verificationType={isAgency ? "agency" : "influencer"}

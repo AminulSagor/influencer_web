@@ -127,8 +127,7 @@ export default function CampaignMilestoneContainer({
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
   );
-  const [selectedInfluencerId, setSelectedInfluencerId] =
-    useState<string>("");
+  const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>("");
   const [remoteProgress, setRemoteProgress] = useState<number | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
 
@@ -138,7 +137,11 @@ export default function CampaignMilestoneContainer({
   const isActiveInfluencerMode = !isPaidAd && campaignStatus === "active";
   const isEditableAssignmentMode =
     !isPaidAd && campaignStatus === "pending-invitations";
-  const canInvite = campaignStatus === "pending-invitations";
+
+  const canInviteInfluencer =
+    !isPaidAd && campaignStatus === "pending-invitations";
+  const canInviteAgency =
+    isPaidAd && campaignStatus === "pending-invitations";
 
   useEffect(() => {
     let cancelled = false;
@@ -463,31 +466,24 @@ export default function CampaignMilestoneContainer({
     activeStatus === "in_review"
       ? "In Review"
       : activeStatus === "completed"
-      ? "Completed"
-      : undefined;
+        ? "Completed"
+        : undefined;
 
   return (
     <div className="space-y-4 p-2">
-      {canInvite && (
-        <>
-          {isPaidAd ? (
-            <InviteAgencyBar
-              campaignId={campaignId}
-              availableForAgency={availableForAgency}
-            />
-          ) : (
-            <InviteInfluencerBar
-              campaignId={campaignId}
-              milestoneCount={(milestones ?? []).length}
-              milestones={(milestones ?? []).map((m: any) => ({
-                id: String(m?.id ?? ""),
-                order: Number(m?.order ?? 0),
-              }))}
-              selectedInfluencerId={selectedInfluencerId}
-              onSelectedInfluencerChange={setSelectedInfluencerId}
-            />
-          )}
-        </>
+      {canInviteAgency && (
+        <InviteAgencyBar
+          campaignId={campaignId}
+          availableForAgency={availableForAgency}
+        />
+      )}
+
+      {canInviteInfluencer && (
+        <InviteInfluencerBar
+          campaignId={campaignId}
+          selectedInfluencerId={selectedInfluencerId}
+          onSelectedInfluencerChange={setSelectedInfluencerId}
+        />
       )}
 
       {!isPaidAd && (isActiveInfluencerMode || isEditableAssignmentMode) && (
@@ -633,23 +629,33 @@ export default function CampaignMilestoneContainer({
                         {[
                           {
                             label: "Reach",
-                            value: compactNum((activeMilestone as any).expectedReach ?? 300000),
+                            value: compactNum(
+                              (activeMilestone as any).expectedReach ?? 300000
+                            ),
                             icon: <Eye className="h-3.5 w-3.5" />,
                           },
                           {
                             label: "Views",
-                            value: compactNum((activeMilestone as any).expectedViews ?? 250000),
+                            value: compactNum(
+                              (activeMilestone as any).expectedViews ?? 250000
+                            ),
                             icon: <Play className="h-3.5 w-3.5 fill-current" />,
                           },
                           {
                             label: "Reaction",
-                            value: compactNum((activeMilestone as any).expectedLikes ?? 300000),
+                            value: compactNum(
+                              (activeMilestone as any).expectedLikes ?? 300000
+                            ),
                             icon: <Heart className="h-3.5 w-3.5 fill-current" />,
                           },
                           {
                             label: "Comment",
-                            value: compactNum((activeMilestone as any).expectedComments ?? 300000),
-                            icon: <MessageCircle className="h-3.5 w-3.5 fill-current" />,
+                            value: compactNum(
+                              (activeMilestone as any).expectedComments ?? 300000
+                            ),
+                            icon: (
+                              <MessageCircle className="h-3.5 w-3.5 fill-current" />
+                            ),
                           },
                         ].map((item) => (
                           <div
@@ -674,9 +680,7 @@ export default function CampaignMilestoneContainer({
                   <div className="col-span-12 lg:col-span-5">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_160px]">
                       <div className="space-y-3">
-                        <Button
-                          className="h-11 w-full rounded-[10px] border-0 bg-[#7EA055] text-[14px] font-medium text-white hover:brightness-95"
-                        >
+                        <Button className="h-11 w-full rounded-[10px] border-0 bg-[#7EA055] text-[14px] font-medium text-white hover:brightness-95">
                           Change Status
                         </Button>
 

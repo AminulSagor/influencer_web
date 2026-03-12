@@ -4,14 +4,14 @@ export type VerificationActionStatus = "approved" | "rejected";
 
 interface Payload {
   userId: string;
-  identifier: string;
+  url: string;
   status: VerificationActionStatus;
   rejectionReason?: string;
 }
 
 export const approveRejectClientSocial = async ({
   userId,
-  identifier,
+  url,
   status,
   rejectionReason,
 }: Payload) => {
@@ -19,7 +19,7 @@ export const approveRejectClientSocial = async ({
     
     `/influencer/admin/verification/client/${userId}/social`,
     {
-      identifier,
+      url,
       status,
       ...(status === "rejected" ? { rejectionReason } : {}),
     }

@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 import CollapsibleCard from "./collapsible-card";
 import RejectReasonModal from "./reject-reason-modal";
+import NotifyUser from "./notify-user";
 
 import {
   Item,
@@ -204,7 +205,17 @@ const PayoutSettings = ({
 
   return (
     <>
-      <CollapsibleCard heading="Payout Settings">
+      <CollapsibleCard
+        heading="Payout Settings"
+        action={
+          <NotifyUser
+            userId={userId}
+            targetRole={verificationType}
+            reminderKey="payout"
+            customLabel="Payout Method"
+          />
+        }
+      >
         <div className="space-y-3">
           {normalizedItems.map((payout) => {
             const isFirstBank =
@@ -248,9 +259,9 @@ const PayoutSettings = ({
                 >
                   <ItemContent className="min-w-0 flex-1">
                     {payout.type === "Bank Account" ? (
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
                         <div className="shrink-0">
-                          <div className="relative w-10 aspect-square">
+                          <div className="relative aspect-square w-10">
                             <Image
                               src={
                                 isFirstBank
@@ -279,9 +290,9 @@ const PayoutSettings = ({
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
                         <div className="shrink-0">
-                          <div className="relative w-8 aspect-square">
+                          <div className="relative aspect-square w-8">
                             <Image
                               className="object-contain"
                               src="/icons/bkash-icon.svg"
@@ -298,7 +309,7 @@ const PayoutSettings = ({
 
                           <div>
                             <p className="text-xs text-gray-400">Bkash</p>
-                            <p className="text-light-green line-clamp-1">
+                            <p className="line-clamp-1 text-light-green">
                               {payout.accountHolder || "N/A"}
                             </p>
                           </div>
@@ -307,14 +318,14 @@ const PayoutSettings = ({
                     )}
                   </ItemContent>
 
-                  <ItemActions className="shrink-0 flex items-center gap-3">
+                  <ItemActions className="flex shrink-0 items-center gap-3">
                     {isPending ? (
                       <>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="min-w-[92px]"
+                          className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
                           disabled={isLoading}
                           onClick={(e) => {
                             e.preventDefault();
@@ -330,7 +341,7 @@ const PayoutSettings = ({
                           type="button"
                           variant={approvedBtnVariant}
                           size="sm"
-                          className="min-w-[92px]"
+                          className="min-w-[108px] rounded-2xl"
                           disabled={isLoading}
                           onClick={(e) => {
                             e.preventDefault();
@@ -372,50 +383,50 @@ const PayoutSettings = ({
 
                 {isOpen && (
                   <div className="px-4 pb-4">
-                    <div className="rounded-md bg-white/60 p-4 text-sm space-y-2">
+                    <div className="space-y-2 rounded-md bg-white/60 p-4 text-sm">
                       {payout.type === "Bank Account" ? (
                         <>
                           <div>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-xs text-gray-400">
                               Bank Account Holder
                             </p>
                             <p>{payout.accountHolder || "N/A"}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-xs text-gray-400">
                               Bank Account Number
                             </p>
                             <p>{payout.accountNumber || "N/A"}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-xs text-gray-400">
                               Routing Number
                             </p>
                             <p>{payout.routingNumber || "N/A"}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">Branch Name</p>
+                            <p className="text-xs text-gray-400">Branch Name</p>
                             <p>{payout.branchName || "N/A"}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">Bank Name</p>
+                            <p className="text-xs text-gray-400">Bank Name</p>
                             <p>{payout.bankName || "N/A"}</p>
                           </div>
                         </>
                       ) : (
                         <>
                           <div>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-xs text-gray-400">
                               Mobile Banking
                             </p>
                             <p>Bkash</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">Phone Number</p>
+                            <p className="text-xs text-gray-400">Phone Number</p>
                             <p>{payout.phoneNumber || "N/A"}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-xs">
+                            <p className="text-xs text-gray-400">
                               Account Holder
                             </p>
                             <p>{payout.accountHolder || "N/A"}</p>

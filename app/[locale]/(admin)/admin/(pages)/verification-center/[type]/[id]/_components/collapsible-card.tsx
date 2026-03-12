@@ -1,59 +1,49 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { ReactNode } from "react";
+"use client";
 
-type BadgeType = "Completed" | "In Review";
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
-type CollapsibleCardProps = {
-  children: ReactNode;
-  heading: string;
-  icon?: ReactNode;
-  badgeText?: string;
-  badge?: BadgeType;
-};
+import { cn } from "@/lib/utils";
 
-const badgeVariants: Record<BadgeType, string> = {
-  Completed: "bg-Primary text-white",
-  "In Review": "bg-orange text-white",
-};
+interface Props {
+  heading: React.ReactNode;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+  action?: React.ReactNode;
+  className?: string;
+}
 
 const CollapsibleCard = ({
-  children,
   heading,
-  icon,
-  badgeText,
-  badge,
-}: CollapsibleCardProps) => {
-  const badgeClass = badge ? badgeVariants[badge] || "bg-gray-300" : "";
+  children,
+  defaultOpen = true,
+  action,
+  className,
+}: Props) => {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <Card>
-      <div className="px-4">
-        <Accordion type="single" collapsible defaultValue="item-1">
-          <AccordionItem value="item-1">
-            <AccordionTrigger className="p-0 mb-4 hover:no-underline hover:cursor-pointer">
-              <div className="flex items-center gap-4 text-md text-Primary font-semibold">
-                {icon && <span className="text-Primary">{icon}</span>}
-                {heading}
-                {badge && <Badge className={badgeClass}>{badge}</Badge>}
-                {badgeText && (
-                  <div className="border border-light-green px-4 py-2 rounded-md bg-linear-to-r from-white to-Secondary text-light-green font-medium ml-6">
-                    {badgeText}
-                  </div>
-                )}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>{children}</AccordionContent>
-          </AccordionItem>
-        </Accordion>
+    <div className={cn("rounded-2xl border border-[#d9d9d9] bg-white p-5", className)}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="min-w-0 text-[18px] font-semibold text-[#2f5d1d]">
+            {heading}
+          </div>
+
+          {action ? <div onClick={(e) => e.stopPropagation()}>{action}</div> : null}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="shrink-0 text-[#2b2b2b]"
+        >
+          {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+        </button>
       </div>
-    </Card>
+
+      {open ? <div className="mt-5">{children}</div> : null}
+    </div>
   );
 };
 

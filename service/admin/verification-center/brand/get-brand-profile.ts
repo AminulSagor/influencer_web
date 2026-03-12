@@ -53,6 +53,7 @@ type BrandProfileApiResponse = {
     isEmailVerified?: boolean;
     isBlocked?: boolean;
     role?: string;
+    verificationRejectReason?: string | null;
   } | null;
 };
 
@@ -116,5 +117,6 @@ export async function getBrandProfile(userId: string) {
     isEmailVerified: item?.user?.isEmailVerified ?? false,
     isBlocked: item?.user?.isBlocked ?? false,
     role: item?.user?.role ?? "",
+    verificationRejectReason: item?.user?.verificationRejectReason ?? null,
   };
 }

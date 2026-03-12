@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 
 import { getAdminCampaignById } from "@/service/admin/campaign/agency/get-campaign-agency-by-id";
 import { getAssignedAgencies } from "@/service/admin/campaign/agency/get-assigned-agencies";
+import { getCampaignNegotiations } from "@/service/admin/campaign/get-campaign-negotiations";
 
 import CampaignDetailsCard from "../campaign-details/_components/campaign-details-card";
 import CampaignMilestoneContainer from "../campaign-details/_components/campaign-milestone-container";
@@ -31,10 +32,26 @@ import {
   computeFinancials,
 } from "@/utils/admin/campaign/campaign_page_util";
 
+import {
+  getNegotiationAwareQuoteState,
+  getNegotiationFinancials,
+  getNegotiationRevisedCount,
+} from "@/utils/admin/campaign/campaign_negotiation_util";
+
+import type {
+  CampaignNegotiationItem,
+  CampaignNegotiationMeta,
+} from "@/service/admin/campaign/get-campaign-negotiations";
+
 type PreferredAgency = { id: string; name: string; image?: string | null };
 
 function safeStr(v: unknown) {
   return String(v ?? "").trim();
+}
+
+function toNum(v: unknown) {
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
 }
 
 export default function Page() {
@@ -43,6 +60,10 @@ export default function Page() {
 
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const [negotiations, setNegotiations] = useState<CampaignNegotiationItem[]>([]);
+  const [negotiationCampaignMeta, setNegotiationCampaignMeta] =
+    useState<CampaignNegotiationMeta | null>(null);
 
   const [preferredAgencies, setPreferredAgencies] = useState<PreferredAgency[]>([]);
   const [loadingPreferredAgencies, setLoadingPreferredAgencies] = useState(false);
@@ -55,14 +76,27 @@ export default function Page() {
 
   const fetchCampaign = useCallback(async () => {
     if (!campaignId) return;
-    setLoading(true);
+    const res = await getAdminCampaignById(campaignId);
+    setCampaign(res?.data ?? null);
+  }, [campaignId]);
+
+  const fetchNegotiations = useCallback(async () => {
+    if (!campaignId) return;
+
     try {
-      const res = await getAdminCampaignById(campaignId);
-      setCampaign(res?.data ?? null);
-    } finally {
-      setLoading(false);
+      const res = await getCampaignNegotiations(campaignId);
+
+      setNegotiationCampaignMeta(res?.data?.campaign ?? null);
+      setNegotiations(Array.isArray(res?.data?.negotiations) ? res.data.negotiations : []);
+    } catch {
+      setNegotiationCampaignMeta(null);
+      setNegotiations([]);
     }
   }, [campaignId]);
+
+  const refreshQuoteSection = useCallback(async () => {
+    await Promise.all([fetchCampaign(), fetchNegotiations()]);
+  }, [fetchCampaign, fetchNegotiations]);
 
   const fetchAssignedAgencies = useCallback(async () => {
     if (!campaignId) return;
@@ -137,12 +171,25 @@ export default function Page() {
   );
 
   useEffect(() => {
-    fetchCampaign();
-  }, [fetchCampaign]);
+    let ignore = false;
 
-  useEffect(() => {
-    fetchAssignedAgencies();
-  }, [fetchAssignedAgencies]);
+    const boot = async () => {
+      if (!campaignId) return;
+
+      setLoading(true);
+      try {
+        await Promise.all([fetchCampaign(), fetchNegotiations(), fetchAssignedAgencies()]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    boot();
+
+    return () => {
+      ignore = true;
+    };
+  }, [campaignId, fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
 
   useEffect(() => {
     if (!campaign) return;
@@ -163,9 +210,19 @@ export default function Page() {
       campaign?.waitingFor
   );
 
-  const quoteState = useMemo(
+  const fallbackQuoteState = useMemo(
     () => computeQuoteState({ campaign, rawStatus, rawQuoteStatus, waitingFor }),
     [campaign, rawStatus, rawQuoteStatus, waitingFor]
+  );
+
+  const quoteState = useMemo(
+    () =>
+      getNegotiationAwareQuoteState({
+        fallbackQuoteState,
+        campaignMeta: negotiationCampaignMeta,
+        negotiations,
+      }),
+    [fallbackQuoteState, negotiationCampaignMeta, negotiations]
   );
 
   const campaignStatus = useMemo(
@@ -175,16 +232,32 @@ export default function Page() {
 
   const { isPaidAd } = useMemo(() => getCampaignTypeFlags(campaign), [campaign]);
 
-  const {
-    totalBudget,
-    clientBudget,
-    vatAmount,
-    netPayableAmount,
-    platformFeePercent,
-    platformFeeAmount,
-    availableForInfluencers,
-    availableForAgency,
-  } = useMemo(() => computeFinancials(campaign), [campaign]);
+  const baseFinancials = useMemo(() => computeFinancials(campaign), [campaign]);
+
+  const negotiationFinancials = useMemo(
+    () => getNegotiationFinancials(negotiations, baseFinancials),
+    [negotiations, baseFinancials]
+  );
+
+  const totalBudget = negotiationFinancials.totalBudget;
+  const clientBudget = negotiationFinancials.clientBudget;
+  const vatAmount = negotiationFinancials.vatAmount;
+  const netPayableAmount = negotiationFinancials.netPayableAmount;
+  const platformFeePercent = negotiationFinancials.platformFeePercent;
+  const platformFeeAmount = negotiationFinancials.platformFeeAmount;
+  const availableForInfluencers = negotiationFinancials.availableForInfluencers;
+
+  const availableForAgency = useMemo(() => {
+    if (isPaidAd) {
+      return Math.round(toNum(campaign?.availableBudgetForExecution));
+    }
+    return negotiationFinancials.availableForAgency;
+  }, [isPaidAd, campaign?.availableBudgetForExecution, negotiationFinancials.availableForAgency]);
+
+  const revisedCount = useMemo(
+    () => getNegotiationRevisedCount(negotiations),
+    [negotiations]
+  );
 
   const platform = useMemo(
     () => getPlatformListFromMilestones(campaign?.milestones ?? []),
@@ -258,8 +331,8 @@ export default function Page() {
           <CampaignQuoteDetails
             campaignId={campaignId}
             quoteState={quoteState}
-            onRefresh={fetchCampaign}
-            revisedCount={0}
+            onRefresh={refreshQuoteSection}
+            revisedCount={revisedCount}
             currencySymbol="৳"
             platform={platform}
             clientBudget={clientBudget}

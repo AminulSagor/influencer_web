@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import CollapsibleCard from "./collapsible-card";
 import RejectReasonModal from "./reject-reason-modal";
+import NotifyUser from "./notify-user";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,12 +31,12 @@ const statusBadgeMap: Record<
   Accepted: {
     label: "Approved",
     className:
-      "border-0 bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee] px-5 py-2",
+      "border-0 bg-[#e8f8ee] px-5 py-2 text-[#078834] hover:bg-[#e8f8ee]",
   },
   Rejected: {
     label: "Rejected",
     className:
-      "border-0 bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0] px-5 py-2",
+      "border-0 bg-[#fff1f0] px-5 py-2 text-[#e73508] hover:bg-[#fff1f0]",
   },
 };
 
@@ -105,7 +106,17 @@ const SkillsCard = ({ userId, skills }: Props) => {
 
   return (
     <>
-      <CollapsibleCard heading="Skills">
+      <CollapsibleCard
+        heading="Skills"
+        action={
+          <NotifyUser
+            userId={userId}
+            targetRole="influencer"
+            reminderKey="skill"
+            customLabel="Skill"
+          />
+        }
+      >
         <div className="space-y-4">
           {items.map((skill) => {
             const isLoading = loadingName === skill.name;
@@ -115,15 +126,18 @@ const SkillsCard = ({ userId, skills }: Props) => {
                 key={skill.name}
                 className="flex items-center justify-between gap-4"
               >
-                <Badge variant="lightGreen" className="border-0 px-6 py-2">
+                <Badge
+                  variant="lightGreen"
+                  className="border-0 bg-[#f2f1dc] px-6 py-2 text-[#5f7e32] hover:bg-[#f2f1dc]"
+                >
                   {skill.name}
                 </Badge>
 
                 {skill.status === "Pending" ? (
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex shrink-0 items-center gap-3">
                     <Button
                       variant="outline"
-                      className="min-w-[92px] border-[#e73508] text-[#e73508] hover:bg-[#fff5f5] hover:text-[#e73508]"
+                      className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
                       disabled={isLoading}
                       onClick={() => {
                         setSelectedName(skill.name);
@@ -135,7 +149,7 @@ const SkillsCard = ({ userId, skills }: Props) => {
 
                     <Button
                       variant="lightGreen"
-                      className="min-w-[92px]"
+                      className="min-w-[108px] rounded-2xl bg-[#86a857] text-white hover:bg-[#78994d]"
                       disabled={isLoading}
                       onClick={() => handleApprove(skill.name)}
                     >

@@ -68,6 +68,7 @@ export type InfluencerProfileDetails = {
   phone?: string;
   isVerified?: boolean;
   isEmailVerified?: boolean;
+  verificationRejectReason?: string | null;
 };
 
 export const getInfluencerProfile = async (
@@ -129,5 +130,6 @@ export const getInfluencerProfile = async (
     phone: raw.user?.phone ?? "",
     isVerified: !!raw.user?.isVerified,
     isEmailVerified: !!raw.user?.isEmailVerified,
+    verificationRejectReason: raw.user?.verificationRejectReason ?? null,
   };
 };

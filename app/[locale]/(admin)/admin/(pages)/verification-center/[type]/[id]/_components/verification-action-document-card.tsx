@@ -6,6 +6,7 @@ import Image from "next/image";
 
 import CollapsibleCard from "./collapsible-card";
 import RejectReasonModal from "./reject-reason-modal";
+import NotifyUser from "./notify-user";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,13 +41,25 @@ const statusBadgeMap: Record<
   Accepted: {
     label: "Approved",
     className:
-      "border-0 bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee] px-5 py-2",
+      "border-0 bg-[#e8f8ee] px-5 py-2 text-[#078834] hover:bg-[#e8f8ee]",
   },
   Rejected: {
     label: "Rejected",
     className:
-      "border-0 bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0] px-5 py-2",
+      "border-0 bg-[#fff1f0] px-5 py-2 text-[#e73508] hover:bg-[#fff1f0]",
   },
+};
+
+const getReminderKey = (docType: DocType) => {
+  if (docType === "trade-license") return "trade-license";
+  if (docType === "tin") return "tin";
+  return "bin";
+};
+
+const getReminderLabel = (docType: DocType) => {
+  if (docType === "trade-license") return "Trade License";
+  if (docType === "tin") return "TIN";
+  return "BIN";
 };
 
 const VerificationActionDocumentCard = ({
@@ -165,7 +178,19 @@ const VerificationActionDocumentCard = ({
 
   return (
     <>
-      <CollapsibleCard heading={title}>
+      <CollapsibleCard
+        heading={title}
+        action={
+          itemStatus === "Pending" ? (
+            <NotifyUser
+              userId={userId}
+              targetRole={verificationType}
+              reminderKey={getReminderKey(docType)}
+              customLabel={getReminderLabel(docType)}
+            />
+          ) : null
+        }
+      >
         <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
@@ -176,7 +201,7 @@ const VerificationActionDocumentCard = ({
             </div>
 
             {itemStatus === "Pending" ? (
-              <Badge className="border-0 bg-[#fff7ed] text-[#f97316] hover:bg-[#fff7ed] px-5 py-2">
+              <Badge className="border-0 bg-[#fff7ed] px-5 py-2 text-[#f97316] hover:bg-[#fff7ed]">
                 Pending
               </Badge>
             ) : (
@@ -191,7 +216,7 @@ const VerificationActionDocumentCard = ({
               <p className="text-xs font-medium text-[#e73508]">
                 Reject Reason
               </p>
-              <p className="text-sm text-[#e73508] mt-1">{itemRejectReason}</p>
+              <p className="mt-1 text-sm text-[#e73508]">{itemRejectReason}</p>
             </div>
           ) : null}
 
@@ -212,11 +237,11 @@ const VerificationActionDocumentCard = ({
           </div>
 
           {itemStatus === "Pending" ? (
-            <div className="flex items-center justify-end gap-3 shrink-0">
+            <div className="flex shrink-0 items-center justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
-                className="min-w-[92px] border-[#e73508] text-[#e73508] hover:bg-[#fff5f5] hover:text-[#e73508]"
+                className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
                 disabled={loadingType !== null}
                 onClick={() => setRejectOpen(true)}
               >
@@ -226,7 +251,7 @@ const VerificationActionDocumentCard = ({
               <Button
                 type="button"
                 variant="lightGreen"
-                className="min-w-[92px]"
+                className="min-w-[108px] rounded-2xl bg-[#86a857] text-white hover:bg-[#78994d]"
                 disabled={loadingType !== null}
                 onClick={handleApprove}
               >

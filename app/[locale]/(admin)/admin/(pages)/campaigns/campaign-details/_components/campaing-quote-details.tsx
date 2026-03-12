@@ -25,10 +25,7 @@ type QuoteState = "none" | "sent" | "confirmed";
 type Props = {
   campaignId: string;
 
-  // ✅ backend-driven state
   quoteState?: QuoteState;
-
-  // ✅ refresh parent after sending so reload stays correct
   onRefresh?: () => Promise<void> | void;
 
   title?: string;
@@ -75,11 +72,14 @@ export default function CampaignQuoteDetails({
 
   const [localQuoteState, setLocalQuoteState] = useState<QuoteState>(quoteState);
 
-  const [quoteAmount, setQuoteAmount] = useState<number>(Number(netPayableAmount ?? 0));
+  // Quote Amount should always start from Base Budget
+  const [quoteAmount, setQuoteAmount] = useState<number>(
+    Number(clientBudget ?? 0)
+  );
 
   useEffect(() => {
-    setQuoteAmount(Number(netPayableAmount ?? 0));
-  }, [netPayableAmount]);
+    setQuoteAmount(Number(clientBudget ?? 0));
+  }, [clientBudget]);
 
   useEffect(() => {
     setLocalQuoteState(quoteState);
@@ -105,38 +105,43 @@ export default function CampaignQuoteDetails({
         ? "Quotation Sent"
         : "Send Quote";
 
-const handleSendQuoteClick = async () => {
-  try {
-    setSending(true);
+  const handleSendQuoteClick = async () => {
+    try {
+      setSending(true);
 
-    await sendCampaignQuote({
-      campaignId,
-      proposedBaseBudget: Number(quoteAmount ?? 0),
-    });
+      await sendCampaignQuote({
+        campaignId,
+        proposedBaseBudget: Number(quoteAmount ?? 0),
+      });
 
-    notifySuccess("Quotation sent successfully");
+      notifySuccess("Quotation sent successfully");
 
-    setLocalQuoteState("sent");
-    setIsDialogOpen(true);
-
-    await onRefresh?.();
-  } catch (e: any) {
-    console.error("❌ send quote failed:", e);
-
-    if (e?.response?.status === 409) {
-      notifyError("Quotation already sent");
       setLocalQuoteState("sent");
-    } else {
-      notifyError("Failed to send quotation");
+      setIsDialogOpen(true);
+
+      await onRefresh?.();
+    } catch (e: any) {
+      console.error("❌ send quote failed:", e);
+
+      if (e?.response?.status === 409) {
+        notifyError("Quotation already sent");
+        setLocalQuoteState("sent");
+      } else {
+        notifyError("Failed to send quotation");
+      }
+    } finally {
+      setSending(false);
     }
-  } finally {
-    setSending(false);
-  }
-};
+  };
 
   return (
     <>
-      <Card className={cn("rounded-2xl border border-[rgba(100,116,139,0.14)]", className)}>
+      <Card
+        className={cn(
+          "rounded-2xl border border-[rgba(100,116,139,0.14)]",
+          className
+        )}
+      >
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-4">
             <CardTitle className="text-Primary text-lg">{title}</CardTitle>
@@ -150,7 +155,7 @@ const handleSendQuoteClick = async () => {
 
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <QuoteTextRow text="Base Campaign Bugdet" amount={clientBudget} />
+            <QuoteTextRow text="Base Campaign Budget" amount={clientBudget} />
             <QuoteTextRow text="Vat/Tax" vat={vatPercent} amount={vatAmount} />
           </div>
 
@@ -196,7 +201,6 @@ const handleSendQuoteClick = async () => {
         </CardContent>
       </Card>
 
-      {/* Popup */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[420px] rounded-2xl p-0 overflow-hidden">
           <div className="relative bg-white p-8 text-center">
@@ -254,6 +258,7 @@ const handleSendQuoteClick = async () => {
                     {platform?.map((plat, idx) => {
                       const Icon = PLATFORM_ICON_MAP[String(plat.key ?? "").toLowerCase()];
                       if (!Icon) return null;
+
                       return (
                         <span key={`${plat.key || "p"}-${idx}`} className="text-white-two">
                           <Icon size={18} />

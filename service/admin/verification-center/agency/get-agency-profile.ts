@@ -80,6 +80,7 @@ export type AgencyProfileDetails = {
   phone?: string;
   isVerified?: boolean;
   isEmailVerified?: boolean;
+  verificationRejectReason?: string | null;
 };
 
 export const getAgencyVerificationProfile = async (
@@ -166,5 +167,6 @@ export const getAgencyVerificationProfile = async (
     phone: raw.user?.phone ?? "",
     isVerified: !!raw.user?.isVerified,
     isEmailVerified: !!raw.user?.isEmailVerified,
+    verificationRejectReason: raw.user?.verificationRejectReason ?? null,
   };
 };
