@@ -19,10 +19,9 @@ export default function MilestoneSubmissionsSection({
   milestone,
 }: Props) {
   const [openValues, setOpenValues] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    setOpenValues([]);
-  }, [milestone.id]);
+  const [openInfluencerValue, setOpenInfluencerValue] = React.useState<
+    string | undefined
+  >(undefined);
 
   const assignedInfluencers = campaign.assignedInfluencers ?? [];
 
@@ -38,6 +37,23 @@ export default function MilestoneSubmissionsSection({
 
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
+
+  React.useEffect(() => {
+    setOpenValues([]);
+    setOpenInfluencerValue(undefined);
+  }, [milestone.id]);
+
+  React.useEffect(() => {
+    if (!isInfluencerPromotion) return;
+    if (!items.length) return;
+
+    setOpenInfluencerValue((prev) => {
+      if (prev && items.some((item) => item.id === prev)) {
+        return prev;
+      }
+      return items[0].id;
+    });
+  }, [isInfluencerPromotion, items]);
 
   if (isLoading) {
     return (
@@ -66,17 +82,32 @@ export default function MilestoneSubmissionsSection({
   if (isInfluencerPromotion) {
     const submission = items[0];
 
+    if (!submission) {
+      return (
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/50">
+          No submissions found for this milestone.
+        </div>
+      );
+    }
+
     return (
-      <div className="space-y-4">
+      <Accordion
+        type="single"
+        collapsible
+        className="space-y-4"
+        value={openInfluencerValue}
+        onValueChange={setOpenInfluencerValue}
+      >
         <SubmissionAccordionItem
+          key={submission.id}
           submission={submission}
           index={0}
           campaign={campaign}
           milestone={milestone}
-          isOpen
+          isOpen={openInfluencerValue === submission.id}
           prefetchedDetail={prefetchedDetailsById[submission.id] ?? null}
         />
-      </div>
+      </Accordion>
     );
   }
 

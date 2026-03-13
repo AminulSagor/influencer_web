@@ -33,7 +33,7 @@ export default function SubmissionPerformanceMetrics({ metrics }: Props) {
   if (!metrics.length) {
     return (
       <div className="text-sm text-black/50">
-        No performance target available for this submission.
+        No performance data available for this submission.
       </div>
     );
   }
@@ -46,32 +46,44 @@ export default function SubmissionPerformanceMetrics({ metrics }: Props) {
       </div>
 
       <div className="mt-6 space-y-7">
-        {metrics.map((metric) => (
-          <div key={metric.key}>
-            <div className="flex items-center gap-2 text-sm text-black">
-              {getMetricIcon(metric.key)}
-              <span>{metric.label}</span>
+        {metrics.map((metric) => {
+          const hasTarget = metric.target > 0;
+          const progressValue = hasTarget ? Math.min(metric.percent, 100) : 0;
+
+          return (
+            <div key={metric.key}>
+              <div className="flex items-center gap-2 text-sm text-black">
+                {getMetricIcon(metric.key)}
+                <span>{metric.label}</span>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-base font-semibold leading-none sm:text-base">
+                <span className="text-[#7BA35A]">
+                  {formatMetricValue(metric.achieved)}
+                </span>
+
+                <span className="text-[#D8892B]">
+                  {hasTarget ? formatMetricValue(metric.target) : "No target"}
+                </span>
+              </div>
+
+              {hasTarget ? (
+                <>
+                  <Progress value={progressValue} className="mt-3 h-2" />
+
+                  <p className="mt-2 text-xs text-[#D8892B]">
+                    Target Hit {metric.percent}%
+                  </p>
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-black/50">
+                  Achieved performance recorded. No target was set for this
+                  metric.
+                </p>
+              )}
             </div>
-
-            <div className="mt-3 flex items-center justify-between text-base font-semibold leading-none sm:text-base">
-              <span className="text-[#7BA35A]">
-                {formatMetricValue(metric.achieved)}
-              </span>
-              <span className="text-[#D8892B]">
-                {formatMetricValue(metric.target)}
-              </span>
-            </div>
-
-            <Progress
-              value={Math.min(metric.percent, 100)}
-              className="mt-3 h-2"
-            />
-
-            <p className="mt-2 text-xs text-[#D8892B]">
-              Target Hit {metric.percent}%
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

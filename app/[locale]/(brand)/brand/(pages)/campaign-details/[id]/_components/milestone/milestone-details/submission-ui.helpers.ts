@@ -1,3 +1,5 @@
+"use client";
+
 import { CampaignMilestone } from "@/types/client/campaigns/campaign-details";
 import {
   SubmissionDetail,
@@ -58,9 +60,12 @@ export function calculatePercent(achieved: number, target: number) {
 }
 
 export function getAveragePerformance(metrics: SubmissionMetricRow[]) {
-  if (!metrics.length) return 0;
-  const total = metrics.reduce((sum, item) => sum + item.percent, 0);
-  return Math.round(total / metrics.length);
+  const metricsWithTarget = metrics.filter((item) => item.target > 0);
+
+  if (!metricsWithTarget.length) return 0;
+
+  const total = metricsWithTarget.reduce((sum, item) => sum + item.percent, 0);
+  return Math.round(total / metricsWithTarget.length);
 }
 
 export function buildSubmissionMetrics(
@@ -68,74 +73,72 @@ export function buildSubmissionMetrics(
   milestone: CampaignMilestone,
   campaignType: string,
 ): SubmissionMetricRow[] {
+  const reachTarget = toNumber(milestone.expectedReach);
+  const likesTarget = toNumber(milestone.expectedLikes);
+  const viewsTarget = toNumber(milestone.expectedViews);
+  const commentsTarget = toNumber(milestone.expectedComments);
+
+  const reachAchieved = toNumber(detail.achievedReach);
+  const likesAchieved = toNumber(detail.achievedLikes);
+  const viewsAchieved = toNumber(detail.achievedViews);
+  const commentsAchieved = toNumber(detail.achievedComments);
+
   if (campaignType === "influencer_promotion") {
     const metrics: SubmissionMetricRow[] = [
       {
         key: "reach",
         label: "Reach",
-        achieved: detail.achievedReach ?? 0,
-        target: Number(milestone.expectedReach ?? 0),
-        percent: calculatePercent(
-          detail.achievedReach ?? 0,
-          Number(milestone.expectedReach ?? 0),
-        ),
+        achieved: reachAchieved,
+        target: reachTarget,
+        percent: calculatePercent(reachAchieved, reachTarget),
       },
       {
         key: "likes",
         label: "Likes",
-        achieved: detail.achievedLikes ?? 0,
-        target: Number(milestone.expectedLikes ?? 0),
-        percent: calculatePercent(
-          detail.achievedLikes ?? 0,
-          Number(milestone.expectedLikes ?? 0),
-        ),
+        achieved: likesAchieved,
+        target: likesTarget,
+        percent: calculatePercent(likesAchieved, likesTarget),
       },
       {
         key: "views",
         label: "Views",
-        achieved: detail.achievedViews ?? 0,
-        target: Number(milestone.expectedViews ?? 0),
-        percent: calculatePercent(
-          detail.achievedViews ?? 0,
-          Number(milestone.expectedViews ?? 0),
-        ),
+        achieved: viewsAchieved,
+        target: viewsTarget,
+        percent: calculatePercent(viewsAchieved, viewsTarget),
       },
       {
         key: "comments",
         label: "Comments",
-        achieved: detail.achievedComments ?? 0,
-        target: Number(milestone.expectedComments ?? 0),
-        percent: calculatePercent(
-          detail.achievedComments ?? 0,
-          Number(milestone.expectedComments ?? 0),
-        ),
+        achieved: commentsAchieved,
+        target: commentsTarget,
+        percent: calculatePercent(commentsAchieved, commentsTarget),
       },
     ];
 
-    return metrics.filter((item) => item.target > 0);
+    return metrics.filter((item) => item.achieved > 0 || item.target > 0);
   }
 
   return [
     {
       key: "reach",
       label: "Reach",
-      achieved: detail.achievedReach ?? 0,
-      target: Number(milestone.expectedReach ?? 0),
-      percent: calculatePercent(
-        detail.achievedReach ?? 0,
-        Number(milestone.expectedReach ?? 0),
-      ),
+      achieved: reachAchieved,
+      target: reachTarget,
+      percent: calculatePercent(reachAchieved, reachTarget),
     },
-  ].filter((item) => item.target > 0);
+  ].filter((item) => item.achieved > 0 || item.target > 0);
 }
 
 export function shouldShowBonus(
   averagePerformance: number,
   status: SubmissionStatus | string,
+  metrics: SubmissionMetricRow[] = [],
 ) {
   const normalizedStatus = String(status ?? "").toLowerCase();
+  const hasTargetMetrics = metrics.some((item) => item.target > 0);
 
   return (
+    hasTargetMetrics &&
     (normalizedStatus === "approved" || normalizedStatus === "completed") &&
     averagePerformance > 100
   );

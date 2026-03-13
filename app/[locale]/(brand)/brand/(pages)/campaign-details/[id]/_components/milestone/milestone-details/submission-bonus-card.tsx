@@ -8,15 +8,15 @@ type Props = {
 
 export default function SubmissionBonusCard({ influencerName }: Props) {
   return (
-    <div className="rounded-[8px] bg-[#5C7F3C] p-4 text-white">
+    <div className="rounded-[10px] bg-[#5C7F3C] p-4 text-white">
       <div className="flex items-center gap-2">
         <Gift className="h-4 w-4" />
         <p className="text-sm font-semibold">Bonus</p>
       </div>
 
-      <p className="mt-1 text-[11px] text-white/80">
+      <p className="mt-1 text-xs text-white/80">
         {influencerName
-          ? `${influencerName} has acquired more than the target required`
+          ? `${influencerName} has achieved more than the required target.`
           : "Bonus is available because the target was exceeded."}
       </p>
 
