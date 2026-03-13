@@ -26,6 +26,8 @@ export function useSubmissionDetails({
 
   React.useEffect(() => {
     setItem(prefetchedDetail ?? null);
+    setError(null);
+    setIsLoading(false);
   }, [prefetchedDetail, submissionId]);
 
   React.useEffect(() => {

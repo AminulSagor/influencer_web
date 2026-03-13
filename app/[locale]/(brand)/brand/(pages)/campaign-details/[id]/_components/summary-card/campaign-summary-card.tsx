@@ -1,11 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
 import CampaignSummaryHeader from "./campaign-summary-header";
 import CampaignSummaryStatusCard from "./campaign-summary-status-card";
 import CampaignSummaryDeadlineCard from "./campaign-summary-deadline-card";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 
 type CampaignSummaryCardProps = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   label?: string;
 };
 
@@ -67,61 +67,62 @@ export default function CampaignSummaryCard({
 
   const deadlineDate = formatDate(endIso);
 
+  const assignedWorkPlatforms = campaign.assignedInfluencers.flatMap(
+    (influencer) => influencer.assignedWork.map((work) => work.platform),
+  );
+
+  const milestonePlatforms = (campaign.milestones ?? []).map(
+    (milestone) => milestone.platform,
+  );
+
   const platforms = Array.from(
     new Set(
-      (campaign.milestones ?? []).map((m) => String(m.platform).toLowerCase()),
+      (assignedWorkPlatforms.length > 0
+        ? assignedWorkPlatforms
+        : milestonePlatforms
+      )
+        .map((platform) => String(platform).toLowerCase())
+        .filter(Boolean),
     ),
-  ).filter(Boolean);
+  );
 
-  const assignedInfluencers = Array.from(
-    new Map(
-      (campaign.milestones ?? [])
-        .filter(
-          (item) =>
-            typeof item.influencerName === "string" &&
-            item.influencerName.trim().length > 0,
-        )
-        .map((item) => [
-          item.influencerName!.trim().toLowerCase(),
-          {
-            name: item.influencerName!.trim(),
-            image: item.influencerImage ?? null,
-          },
-        ]),
-    ).values(),
-  ).slice(0, 3);
+  const assignedInfluencers = campaign.assignedInfluencers
+    .map((item) => ({
+      name: item.name,
+      image: item.image,
+    }))
+    .slice(0, 3);
 
   const assignedInfluencerNames = assignedInfluencers.map((item) => item.name);
 
-  const activeAgency =
-    campaign.assignedAgencies?.find((item) => !item.isDeclined) ||
-    campaign.assignedAgencies?.[0] ||
-    null;
-
-  const agencyName = activeAgency?.agency?.agencyName || null;
-  const agencyLogo = activeAgency?.agency?.logo || null;
-
   const showInfluencerSection =
-    isInfluencerCampaign && assignedInfluencerNames.length > 0;
+    isInfluencerCampaign && assignedInfluencers.length > 0;
+
+  const agencyName = null;
+  const agencyLogo = null;
 
   const showAgencySection = isPaidAdCampaign && Boolean(agencyName);
-
   const showPeopleSection = showInfluencerSection || showAgencySection;
 
-  const totalBudgetValue = toNumber(campaign.totalBudget);
-  const availableBudgetValue = toNumber(campaign.availableBudgetForExecution);
+  const totalBudgetValue = toNumber(
+    campaign.paymentInfo?.totalAmount ?? campaign.totalBudget,
+  );
+  const paidAmountValue = toNumber(
+    campaign.paymentInfo?.paidAmount ?? campaign.paidAmount,
+  );
+  const dueAmountValue = toNumber(
+    campaign.paymentInfo?.dueAmount ?? campaign.dueAmount,
+  );
 
   const isPending = campaign.paymentStatus === "pending";
   const isPartialPaid = campaign.paymentStatus === "partial";
   const isPaid = campaign.paymentStatus === "paid";
 
-  const paidAmount = isPaid
-    ? totalBudgetValue
-    : isPartialPaid
-      ? Math.max(totalBudgetValue - availableBudgetValue, 0)
-      : 0;
-
-  const dueAmount = Math.max(totalBudgetValue - paidAmount, 0);
+  const paidAmount = isPaid ? totalBudgetValue : paidAmountValue;
+  const dueAmount = Math.max(
+    dueAmountValue || totalBudgetValue - paidAmount,
+    0,
+  );
 
   const isCompleted = campaign.status === "completed";
 
@@ -156,7 +157,7 @@ export default function CampaignSummaryCard({
               agencyLogo={agencyLogo}
             />
 
-            <div className="flex w-full flex-col gap-2 lg:w-auto lg:flex-row items-start">
+            <div className="flex w-full flex-col items-start gap-2 lg:w-auto lg:flex-row">
               {isCompleted ? (
                 <CampaignSummaryStatusCard
                   deadlineDate={deadlineDate}

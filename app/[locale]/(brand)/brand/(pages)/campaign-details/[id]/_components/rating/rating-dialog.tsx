@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
 import {
   getCampaignRateableEntities,
   normalizeRating,
@@ -18,11 +17,12 @@ import {
   rateCampaignClient,
   rateInfluencer,
 } from "@/service/client/campaigns/campaign-rating";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 
 type RatingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   title: string;
 };
 
@@ -43,21 +43,21 @@ export default function RatingDialog({
   const [isSubmitted, setIsSubmitted] = React.useState(false);
 
   React.useEffect(() => {
-    if (open) {
-      const initialRatings: Record<string, number> = {};
+    if (!open) return;
 
-      if (campaign.campaignType === "influencer_promotion") {
-        for (const entity of entities) {
-          initialRatings[entity.id] = 0;
-        }
-      } else {
-        initialRatings[campaign.id] = Number(campaign.rating || 0);
+    const initialRatings: Record<string, number> = {};
+
+    if (campaign.campaignType === "influencer_promotion") {
+      for (const entity of entities) {
+        initialRatings[entity.id] = 0;
       }
-
-      setRatings(initialRatings);
-      setExpandedId(null);
-      setIsSubmitted(false);
+    } else {
+      initialRatings[campaign.id] = Number(campaign.rating || 0);
     }
+
+    setRatings(initialRatings);
+    setExpandedId(null);
+    setIsSubmitted(false);
   }, [open, campaign, entities]);
 
   const allRated =
@@ -115,8 +115,10 @@ export default function RatingDialog({
   const helperText = isSubmitted
     ? "Your ratings have been submitted."
     : totalSelected > 0
-      ? `You have rated ${totalSelected} of ${campaign.campaignType === "influencer_promotion" ? entities.length : 1}.`
-      : "You Haven’t Submitted Your Ratings Yet";
+      ? `You have rated ${totalSelected} of ${
+          campaign.campaignType === "influencer_promotion" ? entities.length : 1
+        }.`
+      : "You haven’t submitted your ratings yet.";
 
   const rows =
     campaign.campaignType === "influencer_promotion"
@@ -136,7 +138,7 @@ export default function RatingDialog({
       <DialogContent className="max-w-[560px] rounded-[24px] border-none bg-[#F8F8F8] p-0 shadow-xl sm:max-w-[560px]">
         <div className="px-7 pb-7 pt-6">
           <DialogHeader className="mb-5">
-            <DialogTitle className="text-left text-[18px] font-semibold text-[#345C21] md:text-[20px]">
+            <DialogTitle className="text-left text-base font-semibold text-[#345C21]">
               {title}
             </DialogTitle>
           </DialogHeader>
@@ -158,12 +160,12 @@ export default function RatingDialog({
             type="button"
             onClick={handleSubmit}
             disabled={!allRated || isSubmitting}
-            className="mt-8 h-[54px] w-full rounded-[16px] bg-[#5D8238] text-[16px] font-medium text-white hover:bg-[#4f6f2f] disabled:bg-[#9AA58B] disabled:text-white"
+            className="mt-8 h-[54px] w-full rounded-[16px] bg-[#5D8238] text-sm font-medium text-white hover:bg-[#4f6f2f] disabled:bg-[#9AA58B] disabled:text-white"
           >
             {isSubmitting ? "Submitting..." : "Submit Your Ratings"}
           </Button>
 
-          <p className="mt-3 text-center text-[14px] text-[#A0A0A0]">
+          <p className="mt-3 text-center text-sm text-[#A0A0A0]">
             {helperText}
           </p>
         </div>

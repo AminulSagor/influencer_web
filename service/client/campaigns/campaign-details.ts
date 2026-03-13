@@ -1,66 +1,19 @@
-import { AxiosError } from "axios";
-import { serviceServer } from "@/service/base/axios_server";
-import { redirect } from "next/navigation";
+import { cache } from "react";
 import { ServiceResponse } from "@/types/service-response";
-import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
-import { ClientCampaignDetailsResponse } from "@/types/client/campaigns/campaign-submission.types";
+import { serviceServer } from "@/service/base/axios_server";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 
-export const getCampaignDetails = async (
-  id: string,
-): Promise<CampaignDetails | null> => {
-  try {
-    const { data } = await serviceServer.get<ServiceResponse<CampaignDetails>>(
-      `/campaign/${id}`,
-    );
+export const getCampaignDetails = cache(
+  async (campaignId: string): Promise<ClientCampaignDetails | null> => {
+    try {
+      const res = await serviceServer.get<
+        ServiceResponse<ClientCampaignDetails>
+      >(`/campaign/client/details/${campaignId}`);
 
-    if (data?.success) {
-      return data.data ?? null;
+      return res.data.data;
+    } catch (error) {
+      console.error("Failed to fetch campaign details:", error);
+      return null;
     }
-
-    return null;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        redirect("/login");
-      }
-      console.error("Axios error fetching campaign details:", error.message);
-    } else {
-      console.error("Unexpected error fetching campaign details:", error);
-    }
-
-    return null;
-  }
-};
-
-export const getClientCampaignDetails = async (
-  id: string,
-): Promise<ClientCampaignDetailsResponse | null> => {
-  try {
-    const { data } = await serviceServer.get<
-      ServiceResponse<ClientCampaignDetailsResponse>
-    >(`/campaign/client/details/${id}`);
-
-    if (data?.success) {
-      return data.data ?? null;
-    }
-
-    return null;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response?.status === 401) {
-        redirect("/login");
-      }
-      console.error(
-        "Axios error fetching client campaign details:",
-        error.message,
-      );
-    } else {
-      console.error(
-        "Unexpected error fetching client campaign details:",
-        error,
-      );
-    }
-
-    return null;
-  }
-};
+  },
+);

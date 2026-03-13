@@ -133,7 +133,7 @@ export default function MilestonesCarousel({
                     <div className="flex items-center gap-2">
                       <span
                         className={[
-                          "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold",
+                          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
                           statusClasses.index,
                         ].join(" ")}
                       >
@@ -142,7 +142,7 @@ export default function MilestonesCarousel({
 
                       <p
                         className={[
-                          "truncate text-[15px] font-semibold",
+                          "truncate text-sm font-semibold",
                           statusClasses.title,
                         ].join(" ")}
                       >
@@ -163,7 +163,7 @@ export default function MilestonesCarousel({
                   <Badge
                     variant="outline"
                     className={[
-                      "rounded-full border px-3 py-1 text-[11px] font-medium shadow-none",
+                      "rounded-full border px-3 py-1 text-xs font-medium shadow-none",
                       statusClasses.badge,
                     ].join(" ")}
                   >

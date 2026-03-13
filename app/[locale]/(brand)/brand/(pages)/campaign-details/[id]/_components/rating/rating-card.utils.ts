@@ -1,4 +1,4 @@
-import { CampaignDetails } from "@/types/client/campaigns/campaign-details";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import { RateableEntity } from "./rating-card.types";
 
 export const MAX_RATING = 5;
@@ -14,54 +14,25 @@ export const formatRatedText = (value: number) => {
 };
 
 export const getCampaignRateableEntities = (
-  campaign: CampaignDetails
+  campaign: ClientCampaignDetails,
 ): RateableEntity[] => {
   if (campaign.campaignType === "influencer_promotion") {
     const map = new Map<string, RateableEntity>();
 
-    for (const milestone of campaign.milestones) {
-      const influencerId = milestone.assignedToInfluencerId;
-      if (!influencerId) continue;
+    for (const influencer of campaign.assignedInfluencers) {
+      if (!influencer.influencerId) continue;
 
-      if (!map.has(influencerId)) {
-        map.set(influencerId, {
-          id: influencerId,
-          name: milestone.influencerName?.trim() || "Influencer",
-          image: milestone.influencerImage ?? null,
+      if (!map.has(influencer.influencerId)) {
+        map.set(influencer.influencerId, {
+          id: influencer.influencerId,
+          name: influencer.name?.trim() || "Influencer",
+          image: influencer.image ?? null,
           type: "influencer",
         });
       }
     }
 
     return Array.from(map.values());
-  }
-
-  const selectedAgency = campaign.assignedAgencies.find(
-    (item) => item.agencyId === campaign.selectedAgencyId
-  );
-
-  if (selectedAgency?.agency) {
-    return [
-      {
-        id: selectedAgency.agency.id,
-        name: selectedAgency.agency.agencyName,
-        image: selectedAgency.agency.logo,
-        type: "client",
-      },
-    ];
-  }
-
-  const firstAgency = campaign.assignedAgencies[0];
-
-  if (firstAgency?.agency) {
-    return [
-      {
-        id: firstAgency.agency.id,
-        name: firstAgency.agency.agencyName,
-        image: firstAgency.agency.logo,
-        type: "client",
-      },
-    ];
   }
 
   return [];

@@ -14,11 +14,11 @@ export default function SubmissionDescriptionBlock({
   return (
     <div>
       <div className="flex items-center gap-3">
-        <h5 className="text-[16px] font-semibold text-[#2F4F1E]">
+        <h5 className="text-base font-semibold text-[#2F4F1E]">
           Submission Details
         </h5>
 
-        <span className="rounded-full bg-[#7BA35A] px-3 py-[3px] text-[10px] font-medium text-white">
+        <span className="rounded-full bg-[#7BA35A] px-3 py-1 text-xs font-medium text-white">
           {statusLabel}
         </span>
       </div>
@@ -29,7 +29,7 @@ export default function SubmissionDescriptionBlock({
           <span>Description / Update</span>
         </div>
 
-        <p className="mt-4 text-sm text-black/70">
+        <p className="mt-4 text-sm leading-relaxed text-black/70">
           {description || "No description provided."}
         </p>
       </div>

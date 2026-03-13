@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { getCachedCampaignDetails } from "./_lib/get-campaign-details";
 import { getDefaultCampaignTab } from "./_lib/campaign-status";
+import { getCampaignDetails } from "@/service/client/campaigns/campaign-details";
 
 type PageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -8,13 +8,13 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { locale, id } = await params;
-  const campaign = await getCachedCampaignDetails(id);
+  const campaign = await getCampaignDetails(id);
 
   if (!campaign) {
     return (
       <div className="rounded-xl border border-light-gray bg-white p-6">
-        <p className="text-base text-black/70 text-center">
-          Campaign not found Reload Again.
+        <p className="text-center text-base text-black/70">
+          Campaign not found. Reload again.
         </p>
       </div>
     );

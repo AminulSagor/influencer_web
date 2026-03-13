@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import AgencyQuotationsSection from "../_components/agency-quotations-section";
-import { getCachedCampaignDetails } from "../_lib/get-campaign-details";
 import { shouldShowAgencyQuotationTabs } from "../_lib/campaign-status";
+import { getCampaignDetails } from "@/service/client/campaigns/campaign-details";
+import AgencyQuotationsSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/agency-quotations/_components/agency-quotations-section";
 
 type PageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -9,7 +9,7 @@ type PageProps = {
 
 export default async function AgencyQuotationsPage({ params }: PageProps) {
   const { locale, id } = await params;
-  const campaign = await getCachedCampaignDetails(id);
+  const campaign = await getCampaignDetails(id);
 
   if (!campaign) {
     return (

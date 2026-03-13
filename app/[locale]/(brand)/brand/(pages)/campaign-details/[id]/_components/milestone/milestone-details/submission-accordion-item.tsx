@@ -6,8 +6,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  CampaignDetails,
   CampaignMilestone,
+  ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
 import {
   SubmissionDetail,
@@ -23,7 +23,7 @@ import SubmissionDetailsPanel from "@/app/[locale]/(brand)/brand/(pages)/campaig
 type Props = {
   submission: SubmissionSummary;
   index: number;
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
   isOpen: boolean;
   prefetchedDetail?: SubmissionDetail | null;
@@ -47,6 +47,11 @@ export default function SubmissionAccordionItem({
   const statusClasses = getSubmissionStatusClasses(submission.status);
   const statusLabel = formatSubmissionStatusLabel(submission.status);
 
+  const title =
+    campaign.campaignType === "influencer_promotion"
+      ? "Submission Details"
+      : `Submission ${index + 1}`;
+
   return (
     <AccordionItem
       value={submission.id}
@@ -54,12 +59,10 @@ export default function SubmissionAccordionItem({
     >
       <AccordionTrigger className="py-4 hover:no-underline">
         <div className="flex items-center gap-3 text-left">
-          <h4 className="text-[18px] font-semibold text-[#3B5D2A]">
-            Submission {index + 1}
-          </h4>
+          <h4 className="text-sm font-semibold text-[#3B5D2A]">{title}</h4>
 
           <span
-            className={`inline-flex rounded-full px-3 py-1 text-[10px] font-medium ${statusClasses.badge}`}
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusClasses.badge}`}
           >
             {statusLabel}
           </span>
@@ -68,7 +71,7 @@ export default function SubmissionAccordionItem({
 
       <AccordionContent className="pb-4">
         {isLoading ? (
-          <div className="rounded-[16px] border border-[#E5E7EB] p-4 text-sm text-muted-foreground">
+          <div className="rounded-[16px] border border-[#E5E7EB] p-4 text-sm text-black/60">
             Loading submission details...
           </div>
         ) : error ? (
@@ -82,7 +85,11 @@ export default function SubmissionAccordionItem({
             submission={submission}
             detail={item}
           />
-        ) : null}
+        ) : (
+          <div className="rounded-[16px] border border-[#E5E7EB] p-4 text-sm text-black/50">
+            No submission details found.
+          </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );

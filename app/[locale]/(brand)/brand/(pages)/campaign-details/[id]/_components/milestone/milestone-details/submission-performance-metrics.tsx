@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  BarChart3,
-  Eye,
-  Heart,
-  MessageCircle,
-  Play,
-} from "lucide-react";
+import { BarChart3, Eye, Heart, MessageCircle, Play } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { SubmissionMetricRow } from "@/types/client/campaigns/campaign-submission.types";
 
@@ -59,7 +53,7 @@ export default function SubmissionPerformanceMetrics({ metrics }: Props) {
               <span>{metric.label}</span>
             </div>
 
-            <div className="mt-3 flex items-center justify-between text-[30px] font-semibold leading-none">
+            <div className="mt-3 flex items-center justify-between text-base font-semibold leading-none sm:text-base">
               <span className="text-[#7BA35A]">
                 {formatMetricValue(metric.achieved)}
               </span>

@@ -5,6 +5,7 @@ import SubmissionBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-d
 import SubmissionDescriptionBlock from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-description-block";
 import SubmissionPerformanceMetrics from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-performance-metrics";
 import SubmissionPerformanceRing from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-performance-ring";
+import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-report-actions";
 import {
   buildSubmissionMetrics,
   formatSubmissionStatusLabel,
@@ -12,11 +13,10 @@ import {
   getSubmissionStatusClasses,
   shouldShowBonus,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-ui.helpers";
-import SubmissionDeclineReason from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/ubmission-decline-reason";
-import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-report-actions";
+import SubmissionDeclineReason from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-decline-reason";
 import {
-  CampaignDetails,
   CampaignMilestone,
+  ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
 import {
   SubmissionDetail,
@@ -24,7 +24,7 @@ import {
 } from "@/types/client/campaigns/campaign-submission.types";
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
   submission: SubmissionSummary;
   detail: SubmissionDetail;
@@ -51,46 +51,6 @@ export default function SubmissionDetailsPanel({
   const averagePerformance = getAveragePerformance(metrics);
   const showBonus = shouldShowBonus(averagePerformance, detail.status);
 
-  if (!isInfluencerPromotion) {
-    return (
-      <div
-        className={`space-y-4 rounded-[18px] border p-4 ${statusClasses.panel}`}
-      >
-        <SubmissionDescriptionBlock
-          description={detail.submissionDescription}
-          statusLabel={statusLabel}
-        />
-
-        <SubmissionReportActions
-          submissionId={submission.id}
-          status={detail.status}
-        />
-
-        <div className="rounded-[14px] border border-[#D9D9D9] p-4">
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1fr_220px]">
-            <div className="space-y-8">
-              <SubmissionAttachmentsGrid
-                links={detail.submissionLiveLinks}
-                attachments={detail.submissionAttachments}
-              />
-              <SubmissionPerformanceMetrics metrics={metrics} />
-            </div>
-
-            <SubmissionPerformanceRing value={averagePerformance} />
-          </div>
-
-          {detail.status === "declined" && detail.rejectionReason ? (
-            <div className="mt-6">
-              <SubmissionDeclineReason reason={detail.rejectionReason} />
-            </div>
-          ) : null}
-        </div>
-
-        {showBonus ? <SubmissionBonusCard /> : null}
-      </div>
-    );
-  }
-
   return (
     <div
       className={`space-y-4 rounded-[18px] border p-4 ${statusClasses.panel}`}
@@ -98,11 +58,6 @@ export default function SubmissionDetailsPanel({
       <SubmissionDescriptionBlock
         description={detail.submissionDescription}
         statusLabel={statusLabel}
-      />
-
-      <SubmissionReportActions
-        submissionId={submission.id}
-        status={detail.status}
       />
 
       <div className="rounded-[14px] border border-[#D9D9D9] p-4 md:p-5">
@@ -116,7 +71,7 @@ export default function SubmissionDetailsPanel({
             <SubmissionPerformanceMetrics metrics={metrics} />
           </div>
 
-          <div className="xl:pt-[220px]">
+          <div className="flex items-center justify-center xl:items-start xl:justify-end">
             <SubmissionPerformanceRing value={averagePerformance} />
           </div>
         </div>
@@ -128,8 +83,17 @@ export default function SubmissionDetailsPanel({
         ) : null}
       </div>
 
+      <SubmissionReportActions
+        submissionId={submission.id}
+        status={detail.status}
+      />
+
       {showBonus ? (
-        <SubmissionBonusCard influencerName={submission.influencerName} />
+        <SubmissionBonusCard
+          influencerName={
+            isInfluencerPromotion ? submission.influencerName : undefined
+          }
+        />
       ) : null}
     </div>
   );

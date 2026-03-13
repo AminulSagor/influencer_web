@@ -21,7 +21,9 @@ export default function MilestoneReportActions({ submissionId }: Props) {
       <div className="flex w-full flex-col justify-center gap-2 sm:gap-2.5">
         <Button
           type="button"
-          onClick={() => hasSubmission && setReportOpen(true)}
+          onClick={() => {
+            if (hasSubmission) setReportOpen(true);
+          }}
           disabled={!hasSubmission}
           className="h-10 rounded-[12px] bg-[#6D8F47] px-4 text-xs font-medium text-white hover:bg-[#628141] disabled:bg-[#F1F1F1] disabled:text-[#BDBDBD] sm:h-11 sm:text-sm"
         >
@@ -31,7 +33,9 @@ export default function MilestoneReportActions({ submissionId }: Props) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => hasSubmission && setReportsOpen(true)}
+          onClick={() => {
+            if (hasSubmission) setReportsOpen(true);
+          }}
           disabled={!hasSubmission}
           className="h-10 rounded-[12px] border border-[#D5D5D5] bg-[#FAFAFA] px-4 text-xs font-medium text-[#2E5B1F] hover:bg-[#FAFAFA] disabled:bg-[#F3F3F3] disabled:text-[#BDBDBD] sm:h-11 sm:text-sm"
         >

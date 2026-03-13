@@ -2,69 +2,60 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import ReportAdminDialog from "./report-admin-dialog";
-import SubmittedReportsDialog from "./submitted-reports-dialog";
 import { SubmissionStatus } from "@/types/client/campaigns/campaign-submission.types";
 
 type Props = {
   submissionId: string;
   status: SubmissionStatus | string;
+  onApprove?: (submissionId: string) => void;
+  onDecline?: (submissionId: string) => void;
+  isSubmitting?: boolean;
 };
 
 function normalizeStatus(value?: string) {
   return String(value ?? "").trim().toLowerCase();
 }
 
-function canReportAdmin(status?: string) {
-  const value = normalizeStatus(status);
-  return !["completed", "approved"].includes(value);
-}
-
 export default function SubmissionReportActions({
   submissionId,
   status,
+  onApprove,
+  onDecline,
+  isSubmitting = false,
 }: Props) {
-  const [reportOpen, setReportOpen] = React.useState(false);
-  const [reportsOpen, setReportsOpen] = React.useState(false);
-  const [refreshKey, setRefreshKey] = React.useState(0);
+  const value = normalizeStatus(status);
 
-  const reportEnabled = canReportAdmin(status);
+  const showReviewActions = value === "in_review";
+  const isFinished = ["approved", "completed", "declined"].includes(value);
+
+  if (!showReviewActions && isFinished) {
+    return null;
+  }
+
+  if (!showReviewActions) {
+    return null;
+  }
 
   return (
-    <>
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          onClick={() => setReportOpen(true)}
-          disabled={!reportEnabled}
-          className="h-10 rounded-xl bg-[#6D8F47] px-4 text-xs font-medium text-white hover:bg-[#628141] disabled:bg-[#F1F1F1] disabled:text-[#BDBDBD] sm:text-sm"
-        >
-          Report Admin
-        </Button>
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onDecline?.(submissionId)}
+        disabled={isSubmitting}
+        className="h-10 flex-1 rounded-xl border border-[#D5D5D5] bg-[#FAFAFA] px-4 text-sm font-medium text-black hover:bg-[#F3F3F3] disabled:bg-[#F1F1F1] disabled:text-[#BDBDBD]"
+      >
+        Decline
+      </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setReportsOpen(true)}
-          className="h-10 rounded-xl border border-[#D5D5D5] bg-[#FAFAFA] px-4 text-xs font-medium text-[#2E5B1F] hover:bg-[#FAFAFA] sm:text-sm"
-        >
-          View Submitted Report
-        </Button>
-      </div>
-
-      <ReportAdminDialog
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-        submissionId={submissionId}
-        onSubmitted={() => setRefreshKey((prev) => prev + 1)}
-      />
-
-      <SubmittedReportsDialog
-        open={reportsOpen}
-        onOpenChange={setReportsOpen}
-        submissionId={submissionId}
-        refreshKey={refreshKey}
-      />
-    </>
+      <Button
+        type="button"
+        onClick={() => onApprove?.(submissionId)}
+        disabled={isSubmitting}
+        className="h-10 flex-1 rounded-xl bg-[#81A35A] px-4 text-sm font-medium text-white hover:bg-[#73944e] disabled:bg-[#B7B7B7] disabled:text-white"
+      >
+        Approve
+      </Button>
+    </div>
   );
 }

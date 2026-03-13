@@ -3,16 +3,15 @@
 import React from "react";
 import DangerZoneCard from "./danger-zone-card";
 import MilestoneDetailsCard from "./milestone-details/milestone-details-card";
-import {
-  CampaignDetails,
-  CampaignMilestone,
-} from "@/types/client/campaigns/campaign-details";
 import CampaignMilestonesOverview from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-overview/campaign-milestones-overview";
+import {
+  CampaignMilestone,
+  ClientCampaignDetails,
+} from "@/types/client/campaigns/campaign-details";
 import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
 
 type Props = {
-  campaign: CampaignDetails;
-  assignedInfluencers: CampaignAssignedInfluencer[];
+  campaign: ClientCampaignDetails;
 };
 
 type DerivedAssignedWork = {
@@ -24,11 +23,11 @@ type DerivedAssignedWork = {
   deliveryDays?: number;
   amount?: number;
   status?: string;
-  submissions?: Array<unknown>;
+  submissions?: Array<{ id?: string }>;
 };
 
 function deriveMilestonesFromAssignedInfluencers(
-  campaign: CampaignDetails,
+  campaign: ClientCampaignDetails,
   assignedInfluencers: CampaignAssignedInfluencer[],
 ): CampaignMilestone[] {
   const grouped = new Map<
@@ -53,7 +52,7 @@ function deriveMilestonesFromAssignedInfluencers(
       const existing = grouped.get(work.masterMilestoneId);
 
       if (existing) {
-        existing.statuses.push((work.status ?? "").toLowerCase());
+        existing.statuses.push(String(work.status ?? "").toLowerCase());
         existing.works.push(work);
         continue;
       }
@@ -64,7 +63,7 @@ function deriveMilestonesFromAssignedInfluencers(
         platform: work.platform ?? "",
         contentQuantity: work.contentQuantity ?? "",
         deliveryDays: work.deliveryDays ?? 0,
-        statuses: [(work.status ?? "").toLowerCase()],
+        statuses: [String(work.status ?? "").toLowerCase()],
         works: [work],
       });
     }
@@ -75,17 +74,29 @@ function deriveMilestonesFromAssignedInfluencers(
 
     if (
       group.statuses.length > 0 &&
-      group.statuses.every((s) => s === "completed")
+      group.statuses.every((status) =>
+        ["completed", "approved"].includes(status),
+      )
     ) {
       mergedStatus = "completed";
-    } else if (group.statuses.some((s) => s === "completed")) {
+    } else if (
+      group.statuses.some((status) =>
+        [
+          "in_review",
+          "active",
+          "in_progress",
+          "completed",
+          "approved",
+        ].includes(status),
+      )
+    ) {
       mergedStatus = "in_progress";
-    } else if (group.statuses.some((s) => s === "todo")) {
+    } else {
       mergedStatus = "pending";
     }
 
     const totalAmount = group.works.reduce(
-      (sum, work) => sum + (work.amount ?? 0),
+      (sum, work) => sum + Number(work.amount ?? 0),
       0,
     );
 
@@ -97,13 +108,17 @@ function deriveMilestonesFromAssignedInfluencers(
       deliveryDays: group.deliveryDays,
       status: mergedStatus,
       createdAt: campaign.createdAt,
-      expectedReach: 0,
-      expectedViews: 0,
-      expectedLikes: 0,
-      expectedComments: 0,
+      updatedAt: campaign.updatedAt,
+      expectedReach: null,
+      expectedViews: null,
+      expectedLikes: null,
+      expectedComments: null,
       promotionGoal: "",
-      amount: totalAmount,
+      amount: String(totalAmount),
+      bonusAmount: "0",
+      bonusStatus: "unpaid",
       order: index + 1,
+      campaignId: campaign.id,
     };
   });
 }
@@ -124,20 +139,25 @@ function getInfluencerPromotionMilestoneSubmissionId(
   return null;
 }
 
-export default function CampaignMilestonesSection({
-  campaign,
-  assignedInfluencers,
-}: Props) {
-  const milestones = React.useMemo(() => {
-    if ((campaign.milestones ?? []).length > 0) {
-      return campaign.milestones;
-    }
+export default function CampaignMilestonesSection({ campaign }: Props) {
+  const assignedInfluencers = campaign.assignedInfluencers ?? [];
 
-    if (campaign.campaignType === "influencer_promotion") {
+  const milestones = React.useMemo(() => {
+    const hasTopLevelMilestones = (campaign.milestones ?? []).length > 0;
+    const hasAssignedInfluencers = assignedInfluencers.length > 0;
+
+    if (
+      campaign.campaignType === "influencer_promotion" &&
+      hasAssignedInfluencers
+    ) {
       return deriveMilestonesFromAssignedInfluencers(
         campaign,
         assignedInfluencers,
       );
+    }
+
+    if (hasTopLevelMilestones) {
+      return campaign.milestones;
     }
 
     return [];
@@ -146,11 +166,18 @@ export default function CampaignMilestonesSection({
   const [expandedMilestoneId, setExpandedMilestoneId] = React.useState("");
 
   React.useEffect(() => {
-    if (
-      expandedMilestoneId &&
-      !milestones.some((milestone) => milestone.id === expandedMilestoneId)
-    ) {
+    if (!milestones.length) {
       setExpandedMilestoneId("");
+      return;
+    }
+
+    if (!expandedMilestoneId) {
+      setExpandedMilestoneId(milestones[0].id);
+      return;
+    }
+
+    if (!milestones.some((milestone) => milestone.id === expandedMilestoneId)) {
+      setExpandedMilestoneId(milestones[0].id);
     }
   }, [milestones, expandedMilestoneId]);
 
@@ -179,28 +206,29 @@ export default function CampaignMilestonesSection({
     );
   }, [campaign.campaignType, expandedMilestoneId, assignedInfluencers]);
 
+  const normalizedCampaign = React.useMemo(
+    () => ({
+      ...campaign,
+      milestones,
+    }),
+    [campaign, milestones],
+  );
+
   return (
     <div className="space-y-4">
       <CampaignMilestonesOverview
-        campaign={{
-          ...campaign,
-          milestones,
-        }}
+        campaign={normalizedCampaign}
         expandedMilestoneId={expandedMilestoneId}
         onSelectMilestone={setExpandedMilestoneId}
       />
 
       {expandedMilestone && (
         <MilestoneDetailsCard
-          campaign={{
-            ...campaign,
-            milestones,
-          }}
+          campaign={normalizedCampaign}
           milestone={expandedMilestone}
           milestoneIndex={
             expandedMilestoneIndex >= 0 ? expandedMilestoneIndex : 0
           }
-          assignedInfluencers={assignedInfluencers}
           submissionId={milestoneSubmissionId}
         />
       )}

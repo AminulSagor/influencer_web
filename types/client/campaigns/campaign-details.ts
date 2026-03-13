@@ -1,6 +1,71 @@
-import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
+import {
+  CampaignAssignedInfluencer,
+} from "@/types/client/campaigns/campaign-submission.types";
 
-export type CampaignType = "paid_ad" | "influencer_promotion";
+export type CampaignType = "influencer_promotion" | "paid_ad";
+
+export type CampaignAsset = {
+  id: string;
+  category: string | null;
+  assetType: string | null;
+  fileName: string | null;
+  fileUrl: string;
+  fileSize: string | null;
+  mimeType: string | null;
+  description: string | null;
+  campaignId: string;
+  createdAt: string;
+};
+
+export type CampaignSocialLink = {
+  platform: string;
+  url: string;
+};
+
+export type CampaignClient = {
+  id: string;
+  brandName: string;
+  profileImg: string | null;
+  socialLinks: CampaignSocialLink[];
+};
+
+export type CampaignMilestoneStatus =
+  | "pending"
+  | "in_review"
+  | "accepted"
+  | "approved"
+  | "completed"
+  | "declined"
+  | "in_progress"
+  | string;
+
+export type CampaignMilestone = {
+  id: string;
+  contentTitle: string;
+  platform: string;
+  contentQuantity: string;
+  deliveryDays: number;
+  expectedReach: number | null;
+  expectedViews: number | null;
+  expectedLikes: number | null;
+  expectedComments: number | null;
+  promotionGoal: string | null;
+  amount: string;
+  bonusAmount: string;
+  bonusStatus: string;
+  status: CampaignMilestoneStatus;
+  order: number;
+  campaignId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CampaignPaymentInfo = {
+  totalAmount: string;
+  paidAmount: string;
+  dueAmount: string;
+  showPayDueButton: boolean;
+};
 
 export type CampaignStatus =
   | "draft"
@@ -25,140 +90,56 @@ export type CampaignStatus =
   | "budget_building"
   | string;
 
-export type PaymentStatus = "pending" | "partial" | "paid" | "failed" | string;
+export type CampaignPaymentStatus = "pending" | "partial" | "paid" | string;
 
-export type SocialPlatform =
-  | "instagram"
-  | "youtube"
-  | "tiktok"
-  | "facebook"
-  | "twitter"
-  | "linkedin"
-  | string;
-
-export interface ClientSocialLink {
-  platform: SocialPlatform;
-  url: string;
-}
-
-export interface CampaignClient {
-  id: string;
-  brandName: string;
-  profileImg: string | null;
-  socialLinks: ClientSocialLink[];
-}
-
-export interface AgencyLite {
-  id: string;
-  agencyName: string;
-  logo: string | null;
-}
-
-export interface AssignedAgency {
-  id: string;
-  agencyId: string;
-  agency: AgencyLite;
-  isDeclined: boolean;
-}
-
-export type MilestoneStatus = "pending" | "accepted" | "completed" | string;
-export type BonusStatus = "unpaid" | "paid" | string;
-
-export interface CampaignMilestone {
-  id: string;
-  masterMilestoneId?: string;
-  contentTitle: string;
-  platform: SocialPlatform;
-  contentQuantity: string;
-  deliveryDays: number;
-
-  expectedReach?: number | null;
-  expectedViews?: number | null;
-  expectedLikes?: number | null;
-  expectedComments?: number | null;
-
-  promotionGoal?: string | null;
-
-  amount: string | number;
-  bonusAmount?: string | number;
-  bonusStatus?: BonusStatus;
-
-  status: MilestoneStatus;
-  order?: number;
-
-  campaignId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-
-  assignmentId?: string | null;
-  jobStatus?: string;
-  assignedToInfluencerId?: string | null;
-  influencerName?: string | null;
-  influencerImage?: string | null;
-  influencerLocation?: string | null;
-  influencerCountry?: string | null;
-}
-
-export type AssetCategory = "brand" | "content";
-
-export interface CampaignAsset {
-  id: string;
-  category: AssetCategory;
-  assetType: string;
-  fileName: string;
-  fileUrl: string;
-  fileSize: string | null;
-  mimeType: string | null;
-  description: string | null;
-  campaignId: string;
-  createdAt: string;
-}
-
-export interface CampaignDetails {
+export type ClientCampaignDetails = {
   id: string;
   campaignName: string;
   campaignType: CampaignType;
-
   productType: string | null;
   campaignNiche: string | null;
-
   preferredInfluencers: string[];
   notPreferableInfluencers: string[];
-
   suggestedAgencies: string[] | null;
-  assignedAgencies: AssignedAgency[];
-
-  availableBudgetForExecution: string | null;
+  assignedAt: string | null;
+  platformFeeAmount: string;
+  availableBudgetForExecution: string;
   campaignGoals: string | null;
   productServiceDetails: string | null;
   reportingRequirements: string | null;
   usageRights: string | null;
-
-  startingDate: string | null;
-  duration: number | null;
-
+  startingDate: string;
+  duration: number;
   dos: string | null;
   donts: string | null;
-
-  baseBudget: string | null;
-  vatAmount: string | null;
-  totalBudget: string | null;
-
+  baseBudget: string;
+  vatAmount: string;
+  totalBudget: string;
+  netPayableAmount: string;
   selectedAgencyId: string | null;
-  paymentStatus: PaymentStatus;
-
+  paymentStatus: CampaignPaymentStatus;
+  paidAmount: string;
+  dueAmount: string;
   isRated: boolean;
   rating: string;
-
-  milestones: CampaignMilestone[];
   assets: CampaignAsset[];
-
+  needSampleProduct: boolean;
   status: CampaignStatus;
   currentStep: number;
-
-  client: CampaignClient;
-
+  isPlaced: boolean;
+  placedAt: string | null;
+  negotiationTurn: string | null;
+  clientId: string;
+  assignedAdminId: string | null;
   createdAt: string;
+  updatedAt: string;
   agencyOfferId: string | null;
+  client: CampaignClient | null;
+  milestones: CampaignMilestone[];
+  assignedInfluencers: CampaignAssignedInfluencer[];
+  paymentInfo: CampaignPaymentInfo | null;
+};
+
+export type ClientCampaignDetailsResponse = {
   assignedInfluencers?: CampaignAssignedInfluencer[];
-}
+};

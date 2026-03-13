@@ -8,19 +8,17 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
-  CampaignDetails,
   CampaignMilestone,
+  ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
 import MilestoneSubmissionsSection from "./milestone-submissions-section";
-import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
 import InfluencerPromotionMilestoneContent from "./influencer-promotion-milestone-content";
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
   milestoneIndex: number;
-  assignedInfluencers: CampaignAssignedInfluencer[];
   submissionId?: string | null;
 };
 
@@ -28,15 +26,14 @@ export default function MilestoneDetailsCard({
   campaign,
   milestone,
   milestoneIndex,
-  assignedInfluencers,
   submissionId,
 }: Props) {
   const isInfluencerPromotion =
-    String(campaign?.campaignType ?? "").toLowerCase() ===
+    String(campaign.campaignType ?? "").toLowerCase() ===
     "influencer_promotion";
 
   const safeTitle =
-    milestone?.contentTitle?.trim() || `Milestone ${milestoneIndex + 1}`;
+    milestone.contentTitle?.trim() || `Milestone ${milestoneIndex + 1}`;
 
   return (
     <Accordion
@@ -56,8 +53,9 @@ export default function MilestoneDetailsCard({
                 height={30}
                 className="mt-1 h-[26px] w-[26px] shrink-0 sm:h-[30px] sm:w-[30px]"
               />
+
               <div>
-                <p className="text-base font-medium leading-none text-[#47662D] sm:text-[15px]">
+                <p className="text-sm font-medium leading-none text-[#47662D]">
                   Milestone {milestoneIndex + 1}
                 </p>
                 <h3 className="mt-2 text-base font-semibold leading-none text-[#2E5B1F]">
@@ -67,25 +65,20 @@ export default function MilestoneDetailsCard({
             </div>
           </AccordionTrigger>
 
-          <AccordionContent className="pt-5 pb-0">
+          <AccordionContent className="pb-0 pt-5">
             {isInfluencerPromotion ? (
               <InfluencerPromotionMilestoneContent
-                campaign={campaign}
                 milestone={milestone}
                 submissionId={submissionId}
               />
             ) : (
-              <PaidAdMilestoneContent
-                campaign={campaign}
-                milestone={milestone}
-              />
+              <PaidAdMilestoneContent milestone={milestone} />
             )}
 
             <div className="mt-5">
               <MilestoneSubmissionsSection
                 campaign={campaign}
                 milestone={milestone}
-                assignedInfluencers={assignedInfluencers}
               />
             </div>
           </AccordionContent>

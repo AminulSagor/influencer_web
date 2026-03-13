@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { ImageIcon, Link2 } from "lucide-react";
 
 type Props = {
@@ -11,23 +12,25 @@ export default function SubmissionAttachmentsGrid({
   links,
   attachments,
 }: Props) {
+  const visibleAttachments = attachments.slice(0, 3);
+
   return (
     <div className="grid grid-cols-1 gap-8 md:grid-cols-[220px_1fr]">
       <div>
         <div className="flex items-center gap-2 text-sm font-semibold text-black">
           <Link2 className="h-4 w-4" />
-          <span>Platform 1</span>
+          <span>Platform Link</span>
         </div>
 
         <div className="mt-4 space-y-2">
           {links.length ? (
-            links.map((link) => (
+            links.map((link, index) => (
               <a
-                key={link}
+                key={`${link}-${index}`}
                 href={link}
                 target="_blank"
                 rel="noreferrer"
-                className="block break-all text-sm underline underline-offset-2"
+                className="block break-all text-sm text-[#2E5B1F] underline underline-offset-2"
               >
                 {link}
               </a>
@@ -45,16 +48,18 @@ export default function SubmissionAttachmentsGrid({
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
-          {attachments.length ? (
-            attachments.slice(0, 3).map((src, index) => (
+          {visibleAttachments.length ? (
+            visibleAttachments.map((src, index) => (
               <div
                 key={`${src}-${index}`}
-                className="aspect-square overflow-hidden rounded-[8px] border border-dashed border-[#D8D8D8] bg-[#FAFAFA]"
+                className="relative aspect-square overflow-hidden rounded-[8px] border border-dashed border-[#D8D8D8] bg-[#FAFAFA]"
               >
-                <img
+                <Image
                   src={src}
                   alt={`Attachment ${index + 1}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 33vw, 180px"
                 />
               </div>
             ))

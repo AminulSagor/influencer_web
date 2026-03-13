@@ -5,14 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  CampaignDetails,
+  ClientCampaignDetails,
   CampaignMilestone,
 } from "@/types/client/campaigns/campaign-details";
 import InfluencerSelector from "./influencer-selector";
 import MilestonesCarousel from "./milestones-carousel";
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   expandedMilestoneId: string;
   onSelectMilestone: (milestoneId: string) => void;
 };
@@ -28,25 +28,42 @@ const normalizeStatus = (status?: string) =>
     .trim()
     .toLowerCase();
 
-const getInfluencerOptions = (milestones: CampaignMilestone[]) => {
-  const map = new Map<string, InfluencerOption>();
+const getInfluencerOptions = (
+  campaign: ClientCampaignDetails,
+): InfluencerOption[] => {
+  return (campaign.assignedInfluencers ?? []).map((item) => ({
+    id: item.influencerId,
+    name: item.name,
+    image: item.image ?? null,
+  }));
+};
 
-  for (const milestone of milestones) {
-    const id = milestone.assignedToInfluencerId?.trim();
-    const name = milestone.influencerName?.trim();
+const getInfluencerMilestones = ({
+  allMilestones,
+  campaign,
+  influencerId,
+}: {
+  allMilestones: CampaignMilestone[];
+  campaign: ClientCampaignDetails;
+  influencerId: string;
+}) => {
+  if (!influencerId) return [];
 
-    if (!id || !name) continue;
+  const selectedInfluencer = (campaign.assignedInfluencers ?? []).find(
+    (item) => item.influencerId === influencerId,
+  );
 
-    if (!map.has(id)) {
-      map.set(id, {
-        id,
-        name,
-        image: milestone.influencerImage ?? null,
-      });
-    }
-  }
+  if (!selectedInfluencer) return [];
 
-  return Array.from(map.values());
+  const allowedMilestoneIds = new Set(
+    (selectedInfluencer.assignedWork ?? []).map(
+      (work) => work.masterMilestoneId,
+    ),
+  );
+
+  return allMilestones.filter((milestone) =>
+    allowedMilestoneIds.has(milestone.id),
+  );
 };
 
 export default function CampaignMilestonesOverview({
@@ -60,29 +77,17 @@ export default function CampaignMilestonesOverview({
   );
 
   const showInfluencerDropdown =
-    campaign.campaignType === "influencer_promotion";
+    campaign.campaignType === "influencer_promotion" &&
+    (campaign.assignedInfluencers?.length ?? 0) > 0;
 
   const influencerOptions = useMemo(
-    () => getInfluencerOptions(allMilestones),
-    [allMilestones],
+    () => getInfluencerOptions(campaign),
+    [campaign],
   );
 
   const initialInfluencerId = useMemo(() => {
-    const expandedMilestone = allMilestones.find(
-      (m) => m.id === expandedMilestoneId,
-    );
-    const expandedInfluencerId =
-      expandedMilestone?.assignedToInfluencerId?.trim();
-
-    if (
-      expandedInfluencerId &&
-      influencerOptions.some((item) => item.id === expandedInfluencerId)
-    ) {
-      return expandedInfluencerId;
-    }
-
     return influencerOptions[0]?.id ?? "";
-  }, [allMilestones, expandedMilestoneId, influencerOptions]);
+  }, [influencerOptions]);
 
   const [selectedInfluencerId, setSelectedInfluencerId] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -122,14 +127,18 @@ export default function CampaignMilestonesOverview({
 
   const milestones = useMemo(() => {
     if (!showInfluencerDropdown) return allMilestones;
-    if (!effectiveSelectedInfluencerId) return [];
 
-    return allMilestones.filter(
-      (milestone) =>
-        milestone.assignedToInfluencerId?.trim() ===
-        effectiveSelectedInfluencerId,
-    );
-  }, [allMilestones, showInfluencerDropdown, effectiveSelectedInfluencerId]);
+    return getInfluencerMilestones({
+      allMilestones,
+      campaign,
+      influencerId: effectiveSelectedInfluencerId,
+    });
+  }, [
+    allMilestones,
+    showInfluencerDropdown,
+    campaign,
+    effectiveSelectedInfluencerId,
+  ]);
 
   const completedCount = useMemo(
     () =>
@@ -181,7 +190,7 @@ export default function CampaignMilestonesOverview({
                 height={20}
                 alt="Milestone"
               />
-              <h2 className="text-[16px] font-semibold text-Primary">
+              <h2 className="text-base font-semibold text-Primary">
                 Campaign Milestones
               </h2>
             </div>
@@ -189,7 +198,7 @@ export default function CampaignMilestonesOverview({
             {showInfluencerDropdown ? (
               <div>
                 <p className="text-sm text-black/70">Overall Progress</p>
-                <p className="text-[16px] font-semibold leading-none text-orange">
+                <p className="text-base font-semibold leading-none text-orange">
                   {percent}% Completed
                 </p>
               </div>
@@ -215,10 +224,7 @@ export default function CampaignMilestonesOverview({
                   {completedCount} Of {totalCount} Completed
                 </span>
               </div>
-              <Progress
-                value={percent}
-                className="h-2 [&>div]:bg-Primary/70"
-              />
+              <Progress value={percent} className="h-2 [&>div]:bg-Primary/70" />
             </div>
           )}
         </div>
@@ -232,7 +238,10 @@ export default function CampaignMilestonesOverview({
                 {completedCount} Of {totalCount} Completed
               </span>
             </div>
-            <Progress value={percent} className="mt-2 h-2 [&>div]:bg-Primary/70" />
+            <Progress
+              value={percent}
+              className="mt-2 h-2 [&>div]:bg-Primary/70"
+            />
           </div>
         ) : null}
       </CardHeader>

@@ -6,7 +6,8 @@ type Props = {
 
 export default function SubmissionPerformanceRing({ value }: Props) {
   const normalized = Math.max(0, Math.min(value, 999));
-  const degree = Math.min((Math.min(normalized, 100) / 100) * 360, 360);
+  const ringValue = Math.min(normalized, 100);
+  const degree = (ringValue / 100) * 360;
 
   return (
     <div className="flex items-center justify-center xl:justify-end">
@@ -21,7 +22,7 @@ export default function SubmissionPerformanceRing({ value }: Props) {
             background: `conic-gradient(#7BA35A ${degree}deg, #DCE7CC ${degree}deg)`,
           }}
         >
-          <div className="flex h-[90px] w-[90px] items-center justify-center rounded-full bg-white text-[18px] font-semibold text-black">
+          <div className="flex h-[90px] w-[90px] items-center justify-center rounded-full bg-white text-base font-semibold text-black">
             {normalized}%
           </div>
         </div>

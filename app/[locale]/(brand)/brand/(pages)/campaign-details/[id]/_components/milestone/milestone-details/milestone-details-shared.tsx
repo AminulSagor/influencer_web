@@ -39,7 +39,9 @@ type PromotionTargetProps = {
 };
 
 function normalizeStatus(value?: string | null) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 function formatCompactValue(value?: number | string | null) {
@@ -71,12 +73,11 @@ function toTitleCase(value?: string | null) {
 }
 
 function getEffectiveStatus(milestone: CampaignMilestone) {
-  const raw = milestone?.status;
-  return normalizeStatus(raw);
+  return normalizeStatus(milestone.status);
 }
 
 function getStatusDate(milestone: CampaignMilestone) {
-  return formatMilestoneDate(milestone?.updatedAt ?? milestone?.createdAt);
+  return formatMilestoneDate(milestone.updatedAt ?? milestone.createdAt);
 }
 
 function splitRequirements(contentQuantity?: string | null) {
@@ -96,11 +97,11 @@ export function RequirementList({ contentQuantity }: RequirementListProps) {
 
   return (
     <div>
-      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F] sm:text-base">
+      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
         Content Requirements
       </h4>
 
-      <ul className="mt-2.5 space-y-1.5 pl-4 text-xs leading-5 text-[#355B25] sm:mt-3 sm:space-y-2 sm:pl-5 sm:text-sm">
+      <ul className="mt-3 space-y-2 pl-5 text-sm leading-5 text-[#355B25]">
         {items.map((item) => (
           <li
             key={item}
@@ -116,12 +117,12 @@ export function RequirementList({ contentQuantity }: RequirementListProps) {
 
 export function PromotionGoalBlock({ goal }: PromoGoalProps) {
   return (
-    <div className="mt-4 sm:mt-5">
-      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F] sm:text-base">
+    <div className="mt-4">
+      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
         Promotion Goal
       </h4>
 
-      <p className="mt-2.5 text-xs leading-5 text-[#355B25] sm:mt-3 sm:text-sm sm:leading-6">
+      <p className="mt-3 text-sm leading-6 text-[#355B25]">
         {String(goal ?? "").trim() || "No promotion goal provided"}
       </p>
     </div>
@@ -130,20 +131,20 @@ export function PromotionGoalBlock({ goal }: PromoGoalProps) {
 
 export function MetricCard({ label, value, icon }: MetricCardProps) {
   return (
-    <div className="rounded-[12px] border border-[#5D7F43] bg-transparent px-3 py-2.5 sm:rounded-[14px] sm:px-4 sm:py-3">
+    <div className="rounded-[12px] border border-[#5D7F43] bg-transparent px-3 py-3 sm:rounded-[14px] sm:px-4">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium leading-none text-[#355B25] sm:text-sm">
+        <span className="text-sm font-medium leading-none text-[#355B25]">
           {label}
         </span>
 
         {icon ? (
-          <span className="shrink-0 text-[#4C5138] [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4">
+          <span className="shrink-0 text-[#4C5138] [&_svg]:h-4 [&_svg]:w-4">
             {icon}
           </span>
         ) : null}
       </div>
 
-      <p className="mt-2.5 text-xl font-semibold leading-none text-[#2E5B1F] sm:mt-3 sm:text-[28px]">
+      <p className="mt-3 text-base font-semibold leading-none text-[#2E5B1F]">
         {formatCompactValue(value)}
       </p>
     </div>
@@ -157,29 +158,29 @@ export function MilestoneTargetGrid({
 }) {
   return (
     <div>
-      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F] sm:text-base">
+      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
         Milestone Target
       </h4>
 
-      <div className="mt-2.5 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:mt-3 sm:gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:gap-3">
         <MetricCard
           label="Reach"
-          value={milestone?.expectedReach}
+          value={milestone.expectedReach}
           icon={<Eye />}
         />
         <MetricCard
           label="Views"
-          value={milestone?.expectedViews}
+          value={milestone.expectedViews}
           icon={<Play className="fill-current" />}
         />
         <MetricCard
           label="Reaction"
-          value={milestone?.expectedLikes}
+          value={milestone.expectedLikes}
           icon={<Heart className="fill-current" />}
         />
         <MetricCard
           label="Comment"
-          value={milestone?.expectedComments}
+          value={milestone.expectedComments}
           icon={<MessageCircle className="fill-current" />}
         />
       </div>
@@ -194,20 +195,20 @@ export function PromotionTargetBlock({
 }: PromotionTargetProps) {
   return (
     <div>
-      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F] sm:text-base">
+      <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
         Promotion Target
       </h4>
 
-      <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-2.5">
-        <p className="text-xs font-medium leading-none text-[#355B25] sm:text-sm">
+      <div className="mt-3 space-y-2">
+        <p className="text-sm font-medium leading-none text-[#355B25]">
           {toTitleCase(platform)}
         </p>
 
-        <p className="text-xs font-medium leading-none text-[#355B25] sm:text-sm">
+        <p className="text-sm font-medium leading-none text-[#355B25]">
           {label || "Reach"}
         </p>
 
-        <p className="text-xl font-semibold leading-none text-[#2E5B1F] sm:text-[30px]">
+        <p className="text-base font-semibold leading-none text-[#2E5B1F]">
           {formatCompactValue(value)}
         </p>
       </div>
@@ -215,9 +216,7 @@ export function PromotionTargetBlock({
   );
 }
 
-export function MilestoneActions({
-  submissionId,
-}: ActionButtonsProps) {
+export function MilestoneActions({ submissionId }: ActionButtonsProps) {
   return <MilestoneReportActions submissionId={submissionId} />;
 }
 
@@ -234,13 +233,17 @@ export function MilestoneStatusCard({ milestone }: StatusCardProps) {
         statusClasses.wrapper,
       ].join(" ")}
     >
-      <p className={["text-xs font-medium sm:text-sm", statusClasses.soft].join(" ")}>
+      <p
+        className={["text-xs font-medium sm:text-sm", statusClasses.soft].join(
+          " ",
+        )}
+      >
         Status
       </p>
 
       <span
         className={[
-          "mt-2.5 inline-flex min-h-[30px] max-w-full items-center justify-center rounded-full px-4 text-base font-semibold leading-none sm:mt-3 sm:min-h-[36px] sm:px-5 sm:text-[20px]",
+          "mt-3 inline-flex min-h-[30px] max-w-full items-center justify-center rounded-full px-4 text-base font-semibold leading-none sm:min-h-[36px] sm:px-5",
           statusClasses.badge,
         ].join(" ")}
       >
@@ -249,11 +252,11 @@ export function MilestoneStatusCard({ milestone }: StatusCardProps) {
 
       <p
         className={[
-          "mt-2.5 flex items-center gap-1.5 text-[10px] font-medium sm:mt-3 sm:text-xs",
+          "mt-3 flex items-center gap-1.5 text-xs font-medium",
           statusClasses.soft,
         ].join(" ")}
       >
-        <CircleDot className="h-3 w-3 fill-current sm:h-3.5 sm:w-3.5" />
+        <CircleDot className="h-3.5 w-3.5 fill-current" />
         {statusDate || "—"}
       </p>
     </div>

@@ -5,11 +5,11 @@ import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card
 import { Download, Film, FileText, File, Album, Link2 } from "lucide-react";
 import {
   CampaignAsset,
-  CampaignDetails,
+  ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
 };
 
 const ITEMS_PER_PAGE = 3;
@@ -17,9 +17,11 @@ const ITEMS_PER_PAGE = 3;
 const chunkArray = <T,>(items: T[], size: number): T[][] => {
   if (!items.length) return [];
   const chunks: T[][] = [];
+
   for (let i = 0; i < items.length; i += size) {
     chunks.push(items.slice(i, i + size));
   }
+
   return chunks;
 };
 
@@ -76,7 +78,6 @@ function AssetSliderSection({
             {currentPage.map((asset) => {
               const ext = asset.fileName?.split(".").pop()?.toUpperCase();
               const sizeLabel = getFileSize(asset.fileSize);
-
               const meta = [ext, sizeLabel].filter(Boolean).join(" - ");
 
               return (
@@ -94,10 +95,10 @@ function AssetSliderSection({
 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-light-green">
-                        {asset.fileName}
+                        {asset.fileName || "Untitled Asset"}
                       </p>
                       <p className="text-xs text-light-green/80">
-                        {meta || asset.assetType}
+                        {meta || asset.assetType || "File"}
                       </p>
                     </div>
                   </div>

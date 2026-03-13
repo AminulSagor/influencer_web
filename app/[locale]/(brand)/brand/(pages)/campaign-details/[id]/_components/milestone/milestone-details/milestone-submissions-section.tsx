@@ -1,31 +1,30 @@
 "use client";
 
 import * as React from "react";
-import SubmissionAccordionItem from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
+import SubmissionAccordionItem from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-accordion-item";
 import {
-  CampaignDetails,
   CampaignMilestone,
+  ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
 import { useMilestoneSubmissions } from "@/hooks/use-milestone-submissions";
-import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
 
 type Props = {
-  campaign: CampaignDetails;
+  campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
-  assignedInfluencers: CampaignAssignedInfluencer[];
 };
 
 export default function MilestoneSubmissionsSection({
   campaign,
   milestone,
-  assignedInfluencers,
 }: Props) {
   const [openValues, setOpenValues] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     setOpenValues([]);
   }, [milestone.id]);
+
+  const assignedInfluencers = campaign.assignedInfluencers ?? [];
 
   const { items, prefetchedDetailsById, isLoading, error } =
     useMilestoneSubmissions({
@@ -37,9 +36,12 @@ export default function MilestoneSubmissionsSection({
       enabled: Boolean(campaign.id && milestone.id),
     });
 
+  const isInfluencerPromotion =
+    campaign.campaignType === "influencer_promotion";
+
   if (isLoading) {
     return (
-      <div className="rounded-[20px] border border-[#E5E7EB] bg-white p-5 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/60">
         Loading submissions...
       </div>
     );
@@ -47,7 +49,7 @@ export default function MilestoneSubmissionsSection({
 
   if (error) {
     return (
-      <div className="rounded-[20px] border border-red-200 bg-red-50 p-5 text-sm text-red-500">
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-500">
         {error}
       </div>
     );
@@ -55,8 +57,25 @@ export default function MilestoneSubmissionsSection({
 
   if (!items.length) {
     return (
-      <div className="rounded-[20px] border border-[#E5E7EB] bg-white p-5 text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/50">
         No submissions found for this milestone.
+      </div>
+    );
+  }
+
+  if (isInfluencerPromotion) {
+    const submission = items[0];
+
+    return (
+      <div className="space-y-4">
+        <SubmissionAccordionItem
+          submission={submission}
+          index={0}
+          campaign={campaign}
+          milestone={milestone}
+          isOpen
+          prefetchedDetail={prefetchedDetailsById[submission.id] ?? null}
+        />
       </div>
     );
   }

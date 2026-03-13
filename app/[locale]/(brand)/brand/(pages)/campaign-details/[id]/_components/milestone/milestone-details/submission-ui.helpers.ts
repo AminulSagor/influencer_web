@@ -1,9 +1,12 @@
-
 import { CampaignMilestone } from "@/types/client/campaigns/campaign-details";
-import { SubmissionDetail, SubmissionMetricRow, SubmissionStatus } from "@/types/client/campaigns/campaign-submission.types";
+import {
+  SubmissionDetail,
+  SubmissionMetricRow,
+  SubmissionStatus,
+} from "@/types/client/campaigns/campaign-submission.types";
 
-export function formatSubmissionStatusLabel(status: SubmissionStatus) {
-  switch (status) {
+export function formatSubmissionStatusLabel(status: SubmissionStatus | string) {
+  switch (String(status ?? "").toLowerCase()) {
     case "in_review":
       return "In Review";
     case "declined":
@@ -16,8 +19,8 @@ export function formatSubmissionStatusLabel(status: SubmissionStatus) {
   }
 }
 
-export function getSubmissionStatusClasses(status: SubmissionStatus) {
-  switch (status) {
+export function getSubmissionStatusClasses(status: SubmissionStatus | string) {
+  switch (String(status ?? "").toLowerCase()) {
     case "declined":
       return {
         badge: "bg-red-500 text-white",
@@ -126,9 +129,14 @@ export function buildSubmissionMetrics(
   ].filter((item) => item.target > 0);
 }
 
-export function shouldShowBonus(averagePerformance: number, status: SubmissionStatus) {
+export function shouldShowBonus(
+  averagePerformance: number,
+  status: SubmissionStatus | string,
+) {
+  const normalizedStatus = String(status ?? "").toLowerCase();
+
   return (
-    (status === "approved" || status === "completed") &&
+    (normalizedStatus === "approved" || normalizedStatus === "completed") &&
     averagePerformance > 100
   );
 }

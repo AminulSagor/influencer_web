@@ -22,7 +22,7 @@ export function mapClientSubmissionDetailToSubmissionDetail(
     submissionAttachments: input.content?.attachments ?? [],
     submissionLiveLinks: input.content?.liveLinks ?? [],
     requestedAmount: String(input.milestone?.amount ?? "0"),
-    submittedByRole: "influencer",
+    submittedByRole: "agency",
     rejectionReason: null,
     isClientApproved: input.isApproved ?? false,
     achievedReach: 0,
@@ -52,10 +52,7 @@ export function buildInfluencerPromotionSubmissionItems({
 
   for (const influencer of assignedInfluencers) {
     for (const work of influencer.assignedWork ?? []) {
-      if (
-        work.masterMilestoneId !== milestoneId &&
-        work.id !== milestoneId
-      ) {
+      if (work.masterMilestoneId !== milestoneId && work.id !== milestoneId) {
         continue;
       }
 
@@ -77,6 +74,12 @@ export function buildInfluencerPromotionSubmissionItems({
 
         const detail: SubmissionDetail = {
           ...submission,
+          submissionDescription: submission.submissionDescription ?? null,
+          submissionAttachments: submission.submissionAttachments ?? [],
+          submissionLiveLinks: submission.submissionLiveLinks ?? [],
+          rejectionReason: submission.rejectionReason ?? null,
+          adminFeedback: submission.adminFeedback ?? null,
+          paidAmount: submission.paidAmount ?? "0.00",
           milestoneTitle: work.contentTitle ?? "",
         };
 
