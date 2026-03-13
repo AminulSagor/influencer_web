@@ -1,10 +1,10 @@
 import AssetsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/assets.card";
 import CampaignMilestonesSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/campaign-milestones-section";
 import CampaignProgressCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-progress-card";
-import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote-details-card";
 import RatingCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/rating/rating-card";
 import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/_components/terms-and-condition-card";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/quote-details-card";
 
 type CampaignDetailsContentProps = {
   campaign: ClientCampaignDetails;
