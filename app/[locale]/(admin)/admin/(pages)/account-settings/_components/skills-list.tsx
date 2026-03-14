@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,32 +14,98 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FaEdit, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
+import { createSkill } from "@/service/admin/settings/create-skills";
+import { deleteListItem } from "@/service/admin/settings/delete-list-items";
+import { updateListItem } from "@/service/admin/settings/update-list-item";
 
-const SkillsList = () => {
-  const [skills, setSkills] = useState<string[]>(["JavaScript", "React"]);
+type SkillItem = {
+  id: string;
+  name: string;
+};
 
+type Props = {
+  initialSkills: SkillItem[];
+};
+
+const SkillsList = ({ initialSkills }: Props) => {
+  const router = useRouter();
+
+  const [skills, setSkills] = useState<SkillItem[]>(initialSkills || []);
   const [newSkill, setNewSkill] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const trimmed = newSkill.trim();
-    if (trimmed === "") return;
-    setSkills([...skills, trimmed]);
-    setNewSkill("");
+    if (!trimmed) return;
+
+    try {
+      setIsAdding(true);
+
+      const created = await createSkill({
+        name: trimmed,
+      });
+
+      setSkills((prev) => [
+        ...prev,
+        {
+          id: created.id,
+          name: trimmed,
+        },
+      ]);
+
+      setNewSkill("");
+      toast.success("Skill added");
+      router.refresh();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message;
+
+        if (
+          typeof message === "string" &&
+          message.toLowerCase().includes("already exists")
+        ) {
+          toast.error("Already exists");
+          return;
+        }
+      }
+
+      console.error("Failed to create skill:", error);
+      toast.error("Failed to add skill");
+    } finally {
+      setIsAdding(false);
+    }
   };
 
-  const handleDelete = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index));
-    if (editingIndex === index) {
-      setEditingIndex(null);
-      setEditingValue("");
+  const handleDelete = async (itemId: string, index: number) => {
+    try {
+      setDeletingId(itemId);
+
+      await deleteListItem(itemId);
+
+      setSkills((prev) => prev.filter((item) => item.id !== itemId));
+
+      if (editingIndex === index) {
+        setEditingIndex(null);
+        setEditingValue("");
+      }
+
+      toast.success("Skill deleted");
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to delete skill:", error);
+      toast.error("Failed to delete skill");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);
-    setEditingValue(skills[index]);
+    setEditingValue(skills[index].name);
   };
 
   const handleCancelEdit = () => {
@@ -44,13 +113,50 @@ const SkillsList = () => {
     setEditingValue("");
   };
 
-  const handleSaveEdit = () => {
-    if (editingValue.trim() === "") return;
-    setSkills((prev) =>
-      prev.map((item, i) => (i === editingIndex ? editingValue.trim() : item))
-    );
-    setEditingIndex(null);
-    setEditingValue("");
+  const handleSaveEdit = async () => {
+    if (editingIndex === null) return;
+
+    const trimmed = editingValue.trim();
+    if (!trimmed) return;
+
+    const currentItem = skills[editingIndex];
+    if (!currentItem) return;
+
+    try {
+      setUpdatingId(currentItem.id);
+
+      const updated = await updateListItem(currentItem.id, {
+        name: trimmed,
+      });
+
+      setSkills((prev) =>
+        prev.map((item) =>
+          item.id === currentItem.id ? updated.data : item
+        )
+      );
+
+      setEditingIndex(null);
+      setEditingValue("");
+      toast.success("Skill updated");
+      router.refresh();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message;
+
+        if (
+          typeof message === "string" &&
+          message.toLowerCase().includes("already exists")
+        ) {
+          toast.error("Already exists");
+          return;
+        }
+      }
+
+      console.error("Failed to update skill:", error);
+      toast.error("Failed to update skill");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   return (
@@ -59,15 +165,21 @@ const SkillsList = () => {
         <CardTitle>Skills List</CardTitle>
         <CardDescription>Create and manage your skills</CardDescription>
       </CardHeader>
+
       <CardContent>
         <div className="flex items-center justify-between gap-2">
           <Input
             value={newSkill}
             onChange={(e) => setNewSkill(e.target.value)}
             placeholder="Add new skill"
+            disabled={isAdding}
           />
-          <Button variant={"lightGreen"} onClick={handleAdd}>
-            Add
+          <Button
+            variant="lightGreen"
+            onClick={handleAdd}
+            disabled={isAdding}
+          >
+            {isAdding ? "Adding..." : "Add"}
           </Button>
         </div>
 
@@ -75,69 +187,85 @@ const SkillsList = () => {
           {skills.length === 0 && (
             <p className="text-center text-gray-500">No skills added yet.</p>
           )}
-          {skills.map((skill, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between border p-2 rounded-full bg-Secondary text-light-green"
-            >
-              {editingIndex === index ? (
-                <Input
-                  value={editingValue}
-                  onChange={(e) => setEditingValue(e.target.value)}
-                  className="bg-Secondary text-light-green rounded-full"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSaveEdit();
-                    }
-                    if (e.key === "Escape") {
-                      handleCancelEdit();
-                    }
-                  }}
-                />
-              ) : (
-                <p className="text-sm">{skill}</p>
-              )}
 
-              <div className="flex gap-2">
-                {editingIndex === index ? (
-                  <>
-                    <button
-                      onClick={handleSaveEdit}
-                      aria-label="Save"
-                      className="hover:text-light-green-500"
-                    >
-                      <FaCheck />
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      aria-label="Cancel"
-                      className="hover:text-red-500"
-                    >
-                      <FaTimes />
-                    </button>
-                  </>
+          {skills.map((skill, index) => {
+            const isEditing = editingIndex === index;
+            const isDeleting = deletingId === skill.id;
+            const isUpdating = updatingId === skill.id;
+
+            return (
+              <div
+                key={skill.id}
+                className="flex items-center justify-between rounded-full border p-2 bg-Secondary text-light-green"
+              >
+                {isEditing ? (
+                  <Input
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    className="rounded-full bg-Secondary text-light-green"
+                    autoFocus
+                    disabled={isUpdating}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSaveEdit();
+                      }
+                      if (e.key === "Escape") {
+                        handleCancelEdit();
+                      }
+                    }}
+                  />
                 ) : (
-                  <>
-                    <button
-                      onClick={() => handleEdit(index)}
-                      aria-label="Edit"
-                      className="hover:text-yellow-400"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(index)}
-                      aria-label="Delete"
-                      className="hover:text-red-500"
-                    >
-                      <FaTrash />
-                    </button>
-                  </>
+                  <p className="text-sm">{skill.name}</p>
                 )}
+
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleSaveEdit}
+                        aria-label="Save"
+                        className="hover:text-light-green-500 disabled:opacity-50"
+                        type="button"
+                        disabled={isUpdating}
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        aria-label="Cancel"
+                        className="hover:text-red-500 disabled:opacity-50"
+                        type="button"
+                        disabled={isUpdating}
+                      >
+                        <FaTimes />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleEdit(index)}
+                        aria-label="Edit"
+                        className="hover:text-yellow-400"
+                        type="button"
+                        disabled={!!updatingId}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(skill.id, index)}
+                        aria-label="Delete"
+                        className="hover:text-red-500 disabled:opacity-50"
+                        type="button"
+                        disabled={isDeleting}
+                      >
+                        <FaTrash />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,29 +10,65 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { updatePlatformFee } from "@/service/admin/settings/update-platform-fee";
 
-const DefaultValueCard = () => {
-  // State for platform default value
-  const [platformValue, setPlatformValue] = useState("2%");
+type Props = {
+  initialPlatformFee: string;
+  initialVatTax: string;
+};
+
+const DefaultValueCard = ({
+  initialPlatformFee,
+  initialVatTax,
+}: Props) => {
+  const [platformValue, setPlatformValue] = useState(initialPlatformFee);
+  const [vatValue, setVatValue] = useState(initialVatTax);
+
   const [isEditingPlatform, setIsEditingPlatform] = useState(false);
-
-  // State for VAT value
-  const [vatValue, setVatValue] = useState("15%");
   const [isEditingVat, setIsEditingVat] = useState(false);
 
-  const handlePlatformClick = () => {
-    if (isEditingPlatform) {
-      setIsEditingPlatform(false);
-    } else {
+  const [isUpdatingPlatform, setIsUpdatingPlatform] = useState(false);
+  const [isUpdatingVat, setIsUpdatingVat] = useState(false);
+
+  const handlePlatformClick = async () => {
+    if (!isEditingPlatform) {
       setIsEditingPlatform(true);
+      return;
+    }
+
+    try {
+      setIsUpdatingPlatform(true);
+
+      await updatePlatformFee({
+        platformFee: Number(platformValue),
+      });
+
+      setIsEditingPlatform(false);
+    } catch (error) {
+      console.error("Failed to update platform fee:", error);
+    } finally {
+      setIsUpdatingPlatform(false);
     }
   };
 
-  const handleVatClick = () => {
-    if (isEditingVat) {
-      setIsEditingVat(false);
-    } else {
+  const handleVatClick = async () => {
+    if (!isEditingVat) {
       setIsEditingVat(true);
+      return;
+    }
+
+    try {
+      setIsUpdatingVat(true);
+
+      await updatePlatformFee({
+        vatTax: Number(vatValue),
+      });
+
+      setIsEditingVat(false);
+    } catch (error) {
+      console.error("Failed to update VAT tax:", error);
+    } finally {
+      setIsUpdatingVat(false);
     }
   };
 
@@ -43,35 +80,47 @@ const DefaultValueCard = () => {
           Adjust default values for the platform
         </CardDescription>
       </CardHeader>
+
       <CardContent className="flex items-center gap-10">
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
+        <div className="flex items-center gap-2">
           <Input
+            type="number"
+            min="0"
+            step="0.01"
             value={platformValue}
             onChange={(e) => setPlatformValue(e.target.value)}
-            disabled={!isEditingPlatform}
+            disabled={!isEditingPlatform || isUpdatingPlatform}
             placeholder="Platform default value"
           />
-          <Button variant={"lightGreen"} onClick={handlePlatformClick}>
-            {isEditingPlatform ? "Update" : "Edit"}
+          <Button
+            variant="lightGreen"
+            onClick={handlePlatformClick}
+            disabled={isUpdatingPlatform}
+          >
+            {isUpdatingPlatform
+              ? "Updating..."
+              : isEditingPlatform
+              ? "Update"
+              : "Edit"}
           </Button>
         </div>
 
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div className="flex items-center gap-2">
           <Input
+            type="number"
+            min="0"
+            step="0.01"
             value={vatValue}
             onChange={(e) => setVatValue(e.target.value)}
-            disabled={!isEditingVat}
+            disabled={!isEditingVat || isUpdatingVat}
             placeholder="VAT value"
           />
-          <Button variant={"lightGreen"} onClick={handleVatClick}>
-            {isEditingVat ? "Update" : "Edit"}
+          <Button
+            variant="lightGreen"
+            onClick={handleVatClick}
+            disabled={isUpdatingVat}
+          >
+            {isUpdatingVat ? "Updating..." : isEditingVat ? "Update" : "Edit"}
           </Button>
         </div>
       </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,9 +12,7 @@ import {
 
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 
-import {
-  fetchCampaignAgencyDrafts
-} from "@/service/admin/campaign/agency/get-campaign-agency-draft";
+import { fetchCampaignAgencyDrafts } from "@/service/admin/campaign/agency/get-campaign-agency-draft";
 import { inviteAgency } from "@/service/admin/campaign/agency/send-invite-agency";
 import { AgencyDraftRow } from "@/types/admin/campaign/agency/agency_draft_row";
 
@@ -30,12 +28,12 @@ function fullName(row: AgencyDraftRow) {
 
 export default function InviteAgencyBar({
   campaignId,
-  availableForAgency, // ✅ fixed amount for ALL agencies
+  availableForAgency,
   onRefreshDraft,
 }: {
   campaignId: string;
   availableForAgency: number;
-  onRefreshDraft?: () => void;
+  onRefreshDraft?: () => void | Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
   const [inviting, setInviting] = useState(false);
@@ -43,22 +41,33 @@ export default function InviteAgencyBar({
   const [draftRows, setDraftRows] = useState<AgencyDraftRow[]>([]);
   const [selectedAgencyId, setSelectedAgencyId] = useState<string>("");
 
-  const loadDrafts = async () => {
-    if (!campaignId) return;
+  const loadDrafts = useCallback(async () => {
+    if (!campaignId) {
+      setDraftRows([]);
+      setSelectedAgencyId("");
+      return;
+    }
 
-    setLoading(true);
     try {
+      setLoading(true);
+
       const res: any = await fetchCampaignAgencyDrafts(campaignId);
 
-      const list: AgencyDraftRow[] = res?.data?.data ?? [];
+      const list: AgencyDraftRow[] =
+        res?.data?.data ?? res?.data ?? [];
 
       const drafts = (Array.isArray(list) ? list : []).filter(
-        (x) => String(x?.status ?? "").toLowerCase() === "draft"
+        (x) => String(x?.status ?? "").trim().toLowerCase() === "draft"
       );
 
       setDraftRows(drafts);
 
-      setSelectedAgencyId((prev) => prev || drafts?.[0]?.id || "");
+      setSelectedAgencyId((prev) => {
+        if (prev && drafts.some((x) => String(x?.id) === prev)) {
+          return prev;
+        }
+        return String(drafts?.[0]?.id ?? "");
+      });
     } catch (e) {
       console.error("❌ fetchCampaignAgencyDrafts failed:", e);
       setDraftRows([]);
@@ -66,17 +75,15 @@ export default function InviteAgencyBar({
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignId]);
 
   useEffect(() => {
     loadDrafts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  }, [loadDrafts]);
 
-  const selectedRow = useMemo(
-    () => draftRows.find((r) => r.id === selectedAgencyId) || null,
-    [draftRows, selectedAgencyId]
-  );
+  const selectedRow = useMemo(() => {
+    return draftRows.find((r) => String(r?.id) === selectedAgencyId) || null;
+  }, [draftRows, selectedAgencyId]);
 
   const invitationRemainsText = String(draftRows.length).padStart(2, "0");
 
@@ -88,11 +95,11 @@ export default function InviteAgencyBar({
 
       await inviteAgency({
         campaignId,
-        agencyId: selectedAgencyId, // ✅ id from your response
+        agencyId: selectedAgencyId,
       });
 
-      await loadDrafts(); // refresh dropdown
-      onRefreshDraft?.(); // refresh parent table
+      await loadDrafts();
+      await onRefreshDraft?.();
     } catch (e) {
       console.error("❌ inviteAgency failed:", e);
     } finally {
@@ -103,13 +110,10 @@ export default function InviteAgencyBar({
   return (
     <div className="px-2">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-8">
-        {/* dropdown */}
         <div className="md:flex-[2]">
           <Select value={selectedAgencyId} onValueChange={setSelectedAgencyId}>
             <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={loading ? "Loading..." : "Select Agency"}
-              />
+              <SelectValue placeholder={loading ? "Loading..." : "Select Agency"} />
             </SelectTrigger>
 
             <SelectContent>
@@ -119,7 +123,7 @@ export default function InviteAgencyBar({
                 </SelectItem>
               ) : (
                 draftRows.map((row) => (
-                  <SelectItem key={row.id} value={row.id}>
+                  <SelectItem key={row.id} value={String(row.id)}>
                     {fullName(row)}
                   </SelectItem>
                 ))
@@ -134,29 +138,24 @@ export default function InviteAgencyBar({
           )}
         </div>
 
-        {/* offered amount (FIXED) */}
         <div className="md:flex-1">
-          <h2 className="text-Primary text-sm md:text-lg font-semibold">
+          <h2 className="text-Primary text-sm font-semibold md:text-lg">
             Offered Amount:
           </h2>
-          <p className="text-Primary text-sm md:text-lg font-medium">
-            ৳ {money(availableForAgency)}
+          <p className="text-Primary text-sm font-medium md:text-lg">
+            ৳ {money(Number(availableForAgency ?? 0))}
           </p>
         </div>
 
-        {/* remaining count */}
-        <div className="md:flex-1 text-orange">
-          <h2 className="text-sm md:text-lg">
-            Draft invitations remaining:
-          </h2>
-          <p className="text-sm md:text-lg font-medium">
+        <div className="text-orange md:flex-1">
+          <h2 className="text-sm md:text-lg">Draft invitations remaining:</h2>
+          <p className="text-sm font-medium md:text-lg">
             {invitationRemainsText}
           </p>
         </div>
 
-        {/* CTA */}
-        <div className="md:flex-1 flex flex-col items-start md:items-center md:justify-center gap-2">
-          <h2 className="text-Primary text-sm md:text-lg font-semibold">
+        <div className="flex flex-col items-start gap-2 md:flex-1 md:items-center md:justify-center">
+          <h2 className="text-Primary text-sm font-semibold md:text-lg">
             Invitation Remains: {invitationRemainsText}
           </h2>
 
