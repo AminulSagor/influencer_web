@@ -10,9 +10,10 @@ import React, { useMemo, useRef, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/spin-loader";
 import { Input } from "@/components/ui/input";
-import { AssetCategory, LocalAsset } from "@/app/[locale]/(brand)/brand/types/client-types";
 import { notifyError } from "@/utils/toast_util";
 import { submitCampaignStepFive } from "@/service/campaign/update-step-5";
+import { AssetCategory, LocalAsset } from "@/types/client/campaigns/create-campaign-types";
+
 
 const StepFive = () => {
   const { decreaseStep, increaseStep, campaignType, campaignId } = useCampaignStore();

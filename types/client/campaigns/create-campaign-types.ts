@@ -1,3 +1,4 @@
+//create campaign z-store types
 export type CampaignType = "paid_ad" | "influencer_promotion";
 export interface campaignStoreType {
   step: number;
@@ -25,7 +26,7 @@ export interface NewMilestoneForm {
   promotionGoal: string;
 }
 
-export type ApiMilestoneInfluencer = {
+export type serviceMilestoneInfluencer = {
   contentTitle: string;
   platform: string;
   contentQuantity: string;
@@ -36,7 +37,7 @@ export type ApiMilestoneInfluencer = {
   expectedComments: number;
 };
 
-export type ApiMilestonePaidAd = {
+export type serviceMilestonePaidAd = {
   contentTitle: string;
   platform: string;
   contentQuantity: string;
@@ -50,7 +51,9 @@ export type ApiMilestonePaidAd = {
   expectedComments: number;
 }>;
 
-export type ApiMilestone = ApiMilestoneInfluencer | ApiMilestonePaidAd;
+export type serviceMilestone =
+  | serviceMilestoneInfluencer
+  | serviceMilestonePaidAd;
 
 //respone uplaoad file
 export type SignedUrlResponse = {
@@ -129,7 +132,7 @@ export interface AssignedAgency {
 export type MilestoneStatus = "pending" | "accepted" | "completed" | string;
 export type BonusStatus = "unpaid" | "paid" | string;
 
-export interface CampaignMilestoneApi {
+export interface CampaignMilestoneservice {
   id: string;
   contentTitle: string;
   platform: SocialPlatform;
@@ -159,7 +162,7 @@ export interface CampaignMilestoneApi {
 // ===== ASSET =====
 export type AssetCategory = "brand" | "content" | string;
 
-export interface CampaignAssetApi {
+export interface CampaignAssetservice {
   id: string;
   category: AssetCategory;
 
@@ -176,6 +179,78 @@ export interface CampaignAssetApi {
   createdAt: string;
 }
 
+//assign infos
+interface AssignedMember {
+  id: number;
+  name: string;
+  image: string;
+  type: string;
+}
 
+export interface CampaignSummary {
+  id: string;
+  campaignName: string;
+  campaignType: CampaignType;
+  status: string;
+  totalBudget: number;
+  assignedTo: AssignedMember[];
+  platforms: string[];
+  deadline: string;
+  progress: number;
+  budgetPendingAmount: number;
+  negotiationRevisedTimes: number;
+  totalQuotationsReceived: number;
+}
 
+// ===== CAMPAIGN =====
+export interface Campaignservice {
+  id: string;
+  campaignName: string;
+  campaignType: CampaignType;
 
+  productType: string | null;
+  campaignNiche: string | null;
+
+  preferredInfluencers: InfluencerLite[]; // in paid_ad: []
+  notPreferableInfluencers: InfluencerLite[];
+
+  assignedAgencies: AssignedAgency[]; // in influencer_promotion: []
+  campaignGoals: string | null;
+  productServiceDetails: string | null;
+
+  startingDate: string | null; // "2026-02-01"
+  duration: number | null; // 30
+
+  dos: string | null;
+  donts: string | null;
+
+  baseBudget: string | null; // "100000.00"
+  vatAmount: string | null;
+  totalBudget: string | null;
+
+  paymentStatus: PaymentStatus;
+
+  milestones: CampaignMilestoneservice[];
+  assets: CampaignAssetservice[];
+
+  status: CampaignStatus | string;
+  currentStep: number;
+
+  client: CampaignClient;
+
+  createdAt: string;
+  reportingRequirements?: string | null;
+  usageRights?: string | null;
+  termsConditions?: string | null;
+}
+
+export interface serviceSuccessResponse<T> {
+  success: true;
+  data: T;
+}
+
+export interface serviceErrorResponse {
+  success: false;
+  message?: string;
+  data?: unknown;
+}

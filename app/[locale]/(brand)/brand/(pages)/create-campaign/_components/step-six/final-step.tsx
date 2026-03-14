@@ -17,10 +17,11 @@ import { notifyError } from "@/utils/toast_util";
 
 import { getCampaignById } from "@/service/campaign/getById";
 import { placeCampaign } from "@/service/campaign/place-campaign";
-import { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
 
 const FinalStep = () => {
-  const { open, toggleOpen, decreaseStep, campaignId, campaignType } = useCampaignStore();
+  const { open, toggleOpen, decreaseStep, campaignId, campaignType } =
+    useCampaignStore();
   const [placementLoading, setPlacementLoading] = useState(false);
   const [campaign, setCampaign] = useState<Campaignservice | null>(null);
   const [loading, setLoading] = useState(true);

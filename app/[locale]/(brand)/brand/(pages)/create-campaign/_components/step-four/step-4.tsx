@@ -36,7 +36,7 @@ import { notifyError } from "@/utils/toast_util";
 import {
   serviceMilestone,
   NewMilestoneForm,
-} from "@/app/[locale]/(brand)/brand/types/client-types";
+} from "@/types/client/campaigns/create-campaign-types"
 import { submitCampaignStepFour } from "@/service/campaign/update-step-4";
 import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
 import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
