@@ -144,6 +144,11 @@ function shouldShowDangerZone(status?: string) {
   return !["completed", "cancelled", "declined"].includes(normalized);
 }
 
+function shouldShowMilestoneDetails(status?: string) {
+  const normalized = String(status ?? "").toLowerCase();
+  return ["active", "completed", "cancelled"].includes(normalized);
+}
+
 export default function CampaignMilestonesSection({ campaign }: Props) {
   const assignedInfluencers = React.useMemo(
     () => campaign.assignedInfluencers ?? [],
@@ -227,6 +232,11 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     [campaign.status],
   );
 
+  const showMilestoneDetails = React.useMemo(
+    () => shouldShowMilestoneDetails(campaign.status),
+    [campaign.status],
+  );
+
   return (
     <div className="space-y-4">
       <CampaignMilestonesOverview
@@ -235,7 +245,7 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
         onSelectMilestone={setExpandedMilestoneId}
       />
 
-      {expandedMilestone && (
+      {showMilestoneDetails && expandedMilestone && (
         <MilestoneDetailsCard
           campaign={normalizedCampaign}
           milestone={expandedMilestone}
