@@ -1,6 +1,11 @@
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Clock } from "lucide-react";
-import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
 
 type Props = { campaign: Campaignservice | null };
 

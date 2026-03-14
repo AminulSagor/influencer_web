@@ -7,18 +7,25 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Image from "next/image";
-import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
 
 type Props = { campaign: Campaignservice | null };
 
 const CampaignMilestones = ({ campaign }: Props) => {
-  const milestones = Array.isArray(campaign?.milestones) ? campaign!.milestones : [];
+  const milestones = Array.isArray(campaign?.milestones)
+    ? campaign!.milestones
+    : [];
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Image src={"/icons/milestone.svg"} height={18} width={18} alt="icon" />
+          <Image
+            src={"/icons/milestone.svg"}
+            height={18}
+            width={18}
+            alt="icon"
+          />
           <h2 className="text-Primary font-semibold">Campaign Milestone</h2>
         </div>
       </CardHeader>
@@ -32,7 +39,8 @@ const CampaignMilestones = ({ campaign }: Props) => {
                 .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                 .map((milestone, idx) => {
                   const title = milestone.contentTitle;
-                  const subtitle = milestone.contentQuantity || milestone.promotionGoal || "";
+                  const subtitle =
+                    milestone.contentQuantity || milestone.promotionGoal || "";
                   const day = `Delivery: ${milestone.deliveryDays} day(s)`;
 
                   return (
@@ -48,7 +56,9 @@ const CampaignMilestones = ({ campaign }: Props) => {
                           <p className="text-sm text-Primary">{title}</p>
                         </div>
 
-                        <p className="text-xs text-dark-gray mt-1">{subtitle}</p>
+                        <p className="text-xs text-dark-gray mt-1">
+                          {subtitle}
+                        </p>
 
                         <p className="text-end text-sm text-light-green mt-10">
                           {day}

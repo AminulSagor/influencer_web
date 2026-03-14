@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Download, Film, FileText, File, Album } from "lucide-react";
-import type { Campaignservice, CampaignAssetservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type { Campaignservice, CampaignAssetservice } from "@/types/client/campaigns/create-campaign-types";
 
 type Props = { campaign: Campaignservice | null };
 

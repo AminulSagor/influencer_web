@@ -6,7 +6,7 @@ import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/cre
 import type {
   Campaignservice,
   SocialPlatform,
-} from "@/app/[locale]/(brand)/brand/types/client-types";
+} from "@/types/client/campaigns/create-campaign-types";
 import { getPlatformIcon } from "@/utils/platforms_util";
 //import { getPlatformIcon } from "@/helpers/platforms";
 

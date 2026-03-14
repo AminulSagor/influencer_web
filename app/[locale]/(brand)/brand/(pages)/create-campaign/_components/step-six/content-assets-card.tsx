@@ -2,13 +2,20 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Download, Film, FileText, File, Album } from "lucide-react";
-import type { Campaignservice, CampaignAssetservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  Campaignservice,
+  CampaignAssetservice,
+} from "@/types/client/campaigns/create-campaign-types";
 
 type Props = { campaign: Campaignservice | null };
 
 const ContentAssetsCard = ({ campaign }: Props) => {
-  const assets: CampaignAssetservice[] = Array.isArray(campaign?.assets) ? campaign!.assets : [];
-  const contentAssets = assets.filter((a) => (a.category || "").toLowerCase() === "content");
+  const assets: CampaignAssetservice[] = Array.isArray(campaign?.assets)
+    ? campaign!.assets
+    : [];
+  const contentAssets = assets.filter(
+    (a) => (a.category || "").toLowerCase() === "content",
+  );
 
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image")) return <Album size={20} />;
@@ -51,7 +58,9 @@ const ContentAssetsCard = ({ campaign }: Props) => {
                   className="flex justify-between bg-linear-to-r from-white to-light-green/10 items-center rounded-xl py-3 px-4 text-sm border-light-green border"
                 >
                   <div className="flex gap-3 items-center">
-                    <span className="text-light-green">{getFileIcon(mime)}</span>
+                    <span className="text-light-green">
+                      {getFileIcon(mime)}
+                    </span>
                     <div className="text-sm">
                       <p className="text-light-green">{name}</p>
                       <p className="text-xs text-light-green">

@@ -8,7 +8,10 @@ import {
   FaLinkedin,
 } from "react-icons/fa6";
 import { FiInstagram } from "react-icons/fi";
-import type { Campaignservice, SocialPlatform } from "@/app/[locale]/(brand)/brand/types/client-types";
+import type {
+  Campaignservice,
+  SocialPlatform,
+} from "@/types/client/campaigns/create-campaign-types";
 
 type Props = {
   campaign: Campaignservice | null;
@@ -36,16 +39,24 @@ const ReviewInfoCard = ({ campaign }: Props) => {
     }
   };
 
-  const platformsFromClient: SocialPlatform[] = Array.isArray(campaign?.client?.platform)
+  const platformsFromClient: SocialPlatform[] = Array.isArray(
+    campaign?.client?.platform,
+  )
     ? campaign!.client.platform
     : [];
 
-  const platformsFromMilestones: SocialPlatform[] = Array.isArray(campaign?.milestones)
+  const platformsFromMilestones: SocialPlatform[] = Array.isArray(
+    campaign?.milestones,
+  )
     ? campaign!.milestones.map((m) => m.platform).filter(Boolean)
     : [];
 
   const uniquePlatforms = Array.from(
-    new Set([...platformsFromClient, ...platformsFromMilestones].map((p) => p.toLowerCase()))
+    new Set(
+      [...platformsFromClient, ...platformsFromMilestones].map((p) =>
+        p.toLowerCase(),
+      ),
+    ),
   );
 
   const totalBudget = campaign?.totalBudget ?? campaign?.baseBudget ?? "0";

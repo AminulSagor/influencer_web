@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import BrandAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/brand-assets-card";
-import CampaignMilestones from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/campaign-milestones";
-import ContentAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/content-assets-card";
-import DeadlineCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/deadline-card";
-import ReviewInfoCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/review-info-card";
-import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/terms-and-condition";
-import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/placement-confirm-card";
+import BrandAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/brand-assets-card";
+import CampaignMilestones from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/campaign-milestones";
+import ContentAssetsCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/content-assets-card";
+import DeadlineCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/deadline-card";
+import ReviewInfoCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/review-info-card";
+import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/terms-and-condition";
+import PlacementConfirmCard from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/placement-confirm-card";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
