@@ -51,6 +51,7 @@ import {
   UploadItemState,
   VerificationFormState,
 } from "@/types/client/profile/verification-methods.type";
+import Link from "next/link";
 
 export default function VerificationMethodsCard() {
   const t = useTranslations("brand.profile");
@@ -469,7 +470,9 @@ export default function VerificationMethodsCard() {
               aria-label={t("verification.open")}
               title={t("verification.open")}
             >
-              <ExternalLink className="h-4 w-4" />
+              <Link href={"/brand/account-settings/varification-checklist"}>
+                <ExternalLink className="h-4 w-4" />
+              </Link>
             </button>
 
             <div className="absolute top-4 right-6 flex items-center gap-3">
