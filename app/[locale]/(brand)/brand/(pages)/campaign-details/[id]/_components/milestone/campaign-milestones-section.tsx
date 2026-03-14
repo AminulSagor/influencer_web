@@ -139,8 +139,16 @@ function getInfluencerPromotionMilestoneSubmissionId(
   return null;
 }
 
+function shouldShowDangerZone(status?: string) {
+  const normalized = String(status ?? "").toLowerCase();
+  return !["completed", "cancelled", "declined"].includes(normalized);
+}
+
 export default function CampaignMilestonesSection({ campaign }: Props) {
-  const assignedInfluencers = campaign.assignedInfluencers ?? [];
+  const assignedInfluencers = React.useMemo(
+    () => campaign.assignedInfluencers ?? [],
+    [campaign.assignedInfluencers],
+  );
 
   const milestones = React.useMemo(() => {
     const hasTopLevelMilestones = (campaign.milestones ?? []).length > 0;
@@ -214,6 +222,11 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     [campaign, milestones],
   );
 
+  const showDangerZone = React.useMemo(
+    () => shouldShowDangerZone(campaign.status),
+    [campaign.status],
+  );
+
   return (
     <div className="space-y-4">
       <CampaignMilestonesOverview
@@ -233,7 +246,7 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
         />
       )}
 
-      <DangerZoneCard />
+      {showDangerZone ? <DangerZoneCard /> : null}
     </div>
   );
 }
