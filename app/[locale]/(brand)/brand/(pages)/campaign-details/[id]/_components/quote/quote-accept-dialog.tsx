@@ -8,11 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
-import {
-  getQuoteSummary,
-  formatBDT,
-  type QuoteDetailsCampaign,
-} from "./quote-utils";
+import { formatBDT, type QuoteDetailsCampaign } from "./quote-utils";
 import Loader from "@/components/spin-loader";
 
 type QuoteAcceptDialogProps = {
@@ -22,6 +18,8 @@ type QuoteAcceptDialogProps = {
   isSubmitting?: boolean;
   onConfirm: () => Promise<void> | void;
   onRequote: () => void;
+  adminProposedBaseBudget?: number | null;
+  adminProposedTotalBudget?: number | null;
 };
 
 export default function QuoteAcceptDialog({
@@ -31,8 +29,43 @@ export default function QuoteAcceptDialog({
   isSubmitting = false,
   onConfirm,
   onRequote,
+  adminProposedBaseBudget,
+  adminProposedTotalBudget,
 }: QuoteAcceptDialogProps) {
-  const { baseBudget, vatAmount, totalCost } = getQuoteSummary(campaign);
+  const isInfluencerPromotion =
+    campaign.campaignType === "influencer_promotion";
+
+  const dialogTitle = isInfluencerPromotion
+    ? "Confirm Quote?"
+    : "Confirm Budget?";
+
+  const confirmButtonText = isInfluencerPromotion
+    ? "Accept Quote"
+    : "Accept Budget";
+
+  const loadingText = isInfluencerPromotion ? "Accepting..." : "Confirming...";
+
+  const vatAmount = React.useMemo(() => {
+    if (adminProposedBaseBudget == null) return 0;
+
+    if (adminProposedTotalBudget != null) {
+      return Math.max(adminProposedTotalBudget - adminProposedBaseBudget, 0);
+    }
+
+    return adminProposedBaseBudget * 0.15;
+  }, [adminProposedBaseBudget, adminProposedTotalBudget]);
+
+  const totalCost = React.useMemo(() => {
+    if (adminProposedTotalBudget != null) {
+      return adminProposedTotalBudget;
+    }
+
+    if (adminProposedBaseBudget != null) {
+      return adminProposedBaseBudget + vatAmount;
+    }
+
+    return 0;
+  }, [adminProposedBaseBudget, adminProposedTotalBudget, vatAmount]);
 
   const handleConfirm = async () => {
     await onConfirm();
@@ -49,7 +82,7 @@ export default function QuoteAcceptDialog({
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold text-light-green">
-            Confirm Budget ?
+            {dialogTitle}
           </DialogTitle>
         </DialogHeader>
 
@@ -57,14 +90,14 @@ export default function QuoteAcceptDialog({
           <div className="rounded-xl border border-light-green/40 bg-[#F7F7E9] p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-base text-black">Base Campaign Budget</p>
+                <p className="text-base text-black">Admin Proposed Budget</p>
                 <p className="text-base font-semibold text-light-green">
-                  {formatBDT(baseBudget)}
+                  {formatBDT(adminProposedBaseBudget ?? 0)}
                 </p>
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <p className="text-base text-black">VAT/Tax (15%)</p>
+                <p className="text-base text-black">VAT/Tax</p>
                 <p className="text-base font-semibold text-light-green">
                   {formatBDT(vatAmount)}
                 </p>
@@ -94,10 +127,10 @@ export default function QuoteAcceptDialog({
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader className="h-4 w-4 border-2 border-white border-t-transparent" />
-                  <span>Confirming...</span>
+                  <span>{loadingText}</span>
                 </span>
               ) : (
-                "Confirm"
+                confirmButtonText
               )}
             </PrimaryButton>
           </div>
