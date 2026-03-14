@@ -1,12 +1,12 @@
 "use client";
 
-import FinalStep from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/final-step";
-import StepOne from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-1";
-import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-2-agency";
-import StepTwoInfluencer from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-2-influencer";
-import StepThree from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-3";
-import StepFour from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-4";
-import StepFive from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-5";
+import FinalStep from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-six/final-step";
+import StepOne from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-one/step-1";
+import StepTwoAgency from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-two/agency/step-2-agency";
+import StepTwoInfluencer from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-two/influencer/step-2-influencer";
+import StepThree from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-three/step-3";
+import StepFour from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-four/step-4";
+import StepFive from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-five/step-5";
 import Stepper from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/stepper";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";

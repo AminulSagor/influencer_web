@@ -1,4 +1,4 @@
-import { campaignStoreType } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { campaignStoreType } from "@/types/client/campaigns/create-campaign-types";
 import { create } from "zustand";
 
 export const useCampaignStore = create<campaignStoreType>((set) => ({

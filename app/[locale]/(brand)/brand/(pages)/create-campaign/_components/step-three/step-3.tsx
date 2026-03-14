@@ -28,7 +28,6 @@ import { z } from "zod";
 import Loader from "@/components/spin-loader";
 import { stepThreeSchema } from "@/schemas/campaign/step3_campaign_validation";
 import { notifyError } from "@/utils/toast_util";
-import { CampaignService } from "@/service/campaign/campaign-service";
 import { submitCampaignStepThree } from "@/service/campaign/update-step-3";
 import { StepThreePayload } from "@/types/campaign/step3_campaign_type";
 
