@@ -459,6 +459,50 @@
   },
 
   "brand": {
+    "unverified": {
+    "launchBanner": {
+      "verifiedTitle": "Verification Completed",
+      "verifiedDescription": "Your account verification is completed. You can now access your full dashboard and features.",
+      "agencyTitle": "Almost Ready To Launch",
+      "agencyDescription": "Complete verification to unlock your full dashboard with earnings, active jobs, and new opportunities.",
+      "defaultTitle": "Almost There",
+      "defaultDescription": "Complete verification to unlock your full dashboard, search for top talent, and publish your first campaign."
+    },
+    "verification": {
+      "basicInformationTitle": "Basic Informations",
+        "basicInformationSub": "That’s How We Are Going To Reach You",
+      "title": "Verification Progress",
+      "socialPortfolioTitle": "Social Portfolio",
+      "nidTitle": "NID",
+      "tradeLicenseTitle": "Trade License",
+      "tinTitle": "TIN",
+      "binTitle": "BIN",
+      "emailTitle": "Verify Email",
+      "status": {
+        "done": "Completed",
+        "review": "In Review",
+        "rejected": "Rejected",
+        "rejectedWithReason": "Rejected, {reason}",
+        "pending": "Pending"
+      }
+    },
+    "profileCompletion": {
+      "title": "Complete Your Profile",
+      "profilePictureTitle": "Add Profile Picture",
+      "nichesTitle": "Add Niches",
+      "websiteTitle": "Add Website",
+      "addressTitle": "Add Address",
+      "done": "Completed",
+      "pending": "Pending",
+      "nichesHelp": "A niche is a focused area of interest, need, or demographic that an influencer focuses on exclusively",
+    "websiteHelp": "Add website to showcase your business presence and demographics."
+    },
+    "help": {
+      "title": "Need Help?",
+      "verificationGuide": "Verification Guide",
+      "contactSupport": "Contact Support"
+    }
+  },
      "dashboard": {
       "cards": {
         "Active Jobs": "Active Jobs",
