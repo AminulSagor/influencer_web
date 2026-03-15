@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
 import { removeToken } from "@/utils/cookies_util";
+import { useProfileStore } from "@/store/client-profile-store";
 
 export function useLogout() {
   const router = useRouter();
@@ -16,9 +17,11 @@ export function useLogout() {
     setLoading(true);
 
     try {
+      useProfileStore.getState().resetProfile();
+
       removeToken();
 
-      router.push(`/${locale}/login`);
+      router.replace(`/${locale}/login`);
       router.refresh();
     } finally {
       setLoading(false);

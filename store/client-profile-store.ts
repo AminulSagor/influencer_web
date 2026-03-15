@@ -8,6 +8,7 @@ type ProfileStore = {
   profile: BrandProfile | null;
   isLoading: boolean;
   setProfile: (profile: BrandProfile | null) => void;
+  resetProfile: () => void;
   fetchProfile: () => Promise<void>;
 };
 
@@ -17,19 +18,32 @@ export const useProfileStore = create<ProfileStore>((set) => ({
 
   setProfile: (profile) => set({ profile }),
 
+  resetProfile: () =>
+    set({
+      profile: null,
+      isLoading: false,
+    }),
+
   fetchProfile: async () => {
     set({ isLoading: true });
 
-    const result = await getProfile();
+    try {
+      const result = await getProfile();
 
-    if (typeof result === "string") {
-      set({ profile: null, isLoading: false });
-      return;
+      if (typeof result === "string") {
+        set({ profile: null, isLoading: false });
+        return;
+      }
+
+      set({
+        profile: result,
+        isLoading: false,
+      });
+    } catch {
+      set({
+        profile: null,
+        isLoading: false,
+      });
     }
-
-    set({
-      profile: result,
-      isLoading: false,
-    });
   },
 }));
