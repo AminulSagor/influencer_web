@@ -14,7 +14,6 @@ import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/cre
 import { Card, CardContent } from "@/components/ui/card";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-
 import { getCampaignById } from "@/service/campaign/getById";
 import { placeCampaign } from "@/service/campaign/place-campaign";
 import { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
@@ -22,11 +21,12 @@ import { Campaignservice } from "@/types/client/campaigns/create-campaign-types"
 const FinalStep = () => {
   const { open, toggleOpen, decreaseStep, campaignId, campaignType } =
     useCampaignStore();
+
   const [placementLoading, setPlacementLoading] = useState(false);
   const [campaign, setCampaign] = useState<Campaignservice | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPlaced, setIsPlaced] = useState(false);
 
-  // 1️⃣ Load campaign from backend when component mounts
   useEffect(() => {
     if (!campaignId) return;
 
@@ -34,8 +34,10 @@ const FinalStep = () => {
       try {
         setLoading(true);
         const res = await getCampaignById(campaignId);
-        setCampaign(res.data as unknown as Campaignservice);
-        console.log("Fetched campaign:", res.data);
+        const fetchedCampaign = res.data as unknown as Campaignservice;
+
+        setCampaign(fetchedCampaign);
+        setIsPlaced(fetchedCampaign?.status === "received");
       } catch (err: any) {
         notifyError(err.message || "Failed to fetch campaign");
       } finally {
@@ -46,47 +48,42 @@ const FinalStep = () => {
     fetchCampaign();
   }, [campaignId]);
 
-  // 2️⃣ Handle campaign placement
   const handlePlacement = async () => {
-    if (!campaignId) return;
+    if (!campaignId || isPlaced) return;
 
     setPlacementLoading(true);
     try {
       const res = await placeCampaign(campaignId);
-      console.log("Placement service Response:", res);
 
       if (res.success) {
-        const placedCampaign = res.data as unknown as Campaignservice;
-        setCampaign(placedCampaign); // Update state to show final placed data
+        setIsPlaced(true);
         toggleOpen();
-        console.log("Campaign state updated after placement:", placedCampaign);
       } else {
         notifyError(res.message || "Placement failed");
       }
     } catch (err: any) {
       notifyError(err.message || "Failed to place campaign");
-      console.error("Placement error:", err);
     } finally {
       setPlacementLoading(false);
     }
   };
 
-  if (loading) return <Loader />; // Show loader while fetching
+  if (loading) return <Loader />;
 
   return (
     <div className="space-y-4">
       {open && (
-        <div className="absolute top-28 right-1/2 translate-x-1/2 z-50">
+        <div className="absolute top-28 right-1/2 z-50 translate-x-1/2">
           <PlacementConfirmCard campaign={campaign} />
         </div>
       )}
 
-      <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start gap-4">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start">
         <ReviewInfoCard campaign={campaign} />
         <DeadlineCard campaign={campaign} />
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 w-full">
+      <div className="flex w-full flex-col gap-4 md:flex-row">
         <ContentAssetsCard campaign={campaign} />
         {campaignType === "paid_ad" && <BrandAssetsCard campaign={campaign} />}
       </div>
@@ -96,16 +93,22 @@ const FinalStep = () => {
 
       <Card>
         <CardContent>
-          <div className="w-full flex gap-4 lg:justify-center">
+          <div className="flex w-full gap-4 lg:justify-center">
             <SecondaryButton className="w-full" onClick={decreaseStep}>
               Previous
             </SecondaryButton>
             <PrimaryButton
-              className="w-full items-center flex justify-center"
+              className="flex w-full items-center justify-center"
               onClick={handlePlacement}
-              disabled={placementLoading}
+              disabled={placementLoading || isPlaced}
             >
-              {placementLoading ? <Loader /> : "Get Quote"}
+              {placementLoading ? (
+                <Loader />
+              ) : isPlaced ? (
+                "Quote Requested"
+              ) : (
+                "Get Quote"
+              )}
             </PrimaryButton>
           </div>
         </CardContent>

@@ -8,7 +8,6 @@ import type {
   SocialPlatform,
 } from "@/types/client/campaigns/create-campaign-types";
 import { getPlatformIcon } from "@/utils/platforms_util";
-//import { getPlatformIcon } from "@/helpers/platforms";
 
 type Props = {
   campaign: Campaignservice | null;
@@ -17,7 +16,7 @@ type Props = {
 const PlacementConfirmCard = ({ campaign }: Props) => {
   const toggleOpen = useCampaignStore((s) => s.toggleOpen);
 
-  const formatBudget = (amount: string | null | undefined) => {
+  const formatBudget = (amount: string | number | null | undefined) => {
     const n = Number(amount ?? 0);
     if (Number.isNaN(n)) return "৳0";
     return `৳${n.toLocaleString("en-US")}`;
@@ -28,43 +27,45 @@ const PlacementConfirmCard = ({ campaign }: Props) => {
       [
         ...(campaign?.client?.platform ?? []),
         ...(campaign?.milestones?.map((m) => m.platform) ?? []),
-      ].map((p) => p.toLowerCase())
-    )
+      ].map((p) => p.toLowerCase()),
+    ),
   );
 
   const campaignName = campaign?.campaignName || "Summer Fashion Campaign";
-  const budget = campaign?.totalBudget ?? campaign?.baseBudget ?? "0";
+  const baseBudget = campaign?.baseBudget ?? campaign?.budget?.baseBudget;
+  const totalBudget = campaign?.totalBudget ?? campaign?.budget?.totalBudget;
+  const budget = totalBudget ?? baseBudget ?? "0";
 
   return (
-    <Card className="relative w-[390px] border bg-white rounded-2xl shadow-xl p-6">
+    <Card className="relative w-[390px] rounded-2xl border bg-white p-6 shadow-xl">
       <button
         type="button"
         aria-label="Close"
-        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-Primary/70 hover:bg-light-green/30 hover:text-Primary transition"
+        className="text-Primary/70 hover:bg-light-green/30 hover:text-Primary absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full transition"
         onClick={toggleOpen}
       >
         <X className="h-5 w-5" />
       </button>
 
       <div className="flex flex-col items-center text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-light-green">
+        <div className="bg-light-green mb-4 flex h-16 w-16 items-center justify-center rounded-full">
           <Check className="h-8 w-8 text-white" />
         </div>
 
-        <h2 className="text-xl font-semibold leading-tight text-Primary">
+        <h2 className="text-Primary text-xl font-semibold leading-tight">
           Campaign Placement
           <br />
           Confirmed
         </h2>
 
-        <p className="text-sm leading-6 text-light-green">
+        <p className="text-light-green text-sm leading-6">
           We Will Review Your Campaign Soon.
           <br />
           It May Take Upto 3-5 Business Days
         </p>
       </div>
 
-      <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green p-3 text-white">
+      <div className="from-Primary to-light-green rounded-2xl bg-linear-to-r p-3 text-white">
         <div className="flex items-start gap-4">
           <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
             <FaClapperboard className="h-5 w-5 text-white" />
