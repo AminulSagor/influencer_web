@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,14 +10,151 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { AgencyProfileResponse } from "@/types/agency/account-settings";
+import {
+  getAgencyDollarRate,
+  getAgencyServiceFee,
+  updateAgencyDollarRate,
+  updateAgencyServiceFee,
+} from "@/service/agency/account-settings";
 
 type ServiceFeeCardProps = {
-  profile: AgencyProfileResponse | null;
   isLoading: boolean;
 };
 
-const ServiceFeeCard = ({ profile, isLoading }: ServiceFeeCardProps) => {
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const maybeError = error as {
+    response?: {
+      data?: {
+        message?: string | string[];
+        error?: string;
+      };
+    };
+    message?: string;
+  };
+
+  const message = maybeError?.response?.data?.message;
+
+  if (Array.isArray(message) && message.length > 0) {
+    return message[0];
+  }
+
+  if (typeof message === "string" && message.trim()) {
+    return message;
+  }
+
+  const responseError = maybeError?.response?.data?.error;
+  if (typeof responseError === "string" && responseError.trim()) {
+    return responseError;
+  }
+
+  if (typeof maybeError?.message === "string" && maybeError.message.trim()) {
+    return maybeError.message;
+  }
+
+  return fallback;
+};
+
+const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
+  const [dollarRate, setDollarRate] = useState<string>("");
+  const [serviceFee, setServiceFee] = useState<string>("");
+
+  const [savedDollarRate, setSavedDollarRate] = useState<string>("");
+  const [savedServiceFee, setSavedServiceFee] = useState<string>("");
+
+  const [isDollarRateLoading, setIsDollarRateLoading] = useState(true);
+  const [isServiceFeeLoading, setIsServiceFeeLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const fetchDollarRate = async () => {
+      try {
+        setIsDollarRateLoading(true);
+        const response = await getAgencyDollarRate();
+        const value = response?.dollarRate;
+        const formattedValue =
+          value === null || value === undefined || value === 0 ? "" : String(value);
+
+        setDollarRate(formattedValue);
+        setSavedDollarRate(formattedValue);
+      } catch (error) {
+        console.error("Failed to load dollar rate:", error);
+        setDollarRate("");
+        setSavedDollarRate("");
+      } finally {
+        setIsDollarRateLoading(false);
+      }
+    };
+
+    fetchDollarRate();
+  }, []);
+
+  useEffect(() => {
+    const fetchServiceFee = async () => {
+      try {
+        setIsServiceFeeLoading(true);
+        const response = await getAgencyServiceFee();
+        const value = response?.serviceFee?.trim?.() ?? "";
+
+        setServiceFee(value);
+        setSavedServiceFee(value);
+      } catch (error) {
+        console.error("Failed to load service fee:", error);
+        setServiceFee("");
+        setSavedServiceFee("");
+      } finally {
+        setIsServiceFeeLoading(false);
+      }
+    };
+
+    fetchServiceFee();
+  }, []);
+
+  const handleEditOrSave = async () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      await updateAgencyDollarRate({
+        dollarRate: dollarRate.trim() === "" ? "" : Number(dollarRate),
+      });
+
+      await updateAgencyServiceFee({
+        serviceFee: serviceFee.trim(),
+      });
+
+      const refreshedDollarRate = await getAgencyDollarRate();
+      const refreshedServiceFee = await getAgencyServiceFee();
+
+      const refreshedDollarRateValue =
+        refreshedDollarRate?.dollarRate === null ||
+          refreshedDollarRate?.dollarRate === undefined ||
+          refreshedDollarRate?.dollarRate === 0
+          ? ""
+          : String(refreshedDollarRate.dollarRate);
+
+      const refreshedServiceFeeValue =
+        refreshedServiceFee?.serviceFee?.trim?.() ?? "";
+
+      setDollarRate(refreshedDollarRateValue);
+      setSavedDollarRate(refreshedDollarRateValue);
+
+      setServiceFee(refreshedServiceFeeValue);
+      setSavedServiceFee(refreshedServiceFeeValue);
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update service fee and dollar rate:", error);
+      alert(getErrorMessage(error, "Failed to update service fee and dollar rate"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Card>
       <div className="px-4">
@@ -34,8 +174,14 @@ const ServiceFeeCard = ({ profile, isLoading }: ServiceFeeCardProps) => {
                   <Input
                     placeholder="eg: 10%"
                     className="text-center"
-                    value={isLoading ? "Loading..." : profile?.serviceFee ?? ""}
-                    readOnly
+                    value={
+                      isLoading || isServiceFeeLoading
+                        ? "Loading..."
+                        : serviceFee
+                    }
+                    onChange={(e) => setServiceFee(e.target.value)}
+                    readOnly={!isEditing}
+                    disabled={isLoading || isServiceFeeLoading || isSaving}
                   />
                 </div>
 
@@ -45,14 +191,28 @@ const ServiceFeeCard = ({ profile, isLoading }: ServiceFeeCardProps) => {
                   <Input
                     placeholder="eg: 122 BDT"
                     className="text-center"
-                    value={isLoading ? "Loading..." : profile?.dollarRate ?? ""}
-                    readOnly
+                    value={
+                      isDollarRateLoading ? "Loading..." : dollarRate
+                    }
+                    onChange={(e) => setDollarRate(e.target.value)}
+                    readOnly={!isEditing}
+                    disabled={isDollarRateLoading || isSaving}
                   />
                 </div>
 
                 <div>
-                  <Button className="w-full bg-light-green" type="button">
-                    Save
+                  <Button
+                    className="w-full cursor-pointer bg-light-green"
+                    type="button"
+                    onClick={() => void handleEditOrSave()}
+                    disabled={
+                      isLoading ||
+                      isServiceFeeLoading ||
+                      isDollarRateLoading ||
+                      isSaving
+                    }
+                  >
+                    {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
                   </Button>
                 </div>
               </div>

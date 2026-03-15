@@ -34,6 +34,10 @@ const page = () => {
     fetchAgencyProfile();
   }, []);
 
+  const handleProfileUpdated = (updatedProfile: AgencyProfileResponse) => {
+    setProfile(updatedProfile);
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="grid grid-cols-12 gap-4">
@@ -42,34 +46,60 @@ const page = () => {
         </div>
         <div className="col-span-12 md:col-span-6">
           <Link href={"/agency/account-settings/verification-checklist"}>
-            <ProfileCompletionCard profile={profile} isLoading={isLoading} />
+            <div>
+              <ProfileCompletionCard
+                profile={profile}
+                isLoading={isLoading}
+                onProfileUpdated={handleProfileUpdated}
+              />
+            </div>
           </Link>
         </div>
       </div>
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-4">
-          <ServiceFeeCard profile={profile} isLoading={isLoading} />
+          <ServiceFeeCard isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <NicheCard profile={profile} isLoading={isLoading} />
+          <NicheCard
+            profile={profile}
+            isLoading={isLoading}
+            onProfileUpdated={handleProfileUpdated}
+          />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <SocialLinksCard profile={profile} isLoading={isLoading} />
+          <SocialLinksCard
+            profile={profile}
+            isLoading={isLoading}
+            onProfileUpdated={handleProfileUpdated}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-12 md:col-span-8">
-          <ProfileCard profile={profile} isLoading={isLoading} />
+          <ProfileCard
+            profile={profile}
+            isLoading={isLoading}
+            onProfileUpdated={handleProfileUpdated}
+          />
         </div>
         <div className="col-span-12 md:col-span-4">
-          <PayoutSettingsCard profile={profile} isLoading={isLoading} />
+          <PayoutSettingsCard
+            profile={profile}
+            isLoading={isLoading}
+            onProfileUpdated={handleProfileUpdated}
+          />
         </div>
       </div>
 
       <div>
-        <VerificationMethodCard profile={profile} isLoading={isLoading} />
+        <VerificationMethodCard
+          profile={profile}
+          isLoading={isLoading}
+          onProfileUpdated={handleProfileUpdated}
+        />
       </div>
     </div>
   );

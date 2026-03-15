@@ -43,26 +43,25 @@ const NIDUploadBack = () => {
 
       <div className="relative group">
         <label
-          htmlFor="nid-front"
-          className="flex flex-col items-center justify-center gap-2 w-full h-44 border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition overflow-hidden"
+          htmlFor="nid-back-upload"
+          className="flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition hover:bg-gray-100"
         >
-          {/* Preview */}
           {preview ? (
             <Image
               src={preview}
-              alt="NID Preview"
+              alt="NID Back Preview"
               fill
-              className="object-cover rounded-lg"
+              className="rounded-lg object-cover"
             />
           ) : file && file.type === "application/pdf" ? (
             <div className="flex flex-col items-center gap-2 text-gray-600">
               <FileText size={32} />
-              <p className="text-sm truncate max-w-[90%]">{file.name}</p>
+              <p className="max-w-[90%] truncate text-sm">{file.name}</p>
             </div>
           ) : (
             <>
               <UploadCloud className="text-gray-400" size={32} />
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-sm font-medium text-gray-600">
                 Click to upload or drag & drop
               </p>
               <p className="text-xs text-gray-400">PNG, JPEG, PDF (Max 2MB)</p>
@@ -70,12 +69,11 @@ const NIDUploadBack = () => {
           )}
         </label>
 
-        {/* Remove Button (Hover) */}
         {file && (
           <button
             type="button"
             onClick={removeFile}
-            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+            className="absolute right-2 top-2 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
           >
             <X size={16} />
           </button>
@@ -83,7 +81,7 @@ const NIDUploadBack = () => {
       </div>
 
       <Input
-        id="nid-front"
+        id="nid-back-upload"
         type="file"
         accept="image/png,image/jpeg,application/pdf"
         className="hidden"
