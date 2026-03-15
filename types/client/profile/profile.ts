@@ -1,6 +1,12 @@
 export type VerificationStatus = "pending" | "approved" | "rejected";
 
-export type SocialPlatform = "instagram" | "facebook" | "youtube" | "tiktok" | "linkedin" | string;
+export type SocialPlatform =
+  | "instagram"
+  | "facebook"
+  | "youtube"
+  | "tiktok"
+  | "linkedin"
+  | string;
 
 export type SocialLink = {
   url: string;
@@ -33,27 +39,29 @@ export type BrandProfile = {
   brandName: string;
   firstName: string;
   lastName: string;
-  profileImg: string;
+  profileImg: string | null;
   email: string;
   phone: string;
-  thana: string;
-  zilla: string;
-  fullAddress: string;
-  country: string;
-  website: string;
+  primaryPhone?: string | null;
+  thana: string | null;
+  zilla: string | null;
+  fullAddress: string | null;
+  country: string | null;
+  niches?: string[] | null;
+  website: string | null;
   socialLinks: SocialLink[];
-  nidNumber: string;
-  nidFrontImg: string;
-  nidBackImg: string;
-  nidVerification: NidVerification;
-  tradeLicenseNumber: string;
-  tradeLicenseImg: string;
-  tradeLicenseVerification: TradeLicenseVerification;
-  tinNumber: string;
-  tinImage: string;
-  tinVerification: TinVerification;
-  binNumber: string;
-  binVerification: BinVerification;
+  nidNumber: string | null;
+  nidFrontImg: string | null;
+  nidBackImg: string | null;
+  nidVerification: NidVerification | null;
+  tradeLicenseNumber: string | null;
+  tradeLicenseImg: string | null;
+  tradeLicenseVerification: TradeLicenseVerification | null;
+  tinNumber: string | null;
+  tinImage: string | null;
+  tinVerification: TinVerification | null;
+  binNumber: string | null;
+  binVerification: BinVerification | null;
   isOnboardingComplete: boolean;
   userId: string;
   createdAt: string;
