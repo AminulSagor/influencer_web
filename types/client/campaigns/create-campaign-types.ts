@@ -211,22 +211,28 @@ export interface Campaignservice {
   productType: string | null;
   campaignNiche: string | null;
 
-  preferredInfluencers: InfluencerLite[]; // in paid_ad: []
+  preferredInfluencers: InfluencerLite[];
   notPreferableInfluencers: InfluencerLite[];
 
-  assignedAgencies: AssignedAgency[]; // in influencer_promotion: []
+  assignedAgencies: AssignedAgency[];
   campaignGoals: string | null;
   productServiceDetails: string | null;
 
-  startingDate: string | null; // "2026-02-01"
-  duration: number | null; // 30
+  startingDate: string | null;
+  duration: number | null;
 
   dos: string | null;
   donts: string | null;
 
-  baseBudget: string | null; // "100000.00"
+  baseBudget: string | null;
   vatAmount: string | null;
   totalBudget: string | null;
+
+  budget?: {
+    baseBudget?: string | null;
+    vatAmount?: string | null;
+    totalBudget?: string | null;
+  } | null;
 
   paymentStatus: PaymentStatus;
 
