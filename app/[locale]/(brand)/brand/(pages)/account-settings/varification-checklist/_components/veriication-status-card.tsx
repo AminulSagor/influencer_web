@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 import { VerificationStepType } from "../page";
@@ -14,7 +14,7 @@ interface Props {
 
 const VerificationStatusCard = ({ item }: Props) => {
   const t = useTranslations("brand.verificationChecklist");
-
+  const locale = useLocale();
   const isVerified = item.status === "verified";
   const isUnverified = item.status === "unverified";
   const isUnderReview = item.status === "underReview";
@@ -25,7 +25,7 @@ const VerificationStatusCard = ({ item }: Props) => {
       <div className="px-4">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <h2 className="font-semibold text-Primary">{item.title}</h2>
+            <h2 className="font-semibold text-gray-600">{item.title}</h2>
 
             <div className="flex items-center gap-2">
               <div
@@ -40,9 +40,9 @@ const VerificationStatusCard = ({ item }: Props) => {
 
               <p
                 className={cn(
-                  "text-xs",
-                  isVerified && "text-light-green",
-                  isUnverified && "text-gray-500",
+                  "text-xs font-semibold",
+                  isVerified && "text-green-500",
+                  isUnverified && "",
                   isUnderReview && "text-orange",
                   isRejected && "text-red-500",
                 )}
@@ -52,7 +52,7 @@ const VerificationStatusCard = ({ item }: Props) => {
             </div>
           </div>
 
-          <Link href={"/brand/account-settings"}>
+          <Link href={`/${locale}/brand/account-settings`}>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>
