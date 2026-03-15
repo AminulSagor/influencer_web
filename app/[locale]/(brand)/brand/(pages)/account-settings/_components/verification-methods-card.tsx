@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Accordion,
   AccordionContent,
@@ -86,6 +86,7 @@ export default function VerificationMethodsCard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const locale = useLocale();
 
   const hydrateFromProfile = (data: BrandProfile) => {
     const nextForm = mapProfileToForm(data);
@@ -470,7 +471,9 @@ export default function VerificationMethodsCard() {
               aria-label={t("verification.open")}
               title={t("verification.open")}
             >
-              <Link href={"/brand/account-settings/varification-checklist"}>
+              <Link
+                href={`/${locale}/brand/account-settings/varification-checklist`}
+              >
                 <ExternalLink className="h-4 w-4" />
               </Link>
             </button>
