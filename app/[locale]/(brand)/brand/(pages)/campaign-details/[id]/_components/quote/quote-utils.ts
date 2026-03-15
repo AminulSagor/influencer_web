@@ -182,22 +182,29 @@ export const getQuoteSummary = (campaign: QuoteDetailsCampaign) => {
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
 
-  const showQuoteActions =
-    quoteActionStatuses.includes(campaign.status) &&
-    (campaign.assignedInfluencers?.length ?? 0) === 0 &&
-    !campaign.assignedAt;
+  const normalizedStatus = campaign.status?.toLowerCase();
+  const normalizedPaymentStatus = campaign.paymentStatus?.toLowerCase();
 
-  const isPendingPayment = campaign.paymentStatus === "pending";
-  const isPartialPayment = campaign.paymentStatus === "partial";
-  const isPaid = campaign.paymentStatus === "paid";
+  const isReceived = normalizedStatus === "received";
+  const isNegotiating = normalizedStatus === "negotiating";
+
+  const isPendingPayment = normalizedPaymentStatus === "pending";
+  const isPartialPayment = normalizedPaymentStatus === "partial";
+  const isPaid =
+    normalizedPaymentStatus === "paid" ||
+    (totalCost > 0 && dueAmount <= 0 && paidAmount >= totalCost);
+
+  const showQuoteActions = isNegotiating;
 
   const canPay =
-    !showQuoteActions &&
-    (isPendingPayment || isPartialPayment) &&
-    dueAmount > 0;
+    !isNegotiating &&
+    !isReceived &&
+    !isPaid &&
+    dueAmount > 0 &&
+    (isPendingPayment || isPartialPayment || paidAmount > 0);
 
   const showConfirmedState =
-    !showQuoteActions && !canPay && !isPaid && dueAmount <= 0;
+    !isNegotiating && !isReceived && !isPaid && dueAmount <= 0;
 
   return {
     baseBudget,

@@ -20,7 +20,7 @@ import {
   parseNumericInput,
   toNumber,
   type QuoteDetailsCampaign,
-} from "./quote-utils";
+} from "../quote-utils";
 import Loader from "@/components/spin-loader";
 
 type QuoteRequoteDialogProps = {

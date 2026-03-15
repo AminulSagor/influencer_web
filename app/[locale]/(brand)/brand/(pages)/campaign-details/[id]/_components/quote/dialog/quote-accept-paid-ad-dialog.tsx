@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
-import { formatBDT, type QuoteDetailsCampaign } from "./quote-utils";
+import { formatBDT, type QuoteDetailsCampaign } from "../quote-utils";
 import Loader from "@/components/spin-loader";
 
 type QuoteAcceptDialogProps = {

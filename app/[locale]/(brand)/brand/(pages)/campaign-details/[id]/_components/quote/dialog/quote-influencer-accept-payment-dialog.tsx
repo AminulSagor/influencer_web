@@ -15,14 +15,18 @@ import {
   formatBDT,
   parseNumericInput,
   type QuoteDetailsCampaign,
-} from "./quote-utils";
+} from "../quote-utils";
 import Loader from "@/components/spin-loader";
 
-type QuotePayDueDialogProps = {
+type QuoteInfluencerAcceptPaymentDialogProps = {
   campaign: QuoteDetailsCampaign;
   dueAmount: number;
   isSubmitting?: boolean;
   onSubmit: (amount: number) => Promise<void> | void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+  triggerLabel?: string;
 };
 
 type PresetKey = "full" | "min" | "seventyFive" | null;
@@ -41,7 +45,7 @@ function PercentButton({
       type="button"
       onClick={onClick}
       className={[
-        "rounded-full px-4 py-2 text-sm transition",
+        "min-w-[120px] flex-1 rounded-full px-3 py-2 text-center text-xs transition sm:flex-none sm:px-4 sm:text-sm",
         active
           ? "bg-light-green text-white"
           : "bg-[#EAEAEA] text-black hover:bg-[#E0E0E0]",
@@ -56,31 +60,44 @@ function PaymentMethodButton() {
   return (
     <button
       type="button"
-      className="flex w-full items-center justify-between rounded-xl border border-light-gray bg-white px-4 py-3"
+      className="flex w-full items-center justify-between rounded-xl border border-light-gray bg-white px-3 py-3 sm:px-4"
     >
-      <span className="text-base text-Primary">Credit / Debit Card</span>
-      <span className="text-base text-black">⌄</span>
+      <span className="text-sm text-Primary sm:text-base">
+        Credit / Debit Card
+      </span>
+      <span className="text-sm text-black sm:text-base">⌄</span>
     </button>
   );
 }
 
-export default function QuotePayDueDialog({
+export default function QuoteInfluencerAcceptPaymentDialog({
   campaign,
   dueAmount,
   isSubmitting = false,
   onSubmit,
-}: QuotePayDueDialogProps) {
-  const [open, setOpen] = React.useState(false);
+  open,
+  onOpenChange,
+  hideTrigger = false,
+  triggerLabel = "Accept Quote",
+}: QuoteInfluencerAcceptPaymentDialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  const isControlled =
+    typeof open === "boolean" && typeof onOpenChange === "function";
+
+  const dialogOpen = isControlled ? open : internalOpen;
+  const setDialogOpen = isControlled ? onOpenChange : setInternalOpen;
+
   const [activePreset, setActivePreset] = React.useState<PresetKey>(null);
   const minimumAmount = Math.ceil(dueAmount * 0.5);
   const [payAmount, setPayAmount] = React.useState(dueAmount);
 
   React.useEffect(() => {
-    if (open) {
+    if (dialogOpen) {
       setPayAmount(dueAmount);
       setActivePreset("full");
     }
-  }, [open, dueAmount]);
+  }, [dialogOpen, dueAmount]);
 
   const handlePreset = (percent: number, key: Exclude<PresetKey, null>) => {
     const nextAmount = clampAmount(
@@ -102,46 +119,50 @@ export default function QuotePayDueDialog({
   const handleSubmit = async () => {
     if (!isValidAmount) return;
     await onSubmit(payAmount);
-    setOpen(false);
+    setDialogOpen(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="w-full rounded-md border border-light-gray bg-light-green py-2 text-sm text-white"
-        >
-          Pay Due
-        </button>
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="w-full rounded-md border border-light-gray bg-light-green py-2 text-sm text-white"
+          >
+            {triggerLabel}
+          </button>
+        </DialogTrigger>
+      )}
 
-      <DialogContent className="sm:max-w-[430px]">
+      <DialogContent className="max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-center text-base font-semibold text-Primary">
-            Fund Your Campaign
+          <DialogTitle className="text-center text-sm font-semibold text-Primary sm:text-base">
+            Accept Quote & Start Campaign
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5">
-          <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green px-5 py-5 text-white">
-            <p className="truncate text-center text-base font-medium">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green px-4 py-4 text-white sm:px-5 sm:py-5">
+            <p className="truncate text-center text-sm font-medium sm:text-base">
               {campaign.campaignName ?? "Campaign"}
             </p>
 
             <div className="mt-4 text-center">
-              <p className="text-sm text-white/90">Total Due</p>
-              <p className="mt-1 text-base font-semibold">
+              <p className="text-xs text-white/90 sm:text-sm">
+                Total Campaign Cost
+              </p>
+              <p className="mt-1 text-sm font-semibold sm:text-base">
                 {formatBDT(dueAmount)}
               </p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-[#F0B37A] bg-[#FCE8D6] px-4 py-3 text-center">
-            <p className="text-sm text-[#D97E2B]">
-              Minimum Fund Needed To Start The Campaign (50%)
+          <div className="rounded-xl border border-[#F0B37A] bg-[#FCE8D6] px-3 py-3 text-center sm:px-4">
+            <p className="text-xs text-[#D97E2B] sm:text-sm">
+              Minimum fund needed to start the campaign (50%)
             </p>
-            <p className="mt-1 text-base font-semibold text-[#D97E2B]">
+            <p className="mt-1 text-sm font-semibold text-[#D97E2B] sm:text-base">
               {formatBDT(minimumAmount)}
             </p>
           </div>
@@ -151,10 +172,10 @@ export default function QuotePayDueDialog({
             onChange={(e) => handleAmountInput(e.target.value)}
             inputMode="numeric"
             placeholder="0"
-            className="h-12 rounded-xl border-light-gray text-center text-base"
+            className="h-11 rounded-xl border-light-gray text-center text-sm sm:h-12 sm:text-base"
           />
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-stretch justify-center gap-2 sm:gap-3">
             <PercentButton
               label="Pay In Full (100%)"
               active={activePreset === "full"}
@@ -173,7 +194,7 @@ export default function QuotePayDueDialog({
           </div>
 
           <div>
-            <p className="text-base font-semibold text-Primary">
+            <p className="text-sm font-semibold text-Primary sm:text-base">
               Payment Method
             </p>
             <div className="mt-3">
@@ -182,7 +203,7 @@ export default function QuotePayDueDialog({
           </div>
 
           <PrimaryButton
-            className="w-full"
+            className="w-full text-sm sm:text-base"
             onClick={handleSubmit}
             disabled={!isValidAmount || isSubmitting}
           >
@@ -192,7 +213,7 @@ export default function QuotePayDueDialog({
                 <span>Processing...</span>
               </span>
             ) : (
-              `Pay Now ${formatBDT(payAmount)}`
+              `Accept Quote & Pay ${formatBDT(payAmount)}`
             )}
           </PrimaryButton>
         </div>

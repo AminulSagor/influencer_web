@@ -1,97 +1,30 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  formatBDT,
-  getQuoteSummary,
-  type QuoteDetailsCampaign,
-} from "./quote-utils";
-import QuoteRequoteDialog from "./quote-requote-dialog";
-import QuoteAcceptDialog from "./quote-accept-dialog";
-import QuotePayDueDialog from "./quote-pay-due-dialog";
-import { useQuoteActions } from "@/hooks/use-quote-actions";
 import { useRouter } from "next/navigation";
-import Loader from "@/components/spin-loader";
-import { serviceClient } from "@/service/base/axios_client";
+import QuoteAcceptDialog from "./dialog/quote-accept-paid-ad-dialog";
+import { getQuoteSummary, type QuoteDetailsCampaign } from "./quote-utils";
+import { useQuoteActions } from "@/hooks/use-quote-actions";
+import { getCampaignNegotiations } from "@/service/client/negotiation/get-campaign-negotiations";
+import type { NegotiationItem } from "@/types/client/negotiation/negotiation.types";
+import QuoteDetailsCardInfluencer from "./quote-details-card-influencer";
+import QuoteDetailsCardPaidAd from "./quote-details-card-paid-ad";
+import QuoteRequoteDialog from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/dialog/quote-requote-dialog";
 
 type QuoteDetailsCardProps = {
   campaign: QuoteDetailsCampaign;
   onRefresh?: () => void | Promise<void>;
 };
 
-type NegotiationItem = {
-  id: string;
-  sender: "client" | "admin";
-  action: string;
-  message: string | null;
-  proposedBaseBudget: string | null;
-  proposedTotalBudget: string | null;
-  isRead: boolean;
-  createdAt: string;
-};
-
-type NegotiationResponse = {
-  success: boolean;
-  data: {
-    campaign: {
-      id: string;
-      campaignName: string;
-      status: string;
-      negotiationTurn: string;
-      yourTurn: boolean;
-    };
-    negotiations: NegotiationItem[];
-  };
-};
-
-function SummaryRow({
-  label,
-  value,
-  valueClassName = "font-semibold text-light-green",
-}: {
-  label: string;
-  value: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <p className="text-sm">{label}</p>
-      <p className={valueClassName}>{value}</p>
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="my-3 h-px w-full bg-black/15" />;
-}
-
-function StatusButton({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      disabled
-      className="w-full cursor-not-allowed rounded-md border border-light-gray bg-[#EFEFEF] py-2 text-sm text-black/70"
-    >
-      {label}
-    </button>
-  );
-}
-
-function InfoBadge({ label }: { label: string }) {
-  return (
-    <div className="mb-3 inline-flex rounded-full border border-light-green/30 bg-white/80 px-3 py-1 text-xs text-light-green">
-      {label}
-    </div>
-  );
-}
-
 export default function QuoteDetailsCard({
   campaign,
   onRefresh,
 }: QuoteDetailsCardProps) {
+  console.log(campaign.id)
   const [isRequoteOpen, setIsRequoteOpen] = React.useState(false);
   const [isAcceptOpen, setIsAcceptOpen] = React.useState(false);
+  const [isInfluencerPaymentOpen, setIsInfluencerPaymentOpen] =
+    React.useState(false);
   const [isLoadingNegotiations, setIsLoadingNegotiations] =
     React.useState(false);
   const [negotiations, setNegotiations] = React.useState<NegotiationItem[]>([]);
@@ -109,7 +42,9 @@ export default function QuoteDetailsCard({
     showConfirmedState,
   } = getQuoteSummary(campaign);
 
-  const isNegotiating = campaign.status === "negotiating";
+  const normalizedStatus = campaign.status?.toLowerCase();
+  const isNegotiating = normalizedStatus === "negotiating";
+  const isReceived = normalizedStatus === "received";
 
   const fetchNegotiations = React.useCallback(async () => {
     if (!isNegotiating) {
@@ -119,10 +54,8 @@ export default function QuoteDetailsCard({
 
     try {
       setIsLoadingNegotiations(true);
-      const response = await serviceClient.get<NegotiationResponse>(
-        `/campaign/${campaign.id}/negotiations`,
-      );
-      setNegotiations(response.data.data.negotiations ?? []);
+      const data = await getCampaignNegotiations(campaign.id);
+      setNegotiations(data);
     } catch (error) {
       console.error("Failed to load negotiations", error);
       setNegotiations([]);
@@ -135,23 +68,21 @@ export default function QuoteDetailsCard({
     void fetchNegotiations();
   }, [fetchNegotiations]);
 
-  const latestNegotiation = React.useMemo(() => {
-    if (!negotiations.length) return null;
-    return (
-      [...negotiations].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      )[negotiations.length - 1] ?? null
+  const sortedNegotiations = React.useMemo(() => {
+    return [...negotiations].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [negotiations]);
 
+  const latestNegotiation = React.useMemo(() => {
+    if (!sortedNegotiations.length) return null;
+    return sortedNegotiations[sortedNegotiations.length - 1] ?? null;
+  }, [sortedNegotiations]);
+
   const latestAdminRequest = React.useMemo(() => {
     return (
-      [...negotiations]
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        )
+      [...sortedNegotiations]
         .reverse()
         .find(
           (item) =>
@@ -160,7 +91,7 @@ export default function QuoteDetailsCard({
             !!item.proposedBaseBudget,
         ) ?? null
     );
-  }, [negotiations]);
+  }, [sortedNegotiations]);
 
   const displayBaseBudget = React.useMemo(() => {
     if (
@@ -204,16 +135,39 @@ export default function QuoteDetailsCard({
   }, [isNegotiating, latestNegotiation, vatAmount]);
 
   const quoteStateLabel = React.useMemo(() => {
-    if (showConfirmedState) return "Confirmed Budget";
+    if (showConfirmedState) {
+      return isInfluencerPromotion ? "Confirmed Quote" : "Confirmed Budget";
+    }
+
     if (isPaid) return "Paid";
+
+    if (isReceived) {
+      return isInfluencerPromotion
+        ? "Quote Awaiting Admin Review"
+        : "Budget Awaiting Admin Review";
+    }
+
     if (isNegotiating && latestNegotiation?.sender === "admin") {
-      return "Current Quote · Admin Offer";
+      return isInfluencerPromotion
+        ? "Current Quote · Admin Offer"
+        : "Current Budget · Admin Offer";
     }
+
     if (isNegotiating && latestNegotiation?.sender === "client") {
-      return "Current Quote · Your Counter Offer";
+      return isInfluencerPromotion
+        ? "Current Quote · Your Counter Offer"
+        : "Current Budget · Your Counter Offer";
     }
-    return "Initial Submission";
-  }, [showConfirmedState, isPaid, isNegotiating, latestNegotiation]);
+
+    return isInfluencerPromotion ? "Initial Submission" : "Initial Budget";
+  }, [
+    showConfirmedState,
+    isPaid,
+    isReceived,
+    isNegotiating,
+    latestNegotiation,
+    isInfluencerPromotion,
+  ]);
 
   const showQuoteActions =
     isNegotiating &&
@@ -240,10 +194,6 @@ export default function QuoteDetailsCard({
     },
   });
 
-  const acceptButtonLabel = isInfluencerPromotion
-    ? "Accept Quote"
-    : "Accept Budget";
-
   const handleSubmitRequote = async (payload: {
     proposedBaseBudget: number;
     clientProposedServiceFee?: string;
@@ -255,8 +205,16 @@ export default function QuoteDetailsCard({
     });
   };
 
-  const handleAccept = async () => {
+  const handleAcceptBudget = async () => {
     await acceptQuote({ campaignId: campaign.id });
+  };
+
+  const handleInfluencerAcceptAndPay = async (amount: number) => {
+    await acceptQuote({ campaignId: campaign.id });
+    await payDue({
+      campaignId: campaign.id,
+      amount,
+    });
   };
 
   const handlePayDue = async (amount: number) => {
@@ -266,129 +224,37 @@ export default function QuoteDetailsCard({
     });
   };
 
+  const sharedProps = {
+    campaign,
+    quoteStateLabel,
+    displayBaseBudget,
+    displayVatAmount,
+    displayTotalCost,
+    paidAmount,
+    dueAmount,
+    isPaid,
+    isNegotiating,
+    isReceived,
+    canPay,
+    showConfirmedState,
+    showQuoteActions,
+    isLoadingNegotiations,
+    isSubmittingAccept,
+    isSubmittingPayment,
+    onOpenRequote: () => setIsRequoteOpen(true),
+    onOpenAccept: () => setIsAcceptOpen(true),
+    onOpenInfluencerPayment: () => setIsInfluencerPaymentOpen(true),
+    onInfluencerAcceptAndPay: handleInfluencerAcceptAndPay,
+    onPayDue: handlePayDue,
+  };
+
   return (
     <>
-      <Card>
-        <CardContent>
-          <h2 className="text-base font-semibold text-Primary">
-            Quote Details
-          </h2>
-
-          <div className="mt-2 overflow-x-auto rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 no-scrollbar">
-            <div className="text-sm">
-              <InfoBadge label={quoteStateLabel} />
-
-              <div className="flex gap-4">
-                <div className="flex-1 space-y-2">
-                  <SummaryRow
-                    label="Base Campaign Budget"
-                    value={formatBDT(displayBaseBudget)}
-                  />
-
-                  <SummaryRow
-                    label="VAT/Tax"
-                    value={formatBDT(displayVatAmount)}
-                  />
-
-                  <Divider />
-
-                  <SummaryRow
-                    label="Total Campaign Cost"
-                    value={formatBDT(displayTotalCost)}
-                    valueClassName="text-base font-semibold tracking-tight text-light-green"
-                  />
-
-                  {!showQuoteActions &&
-                    (paidAmount > 0 || dueAmount > 0 || isPaid) && (
-                      <>
-                        <div className="mt-2" />
-                        <SummaryRow
-                          label="Paid"
-                          value={formatBDT(paidAmount)}
-                        />
-
-                        {dueAmount > 0 && (
-                          <>
-                            <Divider />
-                            <SummaryRow
-                              label="Due"
-                              value={formatBDT(dueAmount)}
-                              valueClassName="text-base font-semibold tracking-tight text-light-green"
-                            />
-                          </>
-                        )}
-                      </>
-                    )}
-                </div>
-
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-Secondary">
-                  <span className="text-base font-semibold text-Primary">
-                    ৳
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                {isLoadingNegotiations && isNegotiating && (
-                  <div className="flex items-center justify-center py-2">
-                    <Loader className="h-5 w-5 border-2 border-Primary border-t-transparent" />
-                  </div>
-                )}
-
-                {showQuoteActions && (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsRequoteOpen(true)}
-                      className="w-full rounded-md border border-light-gray bg-[#EFEFEF] py-2 text-sm text-black"
-                    >
-                      Requote
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsAcceptOpen(true)}
-                      disabled={isSubmittingAccept}
-                      className="w-full rounded-md border border-light-green bg-light-green py-2 text-sm text-white disabled:opacity-70"
-                    >
-                      {isSubmittingAccept ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <Loader className="h-4 w-4 border-2 border-white border-t-transparent" />
-                          <span>Submitting...</span>
-                        </span>
-                      ) : (
-                        acceptButtonLabel
-                      )}
-                    </button>
-                  </div>
-                )}
-
-                {!isNegotiating &&
-                  !canPay &&
-                  !showConfirmedState &&
-                  !isPaid && (
-                    <StatusButton label="Waiting for admin response" />
-                  )}
-
-                {canPay && (
-                  <QuotePayDueDialog
-                    campaign={campaign}
-                    dueAmount={dueAmount}
-                    isSubmitting={isSubmittingPayment}
-                    onSubmit={handlePayDue}
-                  />
-                )}
-
-                {showConfirmedState && (
-                  <StatusButton label="Budget Confirmed" />
-                )}
-
-                {isPaid && <StatusButton label="Paid" />}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {isInfluencerPromotion ? (
+        <QuoteDetailsCardInfluencer {...sharedProps} />
+      ) : (
+        <QuoteDetailsCardPaidAd {...sharedProps} />
+      )}
 
       <QuoteRequoteDialog
         open={isRequoteOpen}
@@ -398,27 +264,40 @@ export default function QuoteDetailsCard({
         onSubmit={handleSubmitRequote}
       />
 
-      <QuoteAcceptDialog
-        open={isAcceptOpen}
-        onOpenChange={setIsAcceptOpen}
-        campaign={campaign}
-        isSubmitting={isSubmittingAccept}
-        onConfirm={handleAccept}
-        onRequote={() => {
-          setIsAcceptOpen(false);
-          setIsRequoteOpen(true);
-        }}
-        adminProposedBaseBudget={
-          latestAdminRequest?.proposedBaseBudget
-            ? Number(latestAdminRequest.proposedBaseBudget)
-            : null
-        }
-        adminProposedTotalBudget={
-          latestAdminRequest?.proposedTotalBudget
-            ? Number(latestAdminRequest.proposedTotalBudget)
-            : null
-        }
-      />
+      {!isInfluencerPromotion && (
+        <QuoteAcceptDialog
+          open={isAcceptOpen}
+          onOpenChange={setIsAcceptOpen}
+          campaign={campaign}
+          isSubmitting={isSubmittingAccept}
+          onConfirm={handleAcceptBudget}
+          onRequote={() => {
+            setIsAcceptOpen(false);
+            setIsRequoteOpen(true);
+          }}
+          adminProposedBaseBudget={
+            latestAdminRequest?.proposedBaseBudget
+              ? Number(latestAdminRequest.proposedBaseBudget)
+              : null
+          }
+          adminProposedTotalBudget={
+            latestAdminRequest?.proposedTotalBudget
+              ? Number(latestAdminRequest.proposedTotalBudget)
+              : null
+          }
+        />
+      )}
+
+      {isInfluencerPromotion && (
+        <QuoteDetailsCardInfluencer.PaymentDialog
+          open={isInfluencerPaymentOpen}
+          onOpenChange={setIsInfluencerPaymentOpen}
+          campaign={campaign}
+          dueAmount={displayTotalCost}
+          isSubmitting={isSubmittingAccept || isSubmittingPayment}
+          onSubmit={handleInfluencerAcceptAndPay}
+        />
+      )}
     </>
   );
 }
