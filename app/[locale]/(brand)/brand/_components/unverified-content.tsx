@@ -5,9 +5,9 @@ import LaunchBannerCard from "@/app/[locale]/(brand)/brand/(pages)/unverified/_c
 import NeedHelpCard from "@/app/[locale]/(brand)/brand/(pages)/unverified/_components/need-help-card";
 import ProfileCompletionCard from "@/app/[locale]/(brand)/brand/(pages)/unverified/_components/profile-completion-card";
 import VerificationProgressCard from "@/app/[locale]/(brand)/brand/(pages)/unverified/_components/verification-progress-card";
-import { Card, CardContent } from "@/components/ui/card";
 import type { BrandProfile } from "@/types/client/profile/profile";
 import { getProfile } from "@/service/client/profile/profile";
+import UnverifiedShell from "@/app/[locale]/(brand)/brand/_components/unverified-shell";
 
 type Role = "client" | "agency" | "admin" | "influencer";
 
@@ -80,15 +80,7 @@ export default function UnverifiedContent({ role }: { role?: Role }) {
   );
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <Card className="border border-gray-100 bg-white">
-          <CardContent className="py-10 text-sm text-Primary/60">
-            Loading...
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <UnverifiedShell />;
   }
 
   return (
