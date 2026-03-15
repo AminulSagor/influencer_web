@@ -318,7 +318,7 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
                       </div>
                     </div>
 
-                    <Link
+                    {/* <Link
                       href={item.actionLink}
                       className={cn(
                         "shrink-0 rounded-lg px-4 py-2 text-xs font-medium transition",
@@ -326,7 +326,7 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
                       )}
                     >
                       {ui.buttonText}
-                    </Link>
+                    </Link> */}
                   </div>
                 </div>
               );

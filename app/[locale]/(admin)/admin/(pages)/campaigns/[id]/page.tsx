@@ -308,7 +308,7 @@ export default function Page() {
   const isActiveInfluencerCampaign = !isPaidAd && campaignStatus === "active";
 
   if (loading || !campaign) return <div>Loading...</div>;
-
+console.log("campaign milestones =>", campaign?.milestones);
   return (
     <div className="p-4 space-y-4">
       <div className="grid grid-cols-12 gap-4">

@@ -1,27 +1,34 @@
-import { FaEye, FaComment, FaHeart, FaPlay } from "react-icons/fa";
+import type { ReactNode } from "react";
+import { FaComment, FaEye, FaHeart, FaPlay } from "react-icons/fa";
 
-type StatData = {
+type StatCardProps = {
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   current: number;
   target: number;
 };
 
-const stats: StatData[] = [
-  { label: "Reach", icon: <FaEye />, current: 200000, target: 300000 },
-  { label: "Views", icon: <FaPlay />, current: 150000, target: 200000 },
-  { label: "Comments", icon: <FaComment />, current: 5000, target: 10000 },
-  { label: "Likes", icon: <FaHeart />, current: 120000, target: 150000 },
-];
+type Props = {
+  reach?: number;
+  views?: number;
+  comments?: number;
+  likes?: number;
+  targetReach?: number;
+  targetViews?: number;
+  targetComments?: number;
+  targetLikes?: number;
+};
 
-function StatCard({ label, icon, current, target }: StatData) {
-  const percentage = Math.min(100, Math.round((current / target) * 100));
+function formatNumber(num: number) {
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(0)}k`;
+  return num.toString();
+}
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(0) + "k";
-    return num.toString();
-  };
+function StatCard({ label, icon, current, target }: StatCardProps) {
+  const safeTarget = target > 0 ? target : 0;
+  const percentage =
+    safeTarget > 0 ? Math.min(100, Math.round((current / safeTarget) * 100)) : 0;
 
   return (
     <div className="space-y-2">
@@ -32,18 +39,18 @@ function StatCard({ label, icon, current, target }: StatData) {
 
       <div className="px-2">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-light-green">
               {formatNumber(current)}
             </p>
             <p className="text-sm font-semibold text-orange">
-              {formatNumber(target)}
+              {formatNumber(safeTarget)}
             </p>
           </div>
 
-          <div className="h-2 w-full bg-light-green/30 rounded-full overflow-hidden">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-light-green/30">
             <div
-              className="h-full bg-light-green rounded-full transition-all duration-300"
+              className="h-full rounded-full bg-light-green transition-all duration-300"
               style={{ width: `${percentage}%` }}
             />
           </div>
@@ -57,7 +64,43 @@ function StatCard({ label, icon, current, target }: StatData) {
   );
 }
 
-export default function MilestonePerformanceStats() {
+export default function MilestonePerformanceStats({
+  reach = 0,
+  views = 0,
+  comments = 0,
+  likes = 0,
+  targetReach = 0,
+  targetViews = 0,
+  targetComments = 0,
+  targetLikes = 0,
+}: Props) {
+  const stats: StatCardProps[] = [
+    {
+      label: "Reach",
+      icon: <FaEye />,
+      current: reach,
+      target: targetReach,
+    },
+    {
+      label: "Views",
+      icon: <FaPlay />,
+      current: views,
+      target: targetViews,
+    },
+    {
+      label: "Comments",
+      icon: <FaComment />,
+      current: comments,
+      target: targetComments,
+    },
+    {
+      label: "Likes",
+      icon: <FaHeart />,
+      current: likes,
+      target: targetLikes,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       {stats.map((stat) => (
