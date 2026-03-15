@@ -3,16 +3,27 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, HelpCircle, Headphones } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const NeedHelpCard = () => {
+  const t = useTranslations("brand.unverified.help");
+
   return (
     <Card className="py-0 relative bg-white">
       <CardContent className="py-5">
-        <h1 className="font-semibold text-base text-Primary mb-4">Need Help?</h1>
+        <h1 className="font-semibold text-base text-Primary mb-4">
+          {t("title")}
+        </h1>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <HelpRow icon={<HelpCircle className="w-5 h-5 text-light-green" />} title="Verification Guide" />
-          <HelpRow icon={<Headphones className="w-5 h-5 text-light-green" />} title="Contact Support" />
+          <HelpRow
+            icon={<HelpCircle className="w-5 h-5 text-light-green" />}
+            title={t("verificationGuide")}
+          />
+          <HelpRow
+            icon={<Headphones className="w-5 h-5 text-light-green" />}
+            title={t("contactSupport")}
+          />
         </div>
       </CardContent>
     </Card>
