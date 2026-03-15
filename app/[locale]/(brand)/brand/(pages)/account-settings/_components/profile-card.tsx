@@ -39,7 +39,10 @@ const ProfileCard = () => {
           <div>
             <div className="flex items-center gap-4 lg:gap-10">
               <Avatar className="h-28 w-28">
-                <AvatarImage src={profileImg} alt={fullName} />
+                <AvatarImage
+                  src={profile?.profileImg || undefined}
+                  alt={fullName}
+                />
                 <AvatarFallback className="text-lg font-semibold">
                   {fullName.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
