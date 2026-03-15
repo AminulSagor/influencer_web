@@ -1,8 +1,11 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import React from "react";
-import { VerificationStepType } from "../page";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
+import { VerificationStepType } from "../page";
 import Link from "next/link";
 
 interface Props {
@@ -10,10 +13,12 @@ interface Props {
 }
 
 const VerificationStatusCard = ({ item }: Props) => {
-  const isVerified = item.status === "Verified";
-  const isUnverified = item.status === "Unverified";
-  const isUnderReview = item.status === "Under Review";
-  const isRejected = item.status === "Rejected";
+  const t = useTranslations("brand.verificationChecklist");
+
+  const isVerified = item.status === "verified";
+  const isUnverified = item.status === "unverified";
+  const isUnderReview = item.status === "underReview";
+  const isRejected = item.status === "rejected";
 
   return (
     <Card className="py-4">
@@ -42,7 +47,7 @@ const VerificationStatusCard = ({ item }: Props) => {
                   isRejected && "text-red-500",
                 )}
               >
-                {item.status}
+                {t(item.status)}
               </p>
             </div>
           </div>

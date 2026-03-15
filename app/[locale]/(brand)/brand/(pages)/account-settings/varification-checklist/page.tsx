@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import ProfileCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/profile-card";
 import ProfileCompletionPercentCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/varification-checklist/_components/profile-completion-percent-card";
 import VerificationInProgress from "@/app/[locale]/(brand)/brand/(pages)/account-settings/varification-checklist/_components/verification-in-progress";
@@ -8,10 +9,10 @@ import VerificationStatusCard from "@/app/[locale]/(brand)/brand/(pages)/account
 import { useProfileStore } from "@/store/client-profile-store";
 
 export type VerificationStatus =
-  | "Verified"
-  | "Under Review"
-  | "Rejected"
-  | "Unverified";
+  | "verified"
+  | "underReview"
+  | "rejected"
+  | "unverified";
 
 export interface VerificationStepType {
   id: number;
@@ -23,14 +24,15 @@ const getDocStatus = (
   status?: string | null,
   hasValue?: boolean,
 ): VerificationStatus => {
-  if (status === "approved") return "Verified";
-  if (status === "pending") return "Under Review";
-  if (status === "rejected") return "Rejected";
-  if (hasValue) return "Under Review";
-  return "Unverified";
+  if (status === "approved") return "verified";
+  if (status === "pending") return "underReview";
+  if (status === "rejected") return "rejected";
+  if (hasValue) return "underReview";
+  return "unverified";
 };
 
 const VarificationCheckListPage = () => {
+  const t = useTranslations("brand.verificationChecklist");
   const profile = useProfileStore((state) => state.profile);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
 
@@ -45,43 +47,43 @@ const VarificationCheckListPage = () => {
       return [
         {
           id: 1,
-          title: "Social Profile Verification",
-          status: "Unverified",
+          title: t("socialProfileVerification"),
+          status: "unverified",
         },
         {
           id: 2,
-          title: "Phone No. Verification",
-          status: "Unverified",
+          title: t("phoneVerification"),
+          status: "unverified",
         },
         {
           id: 3,
-          title: "Payment Setup",
-          status: "Unverified",
+          title: t("paymentSetup"),
+          status: "unverified",
         },
         {
           id: 4,
-          title: "NID",
-          status: "Unverified",
+          title: t("nid"),
+          status: "unverified",
         },
         {
           id: 5,
-          title: "Trade License",
-          status: "Unverified",
+          title: t("tradeLicense"),
+          status: "unverified",
         },
         {
           id: 6,
-          title: "TIN",
-          status: "Unverified",
+          title: t("tin"),
+          status: "unverified",
         },
         {
           id: 7,
-          title: "BIN",
-          status: "Unverified",
+          title: t("bin"),
+          status: "unverified",
         },
         {
           id: 8,
-          title: "Email",
-          status: "Unverified",
+          title: t("email"),
+          status: "unverified",
         },
       ];
     }
@@ -108,27 +110,27 @@ const VarificationCheckListPage = () => {
     return [
       {
         id: 1,
-        title: "Social Profile Verification",
-        status: hasSocialLinks ? "Verified" : "Unverified",
+        title: t("socialProfileVerification"),
+        status: hasSocialLinks ? "verified" : "unverified",
       },
       {
         id: 2,
-        title: "Phone No. Verification",
-        status: profile.isPhoneVerified ? "Verified" : "Unverified",
+        title: t("phoneVerification"),
+        status: profile.isPhoneVerified ? "verified" : "unverified",
       },
       {
         id: 3,
-        title: "Payment Setup",
-        status: hasPaymentSetup ? "Verified" : "Unverified",
+        title: t("paymentSetup"),
+        status: hasPaymentSetup ? "verified" : "unverified",
       },
       {
         id: 4,
-        title: "NID",
+        title: t("nid"),
         status: getDocStatus(profile.nidVerification?.nidStatus, hasNid),
       },
       {
         id: 5,
-        title: "Trade License",
+        title: t("tradeLicense"),
         status: getDocStatus(
           profile.tradeLicenseVerification?.tradeLicenseStatus,
           hasTradeLicense,
@@ -136,24 +138,24 @@ const VarificationCheckListPage = () => {
       },
       {
         id: 6,
-        title: "TIN",
+        title: t("tin"),
         status: getDocStatus(profile.tinVerification?.tinStatus, hasTin),
       },
       {
         id: 7,
-        title: "BIN",
+        title: t("bin"),
         status: getDocStatus(profile.binVerification?.binStatus, hasBin),
       },
       {
         id: 8,
-        title: "Email",
-        status: profile.isEmailVerified ? "Verified" : "Unverified",
+        title: t("email"),
+        status: profile.isEmailVerified ? "verified" : "unverified",
       },
     ];
-  }, [profile]);
+  }, [profile, t]);
 
   const completedCount = verificationStep.filter(
-    (item) => item.status === "Verified",
+    (item) => item.status === "verified",
   ).length;
 
   const completionPercent = Math.round(
@@ -161,7 +163,7 @@ const VarificationCheckListPage = () => {
   );
 
   const hasUnderReview = verificationStep.some(
-    (item) => item.status === "Under Review",
+    (item) => item.status === "underReview",
   );
 
   return (

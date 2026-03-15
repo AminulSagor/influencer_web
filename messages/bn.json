@@ -707,6 +707,25 @@
       "prev": "আগের",
       "next": "পরের",
       "viewDetails": "বিস্তারিত দেখুন"
+    },
+    "verificationChecklist": {
+      "socialProfileVerification": "সোশ্যাল প্রোফাইল ভেরিফিকেশন",
+      "phoneVerification": "ফোন নম্বর ভেরিফিকেশন",
+      "paymentSetup": "পেমেন্ট সেটআপ",
+      "nid": "এনআইডি",
+      "tradeLicense": "ট্রেড লাইসেন্স",
+      "tin": "টিন",
+      "bin": "বিন",
+      "email": "ইমেইল",
+      "verified": "ভেরিফায়েড",
+      "underReview": "রিভিউতে আছে",
+      "rejected": "প্রত্যাখ্যাত",
+      "unverified": "ভেরিফায়েড নয়",
+      "verificationInProgress": "ভেরিফিকেশন চলছে",
+      "verificationUpdated": "ভেরিফিকেশন আপডেট হয়েছে",
+      "verificationInProgressDescription": "সব আইটেম ভেরিফায়েড হলে আমরা আপনাকে জানাব",
+      "verificationUpdatedDescription": "আপনার সর্বশেষ ভেরিফিকেশন স্ট্যাটাস নিচে দেখানো হয়েছে",
+      "profileCompletion": "প্রোফাইল সম্পূর্ণতা"
     }
   }
 }

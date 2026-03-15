@@ -1,5 +1,8 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import React from "react";
+import { useTranslations } from "next-intl";
 import { FaCheckCircle } from "react-icons/fa";
 
 interface Props {
@@ -7,6 +10,8 @@ interface Props {
 }
 
 const ProfileCompletionPercentCard = ({ percentage }: Props) => {
+  const t = useTranslations("brand.verificationChecklist");
+
   return (
     <Card className="py-4">
       <div className="px-4">
@@ -14,7 +19,7 @@ const ProfileCompletionPercentCard = ({ percentage }: Props) => {
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-semibold text-Primary">
               <FaCheckCircle />
-              Profile Completion
+              {t("profileCompletion")}
             </h2>
             <span className="text-sm font-medium text-Primary">
               {percentage}%

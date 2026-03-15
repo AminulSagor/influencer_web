@@ -458,7 +458,7 @@
     }
   },
 
-  "brand" : {
+  "brand": {
      "dashboard": {
       "cards": {
         "Active Jobs": "Active Jobs",
@@ -707,6 +707,25 @@
       "prev": "Prev",
       "next": "Next",
       "viewDetails": "View Details"
+    },
+    "verificationChecklist": {
+      "socialProfileVerification": "Social Profile Verification",
+      "phoneVerification": "Phone No. Verification",
+      "paymentSetup": "Payment Setup",
+      "nid": "NID",
+      "tradeLicense": "Trade License",
+      "tin": "TIN",
+      "bin": "BIN",
+      "email": "Email",
+      "verified": "Verified",
+      "underReview": "Under Review",
+      "rejected": "Rejected",
+      "unverified": "Unverified",
+      "verificationInProgress": "Verification In Progress",
+      "verificationUpdated": "Verification Updated",
+      "verificationInProgressDescription": "We’ll notify you once all items are verified",
+      "verificationUpdatedDescription": "Your latest verification status is shown below",
+      "profileCompletion": "Profile Completion"
     }
   }
 }
