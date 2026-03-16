@@ -304,11 +304,29 @@ export default function Page() {
     [totalBudget, platformFeeAmount, availableForInfluencers]
   );
 
-  const useAgencyProfitUI = isPaidAd || rawStatus === "pending_agency";
+  const selectedAgencyForPayment = useMemo(() => {
+    const selectedAgencyId = safeStr(campaign?.selectedAgencyId);
+    if (!selectedAgencyId) return null;
+
+    const assignedAgency = (campaign?.assignedAgencies ?? []).find((item: any) => {
+      const agencyId = safeStr(item?.agencyId ?? item?.agency?.id ?? item?.id);
+      return agencyId === selectedAgencyId;
+    });
+
+    const agency = assignedAgency?.agency ?? assignedAgency;
+    if (!agency) return null;
+
+    return {
+      id: selectedAgencyId,
+      name: safeStr(agency?.agencyName ?? agency?.name) || "Assigned Agency",
+      image: agency?.logo ?? agency?.image ?? null,
+    };
+  }, [campaign?.selectedAgencyId, campaign?.assignedAgencies]);
+
+  const useAgencyProfitUI = isPaidAd || rawStatus === "pending_agency" || rawStatus === "agency_accepted";
   const isActiveInfluencerCampaign = !isPaidAd && campaignStatus === "active";
 
   if (loading || !campaign) return <div>Loading...</div>;
-console.log("campaign milestones =>", campaign?.milestones);
   return (
     <div className="p-4 space-y-4">
       <div className="grid grid-cols-12 gap-4">
@@ -362,6 +380,9 @@ console.log("campaign milestones =>", campaign?.milestones);
           draftAssignedAgencies={assignedAgenciesDraft}
           loadingDraftAssignedAgencies={loadingAssignedAgencies}
           onRefreshDraft={fetchAssignedAgencies}
+          campaignStatusRaw={rawStatus}
+          selectedAgency={selectedAgencyForPayment ?? undefined}
+          offeredAmount={availableForAgency}
         />
       ) : (
         <PlatformProfit
