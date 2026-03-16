@@ -502,7 +502,7 @@
       "verificationGuide": "Verification Guide",
       "contactSupport": "Contact Support"
     }
-  },
+    },
      "dashboard": {
       "cards": {
         "Active Jobs": "Active Jobs",
@@ -528,7 +528,8 @@
         "card1Button": "Review",
         "card2Title": "Trade License Rejected",
         "card2Time": "Yesterday, 4:30pm",
-        "card2Button": "Review"
+        "card2Button": "Review",
+        "noActionRequired" : "No action required"
       },
       "upcommingDateline" : {
         "title": "Upcoming Deadlines",

@@ -534,7 +534,8 @@
         "card1Button": "পর্যালোচনা",
         "card2Title": "ট্রেড লাইসেন্স প্রত্যাখ্যাত",
         "card2Time": "গতকাল, ৪:৩০পিএম",
-        "card2Button": "পর্যালোচনা"
+        "card2Button": "পর্যালোচনা",
+        "noActionRequired" : "কোনো পদক্ষেপের প্রয়োজন নেই"
       },
       "earningOverviewCard": {
       "title": "উপার্জনের সংক্ষিপ্ত বিবরণ",
