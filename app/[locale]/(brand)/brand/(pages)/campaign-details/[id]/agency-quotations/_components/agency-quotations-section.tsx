@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronDown, Search } from "lucide-react";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
@@ -19,8 +19,59 @@ type SortKey =
   | "agencyFeePercent"
   | "agencyFeeAmount"
   | "budgetExcludingAgencyFee"
-  | "dollarRate"
   | "inDollar";
+
+type DateFilterKey = "all" | "last7Days" | "last30Days" | "thisMonth";
+
+const DATE_FILTER_OPTIONS: Array<{ key: DateFilterKey; label: string }> = [
+  { key: "all", label: "All Time" },
+  { key: "last7Days", label: "Last 7 Days" },
+  { key: "last30Days", label: "Last 30 Days" },
+  { key: "thisMonth", label: "This Month" },
+];
+
+const isWithinDateFilter = (
+  createdAt: string | undefined,
+  filter: DateFilterKey,
+) => {
+  if (filter === "all") return true;
+  if (!createdAt) return false;
+
+  const createdDate = new Date(createdAt);
+  if (Number.isNaN(createdDate.getTime())) return false;
+
+  const now = new Date();
+
+  if (filter === "last7Days") {
+    const start = new Date();
+    start.setDate(now.getDate() - 7);
+    start.setHours(0, 0, 0, 0);
+    return createdDate >= start && createdDate <= now;
+  }
+
+  if (filter === "last30Days") {
+    const start = new Date();
+    start.setDate(now.getDate() - 30);
+    start.setHours(0, 0, 0, 0);
+    return createdDate >= start && createdDate <= now;
+  }
+
+  if (filter === "thisMonth") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    return createdDate >= start && createdDate <= end;
+  }
+
+  return true;
+};
 
 export default function AgencyQuotationsSection({
   campaign,
@@ -31,6 +82,10 @@ export default function AgencyQuotationsSection({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("agencyName");
   const [sortAsc, setSortAsc] = useState(true);
+  const [dateFilter, setDateFilter] = useState<DateFilterKey>("last30Days");
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+
+  const dateDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const { items, isLoading, error, refetch } = useCampaignBids({
     campaignId: campaign.id,
@@ -38,17 +93,41 @@ export default function AgencyQuotationsSection({
     enabled: Boolean(campaign.id),
   });
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dateDropdownRef.current &&
+        !dateDropdownRef.current.contains(event.target as Node)
+      ) {
+        setDateDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const filteredItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
     let list = [...items];
 
+    list = list.filter((item) =>
+      isWithinDateFilter(item.createdAt, dateFilter),
+    );
+
     if (keyword) {
       list = list.filter((item) => {
         const nicheText = item.nicheLabels.join(" ").toLowerCase();
+
         return (
           item.agency.agencyName.toLowerCase().includes(keyword) ||
-          nicheText.includes(keyword)
+          item.agencyId.toLowerCase().includes(keyword) ||
+          nicheText.includes(keyword) ||
+          (item.email ?? "").toLowerCase().includes(keyword) ||
+          (item.phone ?? "").toLowerCase().includes(keyword)
         );
       });
     }
@@ -75,7 +154,7 @@ export default function AgencyQuotationsSection({
     });
 
     return list;
-  }, [items, search, sortKey, sortAsc]);
+  }, [items, search, sortKey, sortAsc, dateFilter]);
 
   const totalItems = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
@@ -116,6 +195,10 @@ export default function AgencyQuotationsSection({
     setSortAsc(true);
   };
 
+  const selectedDateFilterLabel =
+    DATE_FILTER_OPTIONS.find((option) => option.key === dateFilter)?.label ??
+    "Last 30 Days";
+
   return (
     <>
       <section className="overflow-hidden rounded-3xl border border-light-gray bg-white">
@@ -138,7 +221,7 @@ export default function AgencyQuotationsSection({
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Search by agency name or niche..."
+                placeholder="Search by agency name, phone or email..."
                 className="h-12 w-full rounded-[14px] border border-light-gray bg-white pl-12 pr-4 text-sm text-black outline-none placeholder:text-black/25"
               />
             </div>
@@ -154,15 +237,42 @@ export default function AgencyQuotationsSection({
               </button>
             </div>
 
-            <div className="xl:col-span-2">
+            <div className="relative xl:col-span-2" ref={dateDropdownRef}>
               <button
                 type="button"
-                onClick={() => handleSortToggle("dollarRate")}
+                onClick={() => setDateDropdownOpen((prev) => !prev)}
                 className="flex h-12 w-full items-center justify-between rounded-[14px] border border-primary-color/40 bg-[#F7F8EA] px-4 text-sm font-medium text-primary-color"
               >
-                <span>Dollar Rate</span>
+                <span>{selectedDateFilterLabel}</span>
                 <ChevronDown className="size-4" />
               </button>
+
+              {dateDropdownOpen ? (
+                <div className="absolute right-0 top-[calc(100%+8px)] z-20 min-w-[180px] overflow-hidden rounded-[14px] border border-light-gray bg-white shadow-lg">
+                  {DATE_FILTER_OPTIONS.map((option) => {
+                    const isActive = option.key === dateFilter;
+
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => {
+                          setDateFilter(option.key);
+                          setCurrentPage(1);
+                          setDateDropdownOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-start px-4 py-3 text-left text-sm transition ${
+                          isActive
+                            ? "bg-[#F7F8EA] font-medium text-primary-color"
+                            : "text-black hover:bg-[#F8F9ED]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -196,12 +306,7 @@ export default function AgencyQuotationsSection({
                         <br />
                         Agency Fee
                       </th>
-                      <th
-                        className="cursor-pointer px-4 py-4 text-sm"
-                        onClick={() => handleSortToggle("dollarRate")}
-                      >
-                        Dollar Rate(৳/$)
-                      </th>
+                      <th className="px-4 py-4 text-sm">Date</th>
                       <th
                         className="cursor-pointer px-4 py-4 text-sm"
                         onClick={() => handleSortToggle("inDollar")}
@@ -247,6 +352,17 @@ export default function AgencyQuotationsSection({
                           item.nicheLabels.length > 1
                             ? item.nicheLabels.length - 1
                             : 0;
+
+                        const formattedDate = item.createdAt
+                          ? new Date(item.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )
+                          : "N/A";
 
                         return (
                           <tr
@@ -308,7 +424,7 @@ export default function AgencyQuotationsSection({
                             </td>
 
                             <td className="px-4 py-5 text-base font-semibold text-primary-color">
-                              ৳{item.dollarRate}
+                              {formattedDate}
                             </td>
 
                             <td className="px-4 py-5 text-base font-semibold text-primary-color">
