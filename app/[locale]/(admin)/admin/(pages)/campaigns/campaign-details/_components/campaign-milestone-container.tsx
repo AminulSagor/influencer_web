@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   ChartColumnIncreasing,
@@ -71,7 +71,39 @@ interface Props {
   availableForInfluencers: number;
   availableForAgency?: number;
   assignedInfluencerOfferTotal?: number;
+  agencyOfferId?: string | null;
 }
+
+type SubmissionItem = {
+  id: string;
+  influencerId?: string | null;
+  influencerName?: string | null;
+  influencerImage?: string | null;
+  assignmentId?: string | null;
+  assignedMilestoneId?: string | null;
+  description?: string | null;
+  attachments?: string[];
+  liveLinks?: string[];
+  requestedAmount?: number;
+  paidAmount?: number;
+  status?: string | null;
+  paymentStatus?: string | null;
+  isClientApproved?: boolean;
+  metrics?: {
+    reach?: number;
+    views?: number;
+    likes?: number;
+    comments?: number;
+  };
+  submittedAt?: string | null;
+  adminFeedback?: string | null;
+  rejectionReason?: string | null;
+};
+
+type MilestoneSubmissionBucket = {
+  totalSubmissions: number;
+  submissions: SubmissionItem[];
+};
 
 function toAmount(v: unknown) {
   const n = Number(v ?? 0);
@@ -144,11 +176,11 @@ function roundMoney(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-function getSubmissionMetric(submissionData: any, key: string) {
+function getSubmissionMetric(submissionData: SubmissionItem | null | undefined, key: string) {
   return toSafeNumber(
-    submissionData?.metrics?.[key] ??
-      submissionData?.performanceMetrics?.[key] ??
-      submissionData?.[key] ??
+    submissionData?.metrics?.[key as keyof NonNullable<SubmissionItem["metrics"]>] ??
+      (submissionData as any)?.performanceMetrics?.[key] ??
+      (submissionData as any)?.[key] ??
       0
   );
 }
@@ -211,6 +243,48 @@ function formatDateLabel(value?: string | null) {
   });
 }
 
+function normalizeSubmissionStatus(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function normalizePaymentStatus(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function deriveAggregateMilestoneStatus(
+  submissions: SubmissionItem[],
+  fallback?: string | null
+) {
+  if (!Array.isArray(submissions) || submissions.length === 0) {
+    return normalizeCampaignMilestoneStatus(fallback);
+  }
+
+  const statusList = submissions.map((item) => normalizeSubmissionStatus(item?.status));
+  const paymentStatusList = submissions.map((item) =>
+    normalizePaymentStatus(item?.paymentStatus)
+  );
+
+  if (statusList.some((status) => status === "in_review")) return "in_review";
+  if (statusList.some((status) => status === "declined")) return "declined";
+  if (paymentStatusList.some((status) => status === "partial_paid")) {
+    return "partial_paid";
+  }
+  if (
+    paymentStatusList.length > 0 &&
+    paymentStatusList.every((status) => status === "paid")
+  ) {
+    return "paid";
+  }
+  if (
+    paymentStatusList.some((status) => status === "paid") ||
+    statusList.some((status) => status === "approved")
+  ) {
+    return "approved";
+  }
+
+  return normalizeCampaignMilestoneStatus(fallback);
+}
+
 export default function CampaignMilestoneContainer({
   campaignId,
   campaignStatus,
@@ -221,6 +295,7 @@ export default function CampaignMilestoneContainer({
   availableForInfluencers,
   availableForAgency = 0,
   assignedInfluencerOfferTotal = 0,
+  agencyOfferId,
 }: Props) {
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
@@ -233,9 +308,11 @@ export default function CampaignMilestoneContainer({
   const [assignmentRows, setAssignmentRows] = useState<any[]>([]);
 
   const [submissionLoading, setSubmissionLoading] = useState(false);
-  const [submissionData, setSubmissionData] = useState<any | null>(null);
+  const [milestoneSubmissionMap, setMilestoneSubmissionMap] = useState<
+    Record<string, MilestoneSubmissionBucket>
+  >({});
 
-  const [selectedPaymentAction, setSelectedPaymentAction] = useState("");
+  const [paymentActionMap, setPaymentActionMap] = useState<Record<string, string>>({});
   const [approveOpen, setApproveOpen] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [partialPaidOpen, setPartialPaidOpen] = useState(false);
@@ -243,6 +320,7 @@ export default function CampaignMilestoneContainer({
   const [partialReason, setPartialReason] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionSubmission, setActionSubmission] = useState<SubmissionItem | null>(null);
 
   const isActiveInfluencerMode = !isPaidAd && campaignStatus === "active";
   const isEditableAssignmentMode =
@@ -441,7 +519,7 @@ export default function CampaignMilestoneContainer({
     });
   }, [selectedAssignment, milestones]);
 
-  const visibleMilestones = useMemo(() => {
+  const baseVisibleMilestones = useMemo(() => {
     if (isEditableAssignmentMode) {
       return assignmentBasedMilestones;
     }
@@ -462,6 +540,108 @@ export default function CampaignMilestoneContainer({
     isEditableAssignmentMode,
     assignmentBasedMilestones,
   ]);
+
+  const refreshMilestoneSubmissions = useCallback(
+  async (milestoneId: string) => {
+      const normalizedMilestoneId = safeStr(milestoneId);
+      if (!normalizedMilestoneId) return;
+
+      const res = await getMilestoneSubmissions(normalizedMilestoneId);
+      const data = res?.data ?? {};
+      const submissions = Array.isArray(data?.submissions) ? data.submissions : [];
+
+      setMilestoneSubmissionMap((prev) => ({
+        ...prev,
+        [normalizedMilestoneId]: {
+          totalSubmissions: Number(data?.totalSubmissions ?? submissions.length ?? 0),
+          submissions,
+        },
+      }));
+    },
+    []
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadVisibleMilestoneSubmissions = async () => {
+      const milestoneIds = baseVisibleMilestones
+        .map((item: any) => safeStr(item?.id || item?.masterMilestoneId))
+        .filter(Boolean);
+
+      if (milestoneIds.length === 0) {
+        setMilestoneSubmissionMap({});
+        return;
+      }
+
+      try {
+        setSubmissionLoading(true);
+
+        const responses = await Promise.all(
+          milestoneIds.map(async (milestoneId: string) => {
+            try {
+              const res = await getMilestoneSubmissions(milestoneId);
+              const data = res?.data ?? {};
+              const submissions = Array.isArray(data?.submissions)
+                ? data.submissions
+                : [];
+
+              return {
+                milestoneId,
+                value: {
+                  totalSubmissions: Number(
+                    data?.totalSubmissions ?? submissions.length ?? 0
+                  ),
+                  submissions,
+                },
+              };
+            } catch {
+              return {
+                milestoneId,
+                value: {
+                  totalSubmissions: 0,
+                  submissions: [],
+                },
+              };
+            }
+          })
+        );
+
+        if (cancelled) return;
+
+        const nextMap = responses.reduce<
+          Record<string, MilestoneSubmissionBucket>
+        >((acc, item) => {
+          acc[item.milestoneId] = item.value;
+          return acc;
+        }, {});
+
+        setMilestoneSubmissionMap(nextMap);
+      } finally {
+        if (!cancelled) setSubmissionLoading(false);
+      }
+    };
+
+    loadVisibleMilestoneSubmissions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [baseVisibleMilestones]);
+
+  const visibleMilestones = useMemo(() => {
+    return baseVisibleMilestones.map((milestone: any) => {
+      const milestoneId = safeStr(milestone?.id || milestone?.masterMilestoneId);
+      const bucket = milestoneSubmissionMap[milestoneId];
+
+      if (!bucket) return milestone;
+
+      return {
+        ...milestone,
+        status: deriveAggregateMilestoneStatus(bucket.submissions, milestone?.status),
+      };
+    });
+  }, [baseVisibleMilestones, milestoneSubmissionMap]);
 
   useEffect(() => {
     const firstId =
@@ -613,36 +793,25 @@ export default function CampaignMilestoneContainer({
 
   const activeMilestoneIdSafe = safeStr((activeMilestone as any)?.id);
 
-  const loadSubmission = useCallback(async () => {
-    if (!activeMilestoneIdSafe) {
-      setSubmissionData(null);
-      return;
-    }
+  const activeSubmissionBucket = useMemo(() => {
+    return milestoneSubmissionMap[activeMilestoneIdSafe] ?? null;
+  }, [milestoneSubmissionMap, activeMilestoneIdSafe]);
 
-    try {
-      setSubmissionLoading(true);
-      const res = await getMilestoneSubmissions(activeMilestoneIdSafe);
-      const firstSubmission = res?.data?.submissions?.[0] ?? null;
-      setSubmissionData(firstSubmission);
-    } catch {
-      setSubmissionData(null);
-    } finally {
-      setSubmissionLoading(false);
-    }
-  }, [activeMilestoneIdSafe]);
+  const activeSubmissions = useMemo<SubmissionItem[]>(() => {
+    return Array.isArray(activeSubmissionBucket?.submissions)
+      ? activeSubmissionBucket.submissions
+      : [];
+  }, [activeSubmissionBucket]);
 
   useEffect(() => {
-    loadSubmission();
-  }, [loadSubmission]);
-
-  useEffect(() => {
-    setSelectedPaymentAction("");
+    setPaymentActionMap({});
     setApproveOpen(false);
     setDeclineOpen(false);
     setPartialPaidOpen(false);
     setDeclineReason("");
     setPartialReason("");
     setPartialAmount("");
+    setActionSubmission(null);
   }, [activeMilestoneIdSafe]);
 
   const activeMilestoneStatus = normalizeCampaignMilestoneStatus(
@@ -652,21 +821,7 @@ export default function CampaignMilestoneContainer({
     (activeMilestone as any)?.status
   );
 
-  const hasSubmission = !!submissionData;
-  const submissionStatus = String(submissionData?.status ?? "")
-    .trim()
-    .toLowerCase();
-  const paymentStatus = String(submissionData?.paymentStatus ?? "")
-    .trim()
-    .toLowerCase();
-
-  const submissionBadge: BadgeType | undefined = hasSubmission
-    ? getSubmissionAccordionBadge(submissionData?.status)
-    : undefined;
-
-  const requestedAmount = Number(submissionData?.requestedAmount ?? 0);
-  const paidAmount = Number(submissionData?.paidAmount ?? 0);
-  const remainingAmount = Math.max(0, requestedAmount - paidAmount);
+  const hasSubmission = activeSubmissions.length > 0;
 
   const statusBoxWrapClass =
     activeMilestoneStatus === "todo"
@@ -684,14 +839,8 @@ export default function CampaignMilestoneContainer({
         ? "text-[#8E8E8E]"
         : "text-[#7D8A61]";
 
-  const changeStatusDisabled =
-    !hasSubmission || activeMilestoneStatus === "todo" || actionLoading;
+  const changeStatusDisabled = !hasSubmission || activeMilestoneStatus === "todo";
   const submittedReportDisabled = !hasSubmission;
-
-  const metricReach = getSubmissionMetric(submissionData, "reach");
-  const metricViews = getSubmissionMetric(submissionData, "views");
-  const metricLikes = getSubmissionMetric(submissionData, "likes");
-  const metricComments = getSubmissionMetric(submissionData, "comments");
 
   const targetReach = toNullableNumber((activeMilestone as any)?.expectedReach);
   const targetViews = toNullableNumber((activeMilestone as any)?.expectedViews);
@@ -732,133 +881,210 @@ export default function CampaignMilestoneContainer({
   ].filter(Boolean) as {
     label: string;
     value: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
   }[];
 
-  const averagePerformance = computeAveragePerformance(
-    {
-      reach: metricReach,
-      views: metricViews,
-      likes: metricLikes,
-      comments: metricComments,
+  const getSubmissionRequestedAmount = useCallback((submission: SubmissionItem | null) => {
+    return Number(submission?.requestedAmount ?? 0);
+  }, []);
+
+  const getSubmissionPaidAmount = useCallback((submission: SubmissionItem | null) => {
+    return Number(submission?.paidAmount ?? 0);
+  }, []);
+
+  const getSubmissionRemainingAmount = useCallback((submission: SubmissionItem | null) => {
+    const requestedAmount = getSubmissionRequestedAmount(submission);
+    const paidAmount = getSubmissionPaidAmount(submission);
+    return Math.max(0, requestedAmount - paidAmount);
+  }, [getSubmissionPaidAmount, getSubmissionRequestedAmount]);
+
+  const openApproveForSubmission = useCallback((submission: SubmissionItem) => {
+    setActionSubmission(submission);
+    setApproveOpen(true);
+  }, []);
+
+  const openDeclineForSubmission = useCallback((submission: SubmissionItem) => {
+    setActionSubmission(submission);
+    setDeclineOpen(true);
+  }, []);
+
+  const openPayForSubmission = useCallback(
+    (submission: SubmissionItem) => {
+      const selectedPaymentAction = paymentActionMap[submission.id] || "";
+      if (!selectedPaymentAction) {
+        toast.error("Select a payment type first.");
+        return;
+      }
+
+      setActionSubmission(submission);
+
+      if (selectedPaymentAction === "partial_paid") {
+        setPartialPaidOpen(true);
+        return;
+      }
+
+      void (async () => {
+        try {
+          setActionLoading(true);
+
+          await payInfluencerSubmission({
+            submissionId: submission.id,
+            amount:
+              getSubmissionRemainingAmount(submission) > 0
+                ? getSubmissionRemainingAmount(submission)
+                : getSubmissionRequestedAmount(submission),
+            reason: "Full payment completed",
+          });
+
+          toast.success("Payment completed successfully.");
+          setPaymentActionMap((prev) => ({ ...prev, [submission.id]: "" }));
+          await refreshMilestoneSubmissions(activeMilestoneIdSafe);
+        } catch (error: any) {
+          toast.error(
+            error?.response?.data?.message || "Failed to complete payment."
+          );
+        } finally {
+          setActionLoading(false);
+        }
+      })();
     },
-    {
-      reach: targetReach,
-      views: targetViews,
-      likes: targetLikes,
-      comments: targetComments,
+    [
+      activeMilestoneIdSafe,
+      getSubmissionRemainingAmount,
+      getSubmissionRequestedAmount,
+      paymentActionMap,
+      refreshMilestoneSubmissions,
+    ]
+  );
+const resolveAssignmentIdForSubmission = useCallback(
+  (submission: SubmissionItem | null, milestone: any) => {
+    const directSubmissionAssignmentId = safeStr(submission?.assignmentId);
+    if (directSubmissionAssignmentId) return directSubmissionAssignmentId;
+
+    const directMilestoneAssignmentId = safeStr(milestone?.assignmentId);
+    if (directMilestoneAssignmentId) return directMilestoneAssignmentId;
+
+    if (isPaidAd) {
+      const paidAdAgencyOfferId = safeStr(agencyOfferId);
+      if (paidAdAgencyOfferId) return paidAdAgencyOfferId;
     }
+
+    const matchedAssignment = assignmentRows.find((row: any) =>
+      (row?.milestones ?? []).some((m: any) => {
+        const rowMilestoneId = safeStr(m?.id);
+        const rowMasterMilestoneId = safeStr(m?.masterMilestoneId);
+        const currentMilestoneId = safeStr(milestone?.id);
+        const submissionAssignedMilestoneId = safeStr(
+          submission?.assignedMilestoneId
+        );
+
+        return (
+          (rowMilestoneId && rowMilestoneId === currentMilestoneId) ||
+          (rowMasterMilestoneId && rowMasterMilestoneId === currentMilestoneId) ||
+          (submissionAssignedMilestoneId &&
+            ((rowMilestoneId && rowMilestoneId === submissionAssignedMilestoneId) ||
+              (rowMasterMilestoneId &&
+                rowMasterMilestoneId === submissionAssignedMilestoneId)))
+        );
+      })
+    );
+
+    return (
+      safeStr(matchedAssignment?.assignmentId) ||
+      safeStr(matchedAssignment?.id) ||
+      safeStr(matchedAssignment?.assigneeId)
+    );
+  },
+  [assignmentRows, isPaidAd, agencyOfferId]
+);
+  async function handleApproveConfirm() {
+  const milestoneId = safeStr((activeMilestone as any)?.id);
+  const assignmentId = resolveAssignmentIdForSubmission(
+    actionSubmission,
+    activeMilestone
   );
 
-  async function handleApproveConfirm() {
-    const milestoneId = safeStr((activeMilestone as any)?.id);
-    const assignmentId =
-      safeStr((activeMilestone as any)?.assignmentId) ||
-      safeStr(submissionData?.assignmentId);
-
-    if (!milestoneId || !assignmentId) {
-      toast.error("Milestone or assignment id is missing.");
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-
-      await updateInfluencerMilestoneStatus({
-        milestoneId,
-        assignmentId,
-        status: "approved",
-      });
-
-      toast.success("Submission approved successfully.");
-      setApproveOpen(false);
-      await loadSubmission();
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to approve submission."
-      );
-    } finally {
-      setActionLoading(false);
-    }
+  if (!milestoneId) {
+    toast.error("Milestone id is missing.");
+    return;
   }
+
+  if (!assignmentId) {
+    toast.error("Assignment id is missing.");
+    return;
+  }
+
+  try {
+    setActionLoading(true);
+
+    await updateInfluencerMilestoneStatus({
+      milestoneId,
+      assignmentId,
+      status: "approved",
+    });
+
+    toast.success("Submission approved successfully.");
+    setApproveOpen(false);
+    await refreshMilestoneSubmissions(milestoneId);
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.message || "Failed to approve submission."
+    );
+  } finally {
+    setActionLoading(false);
+  }
+}
 
   async function handleDeclineConfirm() {
-    const milestoneId = safeStr((activeMilestone as any)?.id);
-    const assignmentId =
-      safeStr((activeMilestone as any)?.assignmentId) ||
-      safeStr(submissionData?.assignmentId);
+  const milestoneId = safeStr((activeMilestone as any)?.id);
+  const assignmentId = resolveAssignmentIdForSubmission(
+    actionSubmission,
+    activeMilestone
+  );
 
-    if (!milestoneId || !assignmentId) {
-      toast.error("Milestone or assignment id is missing.");
-      return;
-    }
-
-    if (!declineReason.trim()) {
-      toast.error("Rejection reason is required.");
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-
-      await updateInfluencerMilestoneStatus({
-        milestoneId,
-        assignmentId,
-        status: "declined",
-        reason: declineReason.trim(),
-      });
-
-      toast.success("Submission declined successfully.");
-      setDeclineOpen(false);
-      setDeclineReason("");
-      await loadSubmission();
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to decline submission."
-      );
-    } finally {
-      setActionLoading(false);
-    }
+  if (!milestoneId) {
+    toast.error("Milestone id is missing.");
+    return;
   }
 
-  async function handlePay() {
-    if (!submissionData?.id) return;
-
-    if (!selectedPaymentAction) {
-      toast.error("Select a payment type first.");
-      return;
-    }
-
-    if (selectedPaymentAction === "partial_paid") {
-      setPartialPaidOpen(true);
-      return;
-    }
-
-    try {
-      setActionLoading(true);
-
-      await payInfluencerSubmission({
-        submissionId: submissionData.id,
-        amount: remainingAmount > 0 ? remainingAmount : requestedAmount,
-        reason: "Full payment completed",
-      });
-
-      toast.success("Payment completed successfully.");
-      setSelectedPaymentAction("");
-      await loadSubmission();
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to complete payment."
-      );
-    } finally {
-      setActionLoading(false);
-    }
+  if (!assignmentId) {
+    toast.error("Assignment id is missing.");
+    return;
   }
+
+  if (!declineReason.trim()) {
+    toast.error("Rejection reason is required.");
+    return;
+  }
+
+  try {
+    setActionLoading(true);
+
+    await updateInfluencerMilestoneStatus({
+      milestoneId,
+      assignmentId,
+      status: "declined",
+      reason: declineReason.trim(),
+    });
+
+    toast.success("Submission declined successfully.");
+    setDeclineOpen(false);
+    setDeclineReason("");
+    await refreshMilestoneSubmissions(milestoneId);
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.message || "Failed to decline submission."
+    );
+  } finally {
+    setActionLoading(false);
+  }
+}
 
   async function handlePartialPaidSubmit() {
-    if (!submissionData?.id) return;
+    if (!actionSubmission?.id) return;
 
     const amountNumber = Number(partialAmount || 0);
+    const remainingAmount = getSubmissionRemainingAmount(actionSubmission);
 
     if (!partialReason.trim()) {
       toast.error("Reason is required.");
@@ -879,7 +1105,7 @@ export default function CampaignMilestoneContainer({
       setActionLoading(true);
 
       await payInfluencerSubmission({
-        submissionId: submissionData.id,
+        submissionId: actionSubmission.id,
         amount: amountNumber,
         reason: partialReason.trim(),
       });
@@ -888,8 +1114,8 @@ export default function CampaignMilestoneContainer({
       setPartialPaidOpen(false);
       setPartialAmount("");
       setPartialReason("");
-      setSelectedPaymentAction("");
-      await loadSubmission();
+      setPaymentActionMap((prev) => ({ ...prev, [actionSubmission.id]: "" }));
+      await refreshMilestoneSubmissions(activeMilestoneIdSafe);
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Failed to update partial payment."
@@ -898,6 +1124,222 @@ export default function CampaignMilestoneContainer({
       setActionLoading(false);
     }
   }
+
+  const renderSubmissionContent = useCallback(
+    (submission: SubmissionItem, index: number) => {
+      const submissionStatus = normalizeSubmissionStatus(submission?.status);
+      const paymentStatus = normalizePaymentStatus(submission?.paymentStatus);
+      const submissionBadge: BadgeType | undefined = getSubmissionAccordionBadge(
+        submission?.status
+      );
+      const metricReach = getSubmissionMetric(submission, "reach");
+      const metricViews = getSubmissionMetric(submission, "views");
+      const metricLikes = getSubmissionMetric(submission, "likes");
+      const metricComments = getSubmissionMetric(submission, "comments");
+      const averagePerformance = computeAveragePerformance(
+        {
+          reach: metricReach,
+          views: metricViews,
+          likes: metricLikes,
+          comments: metricComments,
+        },
+        {
+          reach: targetReach,
+          views: targetViews,
+          likes: targetLikes,
+          comments: targetComments,
+        }
+      );
+
+      const heading = isPaidAd
+        ? `Submission ${index + 1}`
+        : activeSubmissions.length > 1
+          ? `Submission ${index + 1}`
+          : "Submission Details";
+
+      return (
+        <CollapsibleCard
+          key={submission.id || `${heading}-${index}`}
+          heading={heading}
+          badge={submissionBadge}
+        >
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <IconText
+                    className="gap-2 text-base"
+                    icon={<FaUserPen />}
+                    text="Description / Update"
+                  />
+
+                  {isPaidAd && (
+                    <span className="rounded-full bg-[#F7F1E7] px-3 py-1 text-xs font-medium text-[#D6852D]">
+                      {submission?.influencerName || "Unknown Influencer"}
+                    </span>
+                  )}
+                </div>
+
+                <p>{submission?.description || "No description available."}</p>
+
+                {submission?.rejectionReason ? (
+                  <p className="text-sm font-medium text-[#FF1E1E]">
+                    Reason: {submission.rejectionReason}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="lg:min-w-[340px]">
+                <InReviewActions
+                  submissionStatus={submissionStatus}
+                  paymentStatus={paymentStatus}
+                  selectedPaymentAction={paymentActionMap[submission.id] || ""}
+                  onDecline={() => openDeclineForSubmission(submission)}
+                  onApprove={() => openApproveForSubmission(submission)}
+                  onPay={() => openPayForSubmission(submission)}
+                  onPaymentActionChange={(value) =>
+                    setPaymentActionMap((prev) => ({
+                      ...prev,
+                      [submission.id]: value,
+                    }))
+                  }
+                  loading={actionLoading}
+                />
+              </div>
+            </div>
+
+            <div className="mt-2 space-y-4 rounded-[12px] border border-[#DDDDDD] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex flex-wrap gap-4 text-[#4B5563]">
+                  <span>
+                    Requested: <strong>৳ {moneyLabel(submission?.requestedAmount)}</strong>
+                  </span>
+                  <span>
+                    Paid: <strong>৳ {moneyLabel(submission?.paidAmount)}</strong>
+                  </span>
+                  <span>
+                    Due: <strong>৳ {moneyLabel(getSubmissionRemainingAmount(submission))}</strong>
+                  </span>
+                </div>
+
+                <span className="text-[#7D8A61]">
+                  {formatDateLabel(submission?.submittedAt)}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-6 lg:flex-row">
+                <div className="flex-1">
+                  <IconText
+                    className="gap-2 font-semibold"
+                    text="Platform / Live Link"
+                    icon={<CgWebsite size={20} />}
+                  />
+
+                  {(submission?.liveLinks ?? []).length > 0 ? (
+                    <div className="mt-2 flex flex-col gap-2">
+                      {(submission?.liveLinks ?? []).map(
+                        (liveLink: string, liveLinkIndex: number) => (
+                          <Link
+                            key={`${liveLink}-${liveLinkIndex}`}
+                            href={
+                              liveLink.startsWith("http")
+                                ? liveLink
+                                : `https://${liveLink}`
+                            }
+                            target="_blank"
+                            className="text-sm text-primary underline"
+                          >
+                            {liveLink}
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-[#6B7280]">
+                      No live link submitted.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <IconText
+                    icon={<HiMiniIdentification size={20} />}
+                    className="gap-2 font-semibold"
+                    text="Attached Proof"
+                  />
+
+                  <div className="flex flex-wrap gap-3">
+                    {(submission?.attachments ?? []).length > 0 ? (
+                      (submission?.attachments ?? []).map(
+                        (fileUrl: string, attachmentIndex: number) => (
+                          <Link
+                            key={`${fileUrl}-${attachmentIndex}`}
+                            href={fileUrl}
+                            target="_blank"
+                            className="flex h-[96px] w-[104px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white px-2 text-center text-xs text-[#232323]"
+                          >
+                            Proof {attachmentIndex + 1}
+                          </Link>
+                        )
+                      )
+                    ) : (
+                      <p className="text-sm text-[#6B7280]">No proof attached.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <IconText
+                  className="gap-2 font-semibold"
+                  text="Performance Metrics"
+                  icon={<ChartColumnIncreasing size={18} />}
+                />
+
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 mt-4 p-2 lg:col-span-8">
+                    <MilestonePerformanceStats
+                      reach={metricReach}
+                      views={metricViews}
+                      likes={metricLikes}
+                      comments={metricComments}
+                      targetReach={targetReach ?? 0}
+                      targetViews={targetViews ?? 0}
+                      targetLikes={targetLikes ?? 0}
+                      targetComments={targetComments ?? 0}
+                    />
+                  </div>
+
+                  <div className="col-span-12 flex flex-col items-center justify-center gap-2 p-2 lg:col-span-4">
+                    <h2 className="text-lg font-semibold">Average Performance</h2>
+                    <CircularProgressChart
+                      percentage={averagePerformance}
+                      size={180}
+                      strokeWidth={30}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CollapsibleCard>
+      );
+    },
+    [
+      actionLoading,
+      activeSubmissions.length,
+      getSubmissionRemainingAmount,
+      isPaidAd,
+      openApproveForSubmission,
+      openDeclineForSubmission,
+      openPayForSubmission,
+      paymentActionMap,
+      targetComments,
+      targetLikes,
+      targetReach,
+      targetViews,
+    ]
+  );
 
   return (
     <div className="space-y-4 p-2">
@@ -919,23 +1361,27 @@ export default function CampaignMilestoneContainer({
       {!isPaidAd && (isActiveInfluencerMode || isEditableAssignmentMode) && (
         <Card>
           <CardHeader className="flex gap-4">
-            <CardTitle className="text-Primary flex flex-1 items-center gap-2 text-base font-semibold">
+            <CardTitle className="text-Primary flex flex-1 items-center gap-2 text-lg">
               <Image
-                src={"/icons/milestone.svg"}
-                height={20}
+                src={"/icons/person-multiple.svg"}
                 width={20}
-                alt="milestone"
+                height={20}
+                alt="influencer"
               />
-              Campaign Milestones
+              <span>Influencer wise milestone progress</span>
             </CardTitle>
 
-            {isActiveInfluencerMode && (
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">Overall Progress</p>
-                  <p className="text-light-green text-sm font-semibold">
-                    {progressLoading ? "Loading..." : `${progress}% Completed`}
+            {progressLoading ? (
+              <div className="flex w-full max-w-md items-center gap-3">
+                <p className="text-sm text-gray-500">Loading progress...</p>
+              </div>
+            ) : (
+              <div className="flex w-full max-w-md flex-1 flex-col gap-2">
+                <div className="flex items-center justify-between text-sm">
+                  <p className="font-medium text-gray-700">
+                    Partial Payment Progress
                   </p>
+                  <p className="font-semibold text-light-green">{progress}%</p>
                 </div>
 
                 <div className="h-2 w-full overflow-hidden rounded-full bg-light-green/20">
@@ -1021,10 +1467,7 @@ export default function CampaignMilestoneContainer({
 
                       {!isPaidAd && (
                         <p className="text-lg font-medium text-[#6B7280]">
-                          {safeStr(
-                            submissionData?.influencerName ||
-                              (activeMilestone as any).influencerName
-                          )}
+                          {safeStr((activeMilestone as any).influencerName)}
                         </p>
                       )}
                     </div>
@@ -1079,9 +1522,7 @@ export default function CampaignMilestoneContainer({
                                 <p className="text-[14px] leading-none text-[#35571C]">
                                   {item.label}
                                 </p>
-                                <div className="text-[#4C5437]">
-                                  {item.icon}
-                                </div>
+                                <div className="text-[#4C5437]">{item.icon}</div>
                               </div>
 
                               <p className="mt-3 text-[22px] font-semibold leading-none text-Primary">
@@ -1139,7 +1580,7 @@ export default function CampaignMilestoneContainer({
                           <FaClock className="text-[11px]" />
                           <span>
                             {formatDateLabel(
-                              submissionData?.submittedAt ||
+                              activeSubmissions?.[0]?.submittedAt ||
                                 (activeMilestone as any).createdAt
                             )}
                           </span>
@@ -1150,148 +1591,18 @@ export default function CampaignMilestoneContainer({
                 </div>
               </div>
 
-              <div className="mt-4">
-                <CollapsibleCard
-                  heading="Submission Details"
-                  badge={submissionBadge}
-                >
-                  {submissionLoading ? (
-                    <p className="text-sm text-[#6B7280]">Loading submission...</p>
-                  ) : !hasSubmission ? (
-                    <div className="rounded-[12px] border border-dashed border-[#D9E3D0] bg-[#FAFBF7] p-6 text-sm text-[#6B7280]">
-                      No submission available for this milestone yet.
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="space-y-3">
-                          <IconText
-                            className="gap-2 text-base"
-                            icon={<FaUserPen />}
-                            text="Description / Update"
-                          />
-                          <p>
-                            {submissionData?.description ||
-                              "No description available."}
-                          </p>
-                        </div>
-
-                        <div className="lg:min-w-[340px]">
-                          <InReviewActions
-                            submissionStatus={submissionStatus}
-                            paymentStatus={paymentStatus}
-                            selectedPaymentAction={selectedPaymentAction}
-                            onDecline={() => setDeclineOpen(true)}
-                            onApprove={() => setApproveOpen(true)}
-                            onPay={handlePay}
-                            onPaymentActionChange={setSelectedPaymentAction}
-                            loading={actionLoading}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="mt-2 space-y-4 rounded-[12px] border border-[#DDDDDD] p-4">
-                        <div className="flex flex-col gap-6 lg:flex-row">
-                          <div className="flex-1">
-                            <IconText
-                              className="gap-2 font-semibold"
-                              text="Platform / Live Link"
-                              icon={<CgWebsite size={20} />}
-                            />
-
-                            {(submissionData?.liveLinks ?? []).length > 0 ? (
-                              <div className="mt-2 flex flex-col gap-2">
-                                {submissionData.liveLinks.map(
-                                  (liveLink: string, index: number) => (
-                                    <Link
-                                      key={`${liveLink}-${index}`}
-                                      href={
-                                        liveLink.startsWith("http")
-                                          ? liveLink
-                                          : `https://${liveLink}`
-                                      }
-                                      target="_blank"
-                                      className="text-sm text-primary underline"
-                                    >
-                                      {liveLink}
-                                    </Link>
-                                  )
-                                )}
-                              </div>
-                            ) : (
-                              <p className="mt-2 text-sm text-[#6B7280]">
-                                No live link submitted.
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex-1 space-y-2">
-                            <IconText
-                              icon={<HiMiniIdentification size={20} />}
-                              className="gap-2 font-semibold"
-                              text="Attached Proof"
-                            />
-
-                            <div className="flex flex-wrap gap-3">
-                              {(submissionData?.attachments ?? []).length > 0 ? (
-                                submissionData.attachments.map(
-                                  (fileUrl: string, index: number) => (
-                                    <Link
-                                      key={`${fileUrl}-${index}`}
-                                      href={fileUrl}
-                                      target="_blank"
-                                      className="flex h-[96px] w-[104px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white px-2 text-center text-xs text-[#232323]"
-                                    >
-                                      Proof {index + 1}
-                                    </Link>
-                                  )
-                                )
-                              ) : (
-                                <p className="text-sm text-[#6B7280]">
-                                  No proof attached.
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <IconText
-                            className="gap-2 font-semibold"
-                            text="Performance Metrics"
-                            icon={<ChartColumnIncreasing size={18} />}
-                          />
-
-                          <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 mt-4 p-2 lg:col-span-8">
-                              <MilestonePerformanceStats
-                                reach={metricReach}
-                                views={metricViews}
-                                likes={metricLikes}
-                                comments={metricComments}
-                                targetReach={targetReach ?? 0}
-                                targetViews={targetViews ?? 0}
-                                targetLikes={targetLikes ?? 0}
-                                targetComments={targetComments ?? 0}
-                              />
-                            </div>
-
-                            <div className="col-span-12 flex flex-col items-center justify-center gap-2 p-2 lg:col-span-4">
-                              <h2 className="text-lg font-semibold">
-                                Average Performance
-                              </h2>
-                              <CircularProgressChart
-                                percentage={averagePerformance}
-                                size={180}
-                                strokeWidth={30}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CollapsibleCard>
+              <div className="mt-4 space-y-4">
+                {submissionLoading ? (
+                  <p className="text-sm text-[#6B7280]">Loading submission...</p>
+                ) : !hasSubmission ? (
+                  <div className="rounded-[12px] border border-dashed border-[#D9E3D0] bg-[#FAFBF7] p-6 text-sm text-[#6B7280]">
+                    No submission available for this milestone yet.
+                  </div>
+                ) : (
+                  activeSubmissions.map((submission, index) =>
+                    renderSubmissionContent(submission, index)
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1304,7 +1615,7 @@ export default function CampaignMilestoneContainer({
           safeStr((activeMilestone as any)?.contentTitle) ||
           safeStr((activeMilestone as any)?.title)
         }
-        influencerName={safeStr(submissionData?.influencerName)}
+        influencerName={safeStr(actionSubmission?.influencerName)}
         onClose={() => setApproveOpen(false)}
         onApprove={handleApproveConfirm}
         loading={actionLoading}
@@ -1321,10 +1632,16 @@ export default function CampaignMilestoneContainer({
 
       <MilestonePartialPaidModal
         open={partialPaidOpen}
-        influencerName={safeStr(submissionData?.influencerName)}
+        influencerName={safeStr(actionSubmission?.influencerName)}
         reason={partialReason}
         amount={partialAmount}
-        maxAmount={remainingAmount > 0 ? remainingAmount : requestedAmount}
+        maxAmount={
+          actionSubmission
+            ? getSubmissionRemainingAmount(actionSubmission) > 0
+              ? getSubmissionRemainingAmount(actionSubmission)
+              : getSubmissionRequestedAmount(actionSubmission)
+            : 0
+        }
         onReasonChange={setPartialReason}
         onAmountChange={setPartialAmount}
         onClose={() => setPartialPaidOpen(false)}

@@ -142,7 +142,7 @@ export default function Page() {
               image: a?.logo ?? null,
             });
           });
-        } catch {}
+        } catch { }
 
         const results = await Promise.all(
           ids.map(async (profileId) => {
@@ -200,14 +200,14 @@ export default function Page() {
   const rawStatus = normalize(campaign?.status);
   const rawQuoteStatus = normalize(
     campaign?.quote?.status ??
-      campaign?.negotiation?.status ??
-      campaign?.quoteStatus ??
-      campaign?.negotiationStatus
+    campaign?.negotiation?.status ??
+    campaign?.quoteStatus ??
+    campaign?.negotiationStatus
   );
   const waitingFor = normalize(
     campaign?.negotiation?.waitingFor ??
-      campaign?.quote?.waitingFor ??
-      campaign?.waitingFor
+    campaign?.quote?.waitingFor ??
+    campaign?.waitingFor
   );
 
   const fallbackQuoteState = useMemo(
@@ -413,6 +413,7 @@ export default function Page() {
         availableForInfluencers={availableForInfluencers}
         availableForAgency={availableForAgency}
         assignedInfluencerOfferTotal={assignedInfluencerOfferTotal}
+        agencyOfferId={campaign?.agencyOfferId ?? null}
       />
 
       <CampaignTermsCard
