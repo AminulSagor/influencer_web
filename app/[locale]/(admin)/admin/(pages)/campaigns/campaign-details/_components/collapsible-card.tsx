@@ -8,7 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ReactNode } from "react";
 
-export type BadgeType = "Completed" | "In Review";
+export type BadgeType =
+  | "Completed"
+  | "In Review"
+  | "Paid"
+  | "Partial Paid"
+  | "Declined";
 
 type CollapsibleCardProps = {
   children: ReactNode;
@@ -21,6 +26,9 @@ type CollapsibleCardProps = {
 const badgeVariants: Record<BadgeType, string> = {
   Completed: "bg-Primary text-white",
   "In Review": "bg-orange text-white",
+  Paid: "bg-Primary text-white",
+  "Partial Paid": "bg-Primary text-white",
+  Declined: "bg-red text-white",
 };
 
 const CollapsibleCard = ({

@@ -140,12 +140,21 @@ export function isMilestoneDoneForProgress(value?: string | null) {
 }
 
 export function getSubmissionAccordionBadge(
-  submissionStatus?: string | null
-): "Completed" | "In Review" | undefined {
-  const normalized = String(submissionStatus ?? "").trim().toLowerCase();
+  submissionStatus?: string | null,
+  paymentStatus?: string | null
+): "Completed" | "In Review" | "Paid" | "Partial Paid" | "Declined" | undefined {
+  const normalizedSubmissionStatus = String(submissionStatus ?? "")
+    .trim()
+    .toLowerCase();
+  const normalizedPaymentStatus = String(paymentStatus ?? "")
+    .trim()
+    .toLowerCase();
 
-  if (normalized === "approved") return "Completed";
-  if (normalized === "in_review") return "In Review";
+  if (normalizedPaymentStatus === "paid") return "Paid";
+  if (normalizedPaymentStatus === "partial_paid") return "Partial Paid";
+  if (normalizedSubmissionStatus === "declined") return "Declined";
+  if (normalizedSubmissionStatus === "approved") return "Completed";
+  if (normalizedSubmissionStatus === "in_review") return "In Review";
 
   return undefined;
 }

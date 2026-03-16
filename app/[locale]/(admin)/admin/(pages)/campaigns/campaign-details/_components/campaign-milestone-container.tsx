@@ -56,6 +56,8 @@ import {
   getSubmissionAccordionBadge,
   normalizeCampaignMilestoneStatus,
 } from "@/utils/admin/campaign/campaign-milestone/milestone_status_util";
+import { payAgencySubmission } from "@/service/admin/campaign/agency/pay-agency-submission";
+import { reviewAgencySubmission } from "@/service/admin/campaign/agency/review-agency-submission";
 
 const CircularProgressChart = dynamic(() => import("./circular-progress"), {
   ssr: false,
@@ -71,7 +73,6 @@ interface Props {
   availableForInfluencers: number;
   availableForAgency?: number;
   assignedInfluencerOfferTotal?: number;
-  agencyOfferId?: string | null;
 }
 
 type SubmissionItem = {
@@ -295,7 +296,6 @@ export default function CampaignMilestoneContainer({
   availableForInfluencers,
   availableForAgency = 0,
   assignedInfluencerOfferTotal = 0,
-  agencyOfferId,
 }: Props) {
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
@@ -542,7 +542,7 @@ export default function CampaignMilestoneContainer({
   ]);
 
   const refreshMilestoneSubmissions = useCallback(
-  async (milestoneId: string) => {
+    async (milestoneId: string) => {
       const normalizedMilestoneId = safeStr(milestoneId);
       if (!normalizedMilestoneId) return;
 
@@ -909,123 +909,99 @@ export default function CampaignMilestoneContainer({
   }, []);
 
   const openPayForSubmission = useCallback(
-    (submission: SubmissionItem) => {
-      const selectedPaymentAction = paymentActionMap[submission.id] || "";
-      if (!selectedPaymentAction) {
-        toast.error("Select a payment type first.");
-        return;
-      }
-
-      setActionSubmission(submission);
-
-      if (selectedPaymentAction === "partial_paid") {
-        setPartialPaidOpen(true);
-        return;
-      }
-
-      void (async () => {
-        try {
-          setActionLoading(true);
-
-          await payInfluencerSubmission({
-            submissionId: submission.id,
-            amount:
-              getSubmissionRemainingAmount(submission) > 0
-                ? getSubmissionRemainingAmount(submission)
-                : getSubmissionRequestedAmount(submission),
-            reason: "Full payment completed",
-          });
-
-          toast.success("Payment completed successfully.");
-          setPaymentActionMap((prev) => ({ ...prev, [submission.id]: "" }));
-          await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-        } catch (error: any) {
-          toast.error(
-            error?.response?.data?.message || "Failed to complete payment."
-          );
-        } finally {
-          setActionLoading(false);
-        }
-      })();
-    },
-    [
-      activeMilestoneIdSafe,
-      getSubmissionRemainingAmount,
-      getSubmissionRequestedAmount,
-      paymentActionMap,
-      refreshMilestoneSubmissions,
-    ]
-  );
-const resolveAssignmentIdForSubmission = useCallback(
-  (submission: SubmissionItem | null, milestone: any) => {
-    const directSubmissionAssignmentId = safeStr(submission?.assignmentId);
-    if (directSubmissionAssignmentId) return directSubmissionAssignmentId;
-
-    const directMilestoneAssignmentId = safeStr(milestone?.assignmentId);
-    if (directMilestoneAssignmentId) return directMilestoneAssignmentId;
-
-    if (isPaidAd) {
-      const paidAdAgencyOfferId = safeStr(agencyOfferId);
-      if (paidAdAgencyOfferId) return paidAdAgencyOfferId;
+  (submission: SubmissionItem) => {
+    const selectedPaymentAction = paymentActionMap[submission.id] || "";
+    if (!selectedPaymentAction) {
+      toast.error("Select a payment type first.");
+      return;
     }
 
-    const matchedAssignment = assignmentRows.find((row: any) =>
-      (row?.milestones ?? []).some((m: any) => {
-        const rowMilestoneId = safeStr(m?.id);
-        const rowMasterMilestoneId = safeStr(m?.masterMilestoneId);
-        const currentMilestoneId = safeStr(milestone?.id);
-        const submissionAssignedMilestoneId = safeStr(
-          submission?.assignedMilestoneId
-        );
+    setActionSubmission(submission);
 
-        return (
-          (rowMilestoneId && rowMilestoneId === currentMilestoneId) ||
-          (rowMasterMilestoneId && rowMasterMilestoneId === currentMilestoneId) ||
-          (submissionAssignedMilestoneId &&
-            ((rowMilestoneId && rowMilestoneId === submissionAssignedMilestoneId) ||
-              (rowMasterMilestoneId &&
-                rowMasterMilestoneId === submissionAssignedMilestoneId)))
-        );
-      })
-    );
+    if (selectedPaymentAction === "partial_paid") {
+      setPartialPaidOpen(true);
+      return;
+    }
 
-    return (
-      safeStr(matchedAssignment?.assignmentId) ||
-      safeStr(matchedAssignment?.id) ||
-      safeStr(matchedAssignment?.assigneeId)
-    );
+    void (async () => {
+      try {
+        setActionLoading(true);
+
+        const payableAmount =
+          getSubmissionRemainingAmount(submission) > 0
+            ? getSubmissionRemainingAmount(submission)
+            : getSubmissionRequestedAmount(submission);
+
+        if (isPaidAd) {
+          await payAgencySubmission({
+            submissionId: submission.id,
+            amount: payableAmount,
+          });
+        } else {
+          await payInfluencerSubmission({
+            submissionId: submission.id,
+            amount: payableAmount,
+            reason: "Full payment completed",
+          });
+        }
+
+        toast.success("Payment completed successfully.");
+        setPaymentActionMap((prev) => ({ ...prev, [submission.id]: "" }));
+        await refreshMilestoneSubmissions(activeMilestoneIdSafe);
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.message || "Failed to complete payment."
+        );
+      } finally {
+        setActionLoading(false);
+      }
+    })();
   },
-  [assignmentRows, isPaidAd, agencyOfferId]
+  [
+    activeMilestoneIdSafe,
+    getSubmissionRemainingAmount,
+    getSubmissionRequestedAmount,
+    isPaidAd,
+    paymentActionMap,
+    refreshMilestoneSubmissions,
+  ]
 );
+
   async function handleApproveConfirm() {
-  const milestoneId = safeStr((activeMilestone as any)?.id);
-  const assignmentId = resolveAssignmentIdForSubmission(
-    actionSubmission,
-    activeMilestone
-  );
-
-  if (!milestoneId) {
-    toast.error("Milestone id is missing.");
-    return;
-  }
-
-  if (!assignmentId) {
-    toast.error("Assignment id is missing.");
+  if (!actionSubmission?.id) {
+    toast.error("Submission id is missing.");
     return;
   }
 
   try {
     setActionLoading(true);
 
-    await updateInfluencerMilestoneStatus({
-      milestoneId,
-      assignmentId,
-      status: "approved",
-    });
+    if (isPaidAd) {
+      await reviewAgencySubmission({
+        submissionId: actionSubmission.id,
+        action: "approve",
+      });
+    } else {
+      const milestoneId = safeStr((activeMilestone as any)?.id);
+      const assignmentId =
+        safeStr(actionSubmission?.assignmentId) ||
+        safeStr((activeMilestone as any)?.assignmentId);
+
+      if (!milestoneId || !assignmentId) {
+        toast.error("Milestone or assignment id is missing.");
+        return;
+      }
+
+      await updateInfluencerMilestoneStatus({
+        milestoneId,
+        assignmentId,
+        status: "approved",
+      });
+    }
 
     toast.success("Submission approved successfully.");
     setApproveOpen(false);
-    await refreshMilestoneSubmissions(milestoneId);
+    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
   } catch (error: any) {
     toast.error(
       error?.response?.data?.message || "Failed to approve submission."
@@ -1036,41 +1012,48 @@ const resolveAssignmentIdForSubmission = useCallback(
 }
 
   async function handleDeclineConfirm() {
-  const milestoneId = safeStr((activeMilestone as any)?.id);
-  const assignmentId = resolveAssignmentIdForSubmission(
-    actionSubmission,
-    activeMilestone
-  );
-
-  if (!milestoneId) {
-    toast.error("Milestone id is missing.");
-    return;
-  }
-
-  if (!assignmentId) {
-    toast.error("Assignment id is missing.");
-    return;
-  }
-
   if (!declineReason.trim()) {
     toast.error("Rejection reason is required.");
+    return;
+  }
+
+  if (!actionSubmission?.id) {
+    toast.error("Submission id is missing.");
     return;
   }
 
   try {
     setActionLoading(true);
 
-    await updateInfluencerMilestoneStatus({
-      milestoneId,
-      assignmentId,
-      status: "declined",
-      reason: declineReason.trim(),
-    });
+    if (isPaidAd) {
+      await reviewAgencySubmission({
+        submissionId: actionSubmission.id,
+        action: "decline",
+        reason: declineReason.trim(),
+      });
+    } else {
+      const milestoneId = safeStr((activeMilestone as any)?.id);
+      const assignmentId =
+        safeStr(actionSubmission?.assignmentId) ||
+        safeStr((activeMilestone as any)?.assignmentId);
+
+      if (!milestoneId || !assignmentId) {
+        toast.error("Milestone or assignment id is missing.");
+        return;
+      }
+
+      await updateInfluencerMilestoneStatus({
+        milestoneId,
+        assignmentId,
+        status: "declined",
+        reason: declineReason.trim(),
+      });
+    }
 
     toast.success("Submission declined successfully.");
     setDeclineOpen(false);
     setDeclineReason("");
-    await refreshMilestoneSubmissions(milestoneId);
+    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
   } catch (error: any) {
     toast.error(
       error?.response?.data?.message || "Failed to decline submission."
@@ -1081,57 +1064,68 @@ const resolveAssignmentIdForSubmission = useCallback(
 }
 
   async function handlePartialPaidSubmit() {
-    if (!actionSubmission?.id) return;
+  if (!actionSubmission?.id) {
+    toast.error("Submission id is missing.");
+    return;
+  }
 
-    const amountNumber = Number(partialAmount || 0);
-    const remainingAmount = getSubmissionRemainingAmount(actionSubmission);
+  const amountNumber = Number(partialAmount || 0);
+  const remainingAmount = getSubmissionRemainingAmount(actionSubmission);
 
-    if (!partialReason.trim()) {
-      toast.error("Reason is required.");
-      return;
-    }
+  if (!partialReason.trim()) {
+    toast.error("Reason is required.");
+    return;
+  }
 
-    if (!amountNumber || amountNumber <= 0) {
-      toast.error("Enter a valid partial amount.");
-      return;
-    }
+  if (!amountNumber || amountNumber <= 0) {
+    toast.error("Enter a valid partial amount.");
+    return;
+  }
 
-    if (amountNumber > remainingAmount) {
-      toast.error("Partial amount cannot be greater than remaining due.");
-      return;
-    }
+  if (amountNumber > remainingAmount) {
+    toast.error("Partial amount cannot be greater than remaining due.");
+    return;
+  }
 
-    try {
-      setActionLoading(true);
+  try {
+    setActionLoading(true);
 
+    if (isPaidAd) {
+      await payAgencySubmission({
+        submissionId: actionSubmission.id,
+        amount: amountNumber,
+        reason: partialReason.trim(),
+      });
+    } else {
       await payInfluencerSubmission({
         submissionId: actionSubmission.id,
         amount: amountNumber,
         reason: partialReason.trim(),
       });
-
-      toast.success("Partial payment updated successfully.");
-      setPartialPaidOpen(false);
-      setPartialAmount("");
-      setPartialReason("");
-      setPaymentActionMap((prev) => ({ ...prev, [actionSubmission.id]: "" }));
-      await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to update partial payment."
-      );
-    } finally {
-      setActionLoading(false);
     }
+
+    toast.success("Partial payment updated successfully.");
+    setPartialPaidOpen(false);
+    setPartialAmount("");
+    setPartialReason("");
+    setPaymentActionMap((prev) => ({ ...prev, [actionSubmission.id]: "" }));
+    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
+  } catch (error: any) {
+    toast.error(
+      error?.response?.data?.message || "Failed to update partial payment."
+    );
+  } finally {
+    setActionLoading(false);
   }
+}
 
   const renderSubmissionContent = useCallback(
     (submission: SubmissionItem, index: number) => {
       const submissionStatus = normalizeSubmissionStatus(submission?.status);
       const paymentStatus = normalizePaymentStatus(submission?.paymentStatus);
-      const submissionBadge: BadgeType | undefined = getSubmissionAccordionBadge(
-        submission?.status
-      );
+      const submissionBadge: BadgeType | undefined = isPaidAd
+  ? getSubmissionAccordionBadge(submission?.status, submission?.paymentStatus)
+  : getSubmissionAccordionBadge(submission?.status, submission?.paymentStatus);
       const metricReach = getSubmissionMetric(submission, "reach");
       const metricViews = getSubmissionMetric(submission, "views");
       const metricLikes = getSubmissionMetric(submission, "likes");

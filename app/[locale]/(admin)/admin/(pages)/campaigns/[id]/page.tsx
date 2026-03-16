@@ -413,7 +413,6 @@ export default function Page() {
         availableForInfluencers={availableForInfluencers}
         availableForAgency={availableForAgency}
         assignedInfluencerOfferTotal={assignedInfluencerOfferTotal}
-        agencyOfferId={campaign?.agencyOfferId ?? null}
       />
 
       <CampaignTermsCard
