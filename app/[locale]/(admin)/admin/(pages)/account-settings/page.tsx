@@ -1,39 +1,51 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import DefaultValueCard from "./_components/default-value-card";
 import NicheListCard from "./_components/niche-list-card";
 import SkillsList from "./_components/skills-list";
-import ProductTypes from "./_components/productt-types";
+import ProductTypes from "./_components/product-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SecurityCard from "./_components/security-card";
 import LoginActivityCard from "./_components/login-activity-card";
+import { getPlatformFee } from "@/service/admin/settings/get-platform-fee";
+import { getNiches } from "@/service/admin/settings/get-niches";
+import { getSkills } from "@/service/admin/settings/get-skills";
+import { getProductTypes } from "@/service/admin/settings/get-productType";
+import { getActivityLog } from "@/service/admin/settings/get-activity-log";
 
-const page = () => {
+const page = async () => {
+  const generalSettings = await getPlatformFee();
+  const niches = await getNiches();
+  const skills = await getSkills();
+  const productTypes = await getProductTypes();
+  const activityLog = await getActivityLog();
+
   return (
     <div className="p-4">
       <h2 className="text-Primary text-xl font-semibold mb-4">
         General Settings
       </h2>
+
       <div className="space-y-4">
         <div>
-          <DefaultValueCard />
+          <DefaultValueCard
+            initialPlatformFee={String(generalSettings?.platformFee ?? "")}
+            initialVatTax={String(generalSettings?.vatTax ?? "")}
+          />
         </div>
+
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-12 md:col-span-4">
-            <NicheListCard />
+            <NicheListCard initialNiches={niches} />
           </div>
+
           <div className="col-span-12 md:col-span-4">
-            <SkillsList />
+            <SkillsList initialSkills={skills} />
           </div>
+
           <div className="col-span-12 md:col-span-4">
-            <ProductTypes />
+            <ProductTypes initialProductTypes={productTypes} />
           </div>
         </div>
+
         <div>
           <h2 className="font-semibold text-xl text-Primary mb-4">Security</h2>
           <Tabs defaultValue="security">
@@ -51,11 +63,16 @@ const page = () => {
                 Login Activity
               </TabsTrigger>
             </TabsList>
+
             <TabsContent value="security" className="space-y-4">
               <SecurityCard />
             </TabsContent>
+
             <TabsContent value="login_activity" className="space-y-4">
-              <LoginActivityCard />
+              <LoginActivityCard
+                history={activityLog.data}
+                meta={activityLog.meta}
+              />
             </TabsContent>
           </Tabs>
         </div>

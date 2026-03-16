@@ -473,6 +473,15 @@
         "totalJobsDeclined": "মোট বাতিলকৃত কাজ",
         "mostUsedPlatform": "সবচেয়ে ব্যবহৃত প্ল্যাটফর্ম"
       },
+      "upcommingDateline" : {
+        "title": "আসন্ন ডেডলাইনসমূহ",
+        "view": "দেখুন",
+        "dayLeft": "দিন বাকি সম্পন্ন করার জন্য",
+        "daysLeft": "দিন বাকি সম্পন্ন করার জন্য",
+        "dueNow": "আজই শেষ সময়",
+        "emptyMessage": "কোনো আসন্ন ডেডলাইন পাওয়া যায়নি"
+
+      },
         "actionRequired": {
         "title": "প্রয়োজনীয় পদক্ষেপ",
         "card1Title": "Summer Fashion Campaign",

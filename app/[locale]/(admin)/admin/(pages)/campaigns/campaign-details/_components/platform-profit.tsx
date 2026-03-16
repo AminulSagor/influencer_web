@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
 
 import CollapsibleCard from "./collapsible-card";
 import InfluencerBadges from "./influencers-badge";
 
-import { MultiSelect, MultiSelectContent, MultiSelectGroup, MultiSelectItem, MultiSelectTrigger, MultiSelectValue,} from "@/components/ui/multi-select";
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectGroup,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select";
 
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -15,73 +22,85 @@ import { getAllInfluencer } from "@/service/admin/campaign/get-campaign";
 import { money as moneyFmt } from "@/utils/admin/campaign/campaign_calculation_util";
 import { clampPercent } from "@/utils/admin/campaign/platform_fee_util";
 
-import type {AssignedRow, AllInfluencerserviceItem,CampaignInfluencer,InfluencerBadgeItem,QuoteState,Statistics,
+import type {
+  AssignedRow,
+  AllInfluencerserviceItem,
+  InfluencerBadgeItem,
+  QuoteState,
+  Statistics,
 } from "@/types/admin/campaign/platform_profit_type";
 
-import {getDraftAssignments,deleteAssignment,patchAssignment,postAssignInfluencer,
+import {
+  getDraftAssignments,
+  deleteAssignment,
+  patchAssignment,
+  postAssignInfluencer,
 } from "@/service/admin/campaign/influencer-assignments";
 
-import { getGeneralSettings, patchGeneralSettings,
+import {
+  getGeneralSettings,
+  patchGeneralSettings,
 } from "@/service/admin/campaign/general-settings";
 import { getCampaignByIdFromAdmin } from "@/service/admin/campaign/get-campaign";
-import { CampaignStatusType } from "./campaign-milestone-data";
+import type { CampaignStatusType } from "@/types/admin/campaign/campaign_details_type";
 
 type Props = {
   campaignId: string;
   stats: Statistics[];
   quoteState: QuoteState;
+  campaignStatus: CampaignStatusType;
 
-  preferredInfluencers?: CampaignInfluencer[];
-  notPreferableInfluencers?: CampaignInfluencer[];
+  preferredInfluencers?: string[];
+  notPreferableInfluencers?: string[];
+
+  onAssignedOfferTotalChange?: (value: number) => void;
 };
 
 const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
-
-const fullName = (i: {
-  firstName?: string;
-  lastName?: string;
-  name?: string;
-}) => {
-  if (i?.name && i.name.trim()) return i.name.trim();
-  return `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
-};
+const EPSILON = 0.0001;
 
 function toNum(v: any) {
   const n = Number(String(v ?? "0").replace(/,/g, "").trim());
   return Number.isFinite(n) ? n : 0;
 }
 
+function roundTo(value: number, decimals = 4) {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
 export default function PlatformProfitInfluencerAssign({
   campaignId,
   stats,
   quoteState,
+  campaignStatus,
   preferredInfluencers = [],
   notPreferableInfluencers = [],
+  onAssignedOfferTotalChange,
 }: Props) {
-  const locked = quoteState !== "confirmed";
+  const isQuoteConfirmed =
+    quoteState === "confirmed" ||
+    campaignStatus === "active" ||
+    campaignStatus === "completed" ||
+    campaignStatus === "paid";
 
-  // ===============================
-  // Backend driven values
-  // ===============================
+  const locked = !isQuoteConfirmed;
+
   const [platformFeePercent, setPlatformFeePercent] = useState<number>(2);
   const [feeEdit, setFeeEdit] = useState(false);
   const [feeSaving, setFeeSaving] = useState(false);
 
-  const [availableForInfluencers, setAvailableForInfluencers] =
-    useState<number>(0);
+  const [availableForInfluencers, setAvailableForInfluencers] = useState<number>(0);
   const [loadingBudget, setLoadingBudget] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(false);
 
-  // Only for showing on cards (you were using stats[0])
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
 
-  // load settings(platformFee) + campaign(availableBudgetForExecution)
   useEffect(() => {
     if (locked) return;
     if (!campaignId) return;
 
     (async () => {
-      // settings
       try {
         setLoadingSettings(true);
         const sRes: any = await getGeneralSettings();
@@ -89,48 +108,42 @@ export default function PlatformProfitInfluencerAssign({
         const platformFee =
           sRes?.data?.data?.platformFee ??
           sRes?.data?.platformFee ??
-          sRes?.data?.data?.platformFee ??
           "2";
 
         setPlatformFeePercent(clampPercent(toNum(platformFee)));
-      } catch (e: any) {
-        console.error("getGeneralSettings failed", e);
+      } catch {
       } finally {
         setLoadingSettings(false);
       }
 
-      // campaign budget
       try {
         setLoadingBudget(true);
         const cRes: any = await getCampaignByIdFromAdmin(campaignId);
 
         const available = cRes?.data?.availableBudgetForExecution;
         setAvailableForInfluencers(Math.round(toNum(available)));
-      } catch (e: any) {
-        console.error("getCampaignById failed", e);
+      } catch {
       } finally {
         setLoadingBudget(false);
       }
     })();
   }, [locked, campaignId]);
 
-
   const preferredList: InfluencerBadgeItem[] = useMemo(() => {
-    return (preferredInfluencers ?? []).map((i) => ({
-      name: fullName(i) || "Unknown Influencer",
+    return (preferredInfluencers ?? []).map((name) => ({
+      name: String(name || "Unknown Influencer"),
       platform: "—",
       profileUrl: "#",
     }));
   }, [preferredInfluencers]);
 
   const notPreferredList: InfluencerBadgeItem[] = useMemo(() => {
-    return (notPreferableInfluencers ?? []).map((i) => ({
-      name: fullName(i) || "Unknown Influencer",
+    return (notPreferableInfluencers ?? []).map((name) => ({
+      name: String(name || "Unknown Influencer"),
       platform: "—",
       profileUrl: "#",
     }));
   }, [notPreferableInfluencers]);
-
 
   const [allInfluencersservice, setAllInfluencersservice] = useState<
     AllInfluencerserviceItem[]
@@ -147,8 +160,7 @@ export default function PlatformProfitInfluencerAssign({
         const res: any = await getAllInfluencer();
         const list = res?.data?.data ?? res?.data ?? [];
         setAllInfluencersservice(Array.isArray(list) ? list : []);
-      } catch (e) {
-        console.error("getAllInfluencer failed", e);
+      } catch {
         setAllInfluencersservice([]);
       } finally {
         setLoadingInfluencers(false);
@@ -159,7 +171,10 @@ export default function PlatformProfitInfluencerAssign({
   const dropdownInfluencers = useMemo(() => {
     return (allInfluencersservice ?? []).map((i) => ({
       id: String(i.profileId || i.id),
-      name: fullName(i) || "Unknown Influencer",
+      name:
+        (typeof i?.name === "string" && i.name.trim()) ||
+        `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() ||
+        "Unknown Influencer",
       profileImg: i.profileImg ?? null,
     }));
   }, [allInfluencersservice]);
@@ -176,10 +191,6 @@ export default function PlatformProfitInfluencerAssign({
   const [rows, setRows] = useState<AssignedRow[]>([]);
   const [loadingDraft, setLoadingDraft] = useState(false);
 
-  // to prevent repeated autosplits loop
-  const lastAutoSplitKeyRef = useRef<string>("");
-
-
   const loadDraftAssignments = useCallback(async () => {
     if (!campaignId) return;
 
@@ -195,23 +206,20 @@ export default function PlatformProfitInfluencerAssign({
           name: String(a.assigneeName ?? "Unknown Influencer"),
           profileImg: a.assigneeImage ?? null,
 
-          percentage: clampPercent(toNum(a.percentage)),
+          percentage: roundTo(clampPercent(toNum(a.percentage)), 4),
           offerAmount: Math.max(0, Math.round(toNum(a.offeredAmount))),
 
           assignmentId: a.assignmentId ?? null,
           isAssigned: true,
 
-          committedPercentage: clampPercent(toNum(a.percentage)),
+          committedPercentage: roundTo(clampPercent(toNum(a.percentage)), 4),
           committedOfferAmount: Math.max(0, Math.round(toNum(a.offeredAmount))),
         })
       );
 
       setRows(mapped);
       setSelectedIds(mapped.map((x) => x.influencerId));
-
-      lastAutoSplitKeyRef.current = "";
-    } catch (e: any) {
-      console.error("getDraftAssignments failed", e);
+    } catch {
     } finally {
       setLoadingDraft(false);
     }
@@ -222,7 +230,23 @@ export default function PlatformProfitInfluencerAssign({
     loadDraftAssignments();
   }, [locked, loadDraftAssignments]);
 
-  // Build/merge rows from selection (keeps assigned rows, adds new rows)
+  useEffect(() => {
+    if (locked) {
+      onAssignedOfferTotalChange?.(0);
+      return;
+    }
+
+    const committedTotal = rows
+      .filter((r) => r.isAssigned)
+      .reduce(
+        (sum, r) =>
+          sum + Math.max(0, Math.round(Number(r.committedOfferAmount) || 0)),
+        0
+      );
+
+    onAssignedOfferTotalChange?.(committedTotal);
+  }, [rows, locked, onAssignedOfferTotalChange]);
+
   useEffect(() => {
     if (locked) return;
 
@@ -261,7 +285,6 @@ export default function PlatformProfitInfluencerAssign({
     });
   }, [locked, selectedIds, influencerInfoById]);
 
-
   useEffect(() => {
     if (locked) return;
     if (!availableForInfluencers) return;
@@ -271,66 +294,79 @@ export default function PlatformProfitInfluencerAssign({
 
     if (unassignedRows.length === 0) return;
 
-    const assignedPct = assignedRows.reduce(
-      (sum, r) => sum + clampPercent(r.percentage),
+    const allUnassignedUntouched = unassignedRows.every(
+      (r) => Number(r.percentage ?? 0) === 0 && Number(r.offerAmount ?? 0) === 0
+    );
+
+    if (!allUnassignedUntouched) return;
+
+    const assignedAmount = assignedRows.reduce(
+      (sum, r) => sum + Math.max(0, Math.round(Number(r.offerAmount) || 0)),
       0
     );
-    const remainingPct = Math.max(0, 100 - assignedPct);
 
-    const key = [
-      "v2",
-      availableForInfluencers,
-      selectedIds.slice().sort().join("|"),
-      assignedRows
-        .map((r) => `${r.influencerId}:${clampPercent(r.percentage)}`)
-        .sort()
-        .join(","),
-      unassignedRows.length,
-      remainingPct.toFixed(4),
-    ].join("::");
+    const remainingAmount = Math.max(0, availableForInfluencers - assignedAmount);
+    const count = unassignedRows.length;
 
-    if (key === lastAutoSplitKeyRef.current) return;
-    lastAutoSplitKeyRef.current = key;
+    const baseAmount = Math.floor(remainingAmount / count);
+    const remainder = remainingAmount % count;
 
-    const eachPct = clampPercent(remainingPct / unassignedRows.length);
-    const eachAmount = Math.round((availableForInfluencers * eachPct) / 100);
+    setRows((prev) => {
+      let unassignedIndex = 0;
 
-    setRows((prev) =>
-      prev.map((r) => {
+      return prev.map((r) => {
         if (r.isAssigned) return r;
+        if (Number(r.percentage ?? 0) !== 0 || Number(r.offerAmount ?? 0) !== 0) {
+          return r;
+        }
+
+        const amount = baseAmount + (unassignedIndex < remainder ? 1 : 0);
+        unassignedIndex++;
+
+        const percentage =
+          availableForInfluencers > 0
+            ? roundTo((amount / availableForInfluencers) * 100, 4)
+            : 0;
 
         return {
           ...r,
-          percentage: eachPct,
-          offerAmount: eachAmount,
+          percentage,
+          offerAmount: amount,
         };
-      })
-    );
-  }, [locked, rows, selectedIds, availableForInfluencers]);
+      });
+    });
+  }, [locked, rows, availableForInfluencers]);
 
-  // totals + rule
   const totalPct = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.percentage) || 0), 0),
+    () => roundTo(rows.reduce((s, r) => s + (Number(r.percentage) || 0), 0), 4),
     [rows]
   );
+
   const totalAmount = useMemo(
-    () => rows.reduce((s, r) => s + (Number(r.offerAmount) || 0), 0),
+    () =>
+      rows.reduce(
+        (s, r) => s + Math.max(0, Math.round(Number(r.offerAmount) || 0)),
+        0
+      ),
     [rows]
   );
-  const exceeds100 = totalPct > 100;
+
+  const exceedsPercentage = totalPct > 100 + EPSILON;
+  const exceedsAmount = totalAmount > availableForInfluencers;
+  const hasOverflow = exceedsPercentage || exceedsAmount;
 
   const rowIsDirty = useCallback((r: AssignedRow) => {
-    const p = clampPercent(r.percentage);
+    const p = roundTo(clampPercent(r.percentage), 4);
     const a = Math.round(Number(r.offerAmount) || 0);
+
     return (
-      p !== clampPercent(r.committedPercentage) ||
+      p !== roundTo(clampPercent(r.committedPercentage), 4) ||
       a !== Math.round(Number(r.committedOfferAmount) || 0)
     );
   }, []);
 
-  // reverse updates (based on backend availableForInfluencers)
   const updatePercent = (id: string, nextPctRaw: number) => {
-    const pct = clampPercent(nextPctRaw);
+    const pct = roundTo(clampPercent(nextPctRaw), 4);
     const amount = Math.round((availableForInfluencers * pct) / 100);
 
     setRows((prev) =>
@@ -338,14 +374,13 @@ export default function PlatformProfitInfluencerAssign({
         r.influencerId === id ? { ...r, percentage: pct, offerAmount: amount } : r
       )
     );
-    lastAutoSplitKeyRef.current = "";
   };
 
   const updateAmount = (id: string, nextAmountRaw: number) => {
     const amt = Math.max(0, Math.round(Number(nextAmountRaw) || 0));
     const pct =
       availableForInfluencers > 0
-        ? clampPercent((amt / availableForInfluencers) * 100)
+        ? roundTo(clampPercent((amt / availableForInfluencers) * 100), 4)
         : 0;
 
     setRows((prev) =>
@@ -353,24 +388,20 @@ export default function PlatformProfitInfluencerAssign({
         r.influencerId === id ? { ...r, offerAmount: amt, percentage: pct } : r
       )
     );
-    lastAutoSplitKeyRef.current = "";
   };
 
-  // actions
   const dismissRow = (influencerId: string) => {
     setSelectedIds((prev) => prev.filter((x) => x !== influencerId));
     setRows((prev) => prev.filter((r) => r.influencerId !== influencerId));
-    lastAutoSplitKeyRef.current = "";
   };
 
   const confirmRow = async (r: AssignedRow) => {
-    if (!campaignId) return;
-    if (exceeds100) return;
+    if (!campaignId || hasOverflow) return;
 
     const payloadPost = {
       campaignId,
       influencerId: r.influencerId,
-      percentage: clampPercent(r.percentage),
+      percentage: roundTo(clampPercent(r.percentage), 4),
       offerAmount: Math.round(Number(r.offerAmount) || 0),
     };
 
@@ -406,7 +437,6 @@ export default function PlatformProfitInfluencerAssign({
           )
         );
 
-        lastAutoSplitKeyRef.current = "";
         return;
       }
 
@@ -438,10 +468,7 @@ export default function PlatformProfitInfluencerAssign({
             : x
         )
       );
-
-      lastAutoSplitKeyRef.current = "";
-    } catch (e: any) {
-      console.error("confirmRow failed", e);
+    } catch {
       setRows((prev) =>
         prev.map((x) =>
           x.influencerId === r.influencerId ? { ...x, saving: false } : x
@@ -465,10 +492,7 @@ export default function PlatformProfitInfluencerAssign({
 
       await deleteAssignment(r.assignmentId);
       await loadDraftAssignments();
-
-      lastAutoSplitKeyRef.current = "";
-    } catch (e: any) {
-      console.error("deleteAssignment failed", e);
+    } catch {
       setRows((prev) =>
         prev.map((x) =>
           x.influencerId === r.influencerId ? { ...x, deleting: false } : x
@@ -479,10 +503,8 @@ export default function PlatformProfitInfluencerAssign({
 
   const handleSelect = (values: string[]) => {
     setSelectedIds(uniq(values));
-    lastAutoSplitKeyRef.current = "";
   };
 
-  // platform fee edit/save (backend)
   const onSaveFee = async () => {
     try {
       setFeeSaving(true);
@@ -493,23 +515,23 @@ export default function PlatformProfitInfluencerAssign({
       setFeeEdit(false);
 
       const sRes: any = await getGeneralSettings();
-      const fee = sRes?.data?.data?.platformFee ?? sRes?.data?.platformFee ?? "2";
+      const fee =
+        sRes?.data?.data?.platformFee ?? sRes?.data?.platformFee ?? "2";
       setPlatformFeePercent(clampPercent(toNum(fee)));
-    } catch (e: any) {
-      console.error("patchGeneralSettings failed", e);
     } finally {
       setFeeSaving(false);
     }
   };
 
   const platformFeeAmount = useMemo(() => {
-    return Math.round((finalQuotedBudget * clampPercent(platformFeePercent)) / 100);
+    return Math.round(
+      (finalQuotedBudget * clampPercent(platformFeePercent)) / 100
+    );
   }, [finalQuotedBudget, platformFeePercent]);
 
   return (
     <CollapsibleCard heading="Platform Profit & Influencer Management">
       <div>
-        {/* top stats */}
         <div className="grid grid-cols-12 gap-4">
           <div
             className={cn(
@@ -610,7 +632,7 @@ export default function PlatformProfitInfluencerAssign({
         ) : (
           <div className="grid grid-cols-12 gap-4 mt-6">
             <div className="col-span-12 md:col-span-4 space-y-4">
-              <InfluencerBadges title="Preffered" influencers={preferredList} />
+              <InfluencerBadges title="Preferred" influencers={preferredList} />
               <InfluencerBadges title="Not Preferable" influencers={notPreferredList} />
             </div>
 
@@ -619,12 +641,13 @@ export default function PlatformProfitInfluencerAssign({
                 <div>
                   <h2 className="text-Primary mb-1 font-semibold">Assign Influencers</h2>
                   <p className="text-xs text-gray-500">
-                    {loadingInfluencers || loadingDraft || loadingSettings || loadingBudget ? "Loading..." : " "}
+                    {loadingInfluencers || loadingDraft || loadingSettings || loadingBudget
+                      ? "Loading..."
+                      : " "}
                   </p>
                 </div>
               </div>
 
-              {/* multiselect */}
               <div className="mt-3">
                 <MultiSelect values={selectedIds} onValuesChange={handleSelect}>
                   <MultiSelectTrigger className="w-full">
@@ -643,7 +666,6 @@ export default function PlatformProfitInfluencerAssign({
                 </MultiSelect>
               </div>
 
-              {/* table */}
               <div className="mt-4 rounded-lg border overflow-hidden">
                 <div className="bg-linear-to-r from-white to-Secondary px-4 py-3">
                   <div className="grid grid-cols-12 items-center text-[15px] font-medium text-Primary">
@@ -663,7 +685,7 @@ export default function PlatformProfitInfluencerAssign({
                     rows.map((r) => {
                       const dirty = r.isAssigned ? rowIsDirty(r) : true;
                       const showTick = dirty;
-                      const canConfirm = !exceeds100 && !r.saving && !r.deleting;
+                      const canConfirm = !hasOverflow && !r.saving && !r.deleting;
 
                       return (
                         <div
@@ -692,7 +714,7 @@ export default function PlatformProfitInfluencerAssign({
                               onChange={(e) => updatePercent(r.influencerId, toNum(e.target.value))}
                               className={cn(
                                 "h-10 w-[140px] rounded-full border text-center text-Primary",
-                                exceeds100 ? "border-red-600" : ""
+                                hasOverflow ? "border-red-600" : ""
                               )}
                               disabled={!!r.saving || !!r.deleting}
                             />
@@ -707,7 +729,7 @@ export default function PlatformProfitInfluencerAssign({
                               onChange={(e) => updateAmount(r.influencerId, toNum(e.target.value))}
                               className={cn(
                                 "h-10 w-[170px] rounded-full border text-center text-black",
-                                exceeds100 ? "border-red-600" : ""
+                                hasOverflow ? "border-red-600" : ""
                               )}
                               disabled={!!r.saving || !!r.deleting}
                             />
@@ -726,7 +748,13 @@ export default function PlatformProfitInfluencerAssign({
                                 onClick={() => confirmRow(r)}
                                 disabled={!canConfirm}
                                 aria-label="Confirm"
-                                title={exceeds100 ? "Total percentage exceeds 100%" : "Confirm"}
+                                title={
+                                  exceedsAmount
+                                    ? "Total amount exceeds available budget"
+                                    : exceedsPercentage
+                                    ? "Total percentage exceeds 100%"
+                                    : "Confirm"
+                                }
                               >
                                 <Check className="h-5 w-5" />
                               </button>
@@ -738,7 +766,9 @@ export default function PlatformProfitInfluencerAssign({
                                 "h-9 w-9 rounded-full border grid place-items-center",
                                 "border-gray-300 text-gray-500 hover:bg-black/5"
                               )}
-                              onClick={() => (r.isAssigned ? removeAssigned(r) : dismissRow(r.influencerId))}
+                              onClick={() =>
+                                r.isAssigned ? removeAssigned(r) : dismissRow(r.influencerId)
+                              }
                               disabled={!!r.saving || !!r.deleting}
                               aria-label="Remove"
                               title={r.isAssigned ? "Delete assignment" : "Dismiss"}
@@ -755,13 +785,25 @@ export default function PlatformProfitInfluencerAssign({
 
               {rows.length > 0 && (
                 <div className="mt-3 text-right space-y-1">
-                  <p className={cn("text-sm", totalPct > 100 ? "text-red-600" : "text-gray-500")}>
-                    Total Percentage: {totalPct.toFixed(2)}%{totalPct > 100 ? " (exceeds 100%)" : ""}
+                  <p
+                    className={cn(
+                      "text-sm",
+                      exceedsPercentage || exceedsAmount ? "text-red-600" : "text-gray-500"
+                    )}
+                  >
+                    Total Percentage: {totalPct.toFixed(2)}%
+                    {exceedsPercentage ? " (exceeds 100%)" : ""}
                   </p>
 
-                  {exceeds100 && (
+                  {exceedsPercentage && (
                     <p className="text-sm text-red-600 font-medium">
                       Total percentage exceeds 100%. Please adjust before assigning.
+                    </p>
+                  )}
+
+                  {exceedsAmount && (
+                    <p className="text-sm text-red-600 font-medium">
+                      Total amount exceeds available influencer budget. Please adjust before assigning.
                     </p>
                   )}
 

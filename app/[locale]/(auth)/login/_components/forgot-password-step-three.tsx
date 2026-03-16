@@ -41,11 +41,6 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
 
   // Debug
   useEffect(() => {
-    console.log("[Step3] Store data:", { 
-      identifier, 
-      otp,
-      otpString: otp.join("")
-    });
   }, [identifier, otp]);
 
   const form = useForm<FormValues>({
@@ -56,7 +51,6 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log("[Step3] Form submission:", data);
     
     // Convert OTP array to string
     const otpCode = otp.join("");
@@ -69,11 +63,6 @@ const ForgotPasswordStepThree = ({ nextStep }: Props) => {
     setLoading(true);
     
     try {
-      console.log("[Step3] Calling resetPassword with:", {
-        identifier,
-        otp: otpCode,
-        newPassword: data.password
-      });
       
       // Call service with correct parameters
       await resetPassword(identifier, otpCode, data.confirmPassword );
