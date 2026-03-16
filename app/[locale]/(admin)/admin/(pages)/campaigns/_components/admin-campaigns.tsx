@@ -19,6 +19,7 @@ import type {
   CampaignView,
 } from "@/types/admin/campaign/campaign_ui_type";
 import { AdminCampaignApiItem, GetCampaignResponse } from "@/types/admin/campaign/get_campaign_type";
+import toast from "react-hot-toast";
 
 const LIMIT = 7;
 
@@ -155,7 +156,7 @@ export default function AdminCampaigns() {
           totalPages: res?.meta?.totalPages ?? 1,
         });
       } catch (err) {
-        console.error("Failed to fetch campaigns:", err);
+        toast.error("Failed to fetch campaigns:");
         setCampaigns([]);
         setMeta({
           total: 0,

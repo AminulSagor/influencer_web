@@ -15,6 +15,7 @@ import { money } from "@/utils/admin/campaign/campaign_calculation_util";
 import { fetchCampaignAgencyDrafts } from "@/service/admin/campaign/agency/get-campaign-agency-draft";
 import { inviteAgency } from "@/service/admin/campaign/agency/send-invite-agency";
 import { AgencyDraftRow } from "@/types/admin/campaign/agency/agency_draft_row";
+import { toast } from "sonner";
 
 function fullName(row: AgencyDraftRow) {
   return (
@@ -69,7 +70,7 @@ export default function InviteAgencyBar({
         return String(drafts?.[0]?.id ?? "");
       });
     } catch (e) {
-      console.error("❌ fetchCampaignAgencyDrafts failed:", e);
+      toast.error("❌ fetchCampaignAgencyDrafts failed");
       setDraftRows([]);
       setSelectedAgencyId("");
     } finally {
@@ -101,7 +102,7 @@ export default function InviteAgencyBar({
       await loadDrafts();
       await onRefreshDraft?.();
     } catch (e) {
-      console.error("❌ inviteAgency failed:", e);
+      toast.error("Failed to send invitation");
     } finally {
       setInviting(false);
     }

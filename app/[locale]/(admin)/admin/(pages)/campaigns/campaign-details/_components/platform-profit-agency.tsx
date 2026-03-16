@@ -39,6 +39,7 @@ import type {
   Statistics,
 } from "@/types/admin/campaign/agency/platform_profit_agency_type";
 import Image from "next/image";
+import { toast } from "sonner";
 
 type Props = {
   campaignId: string;
@@ -575,8 +576,7 @@ export default function PlatformProfitAgency({
 
       onRefreshDraft?.();
     } catch (e: any) {
-      console.error("❌ assignAgencies failed:", e);
-      console.log("Backend message:", e?.response?.data);
+      toast.error("Failed to assign agencies");
     } finally {
       setSaving(false);
     }

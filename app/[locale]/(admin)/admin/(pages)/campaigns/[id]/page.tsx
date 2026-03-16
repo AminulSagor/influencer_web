@@ -363,7 +363,10 @@ export default function Page() {
         </div>
       </div>
 
-      <CampaignStepper campaignId={campaignId} />
+      <CampaignStepper
+        status={campaign?.status}
+        paymentStatus={campaign?.paymentStatus}
+      />
 
       {useAgencyProfitUI ? (
         <PlatformProfitAgency

@@ -74,8 +74,6 @@ const ProductTypes = ({ initialProductTypes }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to create product type:", error);
       toast.error("Failed to add product type");
     } finally {
       setIsAdding(false);
@@ -98,7 +96,6 @@ const ProductTypes = ({ initialProductTypes }: Props) => {
       toast.success("Product type deleted");
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete product type:", error);
       toast.error("Failed to delete product type");
     } finally {
       setDeletingId(null);
@@ -153,8 +150,6 @@ const ProductTypes = ({ initialProductTypes }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to update product type:", error);
       toast.error("Failed to update product type");
     } finally {
       setUpdatingId(null);

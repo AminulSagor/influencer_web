@@ -19,6 +19,7 @@ import type { Platform } from "./campaign-details-card";
 
 import { sendCampaignQuote } from "@/service/admin/campaign/send-campaign-quote";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import toast from "react-hot-toast";
 
 type QuoteState = "none" | "sent" | "confirmed";
 
@@ -121,7 +122,7 @@ export default function CampaignQuoteDetails({
 
       await onRefresh?.();
     } catch (e: any) {
-      console.error("❌ send quote failed:", e);
+      toast.error("❌ send quote failed");
 
       if (e?.response?.status === 409) {
         notifyError("Quotation already sent");

@@ -105,8 +105,6 @@ const SecurityCard = () => {
           return;
         }
       }
-
-      console.error("Failed to update password:", error);
       toast.error("Failed to update password");
     } finally {
       setIsUpdating(false);
