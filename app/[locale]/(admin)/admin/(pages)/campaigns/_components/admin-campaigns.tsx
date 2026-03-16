@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  getAllCampaigns,
-  type AdminCampaignApiItem,
-  type GetCampaignResponse,
+  getAllCampaigns
 } from "@/service/admin/campaign/get-campaign";
 
 import CampaignsHeader from "./campaigns-header";
@@ -20,8 +18,11 @@ import type {
   CampaignUI,
   CampaignView,
 } from "@/types/admin/campaign/campaign_ui_type";
+import { AdminCampaignApiItem, GetCampaignResponse } from "@/types/admin/campaign/get_campaign_type";
 
 const LIMIT = 7;
+
+type CampaignTypeFilter = "all" | "influencer_promotion" | "paid_ad";
 
 const TAB_TO_BACKEND_STATUS: Record<Exclude<CampaignTabKey, "all">, string> = {
   "needs-quote": "negotiating",
@@ -51,6 +52,7 @@ function addDays(dateStr?: string | null, duration?: number | null) {
   if (Number.isNaN(date.getTime())) return "—";
 
   date.setDate(date.getDate() + duration);
+
   return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -66,13 +68,21 @@ function normalizePaymentStatus(status?: string | null) {
   return "pending";
 }
 
+function formatCampaignTypeLabel(type?: string | null) {
+  const value = String(type || "").toLowerCase();
+
+  if (value === "paid_ad") return "Paid Ad";
+  if (value === "influencer_promotion") return "Influencer Promotion";
+  return type || "—";
+}
+
 function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
   const budget = Number(item.totalBudget || 0);
 
   return {
     id: item.id,
     name: item.campaignName || "Untitled Campaign",
-    category: item.campaignType || "—",
+    category: formatCampaignTypeLabel(item.campaignType),
     niches: "—",
     avatar: "",
     client: item.client?.brandName || "—",
@@ -95,13 +105,16 @@ export default function AdminCampaigns() {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [tab, setTab] = useState<CampaignTabKey>("all");
+  const [campaignType, setCampaignType] = useState<CampaignTypeFilter>("all");
   const [page, setPage] = useState(1);
+
   const [meta, setMeta] = useState({
     total: 0,
     page: 1,
     limit: LIMIT,
     totalPages: 1,
   });
+
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -121,10 +134,13 @@ export default function AdminCampaigns() {
         const backendStatus =
           tab === "all" ? undefined : TAB_TO_BACKEND_STATUS[tab];
 
+        const backendCampaignType =
+          campaignType === "all" ? undefined : campaignType;
+
         const res: GetCampaignResponse = await getAllCampaigns({
           page,
           limit: LIMIT,
-          campaignType: "influencer_promotion",
+          campaignType: backendCampaignType,
           status: backendStatus,
           search: debouncedQuery || undefined,
         });
@@ -153,11 +169,11 @@ export default function AdminCampaigns() {
     };
 
     fetchCampaigns();
-  }, [page, tab, debouncedQuery]);
+  }, [page, tab, debouncedQuery, campaignType]);
 
   useEffect(() => {
     setPage(1);
-  }, [tab]);
+  }, [tab, campaignType]);
 
   const handleStatusChange = (id: string, status: CampaignStatus) => {
     setCampaigns((prev) =>
@@ -189,6 +205,8 @@ export default function AdminCampaigns() {
           setView={setView}
           query={query}
           setQuery={setQuery}
+          campaignType={campaignType}
+          setCampaignType={setCampaignType}
         />
 
         {loading ? (
@@ -218,7 +236,6 @@ export default function AdminCampaigns() {
           totalItems={meta.total}
           showingFrom={showingFrom}
           showingTo={showingTo}
-          itemLabel="Campaigns"
           onPageChange={setPage}
         />
       </CardContent>
