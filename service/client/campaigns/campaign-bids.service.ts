@@ -1,5 +1,4 @@
 import { serviceClient } from "@/service/base/axios_client";
-import { ServiceResponse } from "@/types/service-response";
 import {
   CampaignBidsResponse,
   SelectAgencyPayload,
@@ -7,14 +6,14 @@ import {
 
 export const campaignBidsService = {
   async getCampaignBids(campaignId: string) {
-    const res = await serviceClient.get<ServiceResponse<CampaignBidsResponse>>(
+    const res = await serviceClient.get<CampaignBidsResponse>(
       `/campaign/client/bids/${campaignId}`,
     );
     return res.data;
   },
 
   async selectAgency(payload: SelectAgencyPayload) {
-    const res = await serviceClient.post<ServiceResponse<unknown>>(
+    const res = await serviceClient.post(
       "/campaign/client/select-agency",
       payload,
     );
