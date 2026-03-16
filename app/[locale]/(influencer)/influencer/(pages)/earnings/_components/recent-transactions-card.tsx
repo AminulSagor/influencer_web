@@ -152,6 +152,7 @@ export default function RecentTransactionsCard() {
                     >
                       {item.jobName}
                     </p>
+                    <p className={`font-semibold ${isIncome ? "text-[#4B6B2A]" : "text-[#C96A1B]"}`}>{item.campaignName}</p>
                     <p className="text-sm text-gray-400">{formattedDate} &middot; {item.clientName}</p>
                     <p
                       className={`font-semibold ${

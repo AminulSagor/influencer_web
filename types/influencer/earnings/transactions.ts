@@ -3,6 +3,7 @@ export interface TransactionItem {
     jobId: string;
     date: string;
     jobName: string;
+    campaignName: string;
     clientName: string;
     amount: number;
     status: string;
