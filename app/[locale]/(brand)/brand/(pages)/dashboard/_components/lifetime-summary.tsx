@@ -13,36 +13,39 @@ interface LifetimeSummaryProps {
 export default function LifetimeSummary({ data }: LifetimeSummaryProps) {
   const t = useTranslations("brand.dashboard");
 
+  const topInfluencer = data?.topInfluencer;
+  const topInfluencerName = topInfluencer?.name || "-";
+  const topInfluencerJobsCompleted = topInfluencer?.totalJobsCompleted ?? "-";
+  const topInfluencerLastJobDate = topInfluencer?.lastCompletedJobDate
+    ? new Date(topInfluencer.lastCompletedJobDate).toLocaleDateString()
+    : "-";
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-[#2d5016]">{t("summary.title")}</CardTitle>
       </CardHeader>
 
-      <CardContent className="grid lg:grid-cols-3 gap-4">
-        <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+      <CardContent className="grid gap-4 lg:grid-cols-3">
+        <div className="space-y-2 rounded-lg border bg-secondary px-4 py-2">
           <p className="text-sm font-medium">{t("summary.topClient")}</p>
           <div>
             <h2 className="text-3xl font-semibold text-[#7a9b57]">
-              {data.topInfluencer.name}
+              {topInfluencerName}
             </h2>
             <p className="text-sm font-medium text-[#7a9b57]">
-              {data.topInfluencer.totalJobsCompleted}{" "}
-              {t("summary.jobsCompleted")}
+              {topInfluencerJobsCompleted} {t("summary.jobsCompleted")}
             </p>
           </div>
           <p className="text-xs font-medium text-muted-foreground">
-            {t("summary.lastJob")}:{" "}
-            {new Date(
-              data.topInfluencer.lastCompletedJobDate,
-            ).toLocaleDateString()}
+            {t("summary.lastJob")}: {topInfluencerLastJobDate}
           </p>
         </div>
 
-        <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
-          <div className="flex flex-col justify-center gap-1 h-full">
+        <div className="space-y-2 rounded-lg border bg-secondary px-4 py-2">
+          <div className="flex h-full flex-col justify-center gap-1">
             <h2 className="text-3xl font-semibold text-[#7a9b57]">
-              {data.totalCompleted}
+              {data.totalCompleted ?? 0}
             </h2>
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">
@@ -55,10 +58,10 @@ export default function LifetimeSummary({ data }: LifetimeSummaryProps) {
           </div>
         </div>
 
-        <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
-          <div className="flex flex-col justify-center gap-1 h-full">
+        <div className="space-y-2 rounded-lg border bg-secondary px-4 py-2">
+          <div className="flex h-full flex-col justify-center gap-1">
             <h2 className="text-3xl font-semibold text-yellow-700">
-              {data.totalDeclined}
+              {data.totalDeclined ?? 0}
             </h2>
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">
