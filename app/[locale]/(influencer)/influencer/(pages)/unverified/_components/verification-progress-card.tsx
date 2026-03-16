@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X, Clock3, BadgeCheck } from "lucide-react";
-import { InfluencerProfileData } from "@/types/influencer/profile_type";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 
 type Status = "done" | "review" | "rejected" | "pending";
 
@@ -21,7 +21,7 @@ export default function VerificationProgressCard({ profileData }: VerificationPr
   // Determine verification statuses based on profile data
   const basicInfoStatus: Status = profileData?.firstName && profileData?.lastName ? "done" : "pending";
   const socialPortfolioStatus: Status = profileData?.socialLinks && profileData.socialLinks.length > 0 ? "done" : "pending";
-  const nidStatus: Status = profileData?.nidVerification?.nidStatus === "verified" 
+  const nidStatus: Status = profileData?.nidVerification?.nidStatus === "verified" || profileData?.nidVerification?.nidStatus === "approved"
     ? "done" 
     : profileData?.nidVerification?.nidStatus === "rejected" 
     ? "rejected"
@@ -31,8 +31,8 @@ export default function VerificationProgressCard({ profileData }: VerificationPr
 
   // Check if any payout method is verified
   const hasVerifiedPayout = 
-    profileData?.payouts?.bank?.some(acc => acc.accStatus === "verified") ||
-    profileData?.payouts?.mobileBanking?.some(acc => acc.accStatus === "verified");
+    profileData?.payouts?.bank?.some(acc => acc.accStatus === "verified" || acc.accStatus === "approved") ||
+    profileData?.payouts?.mobileBanking?.some(acc => acc.accStatus === "verified" || acc.accStatus === "approved");
   
   const hasPendingPayout = 
     profileData?.payouts?.bank?.some(acc => acc.accStatus === "pending") ||

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { logout as logoutService } from "@/service/auth/logout";
 
 export function useLogout() {
   const router = useRouter();
@@ -14,11 +15,15 @@ export function useLogout() {
 
     setLoading(true);
     try {
-      await fetch("/service/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      // Call logout service (clears token and calls backend)
+      await logoutService();
 
+      // Redirect to login page
+      router.push(`/${locale}/login`);
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if there's an error, redirect to login since token is cleared
       router.push(`/${locale}/login`);
       router.refresh();
     } finally {

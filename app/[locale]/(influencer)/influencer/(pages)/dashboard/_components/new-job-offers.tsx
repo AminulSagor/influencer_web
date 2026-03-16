@@ -1,35 +1,38 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-
-const campaignActions = [
-  {
-    id: 1,
-    title: "Summer Fashion Campaign",
-    budget: 11107,
-    link: "#",
-  },
-  {
-    id: 2,
-    title: "Winter Clearance Campaign",
-    progress: "35%",
-    budget: 24500,
-    link: "#",
-  },
-  {
-    id: 3,
-    title: "New Brand Launch",
-    budget: 5000,
-    link: "#",
-  },
-];
+import { useTranslations, useLocale } from "next-intl";
+import { InfluencerJobService } from "@/service/influencer/job-service";
+import { JobListItem } from "@/types/influencer/job_types";
 
 const NewJobOffers = () => {
   const t = useTranslations("influencer.dashboard.newJobOffers");
+  const locale = useLocale();
+  const [offers, setOffers] = useState<JobListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchOffers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await InfluencerJobService.getJobs({ status: "new_offer", limit: 3 });
+      setOffers(res.data);
+    } catch (err) {
+      setError("Failed to load new job offers.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOffers();
+  }, [fetchOffers]);
 
   return (
     <Card>
@@ -37,7 +40,7 @@ const NewJobOffers = () => {
         <CardTitle className="text-[#2d5016]">{t("title")}</CardTitle>
         <div>
           <Button variant="link" size="sm" className="p-0 text-[#2d5016]">
-            <Link href={"#"} className="flex items-center text-xs">
+            <Link href={`/${locale}/influencer/jobs`} className="flex items-center text-xs">
               {t("viewAll")}
               <ChevronRight />
             </Link>
@@ -45,37 +48,54 @@ const NewJobOffers = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        {campaignActions.map((item) => (
-          <div
-            key={item.id}
-            className="border rounded-lg bg-secondary px-4 py-2"
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-[#2d5016]">
-                {item.title}
-              </h3>
-
-              <Button variant="link" size="sm" className="p-0 text-[#2d5016]">
-                <Link href={item.link} className="flex items-center text-xs">
-                  {t("view")} <ChevronRight />
-                </Link>
-              </Button>
-            </div>
-
-            <p className="text-sm font-medium text-[#2d5016]">
-              {t("budget")}: ৳{item.budget.toLocaleString()}
-            </p>
-
-            <div className="flex gap-2 py-2">
-              <Button className="flex-1 bg-[#7a9b57] hover:bg-[#5a7a3d] cursor-pointer">
-                {t("accept")}
-              </Button>
-              <Button className="flex-1 cursor-pointer" variant="outline">
-                {t("decline")}
-              </Button>
-            </div>
+        {isLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border rounded-lg bg-secondary px-4 py-2 space-y-2">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-4 w-12" />
+                </div>
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-1/4" />
+              </div>
+            ))}
           </div>
-        ))}
+        ) : error ? (
+          <div className="text-center py-4 space-y-2">
+            <p className="text-sm text-red-500">{error}</p>
+            <Button variant="outline" size="sm" onClick={fetchOffers}>
+              Retry
+            </Button>
+          </div>
+        ) : offers.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No new offers</p>
+        ) : (
+          offers.map((item) => (
+            <div
+              key={item.id}
+              className="border rounded-lg bg-secondary px-4 py-2"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-[#2d5016]">
+                  {item.campaignName}
+                </h3>
+
+                <Button variant="link" size="sm" className="p-0 text-[#2d5016]">
+                  <Link href={`/${locale}/influencer/campaign-details/${item.id}`} className="flex items-center text-xs">
+                    {t("view")} <ChevronRight />
+                  </Link>
+                </Button>
+              </div>
+
+              <p className="text-sm font-medium text-[#2d5016]">
+                {t("budget")}: ৳{Number(item.offeredAmount).toLocaleString()}
+              </p>
+
+              <p className="text-xs text-muted-foreground">{item.brandName}</p>
+            </div>
+          ))
+        )}
       </CardContent>
     </Card>
   );

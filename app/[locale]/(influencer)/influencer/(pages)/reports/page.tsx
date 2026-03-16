@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
   Search,
@@ -10,6 +10,10 @@ import {
   CheckCircle2,
   CalendarDays,
 } from "lucide-react";
+import { getReportLogs } from "@/service/influencer/report_logs";
+import { ReportLogItem } from "@/types/influencer/report_logs";
+
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ReportStatus = "flagged" | "pending" | "resolved";
 type ActiveFilter = ReportStatus | null;
@@ -20,10 +24,39 @@ type ReportItem = {
   milestone: string;
   timeAgo: string;
   message: string;
-  brandName: string;
   date: string;
   status: ReportStatus;
 };
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} Min${mins !== 1 ? "s" : ""} Ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} Hour${hrs !== 1 ? "s" : ""} Ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} Day${days !== 1 ? "s" : ""} Ago`;
+}
+
+function mapToReportItem(item: ReportLogItem): ReportItem {
+  return {
+    id: item.reportId,
+    campaignName: item.campaignName,
+    milestone: item.milestoneTitle,
+    timeAgo: timeAgo(item.date),
+    message: item.feedback,
+    date: formatDate(item.date),
+    status: item.logStatus as ReportStatus,
+  };
+}
 
 const PAGE_SIZE = 4;
 
@@ -44,31 +77,27 @@ function countByStatus(items: ReportItem[]) {
 const ReportPage = () => {
   const t = useTranslations("influencer.reports");
 
-  // Dummy data (localized display values)
-  const dummyReports: ReportItem[] = useMemo(
-    () =>
-      Array.from({ length: 20 }).map((_, i) => {
-        const status: ReportStatus =
-          i % 10 === 0 ? "flagged" : i % 3 === 0 ? "resolved" : "pending";
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        return {
-          id: `rep_${i + 1}`,
-          campaignName: "Summer Fashion Campaign", // if you want, localize this too later
-          milestone:
-            status === "flagged"
-              ? t("Milestone 1")
-              : status === "resolved"
-              ? t("Milestone 2")
-              : t("Milestone 3"),
-          timeAgo: t("2 Hours Ago"),
-          message: t("Audio Quality Does Not Meet Requirements"),
-          brandName: t("StyleCo"),
-          date: t("Dec 15, 2025"),
-          status,
-        };
-      }),
-    [t]
-  );
+  const fetchReports = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await getReportLogs();
+      setReports(res.data.map(mapToReportItem));
+    } catch (err) {
+      console.error("Failed to fetch report logs:", err);
+      setError("Failed to load report logs.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const STATUS_UI = useMemo(
     () => ({
@@ -113,22 +142,21 @@ const ReportPage = () => {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
-  const counts = useMemo(() => countByStatus(dummyReports), [dummyReports]);
+  const counts = useMemo(() => countByStatus(reports), [reports]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return dummyReports
+    return reports
       .filter((r) => (activeStatus ? r.status === activeStatus : true))
       .filter((r) => {
         if (!q) return true;
         return (
           r.campaignName.toLowerCase().includes(q) ||
-          r.brandName.toLowerCase().includes(q) ||
           r.milestone.toLowerCase().includes(q)
         );
       });
-  }, [activeStatus, query, dummyReports]);
+  }, [activeStatus, query, reports]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
@@ -157,9 +185,52 @@ const ReportPage = () => {
     setPage(1);
   }, []);
 
+  const handlePrev = useCallback(() => {
+    setPage((p) => clamp(p - 1, 1, totalPages));
+  }, [totalPages]);
+
   const handleNext = useCallback(() => {
     setPage((p) => clamp(p + 1, 1, totalPages));
   }, [totalPages]);
+
+  if (isLoading) {
+    return (
+      <section className="w-full p-4 bg-white rounded-lg">
+        <div className="space-y-4">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-64" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[74px] rounded-lg" />
+            ))}
+          </div>
+          <Skeleton className="h-10 w-[260px] mt-5" />
+          <div className="space-y-4 mt-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[180px] rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="w-full p-4 bg-white rounded-lg">
+        <div className="flex flex-col items-center justify-center py-20 gap-3">
+          <p className="text-sm text-red-500">{error}</p>
+          <button
+            type="button"
+            onClick={fetchReports}
+            className="h-8 rounded-md px-4 text-sm font-semibold bg-[#6E8E59] text-white hover:brightness-95"
+          >
+            {t("Retry")}
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full p-4 bg-white rounded-lg">
@@ -258,12 +329,6 @@ const ReportPage = () => {
 
                     <div className="mt-4 flex items-center justify-between">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                          <span className={ui.accentText}>•</span>
-                          <span className={ui.accentText}>
-                            {item.brandName}
-                          </span>
-                        </div>
                         <div className="flex items-center gap-2 text-sm">
                           <CalendarDays
                             className={["h-4 w-4", ui.accentText].join(" ")}
@@ -314,6 +379,20 @@ const ReportPage = () => {
             <span>{t("Of")}</span>
             <span>{totalPages}</span>
           </div>
+
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={currentPage <= 1}
+            className={[
+              "h-8 rounded-md px-5 text-sm font-semibold transition",
+              currentPage > 1
+                ? "bg-[#6E8E59] text-white hover:brightness-95"
+                : "bg-[#D7DDD3] text-white cursor-not-allowed",
+            ].join(" ")}
+          >
+            {t("Previous")}
+          </button>
 
           <button
             type="button"

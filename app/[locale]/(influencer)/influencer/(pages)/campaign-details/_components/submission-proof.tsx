@@ -11,6 +11,7 @@ import {
   Play,
   Heart,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -20,6 +21,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { Progress } from "@/components/ui/progress";
+import { useFileUpload } from "@/hooks/useFileUpload";
 import type { FormType, PerformanceMetric, Proof } from "./submission-form";
 
 interface Props {
@@ -38,28 +41,8 @@ const metricItems: Array<{
   { key: "comments", label: "Comments", icon: MessageCircle },
 ];
 
-function isFile(v: unknown): v is File {
-  return typeof File !== "undefined" && v instanceof File;
-}
-
-function FilePreview({ file }: { file?: File }) {
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null);
-      return;
-    }
-
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [file]);
-
-  if (!file) {
+function AttachmentPreview({ value }: { value?: unknown }) {
+  if (!value) {
     return (
       <>
         <UploadCloud className="h-8 w-8 text-light-green" />
@@ -73,41 +56,29 @@ function FilePreview({ file }: { file?: File }) {
     );
   }
 
-  const fileType = file.type;
-
-  if (fileType.startsWith("image/") && previewUrl) {
-    return (
-      <img
-        src={previewUrl}
-        alt="Preview"
-        className="h-28 object-contain rounded-md"
-      />
-    );
-  }
-
-  if (fileType.startsWith("video/") && previewUrl) {
-    return <video src={previewUrl} controls className="h-28 rounded-md" />;
-  }
-
-  if (fileType === "application/pdf") {
+  // Uploaded URL string
+  if (typeof value === "string") {
+    const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(value);
+    if (isImage) {
+      return (
+        <img
+          src={value}
+          alt="Uploaded proof"
+          className="h-28 object-contain rounded-md"
+        />
+      );
+    }
     return (
       <div className="flex flex-col items-center gap-1">
-        <span className="text-sm font-medium text-light-green">📄 PDF Selected</span>
+        <span className="text-sm font-medium text-light-green">File Uploaded</span>
         <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-          {file.name}
+          {value.split("/").pop()}
         </span>
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-sm font-medium text-light-green">📎 File Selected</span>
-      <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-        {file.name}
-      </span>
-    </div>
-  );
+  return null;
 }
 
 const SubmissionProofs = ({ control, submissionIndex }: Props) => {
@@ -205,38 +176,10 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
               </div>
 
               <div className="flex-1">
-                <FormField
+                <ProofAttachmentField
                   control={control}
-                  name={`submissions.${submissionIndex}.proofs.${proofIndex}.attachment`}
-                  render={({ field }) => {
-                    const file = isFile(field.value) ? field.value : undefined;
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Attach Proof (Screenshots, Videos)</FormLabel>
-
-                        <FormControl>
-                          <label className="group cursor-pointer">
-                            <div className="flex flex-col items-center justify-center gap-2 w-full h-40 border-2 border-dashed rounded-xl border-light-green bg-light-green/5 hover:bg-light-green/10 transition">
-                              <FilePreview file={file} />
-                            </div>
-
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept="image/*,video/*,.pdf,.doc,.docx"
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                if (f) field.onChange(f);
-                              }}
-                            />
-                          </label>
-                        </FormControl>
-
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
+                  submissionIndex={submissionIndex}
+                  proofIndex={proofIndex}
                 />
               </div>
             </div>
@@ -255,5 +198,64 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
     </div>
   );
 };
+
+// Separated component so each proof can have its own upload state
+function ProofAttachmentField({
+  control,
+  submissionIndex,
+  proofIndex,
+}: {
+  control: Control<FormType>;
+  submissionIndex: number;
+  proofIndex: number;
+}) {
+  const { upload, isUploading, progress } = useFileUpload({
+    module: "brandguru/influencer/submissions",
+  });
+
+  return (
+    <FormField
+      control={control}
+      name={`submissions.${submissionIndex}.proofs.${proofIndex}.attachment`}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Attach Proof (Screenshots, Videos)</FormLabel>
+
+          <FormControl>
+            <label className={`group ${isUploading ? "pointer-events-none" : "cursor-pointer"}`}>
+              <div className="flex flex-col items-center justify-center gap-2 w-full h-40 border-2 border-dashed rounded-xl border-light-green bg-light-green/5 hover:bg-light-green/10 transition">
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2 w-3/4">
+                    <Loader2 className="h-6 w-6 animate-spin text-light-green" />
+                    <p className="text-sm text-muted-foreground">Uploading...</p>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                ) : (
+                  <AttachmentPreview value={field.value} />
+                )}
+              </div>
+
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*,video/*,.pdf,.doc,.docx"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const result = await upload(f);
+                  if (result) {
+                    field.onChange(result.publicUrl);
+                  }
+                }}
+              />
+            </label>
+          </FormControl>
+
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export default SubmissionProofs;

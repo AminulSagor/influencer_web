@@ -337,7 +337,7 @@
       "Recent Transactions" : "সাম্প্রতিক লেনদেন",
       "Browse and manage your earnings of each campaigns": "প্রতিটি ক্যাম্পেইনের আয় সহজেই দেখুন ",
       "Search By Job name, client name":"ক্যাম্পেইন নাম বা ক্লায়েন্ট নাম দিয়ে খুঁজুন...",
-      "View Campain Details": "ক্যাম্পেইন বিস্তারিত দেখুন",
+      "View Campaign Details": "ক্যাম্পেইন বিস্তারিত দেখুন",
       "Next": "পরবর্তী"
       },
      "support-center" : {
@@ -426,7 +426,7 @@
           "Payment Milestones" : "পেমেন্ট মাইলস্টোন",
           "Progress" : "অগ্রগতি",
           "Where to send the product?" : "পণ্য কোথায় পাঠানো হবে?",
-          "Add Another" : "+ আরও একটি যোগ করুন",
+          "Add Another" : "আরও একটি যোগ করুন",
           "Address" : "ঠিকানা",
           "Give a name" : "একটি নাম দিন",
           "Give a name to the address" : "আপনার ঠিকানার জন্য একটি নাম দিন",
@@ -437,6 +437,7 @@
           "Full Address *" : "পূর্ণ ঠিকানা *",
           "Enter Full Address" : "পূর্ণ ঠিকানা লিখুন",
           "Save" : "সেভ করুন",
+          "Set Default" : "ডিফল্ট সেট করুন",
           "Milestone" : "মাইলস্টোন",
           "Milestone Target" : "মাইলস্টোনের টার্গেট",
           "Payout On approval" : "অনুমোদন হলেই টাকা প্রদান",

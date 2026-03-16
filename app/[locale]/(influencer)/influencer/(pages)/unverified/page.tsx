@@ -6,7 +6,7 @@ import NeedHelpCard from "@/app/[locale]/(influencer)/influencer/(pages)/unverif
 import ProfileCompletionCard from "@/app/[locale]/(influencer)/influencer/(pages)/unverified/_components/profile-completion-card";
 import VerificationProgressCard from "@/app/[locale]/(influencer)/influencer/(pages)/unverified/_components/verification-progress-card";
 import { getInfluencerProfile } from "@/service/influencer/profile/profile";
-import { InfluencerProfileData } from "@/types/influencer/profile_type";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 
 export default function UnverifiedPage() {
   const [profileData, setProfileData] = useState<InfluencerProfileData | null>(null);

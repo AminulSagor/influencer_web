@@ -341,7 +341,7 @@
       "Recent Transactions" : "Recent Transactions",
       "Browse and manage your earnings of each campaigns" : "Browse and manage your earnings of each campaigns",
       "Search By Job name, client name" : "Search By Job name, client name...",
-      "View Campain Details": "View Campain Details",
+      "View Campaign Details": "View Campaign Details",
       "Next": "Next"
     },
     "support-center" : {
@@ -428,7 +428,7 @@
       "Where to send the product?" : "Where to send the product?",
       "Payment Milestones" : "Payment Milestones",
       "Progress" : "Progress",
-      "Add Another" : "+  Add Another",
+      "Add Another" : "Add Another",
       "Address" : "Address",
       "Give a name" : "Give a name",
       "Give a name to the address" : "Give a name to the address",
@@ -440,6 +440,7 @@
       "Full Address *" : "Full Address *",
       "Enter Full Address" : "Enter Full Address",
       "Save" : "Save",
+      "Set Default" : "Set Default",
       "Milestone" : "Milestone",
       "Milestone Target" : "Milestone Target",
       "Payout On approval" : "Payout On approval",

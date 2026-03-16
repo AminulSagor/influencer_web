@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { BankAccount, MobileBankingAccount } from "@/types/influencer/profile_type";
+import { BankAccount, MobileBankingAccount } from "@/types/influencer/account_setting/profile_type";
 
 interface PayoutItemProps {
   type: "bank" | "mobileBanking";
@@ -13,7 +13,7 @@ export default function PayoutItem({ type, data, onRemove }: PayoutItemProps) {
   const isMobileBanking = type === "mobileBanking";
   
   // Status-based styling
-  const isVerified = data.accStatus === "verified";
+  const isVerified = data.accStatus === "verified" || data.accStatus === "approved";
   const isPending = data.accStatus === "pending";
   const isRejected = data.accStatus === "rejected";
   
