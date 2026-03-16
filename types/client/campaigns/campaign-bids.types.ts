@@ -15,29 +15,42 @@ export type CampaignBid = {
   dollarRate: number;
   inDollar: number;
   createdAt?: string;
+  email?: string;
+  phone?: string;
 };
 
 export type RawCampaignBid = {
-  id?: string;
-  agencyId?: string;
-  agency?: {
-    id?: string;
-    agencyName?: string;
-    logo?: string | null;
-    niches?: Array<{ name?: string | null }>;
-  } | null;
-  agencyName?: string;
-  agencyLogo?: string | null;
-  nicheLabels?: string[];
-  agencyFeePercent?: number | string | null;
-  agencyFeeAmount?: number | string | null;
-  budgetExcludingAgencyFee?: number | string | null;
-  dollarRate?: number | string | null;
-  inDollar?: number | string | null;
-  createdAt?: string;
+  agencyId: string;
+  agencyName: string;
+  email: string;
+  phone: string;
+  logo: string | null;
+  niche: Array<{
+    niche: string;
+    status: string;
+    rejectReason?: string;
+  }>;
+  appliedFeePercent: number | string;
+  proposedServiceFeePercent?: string;
+  totalpayableExcludingAgencyServiceFee: number | string;
+  agencyServiceFeeAmount: number | string;
+  dollarRate: number | string;
+  totalCampaignSpentInDollar: number | string;
+  hasRequoted?: boolean;
+  submittedAt?: string;
 };
 
-export type CampaignBidsResponse = RawCampaignBid[];
+export type CampaignBidsResponse = {
+  success: boolean;
+  campaignName: string;
+  data: RawCampaignBid[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
 
 export type SelectAgencyPayload = {
   campaignId: string;
