@@ -52,11 +52,14 @@ export function useMilestoneSubmissions({
       return;
     }
 
+    const safeCampaignId = campaignId;
+    const safeMilestoneId = milestoneId;
+
     if (campaignType === "influencer_promotion") {
       const localItems = buildInfluencerPromotionSubmissionItems({
-        campaignId,
+        campaignId: safeCampaignId,
         campaignName: campaignName ?? "",
-        milestoneId,
+        milestoneId: safeMilestoneId,
         assignedInfluencers,
       });
 
@@ -81,10 +84,10 @@ export function useMilestoneSubmissions({
         setIsLoading(true);
         setError(null);
 
-        const res = await campaignSubmissionService.getSubmissionList({
-          campaignId,
-          milestoneId,
-        });
+        const res =
+          await campaignSubmissionService.getAgencyMilestoneSubmissionList(
+            safeMilestoneId,
+          );
 
         if (!ignore) {
           setItems(res.data ?? []);

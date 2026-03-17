@@ -4,10 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  ClientCampaignDetails,
-  CampaignMilestone,
-} from "@/types/client/campaigns/campaign-details";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import InfluencerSelector from "./influencer-selector";
 import MilestonesCarousel from "./milestones-carousel";
 
@@ -15,6 +12,8 @@ type Props = {
   campaign: ClientCampaignDetails;
   expandedMilestoneId: string;
   onSelectMilestone: (milestoneId: string) => void;
+  selectedInfluencerId: string;
+  onSelectInfluencer: (influencerId: string) => void;
 };
 
 export type InfluencerOption = {
@@ -38,40 +37,14 @@ const getInfluencerOptions = (
   }));
 };
 
-const getInfluencerMilestones = ({
-  allMilestones,
-  campaign,
-  influencerId,
-}: {
-  allMilestones: CampaignMilestone[];
-  campaign: ClientCampaignDetails;
-  influencerId: string;
-}) => {
-  if (!influencerId) return [];
-
-  const selectedInfluencer = (campaign.assignedInfluencers ?? []).find(
-    (item) => item.influencerId === influencerId,
-  );
-
-  if (!selectedInfluencer) return [];
-
-  const allowedMilestoneIds = new Set(
-    (selectedInfluencer.assignedWork ?? []).map(
-      (work) => work.masterMilestoneId,
-    ),
-  );
-
-  return allMilestones.filter((milestone) =>
-    allowedMilestoneIds.has(milestone.id),
-  );
-};
-
 export default function CampaignMilestonesOverview({
   campaign,
   expandedMilestoneId,
   onSelectMilestone,
+  selectedInfluencerId,
+  onSelectInfluencer,
 }: Props) {
-  const allMilestones = useMemo(
+  const milestones = useMemo(
     () => campaign.milestones ?? [],
     [campaign.milestones],
   );
@@ -85,14 +58,6 @@ export default function CampaignMilestonesOverview({
     [campaign],
   );
 
-  const initialInfluencerId = useMemo(() => {
-    return influencerOptions[0]?.id ?? "";
-  }, [influencerOptions]);
-
-  const [selectedInfluencerId, setSelectedInfluencerId] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
   const effectiveSelectedInfluencerId = useMemo(() => {
     if (!showInfluencerDropdown) return "";
 
@@ -103,13 +68,8 @@ export default function CampaignMilestonesOverview({
       return selectedInfluencerId;
     }
 
-    return initialInfluencerId;
-  }, [
-    showInfluencerDropdown,
-    selectedInfluencerId,
-    influencerOptions,
-    initialInfluencerId,
-  ]);
+    return influencerOptions[0]?.id ?? "";
+  }, [showInfluencerDropdown, selectedInfluencerId, influencerOptions]);
 
   const selectedInfluencer = useMemo(() => {
     if (!showInfluencerDropdown) return null;
@@ -125,21 +85,6 @@ export default function CampaignMilestonesOverview({
     effectiveSelectedInfluencerId,
   ]);
 
-  const milestones = useMemo(() => {
-    if (!showInfluencerDropdown) return allMilestones;
-
-    return getInfluencerMilestones({
-      allMilestones,
-      campaign,
-      influencerId: effectiveSelectedInfluencerId,
-    });
-  }, [
-    allMilestones,
-    showInfluencerDropdown,
-    campaign,
-    effectiveSelectedInfluencerId,
-  ]);
-
   const completedCount = useMemo(
     () =>
       milestones.filter((m) => normalizeStatus(m.status) === "completed")
@@ -152,6 +97,9 @@ export default function CampaignMilestonesOverview({
   const percent = totalCount
     ? Math.round((completedCount / totalCount) * 100)
     : 0;
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isDropdownOpen) return;
@@ -170,7 +118,7 @@ export default function CampaignMilestonesOverview({
   }, [isDropdownOpen]);
 
   const handleInfluencerSelect = (influencerId: string) => {
-    setSelectedInfluencerId(influencerId);
+    onSelectInfluencer(influencerId);
     setIsDropdownOpen(false);
 
     if (expandedMilestoneId) {

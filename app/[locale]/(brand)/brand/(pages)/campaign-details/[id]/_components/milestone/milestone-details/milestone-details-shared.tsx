@@ -156,6 +156,7 @@ export function MilestoneTargetGrid({
 }: {
   milestone: CampaignMilestone;
 }) {
+  console.log(milestone);
   return (
     <div>
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">

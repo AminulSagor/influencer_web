@@ -6,17 +6,12 @@ import {
 } from "@/types/client/campaigns/campaign-submission.types";
 import { serviceClient } from "@/service/base/axios_client";
 
-type SubmissionListParams = {
-  campaignId?: string;
-  milestoneId?: string;
-};
-
 export const campaignSubmissionService = {
-  async getSubmissionList(params?: SubmissionListParams) {
+  async getAgencyMilestoneSubmissionList(milestoneId: string) {
     const response: AxiosResponse<ServiceResponse<SubmissionSummary[]>> =
-      await serviceClient.get("/campaign/client/submissions", {
-        params,
-      });
+      await serviceClient.get(
+        `/campaign/client/submissions/agency/${milestoneId}`,
+      );
 
     return response.data;
   },
@@ -24,7 +19,7 @@ export const campaignSubmissionService = {
   async getClientSubmissionDetails(submissionId: string) {
     const response: AxiosResponse<
       ServiceResponse<ClientSubmissionDetailResponse>
-    > = await serviceClient.get(`/campaign/client/submissions/${submissionId}`);
+    > = await serviceClient.get(`/campaign/submission/${submissionId}`);
 
     return response.data;
   },

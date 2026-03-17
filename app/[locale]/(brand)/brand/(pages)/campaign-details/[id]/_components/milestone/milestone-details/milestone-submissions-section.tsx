@@ -57,7 +57,7 @@ export default function MilestoneSubmissionsSection({
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/60">
+      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/60 text-center">
         Loading submissions...
       </div>
     );
@@ -73,8 +73,8 @@ export default function MilestoneSubmissionsSection({
 
   if (!items.length) {
     return (
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/50">
-        No submissions found for this milestone.
+      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-red-500 text-center">
+        No submissions found for this milestonesss.
       </div>
     );
   }
@@ -84,8 +84,8 @@ export default function MilestoneSubmissionsSection({
 
     if (!submission) {
       return (
-        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/50">
-          No submissions found for this milestone.
+        <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-red-400 text-center">
+          No submissions found for this milestoness.
         </div>
       );
     }

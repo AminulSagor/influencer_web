@@ -20,7 +20,6 @@ export default function QuoteDetailsCard({
   campaign,
   onRefresh,
 }: QuoteDetailsCardProps) {
-  console.log(campaign.id)
   const [isRequoteOpen, setIsRequoteOpen] = React.useState(false);
   const [isAcceptOpen, setIsAcceptOpen] = React.useState(false);
   const [isInfluencerPaymentOpen, setIsInfluencerPaymentOpen] =
@@ -57,7 +56,6 @@ export default function QuoteDetailsCard({
       const data = await getCampaignNegotiations(campaign.id);
       setNegotiations(data);
     } catch (error) {
-      console.error("Failed to load negotiations", error);
       setNegotiations([]);
     } finally {
       setIsLoadingNegotiations(false);
