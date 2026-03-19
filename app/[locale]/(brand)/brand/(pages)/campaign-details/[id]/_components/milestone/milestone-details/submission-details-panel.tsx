@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import SubmissionAttachmentsGrid from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-attachments-grid";
 import SubmissionBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-bonus-card";
 import SubmissionDescriptionBlock from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-description-block";
@@ -21,6 +23,7 @@ import {
   SubmissionDetail,
   SubmissionSummary,
 } from "@/types/client/campaigns/campaign-submission.types";
+import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -35,6 +38,9 @@ export default function SubmissionDetailsPanel({
   submission,
   detail,
 }: Props) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
 
@@ -48,6 +54,39 @@ export default function SubmissionDetailsPanel({
 
   const averagePerformance = getAveragePerformance(metrics);
   const showBonus = shouldShowBonus(averagePerformance, detail.status, metrics);
+
+  const handleApprove = async (submissionId: string) => {
+    try {
+      setIsSubmitting(true);
+
+      await reviewSubmission(submissionId, {
+        action: "approve",
+      });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Approve submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDecline = async (submissionId: string, reason: string) => {
+    try {
+      setIsSubmitting(true);
+
+      await reviewSubmission(submissionId, {
+        action: "decline",
+        reason,
+      });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Decline submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -79,6 +118,9 @@ export default function SubmissionDetailsPanel({
       <SubmissionReportActions
         submissionId={submission.id}
         status={detail.status}
+        onApprove={handleApprove}
+        onDecline={handleDecline}
+        isSubmitting={isSubmitting}
       />
 
       {showBonus ? (

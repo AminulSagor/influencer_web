@@ -24,3 +24,29 @@ export const campaignSubmissionService = {
     return response.data;
   },
 };
+
+type ReviewSubmissionPayload =
+  | {
+      action: "approve";
+    }
+  | {
+      action: "decline";
+      reason: string;
+    };
+
+type ReviewSubmissionResponse = {
+  id: string;
+  status: string;
+  reason?: string;
+};
+
+export async function reviewSubmission(
+  submissionId: string,
+  payload: ReviewSubmissionPayload,
+) {
+  const res = await serviceClient.post<
+    ServiceResponse<ReviewSubmissionResponse>
+  >(`/campaign/client/submission/${submissionId}/review`, payload);
+
+  return res.data;
+}

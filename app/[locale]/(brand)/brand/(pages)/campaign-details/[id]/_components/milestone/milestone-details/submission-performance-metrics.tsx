@@ -69,7 +69,10 @@ export default function SubmissionPerformanceMetrics({ metrics }: Props) {
 
               {hasTarget ? (
                 <>
-                  <Progress value={progressValue} className="mt-3 h-2" />
+                  <Progress
+                    value={progressValue}
+                    className="mt-3 h-2 [&>div]:bg-Primary/70"
+                  />
 
                   <p className="mt-2 text-xs text-[#D8892B]">
                     Target Hit {metric.percent}%

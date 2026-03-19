@@ -1,18 +1,16 @@
 "use client";
 
-import { CircleDot } from "lucide-react";
+import { User } from "lucide-react";
 
 type Props = {
   description: string | null;
 };
 
-export default function SubmissionDescriptionBlock({
-  description,
-}: Props) {
+export default function SubmissionDescriptionBlock({ description }: Props) {
   return (
     <div>
       <div className="flex items-center gap-2 text-sm font-medium text-black">
-        <CircleDot className="h-4 w-4 fill-current" />
+        <User className="h-4 w-4 fill-current" />
         <span>Description / Update</span>
       </div>
 
