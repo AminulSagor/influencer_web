@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
@@ -16,11 +17,13 @@ export default function CancelledCampaignsList({
   campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No cancelled campaigns found."
+      emptyTitle={t("noCancelledCampaignsFound")}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4 mt-6">
         {campaigns.map((c) => (
@@ -32,8 +35,10 @@ export default function CancelledCampaignsList({
 }
 
 function CancelledCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
@@ -56,7 +61,7 @@ function CancelledCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -74,7 +79,7 @@ function CancelledCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="rounded-xl border bg-muted/30 px-4 py-4 space-y-1">
-          <p className="text-dark-gray">Offered</p>
+          <p className="text-dark-gray">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
             {c.totalBudget}
           </p>
@@ -83,7 +88,7 @@ function CancelledCard({ c }: { c: CampaignOverView }) {
         <div className="flex items-center justify-between text-muted-foreground">
           <p className="flex items-center gap-2 text-sm">
             <FaClock />
-            Deadline
+            {t("deadline")}
           </p>
           <p className="text-sm">{formatDeadline(c.deadline)}</p>
         </div>

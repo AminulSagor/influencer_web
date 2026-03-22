@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 
@@ -27,6 +28,7 @@ export default function BudgetingAndQuotingCampaignsList({
   filter: BudgetingFilter;
   onFilterChange: (filter: BudgetingFilter) => void;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
   const counts = useBudgetingAndQuotingCounts(true);
 
   const countMap: Record<BudgetingFilter, number> = {
@@ -38,7 +40,7 @@ export default function BudgetingAndQuotingCampaignsList({
   return (
     <>
       <div className="flex flex-wrap gap-2 mt-6">
-        {BUDGETING_FILTER_ITEMS.map(({ key, label }) => {
+        {BUDGETING_FILTER_ITEMS.map(({ key }) => {
           const active = filter === key;
           const count = countMap[key];
 
@@ -54,7 +56,7 @@ export default function BudgetingAndQuotingCampaignsList({
                   : "bg-white text-Primary border-border hover:bg-Secondary",
               ].join(" ")}
             >
-              <span>{label}</span>
+              <span>{t(key)}</span>
 
               <span
                 className={[
@@ -74,7 +76,7 @@ export default function BudgetingAndQuotingCampaignsList({
       <ListShell
         loading={loading}
         empty={!loading && campaigns.length === 0}
-        emptyTitle="No budgeting & quoting campaigns found."
+        emptyTitle={t("noBudgetingQuotingCampaignsFound")}
       >
         <div className="grid md:grid-cols-2 lg:grid-cols-3 overflow-x-scroll gap-4 xl:gap-8 mt-6 items-start no-scrollbar">
           {campaigns.map((campaign) => (
@@ -97,8 +99,12 @@ function BudgetingAndQuotingCampaignCard({
 }: {
   campaign: CampaignOverView;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const campaignType =
-    campaign.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    campaign.campaignType === "paid_ad"
+      ? t("paidAd")
+      : t("influencerPromotion");
 
   const isQuotationReceived = isQuotationReceivedCampaign(campaign);
   const offered = campaign.totalBudget ?? 0;
@@ -115,7 +121,7 @@ function BudgetingAndQuotingCampaignCard({
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
 
           <div className="flex items-center gap-2">
             {campaign.platforms?.length ? (
@@ -135,20 +141,22 @@ function BudgetingAndQuotingCampaignCard({
 
         {!isQuotationReceived ? (
           <div className="rounded-xl border bg-linear-to-r from-Secondary to-white px-4 py-4 space-y-2">
-            <p className="text-Primary text-lg font-semibold">Budget Pending</p>
+            <p className="text-Primary text-lg font-semibold">
+              {t("budgetPending")}
+            </p>
 
             <p className="text-light-green text-3xl font-semibold">
-              {offered > 0 ? formatBDT(offered) : "None"}
+              {offered > 0 ? formatBDT(offered) : t("none")}
             </p>
 
             <p className="text-muted-foreground text-sm">
-              Revised: {campaign.negotiationRevisedTimes ?? 0}
+              {t("revised")}: {campaign.negotiationRevisedTimes ?? 0}
             </p>
           </div>
         ) : (
           <div className="rounded-xl border border-light-green/25 bg-light-green/10 px-4 py-4 space-y-2">
             <p className="text-Primary text-lg font-semibold">
-              Quotation Received
+              {t("quotationReceived")}
             </p>
 
             <p className="text-light-green text-3xl font-semibold">
@@ -156,7 +164,7 @@ function BudgetingAndQuotingCampaignCard({
             </p>
 
             <p className="text-muted-foreground text-sm">
-              Offered: {offered > 0 ? formatBDT(offered) : "None"}
+              {t("offered")}: {offered > 0 ? formatBDT(offered) : t("none")}
             </p>
           </div>
         )}
@@ -164,14 +172,14 @@ function BudgetingAndQuotingCampaignCard({
         <div className="flex items-center justify-between">
           <p className="flex items-center gap-2 text-sm text-orange">
             <FaClock className="text-orange" />
-            Deadline
+            {t("deadline")}
           </p>
           <p className="text-orange text-sm">{deadlineText}</p>
         </div>
 
         <SecondaryButton className="w-full text-Primary px-2 py-2">
           <Link href={`/brand/campaign-details/${campaign.id}`}>
-            View Campaign Details
+            {t("viewCampaignDetails")}
           </Link>
         </SecondaryButton>
       </CardContent>

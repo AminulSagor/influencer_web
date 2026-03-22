@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaClock } from "react-icons/fa";
@@ -20,11 +21,13 @@ export default function ActiveCampaignsList({
   campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No active campaigns found."
+      emptyTitle={t("noActiveCampaignsFound")}
     >
       <div className="grid gap-4 xl:gap-8 mt-6 md:grid-cols-2 lg:grid-cols-3">
         {campaigns.map((c) => (
@@ -38,8 +41,10 @@ export default function ActiveCampaignsList({
 }
 
 function ActiveCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
@@ -63,7 +68,7 @@ function ActiveCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -81,7 +86,7 @@ function ActiveCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="rounded-xl border border-light-green/25 bg-light-green/10 px-4 py-4 space-y-1">
-          <p className="text-Primary text-lg">Offered</p>
+          <p className="text-Primary text-lg">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
             {formatBudget(c.totalBudget)}
           </p>
@@ -91,7 +96,7 @@ function ActiveCard({ c }: { c: CampaignOverView }) {
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm text-orange">
               <FaClock className="text-orange" />
-              Deadline
+              {t("deadline")}
             </p>
             <p className="text-orange text-sm">{formatDeadline(c.deadline)}</p>
           </div>
@@ -105,7 +110,7 @@ function ActiveCard({ c }: { c: CampaignOverView }) {
 
         <Button asChild variant="outline" className="w-full rounded-xl">
           <Link href={`/brand/campaign-details/${c.id}`}>
-            View Campaign Details
+            {t("viewCampaignDetails")}
           </Link>
         </Button>
       </CardContent>

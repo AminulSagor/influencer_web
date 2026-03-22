@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import CampaignSearchBar from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/campaign-search-bar";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,14 @@ export default function CampaignToolbar({
   onSearch,
   onSort,
 }: Props) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <CampaignSearchBar
         title={title}
         resultText={resultText}
-        placeholder="Search By Job Name, Client Name"
+        placeholder={t("searchCampaign")}
         onSearch={onSearch}
       />
 

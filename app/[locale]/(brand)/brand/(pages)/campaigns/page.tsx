@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   STATUS_QUERY,
@@ -88,7 +89,10 @@ function parsePage(value: string | null): number {
   return parsed;
 }
 
+//==============component=======================//
 export default function CampaignsPage() {
+  const t = useTranslations("brand.CampaignsPage");
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -144,11 +148,9 @@ export default function CampaignsPage() {
   const end = total === 0 ? 0 : start + currentItemsCount - 1;
 
   const resultText =
-    total === 0
-      ? "Showing 0 Of 0 Results"
-      : `Showing ${end} Of ${total} Results`;
+    total === 0 ? t("showingZeroResults") : t("showingResults", { end, total });
 
-  const sortLabel = sortBy === "budget_desc" ? "High To Low" : "Low To High";
+  const sortLabel = sortBy === "budget_desc" ? t("highToLow") : t("lowToHigh");
 
   const handleTabChange = (nextTab: CampaignTabKey) => {
     if (nextTab === "budgeting_quoting") {
@@ -210,6 +212,12 @@ export default function CampaignsPage() {
     }
   };
 
+  //tabs
+  const localizedTabItems = CAMPAIGN_TAB_ITEMS.map((item) => ({
+    ...item,
+    label: t(item.labelKey),
+  }));
+
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -217,20 +225,22 @@ export default function CampaignsPage() {
           <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 justify-between items-start">
             <div>
               <CardTitle className="truncate text-lg font-bold text-Primary">
-                Campaigns
+                {t("title")}
               </CardTitle>
               <CardDescription className="text-sm">
-                Browse and manage your campaigns
+                {t("description")}
               </CardDescription>
             </div>
 
             <PrimaryButton type="button" className="sm:max-w-54">
-              <Link href="/brand/create-campaign">+ Create New Campaign</Link>
+              <Link href="/brand/create-campaign">
+                {t("createNewCampaign")}
+              </Link>
             </PrimaryButton>
           </div>
 
           <CampaignTabs
-            items={CAMPAIGN_TAB_ITEMS}
+            items={localizedTabItems}
             activeTab={activeTab}
             activeCount={meta.total ?? data.length}
             onChange={handleTabChange}
@@ -242,7 +252,7 @@ export default function CampaignsPage() {
 
       <CardContent>
         <CampaignToolbar
-          title={TAB_TITLE[activeTab]}
+          title={t(TAB_TITLE[activeTab])}
           resultText={resultText}
           sortLabel={sortLabel}
           onSearch={handleSearch}

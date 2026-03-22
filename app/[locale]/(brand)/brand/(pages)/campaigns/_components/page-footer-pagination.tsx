@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -15,6 +16,8 @@ export default function PageFooterPagination({
   onNext,
   onPrev,
 }: Props) {
+  const t = useTranslations("brand.CampaignsPage");
+
   if (totalPages <= 1) return null;
 
   const safePage = Math.min(Math.max(page, 1), totalPages);
@@ -22,12 +25,21 @@ export default function PageFooterPagination({
   return (
     <div className="flex items-center justify-end gap-3">
       <p className="text-sm text-muted-foreground">
-        Page{" "}
+        {t("page")}{" "}
         <span className="inline-flex items-center justify-center min-w-7 px-2 py-1 rounded-md border bg-Secondary border-light-green text-Primary">
           {safePage}
         </span>{" "}
-        Of {totalPages}
+        {t("of")} {totalPages}
       </p>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={safePage <= 1}
+        onClick={onPrev}
+      >
+        {t("prev")}
+      </Button>
 
       <Button
         type="button"
@@ -36,17 +48,7 @@ export default function PageFooterPagination({
         disabled={safePage >= totalPages}
         onClick={onNext}
       >
-        Next
-      </Button>
-
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={safePage <= 1}
-        onClick={onPrev}
-      >
-        Prev
+        {t("next")}
       </Button>
     </div>
   );

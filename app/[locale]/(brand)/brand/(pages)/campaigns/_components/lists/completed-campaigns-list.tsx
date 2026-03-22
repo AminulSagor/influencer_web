@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
 import ListShell from "../list-shell";
@@ -17,11 +18,13 @@ export default function CompletedCampaignsList({
   campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No completed campaigns found."
+      emptyTitle={t("noCompletedCampaignsFound")}
     >
       <div className="grid md:grid-cols-2 lg:grid-cols-3 overflow-x-scroll gap-4 xl:gap-8 mt-6 items-start no-scrollbar">
         {campaigns.map((c) => (
@@ -38,10 +41,14 @@ function fakeRatingFromId(id: string) {
 }
 
 function CompletedCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const rating = fakeRatingFromId(c.id);
 
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad"
+      ? t("paidAd")
+      : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
@@ -64,7 +71,7 @@ function CompletedCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -82,14 +89,14 @@ function CompletedCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="rounded-xl border bg-muted/30 px-4 py-4 space-y-1">
-          <p className="text-Primary">Offered</p>
+          <p className="text-Primary">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
             ৳ {c.totalBudget}
           </p>
         </div>
 
         <div className="flex items-center justify-between text-orange text-sm">
-          <p>Completed On</p>
+          <p>{t("completedOn")}</p>
           <p>{formatDeadline(c.deadline)}</p>
         </div>
 
@@ -110,7 +117,7 @@ function CompletedCard({ c }: { c: CampaignOverView }) {
 
         <SecondaryButton className="w-full text-Primary px-2 py-2">
           <Link href={`/brand/campaign-details/${c.id}`}>
-            View Campaign Details
+            {t("viewCampaignDetails")}
           </Link>
         </SecondaryButton>
       </CardContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
@@ -18,11 +19,13 @@ export default function DraftCampaignsList({
   campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No draft campaigns found."
+      emptyTitle={t("noDraftCampaignsFound")}
     >
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-10 mt-6">
         {campaigns.map((c) => (
@@ -36,8 +39,10 @@ export default function DraftCampaignsList({
 }
 
 function DraftCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isPaidAd = c.campaignType === "paid_ad";
   const isInfluencerCampaign = c.campaignType === "influencer_promotion";
@@ -45,11 +50,11 @@ function DraftCard({ c }: { c: CampaignOverView }) {
 
   const assignmentText = (() => {
     if (isPaidAd) {
-      return isAssigned ? "Agency Assigned" : "No Agency Assigned";
+      return isAssigned ? t("agencyAssigned") : t("noAgencyAssigned");
     }
 
     if (isInfluencerCampaign) {
-      return isAssigned ? "Influencer Assigned" : "No Influencers Assigned";
+      return isAssigned ? t("influencerAssigned") : t("noInfluencersAssigned");
     }
 
     return "";
@@ -71,7 +76,7 @@ function DraftCard({ c }: { c: CampaignOverView }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -84,30 +89,30 @@ function DraftCard({ c }: { c: CampaignOverView }) {
               ))
             ) : (
               <span className="text-muted-foreground text-sm">
-                : No platforms added!
+                {t("noPlatformsAdded")}
               </span>
             )}
           </div>
         </div>
 
         <div className="rounded-xl border bg-muted/40 px-4 py-5 space-y-2">
-          <p className="text-Primary">Offered</p>
+          <p className="text-Primary">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
-            {c.totalBudget > 0 ? c.totalBudget : "None"}
+            {c.totalBudget > 0 ? c.totalBudget : t("none")}
           </p>
         </div>
 
         <div className="flex items-center justify-between">
           <p className="flex items-center gap-2 text-sm text-orange">
             <FaClock className="text-orange" />
-            Deadline
+            {t("deadline")}
           </p>
           <p className="text-orange text-sm">{formatDeadline(c.deadline)}</p>
         </div>
 
         <SecondaryButton className="w-full px-2 py-2 text-Primary">
           <Link href={`/brand/create-campaign?draftId=${c.id}`}>
-            Continue Editing Campaign Details
+            {t("continueEditingCampaignDetails")}
           </Link>
         </SecondaryButton>
       </CardContent>

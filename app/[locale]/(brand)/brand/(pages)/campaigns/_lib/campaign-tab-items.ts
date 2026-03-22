@@ -2,11 +2,11 @@ import type { CampaignTabKey } from "./campaign-status";
 
 export const CAMPAIGN_TAB_ITEMS: Array<{
   key: CampaignTabKey;
-  label: string;
+  labelKey: string;
 }> = [
-  { key: "active", label: "Active" },
-  { key: "budgeting_quoting", label: "Budgeting & Quoting" },
-  { key: "completed", label: "Completed" },
-  { key: "draft", label: "Draft" },
-  { key: "cancelled", label: "Cancelled" },
+  { key: "active", labelKey: "active" },
+  { key: "budgeting_quoting", labelKey: "budgeting_quoting" },
+  { key: "completed", labelKey: "completed" },
+  { key: "draft", labelKey: "draft" },
+  { key: "cancelled", labelKey: "cancelled" },
 ];

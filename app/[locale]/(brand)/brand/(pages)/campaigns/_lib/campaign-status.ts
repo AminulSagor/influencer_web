@@ -14,9 +14,9 @@ export const STATUS_QUERY: Record<CampaignTabKey, string> = {
 };
 
 export const TAB_TITLE: Record<CampaignTabKey, string> = {
-  active: "Active Jobs",
-  budgeting_quoting: "Budgeting & Quoting",
-  completed: "Completed Jobs",
-  draft: "Draft Campaigns",
-  cancelled: "Cancelled",
+  active: "activeJobs",
+  budgeting_quoting: "budgetingAndQuoting",
+  completed: "completedJobs",
+  draft: "draftCampaigns",
+  cancelled: "cancelled",
 };
