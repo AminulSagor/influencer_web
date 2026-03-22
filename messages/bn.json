@@ -745,7 +745,10 @@
       "confirmed": "নিশ্চিত হয়েছে",
       "weWillReviewYourCampaignSoon": "আমরা শীঘ্রই আপনার ক্যাম্পেইন রিভিউ করব।",
       "itMayTakeUptoBusinessDays": "এতে ৩-৫ কর্মদিবস পর্যন্ত সময় লাগতে পারে",
-      "platforms": "প্ল্যাটফর্মসমূহ"
+      "platforms": "প্ল্যাটফর্মসমূহ",
+      "campaignMilestone": "ক্যাম্পেইন মাইলস্টোন",
+      "deliveryDays": "ডেলিভারি: {days} দিন",
+      "pleaseAddSomeMilestone": "অনুগ্রহ করে কিছু মাইলস্টোন যোগ করুন"
     },
     "explore": {
     "title": "এক্সপ্লোর",

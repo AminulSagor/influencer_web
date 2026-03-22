@@ -746,7 +746,10 @@
       "confirmed": "Confirmed",
       "weWillReviewYourCampaignSoon": "We Will Review Your Campaign Soon.",
       "itMayTakeUptoBusinessDays": "It May Take Upto 3-5 Business Days",
-      "platforms": "Platforms"
+      "platforms": "Platforms",
+      "campaignMilestone": "Campaign Milestone",
+      "deliveryDays": "Delivery: {days} day(s)",
+      "pleaseAddSomeMilestone": "Please add some milestone"
     },
     "explore": {
     "title": "Explore",

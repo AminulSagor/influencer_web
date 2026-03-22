@@ -8,10 +8,13 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 import type { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
+import { useTranslations } from "next-intl";
 
 type Props = { campaign: Campaignservice | null };
 
 const CampaignMilestones = ({ campaign }: Props) => {
+  const t = useTranslations("brand.CreateCampaignsPage");
+
   const milestones = Array.isArray(campaign?.milestones)
     ? campaign!.milestones
     : [];
@@ -26,7 +29,9 @@ const CampaignMilestones = ({ campaign }: Props) => {
             width={18}
             alt="icon"
           />
-          <h2 className="text-Primary font-semibold">Campaign Milestone</h2>
+          <h2 className="text-Primary font-semibold">
+            {t("campaignMilestone")}
+          </h2>
         </div>
       </CardHeader>
 
@@ -41,7 +46,9 @@ const CampaignMilestones = ({ campaign }: Props) => {
                   const title = milestone.contentTitle;
                   const subtitle =
                     milestone.contentQuantity || milestone.promotionGoal || "";
-                  const day = `Delivery: ${milestone.deliveryDays} day(s)`;
+                  const day = t("deliveryDays", {
+                    days: milestone.deliveryDays,
+                  });
 
                   return (
                     <CarouselItem
@@ -74,7 +81,7 @@ const CampaignMilestones = ({ campaign }: Props) => {
           </Carousel>
         ) : (
           <h1 className="text-light-green font-semibold text-xl text-center">
-            Please add some milestone
+            {t("pleaseAddSomeMilestone")}
           </h1>
         )}
       </CardContent>
