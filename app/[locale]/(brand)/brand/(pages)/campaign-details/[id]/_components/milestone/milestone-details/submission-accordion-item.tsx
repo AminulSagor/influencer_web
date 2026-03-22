@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   AccordionContent,
   AccordionItem,
@@ -37,6 +38,8 @@ export default function SubmissionAccordionItem({
   isOpen,
   prefetchedDetail,
 }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const { item, isLoading, error } = useSubmissionDetails({
     submissionId: submission.id,
     enabled: isOpen,
@@ -49,8 +52,8 @@ export default function SubmissionAccordionItem({
 
   const title =
     campaign.campaignType === "influencer_promotion"
-      ? "Submission Details"
-      : `Submission ${index + 1}`;
+      ? t("submissionDetails")
+      : `${t("submission")} ${index + 1}`;
 
   return (
     <AccordionItem
@@ -72,7 +75,7 @@ export default function SubmissionAccordionItem({
       <AccordionContent className="pb-4">
         {isLoading ? (
           <div className="rounded-[16px] border border-[#E5E7EB] p-4 text-sm text-black/60">
-            Loading submission details...
+            {t("loadingSubmissionDetails")}
           </div>
         ) : error ? (
           <div className="rounded-[16px] border border-red-200 bg-red-50 p-4 text-sm text-red-500">
@@ -87,7 +90,7 @@ export default function SubmissionAccordionItem({
           />
         ) : (
           <div className="rounded-[16px] border border-[#E5E7EB] p-4 text-sm text-black/50">
-            No submission details found.
+            {t("noSubmissionDetailsFound")}
           </div>
         )}
       </AccordionContent>

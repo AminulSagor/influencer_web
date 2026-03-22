@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,8 @@ export default function QuoteRequoteDialog({
   isSubmitting = false,
   onSubmit,
 }: QuoteRequoteDialogProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const initialBudget = toNumber(campaign.baseBudget);
   const [proposedBaseBudget, setProposedBaseBudget] =
     React.useState(initialBudget);
@@ -106,14 +109,14 @@ export default function QuoteRequoteDialog({
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold text-light-green">
-            Requote
+            {t("requote")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
           <div>
             <p className="text-base font-medium text-black">
-              Requote your campaign budget
+              {t("requoteYourCampaignBudget")}
             </p>
 
             <Input
@@ -133,17 +136,17 @@ export default function QuoteRequoteDialog({
 
           <div>
             <p className="text-base font-medium text-black">
-              New Requote Overview
+              {t("newRequoteOverview")}
             </p>
 
             <div className="mt-3 rounded-xl border border-light-green/40 bg-[#F7F7E9] p-4">
               <div className="space-y-2">
                 <Row
-                  label="Base Campaign Budget"
+                  label={t("baseCampaignBudget")}
                   value={formatBDT(proposedBaseBudget)}
                 />
                 <Row
-                  label={`VAT/Tax (${vatRate}%)`}
+                  label={t("vatTaxWithRate", { rate: vatRate })}
                   value={formatBDT(vatAmount)}
                 />
               </div>
@@ -151,7 +154,7 @@ export default function QuoteRequoteDialog({
               <div className="my-3 h-px w-full bg-black/10" />
 
               <Row
-                label="Total Campaign Cost"
+                label={t("totalCampaignCost")}
                 value={formatBDT(totalCampaignCost)}
                 strong
               />
@@ -162,21 +165,21 @@ export default function QuoteRequoteDialog({
             <div className="rounded-xl border border-light-green/40 bg-[#F7F7E9] p-4">
               <div className="space-y-2">
                 <Row
-                  label={`Agency Fee (${feeRangeText})`}
+                  label={t("agencyFeeWithRange", { range: feeRangeText })}
                   value={formatRangeBDT(
                     paidAdPreview.agencyFeeMin,
                     paidAdPreview.agencyFeeMax,
                   )}
                 />
                 <Row
-                  label="Campaign Budget Excluding Agency Fee"
+                  label={t("campaignBudgetExcludingAgencyFee")}
                   value={formatRangeBDT(
                     paidAdPreview.excludingAgencyFeeMin,
                     paidAdPreview.excludingAgencyFeeMax,
                   )}
                 />
                 <Row
-                  label={`In Dollars (Based On Avg. ${dollarRate} BDT/$ )`}
+                  label={t("inDollarsBasedOnAvgRate", { rate: dollarRate })}
                   value={formatRangeDollar(
                     paidAdPreview.dollarsMin,
                     paidAdPreview.dollarsMax,
@@ -195,10 +198,10 @@ export default function QuoteRequoteDialog({
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader className="h-4 w-4 border-2 border-white border-t-transparent" />
-                <span>Submitting...</span>
+                <span>{t("submitting")}</span>
               </span>
             ) : (
-              "Requote To Admin"
+              t("requoteToAdmin")
             )}
           </PrimaryButton>
         </div>

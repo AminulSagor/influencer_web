@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   Check,
@@ -7,15 +9,16 @@ import {
   Lock,
   Circle,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type StepperStatus = "done" | "current" | "todo";
 
 type ProgressStepperData = {
-  currentStage: string; // allow CampaignStage too via string (it will be compatible)
+  currentStage: string;
   stages: Array<{
-    stage: string; // allow CampaignStage (it extends string in TS unions)
+    stage: string;
     isDone: boolean;
-    doneLabel?: string; // ✅ optional
+    doneLabel?: string;
   }>;
 };
 
@@ -36,12 +39,27 @@ const iconByStage = (stage: string) => {
 const getStatus = (
   i: number,
   currentIndex: number,
-  isDone: boolean
+  isDone: boolean,
 ): StepperStatus => {
   if (isDone) return "done";
   if (i === currentIndex) return "current";
   if (i < currentIndex) return "done";
   return "todo";
+};
+
+const getStageLabel = (
+  stage: string,
+  t: ReturnType<typeof useTranslations>,
+) => {
+  const key = stage.toLowerCase();
+
+  if (key === "submitted") return t("progressStepper.stages.submitted");
+  if (key === "quoted") return t("progressStepper.stages.quoted");
+  if (key === "paid") return t("progressStepper.stages.paid");
+  if (key === "promoting") return t("progressStepper.stages.promoting");
+  if (key === "completed") return t("progressStepper.stages.completed");
+
+  return stage;
 };
 
 const StepIcon = ({
@@ -70,6 +88,7 @@ const StepIcon = ({
 };
 
 const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const stages = progressStepper?.stages ?? [];
   const stepsCount = stages.length;
 
@@ -78,7 +97,7 @@ const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
   const currentIndexRaw = stages.findIndex(
     (s) =>
       String(s.stage).toLowerCase() ===
-      String(progressStepper?.currentStage ?? "").toLowerCase()
+      String(progressStepper?.currentStage ?? "").toLowerCase(),
   );
   const currentIndex = currentIndexRaw >= 0 ? currentIndexRaw : 0;
 
@@ -97,7 +116,6 @@ const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
   return (
     <div className="w-full overflow-x-auto no-scrollbar">
       <div className="relative min-w-[720px]">
-        {/* Track */}
         <div
           className="absolute top-5 h-[2px] bg-black/10"
           style={{
@@ -111,7 +129,6 @@ const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
           />
         </div>
 
-        {/* Steps */}
         <div
           className="relative grid"
           style={{
@@ -126,7 +143,9 @@ const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
                 key={`${String(s.stage)}-${i}`}
                 className="flex flex-col items-center text-center"
               >
-                <StepIcon status={status}>{iconByStage(String(s.stage))}</StepIcon>
+                <StepIcon status={status}>
+                  {iconByStage(String(s.stage))}
+                </StepIcon>
 
                 <div className="mt-3">
                   <p
@@ -134,7 +153,7 @@ const ProgressStepper = ({ progressStepper }: ProgressStepperProps) => {
                       status === "todo" ? "text-black/45" : "text-black/80"
                     }`}
                   >
-                    {String(s.stage)}
+                    {getStageLabel(String(s.stage), t)}
                   </p>
 
                   <p className="mt-0.5 text-[11px] text-black/40">

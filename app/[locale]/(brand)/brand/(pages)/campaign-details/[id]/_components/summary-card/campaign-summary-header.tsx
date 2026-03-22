@@ -11,6 +11,7 @@ import {
   RiInstagramFill,
   RiLinkedinFill,
 } from "react-icons/ri";
+import { useTranslations } from "next-intl";
 
 type AssignedInfluencer = {
   name: string;
@@ -90,6 +91,7 @@ export default function CampaignSummaryHeader({
   agencyLogo,
 }: CampaignSummaryHeaderProps) {
   const router = useRouter();
+  const t = useTranslations("brand.CampaignDetailsPage");
 
   return (
     <div className="min-w-0 flex-1">
@@ -119,7 +121,9 @@ export default function CampaignSummaryHeader({
               <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white bg-white">
                 <Image
                   src={agencyLogo}
-                  alt={agencyName ?? "Agency"}
+                  alt={
+                    agencyName ?? t("campaignSummaryHeader.agencyFallbackAlt")
+                  }
                   fill
                   className="object-cover"
                   sizes="32px"
@@ -134,7 +138,9 @@ export default function CampaignSummaryHeader({
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <span className="text-sm font-medium text-white">
-              {showInfluencerSection ? "Influencers:" : "Agency:"}
+              {showInfluencerSection
+                ? t("campaignSummaryHeader.influencers")
+                : t("campaignSummaryHeader.agency")}
             </span>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -156,7 +162,7 @@ export default function CampaignSummaryHeader({
 
       <div className="mt-5 flex items-center gap-4">
         <span className="shrink-0 text-sm font-medium text-white">
-          Platforms
+          {t("campaignSummaryHeader.platforms")}
         </span>
 
         <div className="flex flex-wrap items-center gap-2">

@@ -751,6 +751,174 @@
       "deliveryDays": "Delivery: {days} day(s)",
       "pleaseAddSomeMilestone": "Please add some milestone"
     },
+    "CampaignDetailsPage" : {
+      "campaignSummaryHeader": {
+        "agencyFallbackAlt": "Agency",
+        "influencers": "Influencers:",
+        "agency": "Agency:",
+        "platforms": "Platforms"
+      },
+      "campaignSummaryStatusCard": {
+        "status": "Status",
+        "completed": "Completed"
+      },
+      "campaignSummaryDeadlineCard": {
+        "moneyImgAlt": "money img",
+        "totalDue": "Total Due",
+        "deadline": "Deadline",
+        "budgetPending": "Budget Pending",
+        "agencyConfirmationPending": "Agency Confirmation Pending"
+      },
+      "quoteDetailsCard": {
+        "confirmedQuote": "Confirmed Quote",
+        "confirmedBudget": "Confirmed Budget",
+        "paid": "Paid",
+        "quoteAwaitingAdminReview": "Quote Awaiting Admin Review",
+        "budgetAwaitingAdminReview": "Budget Awaiting Admin Review",
+        "currentQuoteAdminOffer": "Current Quote · Admin Offer",
+        "currentBudgetAdminOffer": "Current Budget · Admin Offer",
+        "currentQuoteYourCounterOffer": "Current Quote · Your Counter Offer",
+        "currentBudgetYourCounterOffer": "Current Budget · Your Counter Offer",
+        "initialSubmission": "Initial Submission",
+        "initialBudget": "Initial Budget"
+      },
+      "ratingCard": {
+        "title": "Rate The Influencers",
+        "buttonText": "Provide Ratings To Influencers"
+      },
+      "campaignDetailsContent": {
+        "rateTheInfluencers": "Rate The Influencers",
+        "rateTheAgency": "Rate The Agency",
+        "provideRatingsToInfluencers": "Provide Ratings To Influencers",
+        "provideRatingsToAgency": "Provide Ratings To Agency"
+      },
+      "campaignProgressCard": {
+        "title": "Campaign Progress",
+        "stages": {
+          "submitted": {
+            "stage": "Submitted",
+            "doneLabel": "Campaign Submitted"
+          },
+          "quoted": {
+            "stage": "Quoted",
+            "doneLabel": "Quote Received"
+          },
+          "paid": {
+            "stage": "Paid",
+            "doneLabelPartial": "Payment Partial",
+            "doneLabelConfirmed": "Payment Confirmed",
+            "doneLabelPending": "Payment Pending"
+          },
+          "promoting": {
+            "stage": "Promoting",
+            "doneLabel": "Campaign Live"
+          },
+          "completed": {
+            "stage": "Completed",
+            "doneLabel": "Campaign Finished"
+          }
+        }
+      },
+      "progressStepper": {
+        "stages": {
+          "submitted": "Submitted",
+          "quoted": "Quoted",
+          "paid": "Paid",
+          "promoting": "Promoting",
+          "completed": "Completed"
+        }
+      },
+      "assetsCard": {
+        "noAssetsUploaded": "No assets uploaded.",
+        "untitledAsset": "Untitled Asset",
+        "file": "File",
+        "goToPage": "Go to page {page}",
+        "contentAssets": "Content Assets",
+        "brandAssets": "Brand Assets"
+      },
+      "termsAndConditionCard": {
+        "title": "Brief and Terms & Condition",
+        "campaignBrief": "Campaign Brief",
+        "campaignGoals": "Campaign Goals",
+        "productServiceDetails": "Product/Service Details",
+        "termsAndConditions": "Terms & Conditions",
+        "reportingRequirements": "Reporting Requirements",
+        "usageRights": "Usage Rights",
+        "dos": "Do’s",
+        "donts": "Don’ts"
+      },
+      "campaignMilestones": "Campaign Milestones",
+      "overallProgress": "Overall Progress",
+      "completed": "Completed",
+      "progress": "Progress",
+      "of": "Of",
+      "confirmQuote": "Confirm Quote?",
+      "confirmBudget": "Confirm Budget?",
+      "acceptQuote": "Accept Quote",
+      "acceptBudget": "Accept Budget",
+      "accepting": "Accepting...",
+      "confirming": "Confirming...",
+      "adminProposedBudget": "Admin Proposed Budget",
+      "vatTax": "VAT/Tax",
+      "totalCampaignCost": "Total Campaign Cost",
+      "requote": "Requote",
+      "creditDebitCard": "Credit / Debit Card",
+      "acceptQuoteStartCampaign": "Accept Quote & Start Campaign",
+      "minimumFundNeededToStartTheCampaign50": "Minimum fund needed to start the campaign (50%)",
+      "payInFull100": "Pay In Full (100%)",
+      "payMinimum50": "Pay Minimum (50%)",
+      "pay75": "Pay (75%)",
+      "paymentMethod": "Payment Method",
+      "processing": "Processing...",
+      "acceptQuotePay": "Accept Quote & Pay",
+      "payCampaignDue": "Pay Campaign Due",
+      "remainingDue": "Remaining Due",
+      "pay50": "Pay 50%",
+      "payNow": "Pay Now",
+      "requoteYourCampaignBudget": "Requote your campaign budget",
+      "newRequoteOverview": "New Requote Overview",
+      "baseCampaignBudget": "Base Campaign Budget",
+      "vatTaxWithRate": "VAT/Tax ({rate}%)",
+      "agencyFeeWithRange": "Agency Fee ({range})",
+      "campaignBudgetExcludingAgencyFee": "Campaign Budget Excluding Agency Fee",
+      "inDollarsBasedOnAvgRate": "In Dollars (Based On Avg. {rate} BDT/$ )",
+      "submitting": "Submitting...",
+      "requoteToAdmin": "Requote To Admin",
+      "rate": "Rate",
+      "youveRated": "You've Rated {value}",
+      "milestone": "Milestone",
+      "contentRequirements": "Content Requirements",
+      "noRequirementProvided": "No requirement provided",
+      "promotionGoal": "Promotion Goal",
+      "noPromotionGoalProvided": "No promotion goal provided",
+      "milestoneTarget": "Milestone Target",
+      "reach": "Reach",
+      "views": "Views",
+      "reaction": "Reaction",
+      "comment": "Comment",
+      "promotionTarget": "Promotion Target",
+      "pending": "Pending",
+      "status": "Status",
+      "bonus": "Bonus",
+      "rewardThisCompletedMilestoneWithABonusPayment": "Reward this completed milestone with a bonus payment.",
+      "provideBonusAmount": "Provide Bonus Amount",
+      "loadingSubmissions": "Loading submissions...",
+      "noSubmissionsFoundForThisMilestonesss": "No submissions found for this milestonesss.",
+      "noSubmissionsFoundForThisMilestoness": "No submissions found for this milestoness.",
+      "submissionDetails": "Submission Details",
+      "submission": "Submission",
+      "loadingSubmissionDetails": "Loading submission details...",
+      "noSubmissionDetailsFound": "No submission details found.",
+      "pleaseWriteAReason": "Please write a reason",
+      "agencyOfferIdIsMissing": "Agency offer id is missing",
+      "assignmentIdIsMissing": "Assignment id is missing",
+      "cancellationRequestSubmittedSuccessfully": "Cancellation request submitted successfully",
+      "failedToSubmitCancellationRequest": "Failed to submit cancellation request",
+      "dangerZone": "Danger Zone",
+      "cancelCampaign": "Cancel Campaign",
+      "writeYourReason": "Write your reason...",
+      "requestCancellationAndSubmitReason": "Request Cancellation & Submit Reason"
+    },
     "explore": {
     "title": "Explore",
     "description": "Know your Influencers, Agencies and more",

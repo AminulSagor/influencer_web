@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Accordion } from "@/components/ui/accordion";
 import SubmissionAccordionItem from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-accordion-item";
 import {
@@ -18,6 +19,7 @@ export default function MilestoneSubmissionsSection({
   campaign,
   milestone,
 }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const [openValues, setOpenValues] = React.useState<string[]>([]);
   const [openInfluencerValue, setOpenInfluencerValue] = React.useState<
     string | undefined
@@ -58,7 +60,7 @@ export default function MilestoneSubmissionsSection({
   if (isLoading) {
     return (
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-black/60 text-center">
-        Loading submissions...
+        {t("loadingSubmissions")}
       </div>
     );
   }
@@ -74,7 +76,7 @@ export default function MilestoneSubmissionsSection({
   if (!items.length) {
     return (
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-red-500 text-center">
-        No submissions found for this milestonesss.
+        {t("noSubmissionsFoundForThisMilestonesss")}
       </div>
     );
   }
@@ -85,7 +87,7 @@ export default function MilestoneSubmissionsSection({
     if (!submission) {
       return (
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-sm text-red-400 text-center">
-          No submissions found for this milestoness.
+          {t("noSubmissionsFoundForThisMilestoness")}
         </div>
       );
     }

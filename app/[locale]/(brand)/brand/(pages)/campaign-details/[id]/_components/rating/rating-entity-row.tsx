@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import RatingAvatar from "./rating-avatar";
 import RatingStars from "./rating-stars";
@@ -21,6 +22,8 @@ export default function RatingEntityRow({
   onExpand,
   onChange,
 }: RatingEntityRowProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <div className="overflow-hidden rounded-[18px] bg-[#5D8238] text-white">
       <div className="flex items-center gap-4 px-5 py-4">
@@ -41,7 +44,7 @@ export default function RatingEntityRow({
           onClick={onExpand}
           className="flex items-center gap-1 text-[16px] font-medium text-white/95"
         >
-          <span>Rate</span>
+          <span>{t("rate")}</span>
           {expanded ? (
             <ChevronDown className="h-4 w-4" />
           ) : (
@@ -56,7 +59,7 @@ export default function RatingEntityRow({
             <RatingStars value={value} onChange={onChange} size={42} />
 
             <p className="mt-4 text-center text-[18px] font-semibold text-white">
-              You&apos;ve Rated {formatRatedText(value)}
+              {t("youveRated", { value: formatRatedText(value) })}
             </p>
           </div>
         </div>

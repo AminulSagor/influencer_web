@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -32,18 +33,20 @@ export default function QuoteAcceptDialog({
   adminProposedBaseBudget,
   adminProposedTotalBudget,
 }: QuoteAcceptDialogProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
 
   const dialogTitle = isInfluencerPromotion
-    ? "Confirm Quote?"
-    : "Confirm Budget?";
+    ? t("confirmQuote")
+    : t("confirmBudget");
 
   const confirmButtonText = isInfluencerPromotion
-    ? "Accept Quote"
-    : "Accept Budget";
+    ? t("acceptQuote")
+    : t("acceptBudget");
 
-  const loadingText = isInfluencerPromotion ? "Accepting..." : "Confirming...";
+  const loadingText = isInfluencerPromotion ? t("accepting") : t("confirming");
 
   const vatAmount = React.useMemo(() => {
     if (adminProposedBaseBudget == null) return 0;
@@ -90,14 +93,16 @@ export default function QuoteAcceptDialog({
           <div className="rounded-xl border border-light-green/40 bg-[#F7F7E9] p-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-base text-black">Admin Proposed Budget</p>
+                <p className="text-base text-black">
+                  {t("adminProposedBudget")}
+                </p>
                 <p className="text-base font-semibold text-light-green">
                   {formatBDT(adminProposedBaseBudget ?? 0)}
                 </p>
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <p className="text-base text-black">VAT/Tax</p>
+                <p className="text-base text-black">{t("vatTax")}</p>
                 <p className="text-base font-semibold text-light-green">
                   {formatBDT(vatAmount)}
                 </p>
@@ -107,7 +112,7 @@ export default function QuoteAcceptDialog({
 
           <div>
             <p className="text-base font-semibold text-light-green">
-              Total Campaign Cost
+              {t("totalCampaignCost")}
             </p>
             <p className="mt-1 text-base font-semibold text-light-green">
               {formatBDT(totalCost)}
@@ -120,7 +125,7 @@ export default function QuoteAcceptDialog({
               onClick={handleRequote}
               className="rounded-xl border border-light-gray bg-white py-3 text-base text-black"
             >
-              Requote
+              {t("requote")}
             </button>
 
             <PrimaryButton onClick={handleConfirm} disabled={isSubmitting}>

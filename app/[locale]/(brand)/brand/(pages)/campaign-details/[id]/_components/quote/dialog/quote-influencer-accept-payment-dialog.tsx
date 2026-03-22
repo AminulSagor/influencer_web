@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -57,13 +58,15 @@ function PercentButton({
 }
 
 function PaymentMethodButton() {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <button
       type="button"
       className="flex w-full items-center justify-between rounded-xl border border-light-gray bg-white px-3 py-3 sm:px-4"
     >
       <span className="text-sm text-Primary sm:text-base">
-        Credit / Debit Card
+        {t("creditDebitCard")}
       </span>
       <span className="text-sm text-black sm:text-base">⌄</span>
     </button>
@@ -80,6 +83,8 @@ export default function QuoteInfluencerAcceptPaymentDialog({
   hideTrigger = false,
   triggerLabel = "Accept Quote",
 }: QuoteInfluencerAcceptPaymentDialogProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const [internalOpen, setInternalOpen] = React.useState(false);
 
   const isControlled =
@@ -138,7 +143,7 @@ export default function QuoteInfluencerAcceptPaymentDialog({
       <DialogContent className="max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-sm font-semibold text-Primary sm:text-base">
-            Accept Quote & Start Campaign
+            {t("acceptQuoteStartCampaign")}
           </DialogTitle>
         </DialogHeader>
 
@@ -150,7 +155,7 @@ export default function QuoteInfluencerAcceptPaymentDialog({
 
             <div className="mt-4 text-center">
               <p className="text-xs text-white/90 sm:text-sm">
-                Total Campaign Cost
+                {t("totalCampaignCost")}
               </p>
               <p className="mt-1 text-sm font-semibold sm:text-base">
                 {formatBDT(dueAmount)}
@@ -160,7 +165,7 @@ export default function QuoteInfluencerAcceptPaymentDialog({
 
           <div className="rounded-xl border border-[#F0B37A] bg-[#FCE8D6] px-3 py-3 text-center sm:px-4">
             <p className="text-xs text-[#D97E2B] sm:text-sm">
-              Minimum fund needed to start the campaign (50%)
+              {t("minimumFundNeededToStartTheCampaign50")}
             </p>
             <p className="mt-1 text-sm font-semibold text-[#D97E2B] sm:text-base">
               {formatBDT(minimumAmount)}
@@ -177,17 +182,17 @@ export default function QuoteInfluencerAcceptPaymentDialog({
 
           <div className="flex flex-wrap items-stretch justify-center gap-2 sm:gap-3">
             <PercentButton
-              label="Pay In Full (100%)"
+              label={t("payInFull100")}
               active={activePreset === "full"}
               onClick={() => handlePreset(100, "full")}
             />
             <PercentButton
-              label="Pay Minimum (50%)"
+              label={t("payMinimum50")}
               active={activePreset === "min"}
               onClick={() => handlePreset(50, "min")}
             />
             <PercentButton
-              label="Pay (75%)"
+              label={t("pay75")}
               active={activePreset === "seventyFive"}
               onClick={() => handlePreset(75, "seventyFive")}
             />
@@ -195,7 +200,7 @@ export default function QuoteInfluencerAcceptPaymentDialog({
 
           <div>
             <p className="text-sm font-semibold text-Primary sm:text-base">
-              Payment Method
+              {t("paymentMethod")}
             </p>
             <div className="mt-3">
               <PaymentMethodButton />
@@ -210,10 +215,10 @@ export default function QuoteInfluencerAcceptPaymentDialog({
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader className="h-4 w-4 border-2 border-white border-t-transparent" />
-                <span>Processing...</span>
+                <span>{t("processing")}</span>
               </span>
             ) : (
-              `Accept Quote & Pay ${formatBDT(payAmount)}`
+              `${t("acceptQuotePay")} ${formatBDT(payAmount)}`
             )}
           </PrimaryButton>
         </div>

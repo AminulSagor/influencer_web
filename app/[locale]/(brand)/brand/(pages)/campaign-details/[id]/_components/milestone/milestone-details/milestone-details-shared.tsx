@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleDot, Eye, Heart, MessageCircle, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { CampaignMilestone } from "@/types/client/campaigns/campaign-details";
 import {
   formatMilestoneDate,
@@ -79,9 +80,9 @@ function getStatusDate(milestone: CampaignMilestone) {
   return formatMilestoneDate(milestone.updatedAt ?? milestone.createdAt);
 }
 
-function splitRequirements(contentQuantity?: string | null) {
+function splitRequirements(contentQuantity?: string | null, fallback?: string) {
   const raw = String(contentQuantity ?? "").trim();
-  if (!raw) return ["No requirement provided"];
+  if (!raw) return [fallback || "No requirement provided"];
 
   const pieces = raw
     .split(/\s*\+\s*|,\s*/)
@@ -92,12 +93,13 @@ function splitRequirements(contentQuantity?: string | null) {
 }
 
 export function RequirementList({ contentQuantity }: RequirementListProps) {
-  const items = splitRequirements(contentQuantity);
+  const t = useTranslations("brand.CampaignDetailsPage");
+  const items = splitRequirements(contentQuantity, t("noRequirementProvided"));
 
   return (
     <div>
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
-        Content Requirements
+        {t("contentRequirements")}
       </h4>
 
       <ul className="mt-3 space-y-2 pl-5 text-sm leading-5 text-[#355B25]">
@@ -115,14 +117,16 @@ export function RequirementList({ contentQuantity }: RequirementListProps) {
 }
 
 export function PromotionGoalBlock({ goal }: PromoGoalProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <div className="mt-4">
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
-        Promotion Goal
+        {t("promotionGoal")}
       </h4>
 
       <p className="mt-3 text-sm leading-6 text-[#355B25]">
-        {String(goal ?? "").trim() || "No promotion goal provided"}
+        {String(goal ?? "").trim() || t("noPromotionGoalProvided")}
       </p>
     </div>
   );
@@ -155,30 +159,32 @@ export function MilestoneTargetGrid({
 }: {
   milestone: CampaignMilestone;
 }) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <div>
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
-        Milestone Target
+        {t("milestoneTarget")}
       </h4>
 
       <div className="mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:gap-3">
         <MetricCard
-          label="Reach"
+          label={t("reach")}
           value={milestone.expectedReach}
           icon={<Eye />}
         />
         <MetricCard
-          label="Views"
+          label={t("views")}
           value={milestone.expectedViews}
           icon={<Play className="fill-current" />}
         />
         <MetricCard
-          label="Reaction"
+          label={t("reaction")}
           value={milestone.expectedLikes}
           icon={<Heart className="fill-current" />}
         />
         <MetricCard
-          label="Comment"
+          label={t("comment")}
           value={milestone.expectedComments}
           icon={<MessageCircle className="fill-current" />}
         />
@@ -192,10 +198,12 @@ export function PromotionTargetBlock({
   label,
   value,
 }: PromotionTargetProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <div>
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
-        Promotion Target
+        {t("promotionTarget")}
       </h4>
 
       <div className="mt-3 space-y-2">
@@ -204,7 +212,7 @@ export function PromotionTargetBlock({
         </p>
 
         <p className="text-sm font-medium leading-none text-[#355B25]">
-          {label || "Reach"}
+          {label || t("reach")}
         </p>
 
         <p className="text-base font-semibold leading-none text-[#2E5B1F]">
@@ -215,9 +223,7 @@ export function PromotionTargetBlock({
   );
 }
 
-export function MilestoneActions({
-  milestone,
-}: ActionButtonsProps) {
+export function MilestoneActions({ milestone }: ActionButtonsProps) {
   return (
     <MilestoneReportActions
       milestoneId={milestone.id}
@@ -227,9 +233,10 @@ export function MilestoneActions({
 }
 
 export function MilestoneStatusCard({ milestone }: StatusCardProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const effectiveStatus = getEffectiveStatus(milestone);
   const statusClasses = getMilestoneStatusClasses(effectiveStatus);
-  const label = getMilestoneStatusLabel(effectiveStatus) || "Pending";
+  const label = getMilestoneStatusLabel(effectiveStatus) || t("pending");
   const statusDate = getStatusDate(milestone);
 
   return (
@@ -244,7 +251,7 @@ export function MilestoneStatusCard({ milestone }: StatusCardProps) {
           " ",
         )}
       >
-        Status
+        {t("status")}
       </p>
 
       <span

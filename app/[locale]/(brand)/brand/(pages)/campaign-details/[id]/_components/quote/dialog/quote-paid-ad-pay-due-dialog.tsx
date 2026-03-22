@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -57,13 +58,15 @@ function PercentButton({
 }
 
 function PaymentMethodButton() {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <button
       type="button"
       className="flex w-full items-center justify-between rounded-xl border border-light-gray bg-white px-3 py-3 sm:px-4"
     >
       <span className="text-sm text-Primary sm:text-base">
-        Credit / Debit Card
+        {t("creditDebitCard")}
       </span>
       <span className="text-sm text-black sm:text-base">⌄</span>
     </button>
@@ -80,6 +83,7 @@ export default function QuotePaidAdPayDueDialog({
   hideTrigger = false,
   triggerLabel = "Pay Due",
 }: QuotePaidAdPayDueDialogProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const [internalOpen, setInternalOpen] = React.useState(false);
 
   const isControlled =
@@ -136,7 +140,7 @@ export default function QuotePaidAdPayDueDialog({
       <DialogContent className="max-h-[90vh] w-[95vw] max-w-md overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-sm font-semibold text-Primary sm:text-base">
-            Pay Campaign Due
+            {t("payCampaignDue")}
           </DialogTitle>
         </DialogHeader>
 
@@ -147,7 +151,9 @@ export default function QuotePaidAdPayDueDialog({
             </p>
 
             <div className="mt-4 text-center">
-              <p className="text-xs text-white/90 sm:text-sm">Remaining Due</p>
+              <p className="text-xs text-white/90 sm:text-sm">
+                {t("remainingDue")}
+              </p>
               <p className="mt-1 text-sm font-semibold sm:text-base">
                 {formatBDT(dueAmount)}
               </p>
@@ -164,17 +170,17 @@ export default function QuotePaidAdPayDueDialog({
 
           <div className="flex flex-wrap items-stretch justify-center gap-2 sm:gap-3">
             <PercentButton
-              label="Pay In Full (100%)"
+              label={t("payInFull100")}
               active={activePreset === "full"}
               onClick={() => handlePreset(100, "full")}
             />
             <PercentButton
-              label="Pay 75%"
+              label={t("pay75")}
               active={activePreset === "seventyFive"}
               onClick={() => handlePreset(75, "seventyFive")}
             />
             <PercentButton
-              label="Pay 50%"
+              label={t("pay50")}
               active={activePreset === "half"}
               onClick={() => handlePreset(50, "half")}
             />
@@ -182,7 +188,7 @@ export default function QuotePaidAdPayDueDialog({
 
           <div>
             <p className="text-sm font-semibold text-Primary sm:text-base">
-              Payment Method
+              {t("paymentMethod")}
             </p>
             <div className="mt-3">
               <PaymentMethodButton />
@@ -197,10 +203,10 @@ export default function QuotePaidAdPayDueDialog({
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader className="h-4 w-4 border-2 border-white border-t-transparent" />
-                <span>Processing...</span>
+                <span>{t("processing")}</span>
               </span>
             ) : (
-              `Pay Now ${formatBDT(payAmount)}`
+              `${t("payNow")} ${formatBDT(payAmount)}`
             )}
           </PrimaryButton>
         </div>

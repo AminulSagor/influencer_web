@@ -1,3 +1,5 @@
+"use client";
+
 import AssetsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/assets.card";
 import CampaignMilestonesSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/campaign-milestones-section";
 import CampaignProgressCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-progress-card";
@@ -5,6 +7,7 @@ import RatingCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[i
 import TermsAndConditionCard from "@/app/[locale]/(brand)/brand/_components/terms-and-condition-card";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/quote-details-card";
+import { useTranslations } from "next-intl";
 
 type CampaignDetailsContentProps = {
   campaign: ClientCampaignDetails;
@@ -13,16 +16,18 @@ type CampaignDetailsContentProps = {
 export default function CampaignDetailsContent({
   campaign,
 }: CampaignDetailsContentProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
 
   const ratingTitle = isInfluencerPromotion
-    ? "Rate The Influencers"
-    : "Rate The Agency";
+    ? t("campaignDetailsContent.rateTheInfluencers")
+    : t("campaignDetailsContent.rateTheAgency");
 
   const ratingButtonText = isInfluencerPromotion
-    ? "Provide Ratings To Influencers"
-    : "Provide Ratings To Agency";
+    ? t("campaignDetailsContent.provideRatingsToInfluencers")
+    : t("campaignDetailsContent.provideRatingsToAgency");
 
   return (
     <div className="space-y-4">

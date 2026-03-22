@@ -499,7 +499,7 @@
       "verificationGuide": "ভেরিফিকেশন গাইড",
       "contactSupport": "সাপোর্টে যোগাযোগ"
     }
-  },
+    },
     "dashboard": {
       "cards": {
         "Active Jobs": "সক্রিয় কাজসমূহ",
@@ -749,6 +749,174 @@
       "campaignMilestone": "ক্যাম্পেইন মাইলস্টোন",
       "deliveryDays": "ডেলিভারি: {days} দিন",
       "pleaseAddSomeMilestone": "অনুগ্রহ করে কিছু মাইলস্টোন যোগ করুন"
+    },
+    "CampaignDetailsPage" : {
+      "campaignSummaryHeader": {
+        "agencyFallbackAlt": "এজেন্সি",
+        "influencers": "ইনফ্লুয়েন্সাররা:",
+        "agency": "এজেন্সি:",
+        "platforms": "প্ল্যাটফর্ম"
+      },
+      "campaignSummaryStatusCard": {
+        "status": "স্ট্যাটাস",
+        "completed": "সম্পন্ন"
+      },
+      "campaignSummaryDeadlineCard": {
+        "moneyImgAlt": "টাকার ছবি",
+        "totalDue": "মোট বাকি",
+        "deadline": "শেষ তারিখ",
+        "budgetPending": "বাজেট পেন্ডিং",
+        "agencyConfirmationPending": "এজেন্সি নিশ্চিতকরণ পেন্ডিং"
+      },
+      "quoteDetailsCard": {
+        "confirmedQuote": "নিশ্চিত কোটেশন",
+        "confirmedBudget": "নিশ্চিত বাজেট",
+        "paid": "পরিশোধিত",
+        "quoteAwaitingAdminReview": "কোটেশন অ্যাডমিন রিভিউর অপেক্ষায়",
+        "budgetAwaitingAdminReview": "বাজেট অ্যাডমিন রিভিউর অপেক্ষায়",
+        "currentQuoteAdminOffer": "বর্তমান কোটেশন · অ্যাডমিন অফার",
+        "currentBudgetAdminOffer": "বর্তমান বাজেট · অ্যাডমিন অফার",
+        "currentQuoteYourCounterOffer": "বর্তমান কোটেশন · আপনার পাল্টা অফার",
+        "currentBudgetYourCounterOffer": "বর্তমান বাজেট · আপনার পাল্টা অফার",
+        "initialSubmission": "প্রাথমিক সাবমিশন",
+        "initialBudget": "প্রাথমিক বাজেট"
+      },
+      "ratingCard": {
+        "title": "ইনফ্লুয়েন্সারদের রেট দিন",
+        "buttonText": "ইনফ্লুয়েন্সারদের রেটিং দিন"
+      },
+      "campaignDetailsContent": {
+        "rateTheInfluencers": "ইনফ্লুয়েন্সারদের রেট দিন",
+        "rateTheAgency": "এজেন্সিকে রেট দিন",
+        "provideRatingsToInfluencers": "ইনফ্লুয়েন্সারদের রেটিং দিন",
+        "provideRatingsToAgency": "এজেন্সিকে রেটিং দিন"
+      },
+      "campaignProgressCard": {
+        "title": "ক্যাম্পেইন প্রগ্রেস",
+        "stages": {
+          "submitted": {
+            "stage": "সাবমিটেড",
+            "doneLabel": "ক্যাম্পেইন সাবমিটেড"
+          },
+          "quoted": {
+            "stage": "কোটেড",
+            "doneLabel": "কোট রিসিভড"
+          },
+          "paid": {
+            "stage": "পেইড",
+            "doneLabelPartial": "পেমেন্ট পার্শিয়াল",
+            "doneLabelConfirmed": "পেমেন্ট কনফার্মড",
+            "doneLabelPending": "পেমেন্ট পেন্ডিং"
+          },
+          "promoting": {
+            "stage": "প্রমোটিং",
+            "doneLabel": "ক্যাম্পেইন লাইভ"
+          },
+          "completed": {
+            "stage": "কমপ্লিটেড",
+            "doneLabel": "ক্যাম্পেইন ফিনিশড"
+          }
+        }
+      },
+      "progressStepper": {
+        "stages": {
+          "submitted": "সাবমিটেড",
+          "quoted": "কোটেড",
+          "paid": "পেইড",
+          "promoting": "প্রমোটিং",
+          "completed": "কমপ্লিটেড"
+        }
+      },
+       "assetsCard": {
+          "noAssetsUploaded": "কোনো অ্যাসেট আপলোড করা হয়নি।",
+          "untitledAsset": "শিরোনামহীন অ্যাসেট",
+          "file": "ফাইল",
+          "goToPage": "{page} নম্বর পেজে যান",
+          "contentAssets": "কনটেন্ট অ্যাসেটস",
+          "brandAssets": "ব্র্যান্ড অ্যাসেটস"
+      },
+      "termsAndConditionCard": {
+        "title": "ব্রিফ এবং টার্মস & কন্ডিশন",
+        "campaignBrief": "ক্যাম্পেইন ব্রিফ",
+        "campaignGoals": "ক্যাম্পেইন গোলস",
+        "productServiceDetails": "প্রোডাক্ট/সার্ভিস ডিটেইলস",
+        "termsAndConditions": "টার্মস & কন্ডিশনস",
+        "reportingRequirements": "রিপোর্টিং রিকোয়ারমেন্টস",
+        "usageRights": "ইউসেজ রাইটস",
+        "dos": "করণীয়",
+        "donts": "বর্জনীয়"
+      },
+      "campaignMilestones": "ক্যাম্পেইন মাইলস্টোনস",
+      "overallProgress": "সামগ্রিক অগ্রগতি",
+      "completed": "সম্পন্ন",
+      "progress": "অগ্রগতি",
+      "of": "এর মধ্যে",
+      "confirmQuote": "কোট নিশ্চিত করবেন?",
+      "confirmBudget": "বাজেট নিশ্চিত করবেন?",
+      "acceptQuote": "কোট গ্রহণ করুন",
+      "acceptBudget": "বাজেট গ্রহণ করুন",
+      "accepting": "গ্রহণ করা হচ্ছে...",
+      "confirming": "নিশ্চিত করা হচ্ছে...",
+      "adminProposedBudget": "অ্যাডমিন প্রস্তাবিত বাজেট",
+      "vatTax": "ভ্যাট/ট্যাক্স",
+      "totalCampaignCost": "মোট ক্যাম্পেইন খরচ",
+      "requote": "রেকোট",
+      "creditDebitCard": "ক্রেডিট / ডেবিট কার্ড",
+      "acceptQuoteStartCampaign": "কোট গ্রহণ করুন এবং ক্যাম্পেইন শুরু করুন",
+      "minimumFundNeededToStartTheCampaign50": "ক্যাম্পেইন শুরু করতে প্রয়োজনীয় সর্বনিম্ন ফান্ড (৫০%)",
+      "payInFull100": "সম্পূর্ণ পরিশোধ করুন (১০০%)",
+      "payMinimum50": "সর্বনিম্ন পরিশোধ করুন (৫০%)",
+      "pay75": "পরিশোধ করুন (৭৫%)",
+      "paymentMethod": "পেমেন্ট মেথড",
+      "processing": "প্রসেস করা হচ্ছে...",
+      "acceptQuotePay": "কোট গ্রহণ করুন ও পরিশোধ করুন",
+      "payCampaignDue": "ক্যাম্পেইনের বাকি টাকা পরিশোধ করুন",
+      "remainingDue": "বাকি পরিমাণ",
+      "pay50": "৫০% পরিশোধ করুন",
+      "payNow": "এখন পরিশোধ করুন",
+      "requoteYourCampaignBudget": "আপনার ক্যাম্পেইনের বাজেট রেকোট করুন",
+      "newRequoteOverview": "নতুন রেকোট ওভারভিউ",
+      "baseCampaignBudget": "বেস ক্যাম্পেইন বাজেট",
+      "vatTaxWithRate": "ভ্যাট/ট্যাক্স ({rate}%)",
+      "agencyFeeWithRange": "এজেন্সি ফি ({range})",
+      "campaignBudgetExcludingAgencyFee": "এজেন্সি ফি বাদে ক্যাম্পেইন বাজেট",
+      "inDollarsBasedOnAvgRate": "ডলারে (গড় {rate} BDT/$ অনুযায়ী)",
+      "submitting": "সাবমিট করা হচ্ছে...",
+      "requoteToAdmin": "অ্যাডমিনকে রেকোট পাঠান",
+      "rate": "রেট",
+      "youveRated": "আপনি {value} রেট করেছেন",
+      "milestone": "মাইলস্টোন",
+      "contentRequirements": "কনটেন্টের প্রয়োজনীয়তা",
+      "noRequirementProvided": "কোনো প্রয়োজনীয়তা দেওয়া হয়নি",
+      "promotionGoal": "প্রমোশনের লক্ষ্য",
+      "noPromotionGoalProvided": "কোনো প্রমোশন লক্ষ্য দেওয়া হয়নি",
+      "milestoneTarget": "মাইলস্টোন টার্গেট",
+      "reach": "রিচ",
+      "views": "ভিউ",
+      "reaction": "রিঅ্যাকশন",
+      "comment": "কমেন্ট",
+      "promotionTarget": "প্রমোশন টার্গেট",
+      "pending": "অপেক্ষমাণ",
+      "status": "স্ট্যাটাস",
+      "bonus": "বোনাস",
+      "rewardThisCompletedMilestoneWithABonusPayment": "এই সম্পন্ন মাইলস্টোনকে একটি বোনাস পেমেন্ট দিয়ে পুরস্কৃত করুন।",
+      "provideBonusAmount": "বোনাসের পরিমাণ দিন",
+      "loadingSubmissions": "সাবমিশন লোড হচ্ছে...",
+      "noSubmissionsFoundForThisMilestonesss": "এই milestonesss-এর জন্য কোনো সাবমিশন পাওয়া যায়নি।",
+      "noSubmissionsFoundForThisMilestoness": "এই milestoness-এর জন্য কোনো সাবমিশন পাওয়া যায়নি।",
+      "submissionDetails": "সাবমিশন ডিটেইলস",
+      "submission": "সাবমিশন",
+      "loadingSubmissionDetails": "সাবমিশন ডিটেইলস লোড হচ্ছে...",
+      "noSubmissionDetailsFound": "কোনো সাবমিশন ডিটেইলস পাওয়া যায়নি।",
+      "pleaseWriteAReason": "অনুগ্রহ করে একটি কারণ লিখুন",
+      "agencyOfferIdIsMissing": "এজেন্সি অফার আইডি পাওয়া যায়নি",
+      "assignmentIdIsMissing": "অ্যাসাইনমেন্ট আইডি পাওয়া যায়নি",
+      "cancellationRequestSubmittedSuccessfully": "ক্যানসেলেশন রিকোয়েস্ট সফলভাবে সাবমিট হয়েছে",
+      "failedToSubmitCancellationRequest": "ক্যানসেলেশন রিকোয়েস্ট সাবমিট করা যায়নি",
+      "dangerZone": "ডেঞ্জার জোন",
+      "cancelCampaign": "ক্যাম্পেইন বাতিল করুন",
+      "writeYourReason": "আপনার কারণ লিখুন...",
+      "requestCancellationAndSubmitReason": "ক্যানসেলেশন রিকোয়েস্ট করুন এবং কারণ সাবমিট করুন"
     },
     "explore": {
     "title": "এক্সপ্লোর",

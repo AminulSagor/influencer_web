@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Target } from "lucide-react";
 import ProgressStepper from "@/app/[locale]/(brand)/brand/_components/progress-stepper";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import { useTranslations } from "next-intl";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -9,7 +10,10 @@ type Props = {
 
 const toKey = (v?: string | null) => String(v ?? "").toLowerCase();
 
-function buildProgressStepper(campaign: ClientCampaignDetails) {
+function buildProgressStepper(
+  campaign: ClientCampaignDetails,
+  t: ReturnType<typeof useTranslations>,
+) {
   const status = toKey(campaign.status);
   const pay = toKey(campaign.paymentStatus);
 
@@ -51,32 +55,32 @@ function buildProgressStepper(campaign: ClientCampaignDetails) {
     {
       stage: "Submitted",
       isDone: true,
-      doneLabel: "Campaign Submitted",
+      doneLabel: t("campaignProgressCard.stages.submitted.doneLabel"),
     },
     {
       stage: "Quoted",
       isDone:
         isQuoted || isPaidFull || isPaidPartial || isPromoting || isCompleted,
-      doneLabel: "Quote Received",
+      doneLabel: t("campaignProgressCard.stages.quoted.doneLabel"),
     },
     {
       stage: "Paid",
       isDone: isPaidFull || isPaidPartial || isPromoting || isCompleted,
       doneLabel: isPaidPartial
-        ? "Payment Partial"
+        ? t("campaignProgressCard.stages.paid.doneLabelPartial")
         : isPaidFull
-          ? "Payment Confirmed"
-          : "Payment Pending",
+          ? t("campaignProgressCard.stages.paid.doneLabelConfirmed")
+          : t("campaignProgressCard.stages.paid.doneLabelPending"),
     },
     {
       stage: "Promoting",
       isDone: isPromoting || isCompleted,
-      doneLabel: "Campaign Live",
+      doneLabel: t("campaignProgressCard.stages.promoting.doneLabel"),
     },
     {
       stage: "Completed",
       isDone: isCompleted,
-      doneLabel: "Campaign Finished",
+      doneLabel: t("campaignProgressCard.stages.completed.doneLabel"),
     },
   ];
 
@@ -84,14 +88,15 @@ function buildProgressStepper(campaign: ClientCampaignDetails) {
 }
 
 export default function CampaignProgressCard({ campaign }: Props) {
-  const progressStepper = buildProgressStepper(campaign);
+  const t = useTranslations("brand.CampaignDetailsPage");
+  const progressStepper = buildProgressStepper(campaign, t);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2 font-semibold text-Primary">
           <Target className="h-5 w-5" />
-          <p className="text-base">Campaign Progress</p>
+          <p className="text-base">{t("campaignProgressCard.title")}</p>
         </div>
       </CardHeader>
 

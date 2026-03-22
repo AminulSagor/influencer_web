@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import { useTranslations } from "next-intl";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -24,28 +25,31 @@ const toBullets = (text?: string | null) => {
 };
 
 export default function TermsAndConditionCard({ campaign }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const dos = toBullets(campaign.dos);
   const donts = toBullets(campaign.donts);
 
   return (
-    <CollapseCard title="Brief and Terms & Condition">
+    <CollapseCard title={t("termsAndConditionCard.title")}>
       <div className="flex flex-col justify-between gap-8 lg:flex-row lg:gap-12">
         <div className="space-y-4">
           <div className="mb-4 flex items-center gap-2 pt-4 font-semibold text-Primary md:pt-0">
             <FileText className="h-5 w-5" />
-            <span className="text-base">Campaign Brief</span>
+            <span className="text-base">
+              {t("termsAndConditionCard.campaignBrief")}
+            </span>
           </div>
 
           <div className="space-y-4">
             <Section
               icon={Target}
-              title="Campaign Goals"
+              title={t("termsAndConditionCard.campaignGoals")}
               text={campaign.campaignGoals || "—"}
             />
 
             <Section
               icon={Package}
-              title="Product/Service Details"
+              title={t("termsAndConditionCard.productServiceDetails")}
               text={campaign.productServiceDetails || "—"}
             />
 
@@ -58,19 +62,21 @@ export default function TermsAndConditionCard({ campaign }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-2 font-semibold text-Primary">
             <ScrollText className="h-5 w-5" />
-            <span className="text-base">Terms & Conditions</span>
+            <span className="text-base">
+              {t("termsAndConditionCard.termsAndConditions")}
+            </span>
           </div>
 
           <div className="space-y-4">
             <Section
               icon={BarChart3}
-              title="Reporting Requirements"
+              title={t("termsAndConditionCard.reportingRequirements")}
               text={campaign.reportingRequirements || "—"}
             />
 
             <Section
               icon={ScrollText}
-              title="Usage Rights"
+              title={t("termsAndConditionCard.usageRights")}
               text={campaign.usageRights || "—"}
             />
           </div>
@@ -101,16 +107,18 @@ function Section({
 }
 
 function DoDont({ dos, donts }: { dos: string[]; donts: string[] }) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
     <div className="mt-4 space-y-3">
-      <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
+      <div className="rounded-xl border border-light-green-200 bg-[#BBF7D0] p-4">
         <div className="mb-2 flex items-center gap-2 font-medium text-light-green-700">
           <CheckCircle2 className="h-4 w-4" />
-          <span className="text-sm">Do’s</span>
+          <span className="text-sm">{t("termsAndConditionCard.dos")}</span>
         </div>
 
         {dos.length ? (
-          <ul className="space-y-1 text-sm text-light-green-700">
+          <ul className="space-y-1 text-sm text-[#15803D]">
             {dos.map((x, i) => (
               <li key={i}>• {x}</li>
             ))}
@@ -120,10 +128,10 @@ function DoDont({ dos, donts }: { dos: string[]; donts: string[] }) {
         )}
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+      <div className="rounded-xl border border-red-300 bg-red-50 p-4">
         <div className="mb-2 flex items-center gap-2 font-medium text-red-600">
           <XCircle className="h-4 w-4" />
-          <span className="text-sm">Don’ts</span>
+          <span className="text-sm">{t("termsAndConditionCard.donts")}</span>
         </div>
 
         {donts.length ? (

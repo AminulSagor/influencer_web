@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
@@ -44,6 +45,8 @@ export default function CampaignMilestonesOverview({
   selectedInfluencerId,
   onSelectInfluencer,
 }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const milestones = useMemo(
     () => campaign.milestones ?? [],
     [campaign.milestones],
@@ -139,15 +142,15 @@ export default function CampaignMilestonesOverview({
                 alt="Milestone"
               />
               <h2 className="text-base font-semibold text-Primary">
-                Campaign Milestones
+                {t("campaignMilestones")}
               </h2>
             </div>
 
             {showInfluencerDropdown ? (
               <div>
-                <p className="text-sm text-black/70">Overall Progress</p>
+                <p className="text-sm text-black/70">{t("overallProgress")}</p>
                 <p className="text-base font-semibold leading-none text-orange">
-                  {percent}% Completed
+                  {percent}% {t("completed")}
                 </p>
               </div>
             ) : null}
@@ -167,9 +170,9 @@ export default function CampaignMilestonesOverview({
           ) : (
             <div className="w-full max-w-[710px] space-y-2">
               <div className="flex items-center justify-between text-sm text-black/70">
-                <span>Progress</span>
+                <span>{t("progress")}</span>
                 <span className="font-semibold text-light-green">
-                  {completedCount} Of {totalCount} Completed
+                  {completedCount} {t("of")} {totalCount} {t("completed")}
                 </span>
               </div>
               <Progress value={percent} className="h-2 [&>div]:bg-Primary/70" />
@@ -179,11 +182,11 @@ export default function CampaignMilestonesOverview({
 
         {showInfluencerDropdown ? (
           <div>
-            <p className="mb-2 text-sm text-black/70">Progress</p>
+            <p className="mb-2 text-sm text-black/70">{t("progress")}</p>
             <div className="flex items-center justify-between text-sm font-semibold text-light-green">
               <span />
               <span>
-                {completedCount} Of {totalCount} Completed
+                {completedCount} {t("of")} {totalCount} {t("completed")}
               </span>
             </div>
             <Progress

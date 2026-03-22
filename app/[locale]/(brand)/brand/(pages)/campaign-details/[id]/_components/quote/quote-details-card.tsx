@@ -10,6 +10,7 @@ import type { NegotiationItem } from "@/types/client/negotiation/negotiation.typ
 import QuoteDetailsCardInfluencer from "./quote-details-card-influencer";
 import QuoteDetailsCardPaidAd from "./quote-details-card-paid-ad";
 import QuoteRequoteDialog from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/dialog/quote-requote-dialog";
+import { useTranslations } from "next-intl";
 
 type QuoteDetailsCardProps = {
   campaign: QuoteDetailsCampaign;
@@ -28,6 +29,7 @@ export default function QuoteDetailsCard({
     React.useState(false);
   const [negotiations, setNegotiations] = React.useState<NegotiationItem[]>([]);
   const router = useRouter();
+  const t = useTranslations("brand.CampaignDetailsPage");
 
   const {
     baseBudget,
@@ -134,30 +136,34 @@ export default function QuoteDetailsCard({
 
   const quoteStateLabel = React.useMemo(() => {
     if (showConfirmedState) {
-      return isInfluencerPromotion ? "Confirmed Quote" : "Confirmed Budget";
+      return isInfluencerPromotion
+        ? t("quoteDetailsCard.confirmedQuote")
+        : t("quoteDetailsCard.confirmedBudget");
     }
 
-    if (isPaid) return "Paid";
+    if (isPaid) return t("quoteDetailsCard.paid");
 
     if (isReceived) {
       return isInfluencerPromotion
-        ? "Quote Awaiting Admin Review"
-        : "Budget Awaiting Admin Review";
+        ? t("quoteDetailsCard.quoteAwaitingAdminReview")
+        : t("quoteDetailsCard.budgetAwaitingAdminReview");
     }
 
     if (isNegotiating && latestNegotiation?.sender === "admin") {
       return isInfluencerPromotion
-        ? "Current Quote · Admin Offer"
-        : "Current Budget · Admin Offer";
+        ? t("quoteDetailsCard.currentQuoteAdminOffer")
+        : t("quoteDetailsCard.currentBudgetAdminOffer");
     }
 
     if (isNegotiating && latestNegotiation?.sender === "client") {
       return isInfluencerPromotion
-        ? "Current Quote · Your Counter Offer"
-        : "Current Budget · Your Counter Offer";
+        ? t("quoteDetailsCard.currentQuoteYourCounterOffer")
+        : t("quoteDetailsCard.currentBudgetYourCounterOffer");
     }
 
-    return isInfluencerPromotion ? "Initial Submission" : "Initial Budget";
+    return isInfluencerPromotion
+      ? t("quoteDetailsCard.initialSubmission")
+      : t("quoteDetailsCard.initialBudget");
   }, [
     showConfirmedState,
     isPaid,
@@ -165,6 +171,7 @@ export default function QuoteDetailsCard({
     isNegotiating,
     latestNegotiation,
     isInfluencerPromotion,
+    t,
   ]);
 
   const showQuoteActions =

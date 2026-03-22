@@ -7,6 +7,7 @@ import {
   CampaignAsset,
   ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
+import { useTranslations } from "next-intl";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -60,6 +61,7 @@ function AssetSliderSection({
   title: string;
   assets: CampaignAsset[];
 }) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const pages = useMemo(() => chunkArray(assets, ITEMS_PER_PAGE), [assets]);
   const [pageIndex, setPageIndex] = useState(0);
 
@@ -71,7 +73,9 @@ function AssetSliderSection({
   return (
     <CollapseCard title={title} icon={<Download size={20} />}>
       {!assets.length ? (
-        <p className="text-sm text-black/50">No assets uploaded.</p>
+        <p className="text-sm text-black/50">
+          {t("assetsCard.noAssetsUploaded")}
+        </p>
       ) : (
         <div className="space-y-4">
           <div className="space-y-3">
@@ -95,10 +99,10 @@ function AssetSliderSection({
 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-light-green">
-                        {asset.fileName || "Untitled Asset"}
+                        {asset.fileName || t("assetsCard.untitledAsset")}
                       </p>
                       <p className="text-xs text-light-green/80">
-                        {meta || asset.assetType || "File"}
+                        {meta || asset.assetType || t("assetsCard.file")}
                       </p>
                     </div>
                   </div>
@@ -120,7 +124,7 @@ function AssetSliderSection({
                   <button
                     key={index}
                     type="button"
-                    aria-label={`Go to page ${index + 1}`}
+                    aria-label={t("assetsCard.goToPage", { page: index + 1 })}
                     onClick={() => setPageIndex(index)}
                     className={`h-2.5 w-2.5 rounded-full transition ${
                       isActive ? "bg-light-green" : "bg-black/15"
@@ -137,6 +141,8 @@ function AssetSliderSection({
 }
 
 export default function AssetsCard({ campaign }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const contentAssets = (campaign.assets ?? []).filter(
     (asset) => asset.category === "content",
   );
@@ -151,15 +157,24 @@ export default function AssetsCard({ campaign }: Props) {
   if (isInfluencerPromotion) {
     return (
       <div className="grid grid-cols-1 gap-4">
-        <AssetSliderSection title="Content Assets" assets={contentAssets} />
+        <AssetSliderSection
+          title={t("assetsCard.contentAssets")}
+          assets={contentAssets}
+        />
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <AssetSliderSection title="Content Assets" assets={contentAssets} />
-      <AssetSliderSection title="Brand Assets" assets={brandAssets} />
+      <AssetSliderSection
+        title={t("assetsCard.contentAssets")}
+        assets={contentAssets}
+      />
+      <AssetSliderSection
+        title={t("assetsCard.brandAssets")}
+        assets={brandAssets}
+      />
     </div>
   );
 }

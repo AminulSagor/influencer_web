@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   Accordion,
@@ -29,19 +30,21 @@ export default function MilestoneDetailsCard({
   milestoneIndex,
   submissionId,
 }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   const isInfluencerPromotion =
     String(campaign.campaignType ?? "").toLowerCase() ===
     "influencer_promotion";
 
   const safeTitle =
-    milestone.contentTitle?.trim() || `Milestone ${milestoneIndex + 1}`;
+    milestone.contentTitle?.trim() || `${t("milestone")} ${milestoneIndex + 1}`;
 
   const normalizedMilestoneStatus = String(
     milestone.status ?? "",
   ).toLowerCase();
   const shouldShowBonusCard = normalizedMilestoneStatus === "completed";
 
-  console.log('id', milestone.id)
+  console.log("id", milestone.id);
 
   return (
     <Accordion
@@ -64,7 +67,7 @@ export default function MilestoneDetailsCard({
 
               <div>
                 <p className="text-sm font-medium leading-none text-[#47662D]">
-                  Milestone {milestoneIndex + 1}
+                  {t("milestone")} {milestoneIndex + 1}
                 </p>
                 <h3 className="mt-2 text-base font-semibold leading-none text-[#2E5B1F]">
                   {safeTitle}

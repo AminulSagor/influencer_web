@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ChevronDown, ChevronUp, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { submitCampaignCancelRequest } from "@/service/client/campaigns/campaign-danger-zone";
@@ -22,6 +23,7 @@ export default function DangerZoneCard({
   assignmentId,
   onSubmitted,
 }: DangerZoneCardProps) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const [open, setOpen] = React.useState(false);
   const [reason, setReason] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -40,7 +42,7 @@ export default function DangerZoneCard({
 
   const handleSubmit = async () => {
     if (!trimmedReason) {
-      notifyError("Please write a reason");
+      notifyError(t("pleaseWriteAReason"));
       return;
     }
 
@@ -49,7 +51,7 @@ export default function DangerZoneCard({
 
       if (targetType === "agency") {
         if (!agencyOfferId) {
-          notifyError("Agency offer id is missing");
+          notifyError(t("agencyOfferIdIsMissing"));
           return;
         }
 
@@ -60,7 +62,7 @@ export default function DangerZoneCard({
         });
       } else {
         if (!assignmentId) {
-          notifyError("Assignment id is missing");
+          notifyError(t("assignmentIdIsMissing"));
           return;
         }
 
@@ -71,12 +73,12 @@ export default function DangerZoneCard({
         });
       }
 
-      notifySuccess("Cancellation request submitted successfully");
+      notifySuccess(t("cancellationRequestSubmittedSuccessfully"));
       setReason("");
       setOpen(false);
       onSubmitted?.();
     } catch (error) {
-      notifyError("Failed to submit cancellation request");
+      notifyError(t("failedToSubmitCancellationRequest"));
     } finally {
       setIsSubmitting(false);
     }
@@ -95,8 +97,10 @@ export default function DangerZoneCard({
           </span>
 
           <div className="text-left">
-            <p className="text-sm font-semibold text-red-600">Danger Zone</p>
-            <p className="text-[11px] text-red-500">Cancel Campaign</p>
+            <p className="text-sm font-semibold text-red-600">
+              {t("dangerZone")}
+            </p>
+            <p className="text-[11px] text-red-500">{t("cancelCampaign")}</p>
           </div>
         </div>
 
@@ -113,7 +117,7 @@ export default function DangerZoneCard({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             className="border-red-200 bg-white"
-            placeholder="Write your reason..."
+            placeholder={t("writeYourReason")}
           />
 
           <Button
@@ -125,10 +129,10 @@ export default function DangerZoneCard({
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Submitting...
+                {t("submitting")}
               </span>
             ) : (
-              "Request Cancellation & Submit Reason"
+              t("requestCancellationAndSubmitReason")
             )}
           </Button>
         </div>
