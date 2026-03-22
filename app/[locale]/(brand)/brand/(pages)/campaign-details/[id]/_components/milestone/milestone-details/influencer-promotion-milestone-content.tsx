@@ -15,7 +15,6 @@ type Props = {
 
 export default function InfluencerPromotionMilestoneContent({
   milestone,
-  submissionId,
 }: Props) {
   return (
     <div className="rounded-[18px] border border-[#A8C381] bg-linear-to-r from-[#F5F5DC] to-white px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5 lg:px-6 lg:py-6">
@@ -29,7 +28,7 @@ export default function InfluencerPromotionMilestoneContent({
         </div>
 
         <div className="min-w-0">
-          <MilestoneActions milestone={milestone} submissionId={submissionId} />
+          <MilestoneActions milestone={milestone} />
         </div>
 
         <div className="min-w-0">
@@ -39,3 +38,4 @@ export default function InfluencerPromotionMilestoneContent({
     </div>
   );
 }
+

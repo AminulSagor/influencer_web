@@ -11,7 +11,6 @@ import MilestoneReportActions from "./milestone-report-actions";
 
 type ActionButtonsProps = {
   milestone: CampaignMilestone;
-  submissionId?: string | null;
 };
 
 type StatusCardProps = {
@@ -156,7 +155,6 @@ export function MilestoneTargetGrid({
 }: {
   milestone: CampaignMilestone;
 }) {
-  console.log(milestone);
   return (
     <div>
       <h4 className="text-sm font-semibold leading-none text-[#2E5B1F]">
@@ -217,8 +215,15 @@ export function PromotionTargetBlock({
   );
 }
 
-export function MilestoneActions({ submissionId }: ActionButtonsProps) {
-  return <MilestoneReportActions submissionId={submissionId} />;
+export function MilestoneActions({
+  milestone,
+}: ActionButtonsProps) {
+  return (
+    <MilestoneReportActions
+      milestoneId={milestone.id}
+      milestoneStatus={milestone.status}
+    />
+  );
 }
 
 export function MilestoneStatusCard({ milestone }: StatusCardProps) {

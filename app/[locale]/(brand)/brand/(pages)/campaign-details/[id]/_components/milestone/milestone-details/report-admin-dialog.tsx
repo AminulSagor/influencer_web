@@ -15,14 +15,23 @@ import { createSubmissionReport } from "@/service/client/campaigns/submission-re
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  submissionId: string;
+  milestoneId: string;
   onSubmitted?: () => void;
 };
+
+function resolveTargetTypeFromPath() {
+  if (typeof window === "undefined") return "agency";
+
+  const path = window.location.pathname.toLowerCase();
+
+  if (path.includes("/influencer/")) return "influencer";
+  return "agency";
+}
 
 export default function ReportAdminDialog({
   open,
   onOpenChange,
-  submissionId,
+  milestoneId,
   onSubmitted,
 }: Props) {
   const [report, setReport] = React.useState("");
@@ -49,7 +58,9 @@ export default function ReportAdminDialog({
       setIsSubmitting(true);
       setError(null);
 
-      await createSubmissionReport(submissionId, { report: value });
+      const targetType = resolveTargetTypeFromPath();
+
+      await createSubmissionReport(milestoneId, targetType, { report: value });
 
       onSubmitted?.();
       onOpenChange(false);
