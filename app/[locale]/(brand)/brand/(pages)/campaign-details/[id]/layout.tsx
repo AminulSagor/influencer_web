@@ -15,7 +15,9 @@ export default async function Layout({ children, params }: LayoutProps) {
   if (!campaign) {
     return (
       <div className="rounded-xl border border-light-gray bg-white p-6">
-        <p className="text-sm text-black/70">Please reload again.</p>
+        <p className="text-sm text-black/70 text-center">
+          Please reload again.
+        </p>
       </div>
     );
   }

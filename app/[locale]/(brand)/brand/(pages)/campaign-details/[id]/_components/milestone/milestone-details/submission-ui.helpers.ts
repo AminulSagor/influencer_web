@@ -136,7 +136,6 @@ export function shouldShowBonus(
 ) {
   const normalizedStatus = String(status ?? "").toLowerCase();
   const hasTargetMetrics = metrics.some((item) => item.target > 0);
-
   return (
     hasTargetMetrics &&
     (normalizedStatus === "approved" || normalizedStatus === "completed") &&

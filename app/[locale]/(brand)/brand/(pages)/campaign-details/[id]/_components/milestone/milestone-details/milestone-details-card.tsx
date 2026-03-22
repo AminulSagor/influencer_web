@@ -14,6 +14,7 @@ import {
 import MilestoneSubmissionsSection from "./milestone-submissions-section";
 import InfluencerPromotionMilestoneContent from "./influencer-promotion-milestone-content";
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
+import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/milestone-bonus-card";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -34,6 +35,13 @@ export default function MilestoneDetailsCard({
 
   const safeTitle =
     milestone.contentTitle?.trim() || `Milestone ${milestoneIndex + 1}`;
+
+  const normalizedMilestoneStatus = String(
+    milestone.status ?? "",
+  ).toLowerCase();
+  const shouldShowBonusCard = normalizedMilestoneStatus === "completed";
+
+  console.log('id', milestone.id)
 
   return (
     <Accordion
@@ -82,6 +90,15 @@ export default function MilestoneDetailsCard({
               />
             </div>
           </AccordionContent>
+
+          {shouldShowBonusCard ? (
+            <div className="mt-5">
+              <MilestoneBonusCard
+                milestoneId={milestone.id}
+                campaignType={String(campaign.campaignType ?? "")}
+              />
+            </div>
+          ) : null}
         </div>
       </AccordionItem>
     </Accordion>

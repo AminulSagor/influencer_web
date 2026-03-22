@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import SubmissionAttachmentsGrid from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-attachments-grid";
-import SubmissionBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-bonus-card";
 import SubmissionDescriptionBlock from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-description-block";
 import SubmissionPerformanceMetrics from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-performance-metrics";
 import SubmissionPerformanceRing from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-performance-ring";
@@ -11,8 +10,6 @@ import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campai
 import {
   buildSubmissionMetrics,
   getAveragePerformance,
-  getSubmissionStatusClasses,
-  shouldShowBonus,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-ui.helpers";
 import SubmissionDeclineReason from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-decline-reason";
 import {
@@ -41,11 +38,6 @@ export default function SubmissionDetailsPanel({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const isInfluencerPromotion =
-    campaign.campaignType === "influencer_promotion";
-
-  const statusClasses = getSubmissionStatusClasses(detail.status);
-
   const metrics = buildSubmissionMetrics(
     detail,
     milestone,
@@ -53,7 +45,6 @@ export default function SubmissionDetailsPanel({
   );
 
   const averagePerformance = getAveragePerformance(metrics);
-  const showBonus = shouldShowBonus(averagePerformance, detail.status, metrics);
 
   const handleApprove = async (submissionId: string) => {
     try {
@@ -89,9 +80,7 @@ export default function SubmissionDetailsPanel({
   };
 
   return (
-    <div
-      className={`space-y-4 rounded-[18px] border p-4 ${statusClasses.panel}`}
-    >
+    <div className={`space-y-4 rounded-[18px]  p-4`}>
       <SubmissionDescriptionBlock description={detail.submissionDescription} />
 
       <div className="rounded-[14px] border border-[#D9D9D9] p-4 md:p-5">
@@ -122,14 +111,6 @@ export default function SubmissionDetailsPanel({
         onDecline={handleDecline}
         isSubmitting={isSubmitting}
       />
-
-      {showBonus ? (
-        <SubmissionBonusCard
-          influencerName={
-            isInfluencerPromotion ? submission.influencerName : undefined
-          }
-        />
-      ) : null}
     </div>
   );
 }
