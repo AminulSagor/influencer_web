@@ -36,11 +36,12 @@ import { notifyError } from "@/utils/toast_util";
 import {
   serviceMilestone,
   NewMilestoneForm,
-} from "@/types/client/campaigns/create-campaign-types"
+} from "@/types/client/campaigns/create-campaign-types";
 import { submitCampaignStepFour } from "@/service/campaign/update-step-4";
 import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
 import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
 import { buildStepFourPayload } from "@/utils/campaigns/step_4_util";
+import { useTranslations } from "next-intl";
 
 type BudgetPros = {
   budget: string;
@@ -75,6 +76,7 @@ const Row = ({
 );
 
 const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
+  const t = useTranslations("brand.CreateCampaignsPage");
   const campaignType = useCampaignStore((s) => s.campaignType);
   const [error, setError] = useState<string>("");
 
@@ -156,7 +158,11 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
       return;
     }
     if (n < MIN_BUDGET) {
-      setError(`Minimum budget is ৳${MIN_BUDGET.toLocaleString("en-US")}`);
+      setError(
+        t("minimumBudgetIs", {
+          amount: `৳${MIN_BUDGET.toLocaleString("en-US")}`,
+        }),
+      );
       return;
     }
     setError("");
@@ -165,7 +171,11 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
   const handleSuggestionClick = (amount: number) => {
     setBudget(amount.toLocaleString("en-US"));
     if (amount < MIN_BUDGET) {
-      setError(`Minimum budget is ৳${MIN_BUDGET.toLocaleString("en-US")}`);
+      setError(
+        t("minimumBudgetIs", {
+          amount: `৳${MIN_BUDGET.toLocaleString("en-US")}`,
+        }),
+      );
     } else {
       setError("");
     }
@@ -175,7 +185,9 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
     <Card>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-Primary">Suggestions</h3>
+          <h3 className="text-sm font-semibold text-Primary">
+            {t("suggestions")}
+          </h3>
           <div className="flex gap-2 flex-wrap">
             {suggestions.map((amount) => (
               <button
@@ -193,7 +205,7 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 lg:gap-12">
           <div className="space-y-2 md:col-span-2">
             <h3 className="text-sm font-semibold text-Primary">
-              Enter Budget Amount
+              {t("enterBudgetAmount")}
             </h3>
 
             <div className="rounded-xl border border-light-gray bg-white p-4">
@@ -202,21 +214,21 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
                   value={budget}
                   onChange={handleBudgetChange}
                   className="w-full shadow-none pr-16 text-2xl text-light-green border border-white outline-none placeholder:text-sm placeholder:text-dark-gray"
-                  placeholder="Enter Budget here..."
+                  placeholder={t("enterBudgetHere")}
                 />
               </div>
 
               {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
 
               <p className="text-xs text-light-gray text-end pt-10">
-                Min: {formatBDT(MIN_BUDGET)}
+                {t("minLabel")}: {formatBDT(MIN_BUDGET)}
               </p>
             </div>
 
             {campaignType === "paid_ad" && (
               <div className="pt-4">
                 <p className="font-semibold text-Primary">
-                  Net Payable Budget Amount (Inc. Tax)
+                  {t("netPayableBudgetAmountIncTax")}
                 </p>
                 <h1 className="text-2xl font-semibold text-light-green mt-1">
                   {calculated ? formatBDT(calculated.totalWithVAT) : "৳ 0"}
@@ -227,21 +239,21 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
 
           <div className="space-y-2 md:col-span-3">
             <h3 className="text-sm font-semibold text-Primary">
-              Quote (Budget Breakdown)
+              {t("quoteBudgetBreakdown")}
             </h3>
 
             <div className="rounded-xl border border-light-green bg-linear-to-r from-Secondary to-white p-4 space-y-2 text-sm">
               <Row
-                label="Base Campaign Budget"
+                label={t("baseCampaignBudget")}
                 value={calculated ? formatBDT(calculated.baseBudget) : "৳0"}
               />
               <Row
-                label={`+ VAT/Tax (${VAT_PERCENTAGE}%)`}
+                label={t("vatTaxLabel", { percentage: VAT_PERCENTAGE })}
                 value={calculated ? formatBDT(calculated.vatAmount) : "৳0"}
               />
               <div className="border border-light-gray" />
               <Row
-                label="Budget Including Tax"
+                label={t("budgetIncludingTax")}
                 value={calculated ? formatBDT(calculated.totalWithVAT) : "৳0"}
                 bold
               />
@@ -250,7 +262,7 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
             {campaignType === "influencer_promotion" && (
               <div className="pt-4 flex justify-between items-center">
                 <p className="font-semibold text-Primary">
-                  Net Payable Budget Amount (Inc. Tax)
+                  {t("netPayableBudgetAmountIncTax")}
                 </p>
                 <h1 className="text-2xl font-semibold text-light-green mt-1">
                   {calculated ? formatBDT(calculated.totalWithVAT) : "৳ 0"}
@@ -261,32 +273,37 @@ const BudgetCalculatorSection = ({ budget, setBudget }: BudgetPros) => {
             {campaignType === "paid_ad" && (
               <div className="rounded-xl border border-light-green bg-linear-to-r from-Secondary to-white p-4 space-y-2 text-sm">
                 <Row
-                  label={`Agency Fee (${AGENCY_FEE_MIN} - ${AGENCY_FEE_MAX}%)`}
+                  label={t("agencyFeeRange", {
+                    min: AGENCY_FEE_MIN,
+                    max: AGENCY_FEE_MAX,
+                  })}
                   value={
                     calculated
                       ? `${formatBDT(calculated.agencyFeeMin)} - ${formatBDT(
-                          calculated.agencyFeeMax
+                          calculated.agencyFeeMax,
                         )}`
                       : "৳0 - ৳0"
                   }
                 />
                 <div className="border border-light-gray" />
                 <Row
-                  label="Campaign Budget Excluding Agency Fee"
+                  label={t("campaignBudgetExcludingAgencyFee")}
                   value={
                     calculated
                       ? `${formatBDT(
-                          calculated.campaignBudgetMin
+                          calculated.campaignBudgetMin,
                         )} - ${formatBDT(calculated.campaignBudgetMax)}`
                       : "৳0 - ৳0"
                   }
                 />
                 <Row
-                  label={`In Dollars ( based on avg. ${EXCHANGE_RATE} BDT/$)`}
+                  label={t("inDollarsBasedOnAvg", {
+                    rate: EXCHANGE_RATE,
+                  })}
                   value={
                     calculated
                       ? `${formatUSD(calculated.inDollarsMin)} - ${formatUSD(
-                          calculated.inDollarsMax
+                          calculated.inDollarsMax,
                         )}`
                       : "$0.00 - $0.00"
                   }
@@ -319,6 +336,7 @@ const extractNumber = (value: string) => {
 };
 
 const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
+  const t = useTranslations("brand.CreateCampaignsPage");
   const campaignId = useCampaignStore((s) => s.campaignId);
   //const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
@@ -329,7 +347,6 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // ✅ store extra metric fields (only used when campaignType !== "paid_ad")
   type MilestoneLocalForm = NewMilestoneForm & {
     expectedReach?: string;
     expectedViews?: string;
@@ -371,7 +388,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
 
   const handlePromotionTargetChange = (
     field: "title" | "amount",
-    value: string
+    value: string,
   ) => {
     setNewMilestone((prev) => ({
       ...prev,
@@ -384,16 +401,14 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
-  //keep same UI, just bind metric inputs to state
   const handleMetricChange = (
     field:
       | "expectedReach"
       | "expectedViews"
       | "expectedLikes"
       | "expectedComments",
-    value: string
+    value: string,
   ) => {
-    // allow numbers + common suffix chars (k,m,.) for display
     const cleaned = value.replace(/[^0-9kKmM. ]/g, "");
     setNewMilestone((prev) => ({ ...prev, [field]: cleaned }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -402,31 +417,33 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!newMilestone.title.trim()) newErrors.title = "Title is required";
+    if (!newMilestone.title.trim()) newErrors.title = t("titleIsRequired");
     if (!newMilestone.subtitle.trim())
-      newErrors.subtitle = "Subtitle is required";
-    if (!newMilestone.day.trim()) newErrors.day = "Day is required";
+      newErrors.subtitle = t("subtitleIsRequired");
+    if (!newMilestone.day.trim()) newErrors.day = t("dayIsRequired");
     if (!newMilestone.platform.trim())
-      newErrors.platform = "Platform is required";
+      newErrors.platform = t("platformIsRequired");
 
     if (campaignType === "paid_ad") {
       if (!newMilestone.promotionTarget.title.trim())
-        newErrors["promotionTarget.title"] =
-          "Promotion target title is required";
+        newErrors["promotionTarget.title"] = t(
+          "promotionTargetTitleIsRequired",
+        );
       if (!newMilestone.promotionTarget.amount.trim())
-        newErrors["promotionTarget.amount"] =
-          "Promotion target amount is required";
+        newErrors["promotionTarget.amount"] = t(
+          "promotionTargetAmountIsRequired",
+        );
       if (!newMilestone.promotionGoal.trim())
-        newErrors.promotionGoal = "Promotion goal is required";
+        newErrors.promotionGoal = t("promotionGoalIsRequired");
     } else {
       if (!newMilestone.expectedReach?.trim())
-        newErrors.expectedReach = "Reach is required";
+        newErrors.expectedReach = t("reachIsRequired");
       if (!newMilestone.expectedViews?.trim())
-        newErrors.expectedViews = "Views is required";
+        newErrors.expectedViews = t("viewsIsRequired");
       if (!newMilestone.expectedLikes?.trim())
-        newErrors.expectedLikes = "Likes is required";
+        newErrors.expectedLikes = t("likesIsRequired");
       if (!newMilestone.expectedComments?.trim())
-        newErrors.expectedComments = "Comments is required";
+        newErrors.expectedComments = t("commentsIsRequired");
     }
 
     setErrors(newErrors);
@@ -517,7 +534,7 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
         else if (metricTitle.includes("like")) base.expectedLikes = metricValue;
         else if (metricTitle.includes("comment"))
           base.expectedComments = metricValue;
-        else base.expectedViews = metricValue; // safe default
+        else base.expectedViews = metricValue;
 
         return base;
       }
@@ -537,57 +554,54 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
 
   const validateBeforeSubmit = () => {
     if (milestones.length === 0)
-      return "Please add at least one campaign milestone";
-    else if (!budget) return "Please enter your budget first";
+      return t("pleaseAddAtLeastOneCampaignMilestone");
+    else if (!budget) return t("pleaseEnterYourBudgetFirst");
     return "";
   };
 
+  const handleNextStep = async () => {
+    const payload = buildStepFourPayload(budget, milestones);
 
-const handleNextStep = async () => {
-  const payload = buildStepFourPayload(budget, milestones);
+    const validation = stepFourSchema.safeParse(payload);
 
-  const validation = stepFourSchema.safeParse(payload);
+    if (!validation.success) {
+      notifyError(validation.error.issues[0]?.message || t("validationFailed"));
+      return;
+    }
 
-  if (!validation.success) {
-    notifyError(validation.error.issues[0]?.message || "Validation failed");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    await submitCampaignStepFour(campaignId, payload);
-    increaseStep();
-  } catch (err: any) {
-    notifyError(err?.message || "Failed to save Step 4");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+    setLoading(true);
+    try {
+      await submitCampaignStepFour(campaignId, payload);
+      increaseStep();
+    } catch (err: any) {
+      notifyError(err?.message || t("failedToSaveStep4"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const METRICS = [
     {
       key: "expectedReach" as const,
-      label: "Reach",
+      label: t("reach"),
       icon: <Target className="w-4 h-4 text-light-green" />,
       placeholder: "0",
     },
     {
       key: "expectedViews" as const,
-      label: "Views",
+      label: t("views"),
       icon: <Eye className="w-4 h-4 text-light-green" />,
       placeholder: "0",
     },
     {
       key: "expectedLikes" as const,
-      label: "Likes",
+      label: t("likes"),
       icon: <Heart className="w-4 h-4 text-light-green" />,
       placeholder: "0",
     },
     {
       key: "expectedComments" as const,
-      label: "Comments",
+      label: t("comments"),
       icon: <MessageCircle className="w-4 h-4 text-light-green" />,
       placeholder: "0",
     },
@@ -604,7 +618,7 @@ const handleNextStep = async () => {
             width={22}
           />
           <h3 className="text-base font-semibold text-Primary">
-            Campaign Milestones
+            {t("campaignMilestones")}
           </h3>
         </div>
       </CardHeader>
@@ -613,7 +627,7 @@ const handleNextStep = async () => {
         <div className="flex flex-col xl:flex-row gap-4 lg:gap-6 xl:gap-9">
           <div className="space-y-4 w-full">
             <DottedButton onClick={handleAddMilestoneClick}>
-              Add another Milestone
+              {t("addAnotherMilestone")}
             </DottedButton>
 
             {showNewMilestoneForm && (
@@ -651,7 +665,7 @@ const handleNextStep = async () => {
                         onChange={(e) =>
                           handleInputChange("title", e.target.value)
                         }
-                        placeholder="Ex: Initial Content Creation"
+                        placeholder={t("initialContentCreationExample")}
                         className={`w-full focus-visible:ring-1 ${
                           errors.title ? "border-red-500" : ""
                         }`}
@@ -675,7 +689,7 @@ const handleNextStep = async () => {
                             errors.platform ? "border-red-500" : ""
                           }`}
                         >
-                          <SelectValue placeholder="Select Platform" />
+                          <SelectValue placeholder={t("selectPlatform")} />
                         </SelectTrigger>
                         <SelectContent className="w-full">
                           {platforms.map((platform) => (
@@ -701,7 +715,7 @@ const handleNextStep = async () => {
                         onChange={(e) =>
                           handleInputChange("subtitle", e.target.value)
                         }
-                        placeholder="1 Sponsered Video / 1 Post"
+                        placeholder={t("sponsoredVideoPostExample")}
                         className={`w-full focus-visible:ring-1 ${
                           errors.subtitle ? "border-red-500" : ""
                         }`}
@@ -719,7 +733,7 @@ const handleNextStep = async () => {
                         onChange={(e) =>
                           handleInputChange("day", e.target.value)
                         }
-                        placeholder="DAY 1"
+                        placeholder={t("day1")}
                         className={`w-full focus-visible:ring-1 ${
                           errors.day ? "border-red-500" : ""
                         }`}
@@ -738,7 +752,7 @@ const handleNextStep = async () => {
                         <div className="flex items-center gap-2">
                           <BarChart3 className="w-5 h-5 text-Primary" />
                           <p className="text-base font-semibold text-Primary">
-                            Promotion Target
+                            {t("promotionTarget")}
                           </p>
                         </div>
 
@@ -746,7 +760,7 @@ const handleNextStep = async () => {
                           <div className="flex items-center gap-2">
                             <BsEye className="w-4 h-4 text-light-green" />
                             <Label className="text-xs font-semibold text-Primary">
-                              Target Title (Ex: Reach, Like, Follow, Comments)
+                              {t("targetTitleExample")}
                             </Label>
                           </div>
                           <Input
@@ -754,10 +768,10 @@ const handleNextStep = async () => {
                             onChange={(e) =>
                               handlePromotionTargetChange(
                                 "title",
-                                e.target.value
+                                e.target.value,
                               )
                             }
-                            placeholder="Reach"
+                            placeholder={t("reach")}
                             className={`w-full h-10 focus-visible:ring-1 ${
                               errors["promotionTarget.title"]
                                 ? "border-red-500"
@@ -773,14 +787,14 @@ const handleNextStep = async () => {
 
                         <div className="space-y-1">
                           <Label className="text-xs font-semibold text-Primary">
-                            Target Amount (Ex: 300k, 2.5M)
+                            {t("targetAmountExample")}
                           </Label>
                           <Input
                             value={newMilestone.promotionTarget.amount}
                             onChange={(e) =>
                               handlePromotionTargetChange(
                                 "amount",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             placeholder="2.5M"
@@ -802,7 +816,7 @@ const handleNextStep = async () => {
                         <div className="flex items-center gap-2">
                           <BarChart3 className="w-5 h-5 text-Primary" />
                           <p className="text-base font-semibold text-Primary">
-                            Promotion Goal
+                            {t("promotionGoal")}
                           </p>
                         </div>
 
@@ -812,7 +826,9 @@ const handleNextStep = async () => {
                             onChange={(e) =>
                               handleInputChange("promotionGoal", e.target.value)
                             }
-                            placeholder="Describe Your Milestone Goal Here, What You Want To Achieve Specifically"
+                            placeholder={t(
+                              "describeYourMilestoneGoalHereWhatYouWantToAchieveSpecifically",
+                            )}
                             className={`w-full min-h-[120px] placeholder:text-light-gray resize-none focus-visible:ring-1 ${
                               errors.promotionGoal ? "border-red-500" : ""
                             }`}
@@ -830,7 +846,7 @@ const handleNextStep = async () => {
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-Primary" />
                         <p className="text-base font-semibold text-Primary">
-                          Promotion Target
+                          {t("promotionTarget")}
                         </p>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -878,10 +894,10 @@ const handleNextStep = async () => {
                       <BarChart3 className="h-6 w-6 text-light-green" />
                     </div>
                     <h3 className="text-base font-semibold text-gray-700 mb-1">
-                      No milestone added yet
+                      {t("noMilestoneAddedYet")}
                     </h3>
                     <p className="text-sm text-gray-500 max-w-[200px]">
-                      Add your first milestone to get started
+                      {t("addYourFirstMilestoneToGetStarted")}
                     </p>
                   </div>
                 </div>
@@ -944,29 +960,30 @@ const handleNextStep = async () => {
                               {m.subtitle}
                             </p>
                             <p className="text-xs text-gray-400">
-                              Platform: {m.platform}
+                              {t("platform")}: {m.platform}
                             </p>
 
                             {campaignType === "paid_ad" ? (
                               <>
                                 {m.promotionTarget && (
                                   <div className="text-xs text-gray-400 mt-1">
-                                    Target: {m.promotionTarget.title} -{" "}
+                                    {t("target")}: {m.promotionTarget.title} -{" "}
                                     {m.promotionTarget.amount}
                                   </div>
                                 )}
                                 {m.promotionGoal && (
                                   <div className="text-xs text-gray-400 mt-1">
-                                    Goal: {m.promotionGoal.substring(0, 50)}...
+                                    {t("goal")}:{" "}
+                                    {m.promotionGoal.substring(0, 50)}...
                                   </div>
                                 )}
                               </>
                             ) : (
                               <div className="text-xs text-gray-400 mt-1">
-                                Reach: {m.expectedReach || "0"} | Views:{" "}
-                                {m.expectedViews || "0"} | Likes:{" "}
-                                {m.expectedLikes || "0"} | Comments:{" "}
-                                {m.expectedComments || "0"}
+                                {t("reach")}: {m.expectedReach || "0"} |{" "}
+                                {t("views")}: {m.expectedViews || "0"} |{" "}
+                                {t("likes")}: {m.expectedLikes || "0"} |{" "}
+                                {t("comments")}: {m.expectedComments || "0"}
                               </div>
                             )}
                           </div>
@@ -981,7 +998,7 @@ const handleNextStep = async () => {
             <div className="flex justify-end mt-10 lg:absolute bottom-0 right-0">
               <div className="flex gap-4">
                 <SecondaryButton onClick={() => decreaseStep()}>
-                  Previous
+                  {t("previous")}
                 </SecondaryButton>
 
                 <PrimaryButton
@@ -990,7 +1007,7 @@ const handleNextStep = async () => {
                   type="button"
                   disabled={loading}
                 >
-                  {loading ? <Loader className="h-4 w-4" /> : "Next"}
+                  {loading ? <Loader className="h-4 w-4" /> : t("next")}
                 </PrimaryButton>
               </div>
             </div>

@@ -7,8 +7,11 @@ import StepTwoAgencyActions from "@/app/[locale]/(brand)/brand/(pages)/create-ca
 import StepTwoAgencySelectField from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-two/agency/step-two-agency-select-field";
 import { useStepTwoAgency } from "@/app/[locale]/(brand)/brand/hooks/use-step-two-agency";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 const StepTwoAgency = () => {
+  const t = useTranslations("brand.CreateCampaignsPage");
+
   const {
     campaignNiches,
     campaignNiche,
@@ -36,7 +39,7 @@ const StepTwoAgency = () => {
     <Card className="border-none">
       <CardContent className="space-y-6">
         <StepTwoAgencySelectField
-          label="Campaign Niche"
+          label={t("campaignNiche")}
           options={campaignNiches}
           value={campaignNiche}
           onChange={(value) => {
@@ -62,14 +65,14 @@ const StepTwoAgency = () => {
         />
 
         <AgencyListSection
-          title="Recommended Ad Agencies"
+          title={t("recommendedAdAgencies")}
           agencies={recommendedAgencies}
           variant="horizontal"
           onSelect={addAgency}
         />
 
         <AgencyListSection
-          title="Other Ad Agencies"
+          title={t("otherAdAgencies")}
           agencies={otherAgencies}
           variant="vertical"
           onSelect={addAgency}

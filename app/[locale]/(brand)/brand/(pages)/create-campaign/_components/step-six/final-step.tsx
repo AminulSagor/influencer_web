@@ -17,8 +17,11 @@ import { notifyError } from "@/utils/toast_util";
 import { getCampaignById } from "@/service/campaign/getById";
 import { placeCampaign } from "@/service/campaign/place-campaign";
 import { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
+import { useTranslations } from "next-intl";
 
 const FinalStep = () => {
+  const t = useTranslations("brand.CreateCampaignsPage");
+
   const { open, toggleOpen, decreaseStep, campaignId, campaignType } =
     useCampaignStore();
 
@@ -39,14 +42,14 @@ const FinalStep = () => {
         setCampaign(fetchedCampaign);
         setIsPlaced(fetchedCampaign?.status === "received");
       } catch (err: any) {
-        notifyError(err.message || "Failed to fetch campaign");
+        notifyError(err.message || t("failedToFetchCampaign"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchCampaign();
-  }, [campaignId]);
+  }, [campaignId, t]);
 
   const handlePlacement = async () => {
     if (!campaignId || isPlaced) return;
@@ -59,10 +62,10 @@ const FinalStep = () => {
         setIsPlaced(true);
         toggleOpen();
       } else {
-        notifyError(res.message || "Placement failed");
+        notifyError(res.message || t("placementFailed"));
       }
     } catch (err: any) {
-      notifyError(err.message || "Failed to place campaign");
+      notifyError(err.message || t("failedToPlaceCampaign"));
     } finally {
       setPlacementLoading(false);
     }
@@ -95,7 +98,7 @@ const FinalStep = () => {
         <CardContent>
           <div className="flex w-full gap-4 lg:justify-center">
             <SecondaryButton className="w-full" onClick={decreaseStep}>
-              Previous
+              {t("previous")}
             </SecondaryButton>
             <PrimaryButton
               className="flex w-full items-center justify-center"
@@ -105,9 +108,9 @@ const FinalStep = () => {
               {placementLoading ? (
                 <Loader />
               ) : isPlaced ? (
-                "Quote Requested"
+                t("quoteRequested")
               ) : (
-                "Get Quote"
+                t("getQuote")
               )}
             </PrimaryButton>
           </div>

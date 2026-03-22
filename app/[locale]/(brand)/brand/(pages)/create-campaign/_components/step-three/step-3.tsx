@@ -15,7 +15,10 @@ import {
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-import { StepThreeData, useFormStore } from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
+import {
+  StepThreeData,
+  useFormStore,
+} from "@/app/[locale]/(brand)/brand/zustand-store/campaign-forms-store";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -30,8 +33,11 @@ import { stepThreeSchema } from "@/schemas/campaign/step3_campaign_validation";
 import { notifyError } from "@/utils/toast_util";
 import { submitCampaignStepThree } from "@/service/campaign/update-step-3";
 import { StepThreePayload } from "@/types/campaign/step3_campaign_type";
+import { useTranslations } from "next-intl";
 
 const StepThree = () => {
+  const t = useTranslations("brand.CreateCampaignsPage");
+
   const { decreaseStep, increaseStep, campaignId } = useCampaignStore();
   const {
     stepThree,
@@ -56,7 +62,6 @@ const StepThree = () => {
     return d;
   }, []);
 
-  // ==================== Zod Validation ====================
   const validateStep = (): boolean => {
     const result = stepThreeSchema.safeParse(stepThree);
 
@@ -80,7 +85,6 @@ const StepThree = () => {
     return true;
   };
 
-
   const handleNext = async () => {
     clearValidationErrors();
     setLocalErrors({});
@@ -91,11 +95,11 @@ const StepThree = () => {
     try {
       const payload: StepThreePayload = {
         campaignGoals: stepThree.campaignGoals,
-        productServiceDetails: stepThree.productDetails, 
+        productServiceDetails: stepThree.productDetails,
         reportingRequirements: stepThree.reportingRequirements,
         usageRights: stepThree.usageRights,
         startingDate: stepThree.startingDate,
-        duration: Number(stepThree.duration), 
+        duration: Number(stepThree.duration),
         dos: stepThree.dos,
         donts: stepThree.donts,
       };
@@ -105,7 +109,7 @@ const StepThree = () => {
       increaseStep();
     } catch (err: unknown) {
       console.error(err);
-      notifyError("Something went wrong while saving step 3.");
+      notifyError(t("somethingWentWrongWhileSavingStep3"));
     } finally {
       setLoading(false);
     }
@@ -122,122 +126,167 @@ const StepThree = () => {
     }
   };
 
-  const getError = (field: string) => localErrors[field] || validationErrors[field];
-  const inputErrCls = (field: string) => clsx("focus-visible:ring-1", getError(field) && "border-red-500");
+  const getError = (field: string) =>
+    localErrors[field] || validationErrors[field];
+  const inputErrCls = (field: string) =>
+    clsx("focus-visible:ring-1", getError(field) && "border-red-500");
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LEFT */}
         <Card>
           <CardContent>
             <div className="space-y-6">
               <Section
                 icon={<ClipboardList className="w-4 h-4 text-Primary" />}
-                title="Campaign Goals"
+                title={t("campaignGoals")}
                 error={getError("campaignGoals")}
               >
                 <Textarea
                   value={stepThree.campaignGoals}
-                  onChange={(e) => handleInputChange("campaignGoals", e.target.value)}
-                  placeholder="Enter Brief Description About Your Campaign Goals"
-                  className={clsx("min-h-[120px] placeholder:text-light-gray", inputErrCls("campaignGoals"))}
+                  onChange={(e) =>
+                    handleInputChange("campaignGoals", e.target.value)
+                  }
+                  placeholder={t("enterBriefDescriptionAboutYourCampaignGoals")}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("campaignGoals"),
+                  )}
                 />
               </Section>
 
               <Section
                 icon={<FileText className="w-4 h-4 text-Primary" />}
-                title="Product / Service Details"
+                title={t("productServiceDetails")}
                 error={getError("productDetails")}
               >
                 <Textarea
                   value={stepThree.productDetails}
-                  onChange={(e) => handleInputChange("productDetails", e.target.value)}
-                  placeholder="Enter Brief Description About Your Product / Service Details"
-                  className={clsx("min-h-[120px] placeholder:text-light-gray", inputErrCls("productDetails"))}
+                  onChange={(e) =>
+                    handleInputChange("productDetails", e.target.value)
+                  }
+                  placeholder={t(
+                    "enterBriefDescriptionAboutYourProductServiceDetails",
+                  )}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("productDetails"),
+                  )}
                 />
               </Section>
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <CircleSlash className="w-4 h-4 text-Primary" />
-                  <h2 className="text-base font-semibold text-Primary">Do&apos;s & Don&apos;ts</h2>
+                  <h2 className="text-base font-semibold text-Primary">
+                    {t("dosAndDonts")}
+                  </h2>
                 </div>
 
                 <div className="rounded-xl border border-light-green bg-[#BBF7D0] p-4 space-y-2">
                   <div className="flex items-center gap-2 text-Primary font-semibold">
-                    <CheckCircle className="w-4 h-4" /> Do&apos;s
+                    <CheckCircle className="w-4 h-4" /> {t("dos")}
                   </div>
                   <Textarea
                     value={stepThree.dos}
                     onChange={(e) => handleInputChange("dos", e.target.value)}
-                    placeholder={`Ex:\n• Show Authentic Usage\n• Tag @Brand\n• Natural Lighting`}
-                    className={clsx("bg-white min-h-[100px] placeholder:text-light-gray", inputErrCls("dos"))}
+                    placeholder={t("dosExample")}
+                    className={clsx(
+                      "bg-white min-h-[100px] placeholder:text-light-gray",
+                      inputErrCls("dos"),
+                    )}
                   />
-                  {getError("dos") && <p className="text-red-500 text-sm">{getError("dos")}</p>}
+                  {getError("dos") && (
+                    <p className="text-red-500 text-sm">{getError("dos")}</p>
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-red-400 bg-[#FECACA] p-4 space-y-2">
                   <div className="flex items-center gap-2 text-red-500 font-semibold">
-                    <CircleSlash className="w-4 h-4" /> Don&apos;ts
+                    <CircleSlash className="w-4 h-4" /> {t("donts")}
                   </div>
                   <Textarea
                     value={stepThree.donts}
                     onChange={(e) => handleInputChange("donts", e.target.value)}
-                    placeholder={`Ex:\n• Misleading Claims\n• Competitor Branding\n• Offensive Language`}
-                    className={clsx("bg-white min-h-[100px] placeholder:text-light-gray", inputErrCls("donts"))}
+                    placeholder={t("dontsExample")}
+                    className={clsx(
+                      "bg-white min-h-[100px] placeholder:text-light-gray",
+                      inputErrCls("donts"),
+                    )}
                   />
-                  {getError("donts") && <p className="text-red-500 text-sm">{getError("donts")}</p>}
+                  {getError("donts") && (
+                    <p className="text-red-500 text-sm">{getError("donts")}</p>
+                  )}
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* RIGHT */}
         <Card>
           <CardContent>
             <div className="space-y-6">
               <div className="text-Primary font-semibold flex gap-2 items-center">
-                <ShieldCheck className="w-5 h-5 text-Primary" /> Terms And Conditions
+                <ShieldCheck className="w-5 h-5 text-Primary" />{" "}
+                {t("termsAndConditions")}
               </div>
 
               <Section
                 icon={<ClipboardList className="w-4 h-4 text-Primary" />}
-                title="Reporting Requirements"
+                title={t("reportingRequirements")}
                 error={getError("reportingRequirements")}
               >
                 <Textarea
                   value={stepThree.reportingRequirements}
-                  onChange={(e) => handleInputChange("reportingRequirements", e.target.value)}
-                  placeholder="Enter Reporting Requirements in details"
-                  className={clsx("min-h-[120px] placeholder:text-light-gray", inputErrCls("reportingRequirements"))}
+                  onChange={(e) =>
+                    handleInputChange("reportingRequirements", e.target.value)
+                  }
+                  placeholder={t("enterReportingRequirementsInDetails")}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("reportingRequirements"),
+                  )}
                 />
               </Section>
 
               <Section
                 icon={<ShieldCheck className="w-4 h-4 text-Primary" />}
-                title="Usage Rights"
+                title={t("usageRights")}
                 error={getError("usageRights")}
               >
                 <Textarea
                   value={stepThree.usageRights}
-                  onChange={(e) => handleInputChange("usageRights", e.target.value)}
-                  placeholder="Enter Usage Rights in details"
-                  className={clsx("min-h-[120px] placeholder:text-light-gray", inputErrCls("usageRights"))}
+                  onChange={(e) =>
+                    handleInputChange("usageRights", e.target.value)
+                  }
+                  placeholder={t("enterUsageRightsInDetails")}
+                  className={clsx(
+                    "min-h-[120px] placeholder:text-light-gray",
+                    inputErrCls("usageRights"),
+                  )}
                 />
               </Section>
 
-              <Section title="Starting Date" error={getError("startingDate")}>
+              <Section
+                title={t("startingDate")}
+                error={getError("startingDate")}
+              >
                 <Popover>
                   <PopoverTrigger asChild>
                     <button type="button" className="w-full">
                       <div className="relative">
                         <Input
                           readOnly
-                          value={selectedDate ? format(selectedDate, "dd MMMM yyyy") : ""}
-                          placeholder="12 December 2025"
-                          className={clsx("h-12 pr-10 placeholder:text-light-gray cursor-pointer", inputErrCls("startingDate"))}
+                          value={
+                            selectedDate
+                              ? format(selectedDate, "dd MMMM yyyy")
+                              : ""
+                          }
+                          placeholder={t("startingDatePlaceholder")}
+                          className={clsx(
+                            "h-12 pr-10 placeholder:text-light-gray cursor-pointer",
+                            inputErrCls("startingDate"),
+                          )}
                         />
                         <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-orange" />
                       </div>
@@ -247,7 +296,7 @@ const StepThree = () => {
                     <Calendar
                       mode="single"
                       selected={selectedDate}
-                      required={true} // ✅ required prop for react-day-picker
+                      required={true}
                       onSelect={(d) => {
                         if (!d) return;
                         const dd = new Date(d);
@@ -257,7 +306,10 @@ const StepThree = () => {
                         const yyyy = dd.getFullYear();
                         const mm = String(dd.getMonth() + 1).padStart(2, "0");
                         const day = String(dd.getDate()).padStart(2, "0");
-                        handleInputChange("startingDate", `${yyyy}-${mm}-${day}`);
+                        handleInputChange(
+                          "startingDate",
+                          `${yyyy}-${mm}-${day}`,
+                        );
                       }}
                       disabled={(date) => {
                         const dd = new Date(date);
@@ -270,13 +322,18 @@ const StepThree = () => {
                 </Popover>
               </Section>
 
-              <Section title="Duration" error={getError("duration")}>
+              <Section title={t("duration")} error={getError("duration")}>
                 <Input
                   value={stepThree.duration}
-                  onChange={(e) => handleInputChange("duration", e.target.value)}
-                  placeholder="30"
+                  onChange={(e) =>
+                    handleInputChange("duration", e.target.value)
+                  }
+                  placeholder={t("durationPlaceholder")}
                   inputMode="numeric"
-                  className={clsx("h-12 placeholder:text-light-gray", inputErrCls("duration"))}
+                  className={clsx(
+                    "h-12 placeholder:text-light-gray",
+                    inputErrCls("duration"),
+                  )}
                 />
               </Section>
             </div>
@@ -288,10 +345,14 @@ const StepThree = () => {
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-4">
             <div className="text-red-600">
-              <p className="font-semibold mb-2">Please fill in all required fields:</p>
+              <p className="font-semibold mb-2">
+                {t("pleaseFillInAllRequiredFields")}
+              </p>
               <ul className="list-disc list-inside space-y-1">
                 {Object.values(localErrors).map((error, index) => (
-                  <li key={index} className="text-sm">{error}</li>
+                  <li key={index} className="text-sm">
+                    {error}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -303,9 +364,15 @@ const StepThree = () => {
         <CardContent>
           <div className="flex justify-end">
             <div className="flex gap-4">
-              <SecondaryButton onClick={() => decreaseStep()}>Previous</SecondaryButton>
-              <PrimaryButton className="px-8" onClick={handleNext} disabled={loading}>
-                {loading ? <Loader className="h-4 w-4" /> : "Next"}
+              <SecondaryButton onClick={() => decreaseStep()}>
+                {t("previous")}
+              </SecondaryButton>
+              <PrimaryButton
+                className="px-8"
+                onClick={handleNext}
+                disabled={loading}
+              >
+                {loading ? <Loader className="h-4 w-4" /> : t("next")}
               </PrimaryButton>
             </div>
           </div>

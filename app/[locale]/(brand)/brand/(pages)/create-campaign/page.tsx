@@ -14,16 +14,15 @@ import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/cre
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { MoveLeft } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 const CreateCampaingAgencyPage = () => {
+  const t = useTranslations("brand.CreateCampaignsPage");
   const step = useCampaignStore((s) => s.step);
   const campaignType = useCampaignStore((s) => s.campaignType);
 
-  // const open = useCampaignStore((s) => s.open);
-
   return (
     <div className="space-y-3">
-      {/*============= header ==================*/}
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row gap-4 md:gap-8 border-b pb-8">
@@ -34,48 +33,45 @@ const CreateCampaingAgencyPage = () => {
                     <MoveLeft />
                   </Link>
                 </span>
-                <h2>Create Campaign</h2>
+                <h2>{t("createCampaign")}</h2>
               </div>
               <p className="text-dark-gray text-sm">
-                Browse and manage your campaigns
+                {t("browseAndManageYourCampaigns")}
               </p>
             </div>
 
             <div className="gap-4 flex items-start min-w-72">
-              <PrimaryButton>Save As Draft</PrimaryButton>
-              {step === 1 && <SecondaryButton>Cencel</SecondaryButton>}
+              <PrimaryButton>{t("saveAsDraft")}</PrimaryButton>
+              {step === 1 && <SecondaryButton>{t("cancel")}</SecondaryButton>}
             </div>
           </div>
         </CardHeader>
 
-        {/* stepper */}
         <CardContent>
           <Stepper currentStep={step} />
         </CardContent>
       </Card>
 
-      {/*============= midlle ==================*/}
       <Card className="text-orange font-semibold text-center flex items-center justify-center text-lg lg:text-xl">
         {step === 1 ? (
-          <p>Set up the basics for your new campaign</p>
+          <p>{t("stepOneDescription")}</p>
         ) : step === 2 ? (
-          <>Provide your Preferences for this campaign</>
+          <>{t("stepTwoDescription")}</>
         ) : step === 3 ? (
-          <p>Describe the requirements and provide a detailed brief.</p>
+          <p>{t("stepThreeDescription")}</p>
         ) : step === 4 ? (
-          <p>Provide your budget and set milestones with placements</p>
+          <p>{t("stepFourDescription")}</p>
         ) : step === 5 ? (
           campaignType === "influencer_promotion" ? (
-            <p>Upload you campaign Contents for the influencers</p>
+            <p>{t("stepFiveInfluencerDescription")}</p>
           ) : (
-            <p>Upload you campaign Contents for the Agencies</p>
+            <p>{t("stepFiveAgencyDescription")}</p>
           )
         ) : (
-          <p>REVIEW YOUR CAMPAIGN</p>
+          <p>{t("reviewYourCampaign")}</p>
         )}
       </Card>
 
-      {/*============= rendering compo based on steps ==================*/}
       <div>
         {step === 1 ? (
           <StepOne />

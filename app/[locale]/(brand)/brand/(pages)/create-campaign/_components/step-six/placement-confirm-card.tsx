@@ -8,12 +8,14 @@ import type {
   SocialPlatform,
 } from "@/types/client/campaigns/create-campaign-types";
 import { getPlatformIcon } from "@/utils/platforms_util";
+import { useTranslations } from "next-intl";
 
 type Props = {
   campaign: Campaignservice | null;
 };
 
 const PlacementConfirmCard = ({ campaign }: Props) => {
+  const t = useTranslations("brand.CreateCampaignsPage");
   const toggleOpen = useCampaignStore((s) => s.toggleOpen);
 
   const formatBudget = (amount: string | number | null | undefined) => {
@@ -40,7 +42,7 @@ const PlacementConfirmCard = ({ campaign }: Props) => {
     <Card className="relative w-[390px] rounded-2xl border bg-white p-6 shadow-xl">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
         className="text-Primary/70 hover:bg-light-green/30 hover:text-Primary absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full transition"
         onClick={toggleOpen}
       >
@@ -53,15 +55,15 @@ const PlacementConfirmCard = ({ campaign }: Props) => {
         </div>
 
         <h2 className="text-Primary text-xl font-semibold leading-tight">
-          Campaign Placement
+          {t("campaignPlacement")}
           <br />
-          Confirmed
+          {t("confirmed")}
         </h2>
 
         <p className="text-light-green text-sm leading-6">
-          We Will Review Your Campaign Soon.
+          {t("weWillReviewYourCampaignSoon")}
           <br />
-          It May Take Upto 3-5 Business Days
+          {t("itMayTakeUptoBusinessDays")}
         </p>
       </div>
 
@@ -82,7 +84,9 @@ const PlacementConfirmCard = ({ campaign }: Props) => {
         <div className="my-4 h-px w-full bg-white/25" />
 
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-white/90">Platforms</span>
+          <span className="text-sm font-medium text-white/90">
+            {t("platforms")}
+          </span>
 
           <div className="flex items-center gap-3">
             {uniquePlatforms.length > 0 ? (
