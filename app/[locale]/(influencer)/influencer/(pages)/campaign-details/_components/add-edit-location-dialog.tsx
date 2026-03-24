@@ -148,7 +148,6 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
 
   /* ---------------- Submit ---------------- */
   const onSubmit = (values: LocationFormValues) => {
-    console.log("Saving location:", values);
     
     // Find district name
     const district = districts.find(d => d.id === values.districtId);

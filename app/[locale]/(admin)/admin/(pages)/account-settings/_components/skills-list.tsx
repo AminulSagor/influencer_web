@@ -72,8 +72,6 @@ const SkillsList = ({ initialSkills }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to create skill:", error);
       toast.error("Failed to add skill");
     } finally {
       setIsAdding(false);
@@ -96,7 +94,6 @@ const SkillsList = ({ initialSkills }: Props) => {
       toast.success("Skill deleted");
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete skill:", error);
       toast.error("Failed to delete skill");
     } finally {
       setDeletingId(null);
@@ -151,8 +148,6 @@ const SkillsList = ({ initialSkills }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to update skill:", error);
       toast.error("Failed to update skill");
     } finally {
       setUpdatingId(null);

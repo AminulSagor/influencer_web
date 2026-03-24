@@ -70,7 +70,6 @@ const ForgotPasswordStepTwo = ({ nextStep }: Props) => {
     setLoading(true);
     try {
       const otpCode = codes.join("");
-      console.log("Verifying OTP:", { identifier, otp: otpCode });
       
       // Verify OTP with backend
       await verifyForgotPasswordOtp(identifier, otpCode);
