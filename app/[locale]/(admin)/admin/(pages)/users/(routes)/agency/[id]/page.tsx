@@ -9,30 +9,47 @@ import CampaignAcceptOrDeclinedCard from "../../influencer/_components/campaign-
 import PayoutSettings from "../../influencer/_components/payout-setting";
 import ProfileDetailsCard from "../../influencer/_components/profile-details-card";
 import NidInfoCard from "../../influencer/_components/nid-info-card";
+import BlockUserSection from "../../../_components/block-user-section";
+import BlockedBanner from "../../../_components/blocked-banner";
+import UserCampaignTable from "../../../_components/user-campaign-table";
 
 import BrandTradeLicenseCard from "../../brand/_components/brand-trade-license-card";
 import BrandTinCertificateCard from "../../brand/_components/brand-tin-certificate-card";
 import BrandBinCard from "../../brand/_components/brand-bin-card";
 
 import { getAgencyProfile } from "@/service/admin/users/get-agency-profile";
+import { getUserCampaignList } from "@/service/admin/users/get-user-campaign-list";
 import { getUserOverviewStats } from "@/service/admin/users/get-users-overview-stats";
 import { getUserCompletion } from "@/service/admin/users/get-user-completion";
 
 interface Props {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const formatMoney = (amount: number) => {
     return `৳${new Intl.NumberFormat("en-BD").format(amount || 0)}`;
 };
 
-const page = async ({ params }: Props) => {
+const page = async ({ params, searchParams }: Props) => {
     const { id } = await params;
+    const sParams = await searchParams;
 
-    const [agency, overviewStats, completion] = await Promise.all([
+    const tab = (sParams.tab as any) || "all";
+    const search = (sParams.search as string) || undefined;
+    const pageNum = Number(sParams.page) || 1;
+
+    const [agency, overviewStats, completion, campaignsRes] = await Promise.all([
         getAgencyProfile(id),
         getUserOverviewStats(id),
         getUserCompletion(id),
+        getUserCampaignList({ 
+            userId: id, 
+            userType: "agency",
+            tab,
+            search,
+            page: pageNum
+        }),
     ]);
 
     if (!agency?.userId) {
@@ -136,6 +153,8 @@ const page = async ({ params }: Props) => {
                 </div>
             </div>
 
+            {agency.isBlocked && <BlockedBanner userId={id} />}
+
             <Tabs defaultValue="profile_details">
                 <TabsList className="w-full bg-white rounded-full p-1 border">
                     <TabsTrigger
@@ -224,24 +243,17 @@ const page = async ({ params }: Props) => {
                             <BrandBinCard binNumber={agency.binNumber} />
                         </div>
                     </div>
-
-                    <div className="border border-red rounded-xl p-4 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-red font-semibold text-sm">Danger Zone</h3>
-                            <p className="text-xs text-muted-foreground">Block this profile</p>
-                        </div>
-                        <button className="bg-red text-white px-5 py-1.5 rounded-md text-sm">
-                            Block
-                        </button>
-                    </div>
                 </TabsContent>
 
                 <TabsContent value="campaigns" className="space-y-4 mt-4">
-                    <div className="rounded-xl border bg-white p-6 text-sm text-muted-foreground">
-                        Campaign data is not available from this endpoint yet.
-                    </div>
+                    <UserCampaignTable 
+                        initialData={campaignsRes?.data || []} 
+                        meta={campaignsRes?.meta} 
+                    />
                 </TabsContent>
             </Tabs>
+
+            {!agency.isBlocked && <BlockUserSection userId={id} />}
         </div>
     );
 };

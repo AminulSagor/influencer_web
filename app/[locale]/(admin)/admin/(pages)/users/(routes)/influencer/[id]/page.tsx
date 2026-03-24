@@ -9,27 +9,43 @@ import PayoutSettings from "../_components/payout-setting";
 import ProfileDetailsCard from "../_components/profile-details-card";
 import NidInfoCard from "../_components/nid-info-card";
 import DeliveryLocationCard from "../_components/delivery-location-card";
-import CampaignTable from "../_components/campaign-table";
+import UserCampaignTable from "../../../_components/user-campaign-table";
+import BlockUserSection from "../../../_components/block-user-section";
+import BlockedBanner from "../../../_components/blocked-banner";
 
 import { getInfluencerProfile } from "@/service/admin/users/get-influencer-profile";
 import { getUserOverviewStats } from "@/service/admin/users/get-users-overview-stats";
 import { getUserCompletion } from "@/service/admin/users/get-user-completion";
+import { getUserCampaignList } from "@/service/admin/users/get-user-campaign-list";
 
 interface Props {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 const formatMoney = (amount: number) => {
   return `৳${new Intl.NumberFormat("en-BD").format(amount || 0)}`;
 };
 
-const page = async ({ params }: Props) => {
+const page = async ({ params, searchParams }: Props) => {
   const { id } = await params;
+  const sParams = await searchParams;
+  
+  const tab = (sParams.tab as any) || "all";
+  const search = (sParams.search as string) || undefined;
+  const pageNum = Number(sParams.page) || 1;
 
-  const [inf, overviewStats, completion] = await Promise.all([
+  const [inf, overviewStats, completion, campaignsRes] = await Promise.all([
     getInfluencerProfile(id),
     getUserOverviewStats(id),
     getUserCompletion(id),
+    getUserCampaignList({ 
+      userId: id, 
+      userType: "influencer",
+      tab,
+      search,
+      page: pageNum
+    }),
   ]);
 
   if (!inf?.userId) {
@@ -135,6 +151,8 @@ const page = async ({ params }: Props) => {
         </div>
       </div>
 
+      {inf.isBlocked && <BlockedBanner userId={id} />}
+
       <Tabs defaultValue="profile_details">
         <TabsList className="w-full bg-white rounded-full p-1 border">
           <TabsTrigger
@@ -197,9 +215,14 @@ const page = async ({ params }: Props) => {
         </TabsContent>
 
         <TabsContent value="campaigns" className="space-y-4 mt-4">
-          <CampaignTable />
+          <UserCampaignTable 
+            initialData={campaignsRes?.data || []} 
+            meta={campaignsRes?.meta} 
+          />
         </TabsContent>
       </Tabs>
+
+      {!inf.isBlocked && <BlockUserSection userId={id} />}
     </div>
   );
 };
