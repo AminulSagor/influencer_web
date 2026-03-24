@@ -20,16 +20,16 @@ type Props = {
 
 const RowTwo = ({ actionsData, activityData, actionFilters }: Props) => {
   return (
-    <div className="grid grid-cols-12 gap-4">
-      <div className="col-span-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="lg:col-span-8">
         <ActionRequiredCard
           actionsData={actionsData}
           filters={actionFilters}
         />
       </div>
 
-      <div className="col-span-4">
-        <div className="space-y-4">
+      <div className="lg:col-span-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
           <QuickActionsCard />
           <RecentActivityCard activities={activityData} />
         </div>
