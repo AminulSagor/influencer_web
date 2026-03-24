@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { toast } from "sonner";
 import {
   ChartColumnIncreasing,
   ChevronDown,
@@ -46,18 +45,32 @@ import type {
 } from "@/types/admin/campaign/campaign_details_type";
 
 import { safeStr } from "@/utils/admin/campaign/number_util";
-import { getInfluencerMilstoneProgress } from "@/service/admin/campaign/get-milstone-progress";
-import { getCampaignAssignments } from "@/service/admin/campaign/get-campaign-assignments";
-import { getMilestoneSubmissions } from "@/service/admin/campaign/get-milestone-submissions";
-import { payInfluencerSubmission } from "@/service/admin/campaign/pay-influencer-submission";
-import { updateInfluencerMilestoneStatus } from "@/service/admin/campaign/update-influencer-milestone-status";
 import {
   getMilestoneStatusUi,
   getSubmissionAccordionBadge,
   normalizeCampaignMilestoneStatus,
 } from "@/utils/admin/campaign/campaign-milestone/milestone_status_util";
-import { payAgencySubmission } from "@/service/admin/campaign/agency/pay-agency-submission";
-import { reviewAgencySubmission } from "@/service/admin/campaign/agency/review-agency-submission";
+import {
+  toAmount,
+  toNullableNumber,
+  moneyLabel,
+  compactNum,
+  roundMoney,
+} from "@/utils/admin/campaign/campaign-milestone/number_helpers";
+import {
+  formatDateLabel,
+  normalizeSubmissionStatus,
+  normalizePaymentStatus,
+  getSubmissionMetric,
+  computeAveragePerformance,
+  type SubmissionItem,
+} from "@/utils/admin/campaign/campaign-milestone/submission_helpers";
+
+import { useCampaignAssignments } from "@/hooks/campaign-milestone/use-campaign-assignments";
+import { useInfluencerSelection } from "@/hooks/campaign-milestone/use-influencer-selection";
+import { useMilestoneSubmissions } from "@/hooks/campaign-milestone/use-milestone-submissions";
+import { useMilestoneProgress } from "@/hooks/campaign-milestone/use-milestone-progress";
+import { useMilestoneActions } from "@/hooks/campaign-milestone/use-milestone-actions";
 
 const CircularProgressChart = dynamic(() => import("./circular-progress"), {
   ssr: false,
@@ -75,217 +88,6 @@ interface Props {
   assignedInfluencerOfferTotal?: number;
 }
 
-type SubmissionItem = {
-  id: string;
-  influencerId?: string | null;
-  influencerName?: string | null;
-  influencerImage?: string | null;
-  assignmentId?: string | null;
-  assignedMilestoneId?: string | null;
-  description?: string | null;
-  attachments?: string[];
-  liveLinks?: string[];
-  requestedAmount?: number;
-  paidAmount?: number;
-  status?: string | null;
-  paymentStatus?: string | null;
-  isClientApproved?: boolean;
-  metrics?: {
-    reach?: number;
-    views?: number;
-    likes?: number;
-    comments?: number;
-  };
-  submittedAt?: string | null;
-  adminFeedback?: string | null;
-  rejectionReason?: string | null;
-};
-
-type MilestoneSubmissionBucket = {
-  totalSubmissions: number;
-  submissions: SubmissionItem[];
-};
-
-function toAmount(v: unknown) {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function toSafeNumber(value: unknown) {
-  if (value === null || value === undefined) return 0;
-
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (typeof value === "string") {
-    const cleaned = value.replace(/,/g, "").trim();
-    const parsed = Number(cleaned);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
-}
-
-function toNullableNumber(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
-
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : null;
-  }
-
-  if (typeof value === "string") {
-    const cleaned = value.replace(/,/g, "").trim();
-    if (!cleaned) return null;
-    const parsed = Number(cleaned);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-}
-
-function moneyLabel(v: unknown) {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n)
-    ? n.toLocaleString("en-US", {
-        minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-      })
-    : "0";
-}
-
-function compactNum(v: unknown) {
-  const n = Number(v ?? 0);
-  if (!Number.isFinite(n)) return "0";
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(".0", "")}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
-  return `${n}`;
-}
-
-function isCompletedStatus(status?: string | null) {
-  const s = String(status ?? "").trim().toLowerCase();
-  return ["approved", "partial_paid", "paid"].includes(s);
-}
-
-function extractProgressPercent(progressRes: any): number {
-  const percent = Number(progressRes?.data?.progressPercentage ?? 0);
-  return Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
-}
-
-function roundMoney(n: number) {
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 100) / 100;
-}
-
-function getSubmissionMetric(submissionData: SubmissionItem | null | undefined, key: string) {
-  return toSafeNumber(
-    submissionData?.metrics?.[key as keyof NonNullable<SubmissionItem["metrics"]>] ??
-      (submissionData as any)?.performanceMetrics?.[key] ??
-      (submissionData as any)?.[key] ??
-      0
-  );
-}
-
-function computeAveragePerformance(
-  metrics: {
-    reach?: number;
-    views?: number;
-    likes?: number;
-    comments?: number;
-  },
-  targets: {
-    reach?: number | null;
-    views?: number | null;
-    likes?: number | null;
-    comments?: number | null;
-  }
-) {
-  const values = [
-    {
-      current: toSafeNumber(metrics?.reach),
-      target: toSafeNumber(targets?.reach),
-    },
-    {
-      current: toSafeNumber(metrics?.views),
-      target: toSafeNumber(targets?.views),
-    },
-    {
-      current: toSafeNumber(metrics?.likes),
-      target: toSafeNumber(targets?.likes),
-    },
-    {
-      current: toSafeNumber(metrics?.comments),
-      target: toSafeNumber(targets?.comments),
-    },
-  ];
-
-  const valid = values.filter((item) => item.target > 0);
-  if (!valid.length) return 0;
-
-  const totalPercent = valid.reduce((sum, item) => {
-    const percent = (item.current / item.target) * 100;
-    return sum + Math.max(0, Math.min(percent, 100));
-  }, 0);
-
-  return Math.round((totalPercent / valid.length) * 10) / 10;
-}
-
-function formatDateLabel(value?: string | null) {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "—";
-
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return raw.slice(0, 10);
-
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-function normalizeSubmissionStatus(value?: string | null) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
-function normalizePaymentStatus(value?: string | null) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
-function deriveAggregateMilestoneStatus(
-  submissions: SubmissionItem[],
-  fallback?: string | null
-) {
-  if (!Array.isArray(submissions) || submissions.length === 0) {
-    return normalizeCampaignMilestoneStatus(fallback);
-  }
-
-  const statusList = submissions.map((item) => normalizeSubmissionStatus(item?.status));
-  const paymentStatusList = submissions.map((item) =>
-    normalizePaymentStatus(item?.paymentStatus)
-  );
-
-  if (statusList.some((status) => status === "in_review")) return "in_review";
-  if (statusList.some((status) => status === "declined")) return "declined";
-  if (paymentStatusList.some((status) => status === "partial_paid")) {
-    return "partial_paid";
-  }
-  if (
-    paymentStatusList.length > 0 &&
-    paymentStatusList.every((status) => status === "paid")
-  ) {
-    return "paid";
-  }
-  if (
-    paymentStatusList.some((status) => status === "paid") ||
-    statusList.some((status) => status === "approved")
-  ) {
-    return "approved";
-  }
-
-  return normalizeCampaignMilestoneStatus(fallback);
-}
-
 export default function CampaignMilestoneContainer({
   campaignId,
   campaignStatus,
@@ -300,27 +102,6 @@ export default function CampaignMilestoneContainer({
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
   );
-  const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>("");
-  const [remoteProgress, setRemoteProgress] = useState<number | null>(null);
-  const [progressLoading, setProgressLoading] = useState(false);
-
-  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
-  const [assignmentRows, setAssignmentRows] = useState<any[]>([]);
-
-  const [submissionLoading, setSubmissionLoading] = useState(false);
-  const [milestoneSubmissionMap, setMilestoneSubmissionMap] = useState<
-    Record<string, MilestoneSubmissionBucket>
-  >({});
-
-  const [paymentActionMap, setPaymentActionMap] = useState<Record<string, string>>({});
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [declineOpen, setDeclineOpen] = useState(false);
-  const [partialPaidOpen, setPartialPaidOpen] = useState(false);
-  const [declineReason, setDeclineReason] = useState("");
-  const [partialReason, setPartialReason] = useState("");
-  const [partialAmount, setPartialAmount] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
-  const [actionSubmission, setActionSubmission] = useState<SubmissionItem | null>(null);
 
   const isActiveInfluencerMode = !isPaidAd && campaignStatus === "active";
   const isEditableAssignmentMode =
@@ -331,194 +112,27 @@ export default function CampaignMilestoneContainer({
   const canInviteAgency =
     isPaidAd && campaignStatus === "pending-invitations";
 
-  useEffect(() => {
-    let cancelled = false;
+  // --- Assignments hook ---
+  const { assignmentsLoading, assignmentRows } = useCampaignAssignments(
+    campaignId,
+    isEditableAssignmentMode
+  );
 
-    const loadAssignments = async () => {
-      if (!isEditableAssignmentMode || !campaignId) {
-        setAssignmentRows([]);
-        return;
-      }
+  // --- Influencer selection hook ---
+  const {
+    selectedInfluencerId,
+    setSelectedInfluencerId,
+    activeInfluencerOptions,
+    selectedInfluencerLabel,
+    selectedAssignment,
+    assignmentBasedMilestones,
+  } = useInfluencerSelection(
+    milestones,
+    isEditableAssignmentMode,
+    assignmentRows
+  );
 
-      try {
-        setAssignmentsLoading(true);
-        const res = await getCampaignAssignments(campaignId);
-        if (cancelled) return;
-
-        const rows = Array.isArray(res?.data?.assignments)
-          ? res.data.assignments
-          : [];
-
-        setAssignmentRows(rows);
-
-        setSelectedInfluencerId((prev) => {
-          if (prev && rows.some((x: any) => safeStr(x?.assigneeId) === prev)) {
-            return prev;
-          }
-          return safeStr(rows?.[0]?.assigneeId);
-        });
-      } catch {
-        if (!cancelled) setAssignmentRows([]);
-      } finally {
-        if (!cancelled) setAssignmentsLoading(false);
-      }
-    };
-
-    loadAssignments();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignId, isEditableAssignmentMode]);
-
-  const activeInfluencerOptions = useMemo(() => {
-    if (isEditableAssignmentMode) {
-      return assignmentRows.map((a: any) => ({
-        id: safeStr(a?.assigneeId),
-        name: safeStr(a?.assigneeName) || "Unknown Influencer",
-        image: a?.assigneeImage ?? null,
-        jobStatus: safeStr(a?.status),
-      }));
-    }
-
-    const map = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        image?: string | null;
-        jobStatus?: string;
-      }
-    >();
-
-    (milestones ?? []).forEach((m: any) => {
-      const id = safeStr(m?.assignedToInfluencerId);
-      if (!id) return;
-
-      const prev = map.get(id);
-      const nextJobStatus = safeStr(m?.jobStatus).toLowerCase();
-
-      if (!prev) {
-        map.set(id, {
-          id,
-          name: safeStr(m?.influencerName) || "Unknown Influencer",
-          image: m?.influencerImage ?? null,
-          jobStatus: nextJobStatus,
-        });
-        return;
-      }
-
-      if (prev.jobStatus !== "active" && nextJobStatus === "active") {
-        map.set(id, {
-          ...prev,
-          jobStatus: nextJobStatus,
-        });
-      }
-    });
-
-    return Array.from(map.values()).sort((a, b) => {
-      const aActive = a.jobStatus === "active" ? 0 : 1;
-      const bActive = b.jobStatus === "active" ? 0 : 1;
-      if (aActive !== bActive) return aActive - bActive;
-      return a.name.localeCompare(b.name);
-    });
-  }, [milestones, isEditableAssignmentMode, assignmentRows]);
-
-  useEffect(() => {
-    if (selectedInfluencerId) return;
-    if (activeInfluencerOptions.length === 0) return;
-
-    const activeOne =
-      activeInfluencerOptions.find((x) => x.jobStatus === "active") ??
-      activeInfluencerOptions[0];
-
-    setSelectedInfluencerId(activeOne.id);
-  }, [selectedInfluencerId, activeInfluencerOptions]);
-
-  const selectedAssignment = useMemo(() => {
-    if (!isEditableAssignmentMode) return null;
-
-    return (
-      assignmentRows.find(
-        (x: any) => safeStr(x?.assigneeId) === safeStr(selectedInfluencerId)
-      ) ?? null
-    );
-  }, [assignmentRows, selectedInfluencerId, isEditableAssignmentMode]);
-
-  const assignmentBasedMilestones = useMemo(() => {
-    if (!selectedAssignment) return [];
-
-    return (selectedAssignment?.milestones ?? []).map((m: any, idx: number) => {
-      const matchedCampaignMilestone =
-        (milestones ?? []).find((cm) => {
-          const sameMasterId =
-            safeStr(cm?.id) &&
-            safeStr(m?.masterMilestoneId) &&
-            safeStr(cm?.id) === safeStr(m?.masterMilestoneId);
-
-          const sameOwnId =
-            safeStr(cm?.id) &&
-            safeStr(m?.id) &&
-            safeStr(cm?.id) === safeStr(m?.id);
-
-          const sameOrderAndTitle =
-            Number(cm?.order ?? -1) === Number(m?.order ?? -2) &&
-            safeStr(cm?.contentTitle).toLowerCase() ===
-              safeStr(m?.contentTitle || m?.title).toLowerCase();
-
-          return sameMasterId || sameOwnId || sameOrderAndTitle;
-        }) ?? null;
-
-      return {
-        id: safeStr(m?.id) || safeStr(m?.masterMilestoneId) || `m-${idx}`,
-        masterMilestoneId:
-          safeStr(m?.masterMilestoneId) || safeStr(matchedCampaignMilestone?.id),
-        order: Number(m?.order ?? matchedCampaignMilestone?.order ?? idx),
-        contentTitle: safeStr(
-          m?.contentTitle ||
-            m?.title ||
-            matchedCampaignMilestone?.contentTitle
-        ),
-        title: safeStr(
-          m?.contentTitle ||
-            m?.title ||
-            matchedCampaignMilestone?.contentTitle
-        ),
-        contentQuantity: safeStr(
-          m?.contentQuantity || matchedCampaignMilestone?.contentQuantity
-        ),
-        platform: safeStr(m?.platform || matchedCampaignMilestone?.platform),
-        amount: roundMoney(
-          Number(m?.amount ?? matchedCampaignMilestone?.amount ?? 0)
-        ),
-        status: safeStr(m?.status),
-        assignmentId: safeStr(selectedAssignment?.assigneeId),
-        assignedToInfluencerId: safeStr(selectedAssignment?.assigneeId),
-        influencerName: safeStr(selectedAssignment?.assigneeName),
-        influencerImage: selectedAssignment?.assigneeImage ?? null,
-        createdAt: m?.createdAt ?? selectedAssignment?.createdAt ?? null,
-        updatedAt: m?.updatedAt ?? selectedAssignment?.updatedAt ?? null,
-        jobStatus: safeStr(selectedAssignment?.status),
-        promotionGoal:
-          safeStr(m?.promotionGoal) ||
-          safeStr(matchedCampaignMilestone?.promotionGoal) ||
-          null,
-        expectedReach: toNullableNumber(
-          m?.expectedReach ?? matchedCampaignMilestone?.expectedReach
-        ),
-        expectedViews: toNullableNumber(
-          m?.expectedViews ?? matchedCampaignMilestone?.expectedViews
-        ),
-        expectedLikes: toNullableNumber(
-          m?.expectedLikes ?? matchedCampaignMilestone?.expectedLikes
-        ),
-        expectedComments: toNullableNumber(
-          m?.expectedComments ?? matchedCampaignMilestone?.expectedComments
-        ),
-      };
-    });
-  }, [selectedAssignment, milestones]);
-
+  // --- Base visible milestones ---
   const baseVisibleMilestones = useMemo(() => {
     if (isEditableAssignmentMode) {
       return assignmentBasedMilestones;
@@ -541,108 +155,16 @@ export default function CampaignMilestoneContainer({
     assignmentBasedMilestones,
   ]);
 
-  const refreshMilestoneSubmissions = useCallback(
-    async (milestoneId: string) => {
-      const normalizedMilestoneId = safeStr(milestoneId);
-      if (!normalizedMilestoneId) return;
+  // --- Submissions hook ---
+  const {
+    submissionLoading,
+    milestoneSubmissionMap,
+    visibleMilestones,
+    refreshMilestoneSubmissions,
+    getActiveSubmissions,
+  } = useMilestoneSubmissions(baseVisibleMilestones);
 
-      const res = await getMilestoneSubmissions(normalizedMilestoneId);
-      const data = res?.data ?? {};
-      const submissions = Array.isArray(data?.submissions) ? data.submissions : [];
-
-      setMilestoneSubmissionMap((prev) => ({
-        ...prev,
-        [normalizedMilestoneId]: {
-          totalSubmissions: Number(data?.totalSubmissions ?? submissions.length ?? 0),
-          submissions,
-        },
-      }));
-    },
-    []
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadVisibleMilestoneSubmissions = async () => {
-      const milestoneIds = baseVisibleMilestones
-        .map((item: any) => safeStr(item?.id || item?.masterMilestoneId))
-        .filter(Boolean);
-
-      if (milestoneIds.length === 0) {
-        setMilestoneSubmissionMap({});
-        return;
-      }
-
-      try {
-        setSubmissionLoading(true);
-
-        const responses = await Promise.all(
-          milestoneIds.map(async (milestoneId: string) => {
-            try {
-              const res = await getMilestoneSubmissions(milestoneId);
-              const data = res?.data ?? {};
-              const submissions = Array.isArray(data?.submissions)
-                ? data.submissions
-                : [];
-
-              return {
-                milestoneId,
-                value: {
-                  totalSubmissions: Number(
-                    data?.totalSubmissions ?? submissions.length ?? 0
-                  ),
-                  submissions,
-                },
-              };
-            } catch {
-              return {
-                milestoneId,
-                value: {
-                  totalSubmissions: 0,
-                  submissions: [],
-                },
-              };
-            }
-          })
-        );
-
-        if (cancelled) return;
-
-        const nextMap = responses.reduce<
-          Record<string, MilestoneSubmissionBucket>
-        >((acc, item) => {
-          acc[item.milestoneId] = item.value;
-          return acc;
-        }, {});
-
-        setMilestoneSubmissionMap(nextMap);
-      } finally {
-        if (!cancelled) setSubmissionLoading(false);
-      }
-    };
-
-    loadVisibleMilestoneSubmissions();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [baseVisibleMilestones]);
-
-  const visibleMilestones = useMemo(() => {
-    return baseVisibleMilestones.map((milestone: any) => {
-      const milestoneId = safeStr(milestone?.id || milestone?.masterMilestoneId);
-      const bucket = milestoneSubmissionMap[milestoneId];
-
-      if (!bucket) return milestone;
-
-      return {
-        ...milestone,
-        status: deriveAggregateMilestoneStatus(bucket.submissions, milestone?.status),
-      };
-    });
-  }, [baseVisibleMilestones, milestoneSubmissionMap]);
-
+  // --- Active milestone selection ---
   useEffect(() => {
     const firstId =
       safeStr(visibleMilestones?.[0]?.id) ||
@@ -665,6 +187,55 @@ export default function CampaignMilestoneContainer({
     );
   }, [visibleMilestones, activeMilestoneId]);
 
+  const activeMilestoneIdSafe = safeStr((activeMilestone as any)?.id);
+
+  const activeSubmissions = useMemo(() => {
+    return getActiveSubmissions(activeMilestoneIdSafe);
+  }, [getActiveSubmissions, activeMilestoneIdSafe]);
+
+  // --- Progress hook ---
+  const { progress, progressLoading } = useMilestoneProgress(
+    campaignId,
+    selectedInfluencerId,
+    isActiveInfluencerMode,
+    visibleMilestones
+  );
+
+  // --- Actions hook ---
+  const {
+    paymentActionMap,
+    setPaymentActionMap,
+    approveOpen,
+    setApproveOpen,
+    declineOpen,
+    setDeclineOpen,
+    partialPaidOpen,
+    setPartialPaidOpen,
+    declineReason,
+    setDeclineReason,
+    partialReason,
+    setPartialReason,
+    partialAmount,
+    setPartialAmount,
+    actionLoading,
+    actionSubmission,
+    getSubmissionRequestedAmount,
+    getSubmissionPaidAmount,
+    getSubmissionRemainingAmount,
+    openApproveForSubmission,
+    openDeclineForSubmission,
+    openPayForSubmission,
+    handleApproveConfirm,
+    handleDeclineConfirm,
+    handlePartialPaidSubmit,
+  } = useMilestoneActions(
+    isPaidAd,
+    activeMilestone,
+    activeMilestoneIdSafe,
+    refreshMilestoneSubmissions
+  );
+
+  // --- Milestone influencers ---
   const milestoneInfluencers: InfluencerUI[] = useMemo(() => {
     const fallbackImg = "/avatar-fallback.png";
 
@@ -708,6 +279,7 @@ export default function CampaignMilestoneContainer({
       .filter((x) => safeStr(x.id).length > 0);
   }, [dropdownInfluencers, influencers]);
 
+  // --- Milestone budget max ---
   const milestoneBudgetMax = useMemo(() => {
     if (isPaidAd) return Math.max(0, Number(availableForAgency) || 0);
 
@@ -738,82 +310,7 @@ export default function CampaignMilestoneContainer({
     availableForInfluencers,
   ]);
 
-  const localProgress = useMemo(() => {
-    const total = visibleMilestones.length;
-    if (total === 0) return 0;
-
-    const completed = visibleMilestones.filter((m: any) =>
-      isCompletedStatus(m?.status)
-    ).length;
-
-    return Math.round((completed / total) * 100);
-  }, [visibleMilestones]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadProgress = async () => {
-      if (!isActiveInfluencerMode || !campaignId || !selectedInfluencerId) {
-        setRemoteProgress(null);
-        return;
-      }
-
-      try {
-        setProgressLoading(true);
-        const res = await getInfluencerMilstoneProgress(
-          campaignId,
-          selectedInfluencerId
-        );
-        if (cancelled) return;
-        setRemoteProgress(extractProgressPercent(res));
-      } catch {
-        if (cancelled) return;
-        setRemoteProgress(null);
-      } finally {
-        if (!cancelled) setProgressLoading(false);
-      }
-    };
-
-    loadProgress();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignId, selectedInfluencerId, isActiveInfluencerMode]);
-
-  const progress = remoteProgress ?? localProgress;
-
-  const selectedInfluencerLabel = useMemo(() => {
-    if (!selectedInfluencerId) return "";
-    return (
-      activeInfluencerOptions.find((x) => x.id === selectedInfluencerId)?.name ??
-      ""
-    );
-  }, [selectedInfluencerId, activeInfluencerOptions]);
-
-  const activeMilestoneIdSafe = safeStr((activeMilestone as any)?.id);
-
-  const activeSubmissionBucket = useMemo(() => {
-    return milestoneSubmissionMap[activeMilestoneIdSafe] ?? null;
-  }, [milestoneSubmissionMap, activeMilestoneIdSafe]);
-
-  const activeSubmissions = useMemo<SubmissionItem[]>(() => {
-    return Array.isArray(activeSubmissionBucket?.submissions)
-      ? activeSubmissionBucket.submissions
-      : [];
-  }, [activeSubmissionBucket]);
-
-  useEffect(() => {
-    setPaymentActionMap({});
-    setApproveOpen(false);
-    setDeclineOpen(false);
-    setPartialPaidOpen(false);
-    setDeclineReason("");
-    setPartialReason("");
-    setPartialAmount("");
-    setActionSubmission(null);
-  }, [activeMilestoneIdSafe]);
-
+  // --- Derived status values ---
   const activeMilestoneStatus = normalizeCampaignMilestoneStatus(
     (activeMilestone as any)?.status
   );
@@ -884,241 +381,7 @@ export default function CampaignMilestoneContainer({
     icon: ReactNode;
   }[];
 
-  const getSubmissionRequestedAmount = useCallback((submission: SubmissionItem | null) => {
-    return Number(submission?.requestedAmount ?? 0);
-  }, []);
-
-  const getSubmissionPaidAmount = useCallback((submission: SubmissionItem | null) => {
-    return Number(submission?.paidAmount ?? 0);
-  }, []);
-
-  const getSubmissionRemainingAmount = useCallback((submission: SubmissionItem | null) => {
-    const requestedAmount = getSubmissionRequestedAmount(submission);
-    const paidAmount = getSubmissionPaidAmount(submission);
-    return Math.max(0, requestedAmount - paidAmount);
-  }, [getSubmissionPaidAmount, getSubmissionRequestedAmount]);
-
-  const openApproveForSubmission = useCallback((submission: SubmissionItem) => {
-    setActionSubmission(submission);
-    setApproveOpen(true);
-  }, []);
-
-  const openDeclineForSubmission = useCallback((submission: SubmissionItem) => {
-    setActionSubmission(submission);
-    setDeclineOpen(true);
-  }, []);
-
-  const openPayForSubmission = useCallback(
-  (submission: SubmissionItem) => {
-    const selectedPaymentAction = paymentActionMap[submission.id] || "";
-    if (!selectedPaymentAction) {
-      toast.error("Select a payment type first.");
-      return;
-    }
-
-    setActionSubmission(submission);
-
-    if (selectedPaymentAction === "partial_paid") {
-      setPartialPaidOpen(true);
-      return;
-    }
-
-    void (async () => {
-      try {
-        setActionLoading(true);
-
-        const payableAmount =
-          getSubmissionRemainingAmount(submission) > 0
-            ? getSubmissionRemainingAmount(submission)
-            : getSubmissionRequestedAmount(submission);
-
-        if (isPaidAd) {
-          await payAgencySubmission({
-            submissionId: submission.id,
-            amount: payableAmount,
-          });
-        } else {
-          await payInfluencerSubmission({
-            submissionId: submission.id,
-            amount: payableAmount,
-            reason: "Full payment completed",
-          });
-        }
-
-        toast.success("Payment completed successfully.");
-        setPaymentActionMap((prev) => ({ ...prev, [submission.id]: "" }));
-        await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-      } catch (error: any) {
-        toast.error(
-          error?.response?.data?.message || "Failed to complete payment."
-        );
-      } finally {
-        setActionLoading(false);
-      }
-    })();
-  },
-  [
-    activeMilestoneIdSafe,
-    getSubmissionRemainingAmount,
-    getSubmissionRequestedAmount,
-    isPaidAd,
-    paymentActionMap,
-    refreshMilestoneSubmissions,
-  ]
-);
-
-  async function handleApproveConfirm() {
-  if (!actionSubmission?.id) {
-    toast.error("Submission id is missing.");
-    return;
-  }
-
-  try {
-    setActionLoading(true);
-
-    if (isPaidAd) {
-      await reviewAgencySubmission({
-        submissionId: actionSubmission.id,
-        action: "approve",
-      });
-    } else {
-      const milestoneId = safeStr((activeMilestone as any)?.id);
-      const assignmentId =
-        safeStr(actionSubmission?.assignmentId) ||
-        safeStr((activeMilestone as any)?.assignmentId);
-
-      if (!milestoneId || !assignmentId) {
-        toast.error("Milestone or assignment id is missing.");
-        return;
-      }
-
-      await updateInfluencerMilestoneStatus({
-        milestoneId,
-        assignmentId,
-        status: "approved",
-      });
-    }
-
-    toast.success("Submission approved successfully.");
-    setApproveOpen(false);
-    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-  } catch (error: any) {
-    toast.error(
-      error?.response?.data?.message || "Failed to approve submission."
-    );
-  } finally {
-    setActionLoading(false);
-  }
-}
-
-  async function handleDeclineConfirm() {
-  if (!declineReason.trim()) {
-    toast.error("Rejection reason is required.");
-    return;
-  }
-
-  if (!actionSubmission?.id) {
-    toast.error("Submission id is missing.");
-    return;
-  }
-
-  try {
-    setActionLoading(true);
-
-    if (isPaidAd) {
-      await reviewAgencySubmission({
-        submissionId: actionSubmission.id,
-        action: "decline",
-        reason: declineReason.trim(),
-      });
-    } else {
-      const milestoneId = safeStr((activeMilestone as any)?.id);
-      const assignmentId =
-        safeStr(actionSubmission?.assignmentId) ||
-        safeStr((activeMilestone as any)?.assignmentId);
-
-      if (!milestoneId || !assignmentId) {
-        toast.error("Milestone or assignment id is missing.");
-        return;
-      }
-
-      await updateInfluencerMilestoneStatus({
-        milestoneId,
-        assignmentId,
-        status: "declined",
-        reason: declineReason.trim(),
-      });
-    }
-
-    toast.success("Submission declined successfully.");
-    setDeclineOpen(false);
-    setDeclineReason("");
-    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-  } catch (error: any) {
-    toast.error(
-      error?.response?.data?.message || "Failed to decline submission."
-    );
-  } finally {
-    setActionLoading(false);
-  }
-}
-
-  async function handlePartialPaidSubmit() {
-  if (!actionSubmission?.id) {
-    toast.error("Submission id is missing.");
-    return;
-  }
-
-  const amountNumber = Number(partialAmount || 0);
-  const remainingAmount = getSubmissionRemainingAmount(actionSubmission);
-
-  if (!partialReason.trim()) {
-    toast.error("Reason is required.");
-    return;
-  }
-
-  if (!amountNumber || amountNumber <= 0) {
-    toast.error("Enter a valid partial amount.");
-    return;
-  }
-
-  if (amountNumber > remainingAmount) {
-    toast.error("Partial amount cannot be greater than remaining due.");
-    return;
-  }
-
-  try {
-    setActionLoading(true);
-
-    if (isPaidAd) {
-      await payAgencySubmission({
-        submissionId: actionSubmission.id,
-        amount: amountNumber,
-        reason: partialReason.trim(),
-      });
-    } else {
-      await payInfluencerSubmission({
-        submissionId: actionSubmission.id,
-        amount: amountNumber,
-        reason: partialReason.trim(),
-      });
-    }
-
-    toast.success("Partial payment updated successfully.");
-    setPartialPaidOpen(false);
-    setPartialAmount("");
-    setPartialReason("");
-    setPaymentActionMap((prev) => ({ ...prev, [actionSubmission.id]: "" }));
-    await refreshMilestoneSubmissions(activeMilestoneIdSafe);
-  } catch (error: any) {
-    toast.error(
-      error?.response?.data?.message || "Failed to update partial payment."
-    );
-  } finally {
-    setActionLoading(false);
-  }
-}
-
+  // --- Render submission content ---
   const renderSubmissionContent = useCallback(
     (submission: SubmissionItem, index: number) => {
       const submissionStatus = normalizeSubmissionStatus(submission?.status);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLogout } from "@/hooks/useLogout";
+
 import { BriefcaseBusiness, LayoutDashboard, Settings } from "lucide-react";
 
 import {
@@ -51,7 +53,7 @@ const items = [
     children: [
       { title: "Influencer", url: "/admin/users/influencer" },
       { title: "Agency", url: "/admin/users/agency" },
-      { title: "Brands", url: "/admin/users/brands" },
+      { title: "Brands", url: "/admin/users/brand" },
     ],
   },
   {
@@ -69,15 +71,14 @@ const items = [
     icon: Settings,
     url: "/admin/account-settings",
   },
-  {
-    title: "Logout",
-    icon: RiLogoutCircleRLine,
-    url: "/admin/logout",
-  },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { logout, loading: logoutLoading } = useLogout();
+
+  // Handle locale prefix for matching
+  const normalizedPathname = pathname.replace(/^\/(?:en|bn)/, "") || "/";
 
   return (
     <Sidebar>
@@ -94,11 +95,11 @@ export function AppSidebar() {
 
                 // 🔥 Auto-open accordion if child route is active
                 const isChildActive = item.children?.some((child) =>
-                  pathname.startsWith(child.url)
+                  normalizedPathname.startsWith(child.url)
                 );
 
                 const isActive = item.url
-                  ? pathname.startsWith(item.url)
+                  ? normalizedPathname.startsWith(item.url)
                   : isChildActive;
 
                 // ======================
@@ -110,8 +111,8 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         className={cn(
-                          "py-5 hover:bg-[#7A9B57] hover:text-white border",
-                          isActive && "bg-[#7A9B57] text-white"
+                          "py-5 hover:bg-light-green hover:text-white border",
+                          isActive && "bg-light-green text-white"
                         )}
                       >
                         <Link href={item.url!}>
@@ -134,7 +135,7 @@ export function AppSidebar() {
                     defaultValue={isChildActive ? `item-${index}` : undefined}
                   >
                     <AccordionItem value={`item-${index}`} className="border-0">
-                      <AccordionTrigger className="px-3 py-5 hover:bg-[#7A9B57] hover:text-white data-[state=open]:bg-[#7A9B57] data-[state=open]:text-white p-2 hover:no-underline font-normal hover:cursor-pointer border ">
+                      <AccordionTrigger className="px-3 py-5 hover:bg-light-green hover:text-white data-[state=open]:bg-light-green data-[state=open]:text-white p-2 hover:no-underline font-normal hover:cursor-pointer border ">
                         <div className="flex items-center gap-2 ">
                           <item.icon />
                           <span>{item.title}</span>
@@ -143,15 +144,15 @@ export function AppSidebar() {
 
                       <AccordionContent className="space-y-1 mt-2">
                         {item.children!.map((child) => {
-                          const isSubActive = pathname.startsWith(child.url);
+                          const isSubActive = normalizedPathname.startsWith(child.url);
 
                           return (
                             <Link
                               key={child.title}
                               href={child.url}
                               className={cn(
-                                "block rounded-md px-3 py-2 text-sm transition hover:bg-[#7A9B57] hover:text-white border ml-4",
-                                isSubActive && "bg-[#7A9B57] text-white"
+                                "block rounded-md px-3 py-2 text-sm transition hover:bg-light-green hover:text-white border ml-4",
+                                isSubActive && "bg-light-green text-white"
                               )}
                             >
                               {child.title}
@@ -163,6 +164,20 @@ export function AppSidebar() {
                   </Accordion>
                 );
               })}
+
+              {/* Logout button */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(
+                    "py-5 hover:bg-light-green hover:text-white border cursor-pointer",
+                    logoutLoading && "opacity-50 pointer-events-none"
+                  )}
+                  onClick={logout}
+                >
+                  <RiLogoutCircleRLine />
+                  <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

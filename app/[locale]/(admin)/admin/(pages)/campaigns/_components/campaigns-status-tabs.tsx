@@ -10,7 +10,7 @@ export type CampaignTabKey =
   | "completed"
   | "canceled";
 
-const ORDER: CampaignTabKey[] = [
+export const ORDER: CampaignTabKey[] = [
   "all",
   "needs-quote",
   "active",

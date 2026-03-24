@@ -35,34 +35,36 @@ export default function CampaignsToolbar({
   setCampaignType: (v: CampaignTypeFilter) => void;
 }) {
   return (
-    <div className="mx-2 flex items-center justify-between gap-4">
-      <div className="relative flex-1">
+    <div className="mx-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative w-full sm:flex-1">
         <Search
           className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
           size={18}
         />
         <Input
           placeholder="Search by campaign name"
-          className="pl-10"
+          className="h-10 w-full pl-10"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          className={cn(baseBtn, view === "list" && activeBtn)}
-          onClick={() => setView("list")}
-        >
-          List View
-        </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-1 items-center gap-2 sm:flex-none">
+          <Button
+            className={cn(baseBtn, "flex-1 sm:flex-none", view === "list" && activeBtn)}
+            onClick={() => setView("list")}
+          >
+            List View
+          </Button>
 
-        <Button
-          className={cn(baseBtn, view === "grid" && activeBtn)}
-          onClick={() => setView("grid")}
-        >
-          Grid View
-        </Button>
+          <Button
+            className={cn(baseBtn, "flex-1 sm:flex-none", view === "grid" && activeBtn)}
+            onClick={() => setView("grid")}
+          >
+            Grid View
+          </Button>
+        </div>
 
         <Select
           value={campaignType}
@@ -70,7 +72,7 @@ export default function CampaignsToolbar({
             setCampaignType(value as CampaignTypeFilter)
           }
         >
-          <SelectTrigger className="w-[190px] border border-light-green bg-white text-sm">
+          <SelectTrigger className="w-full border border-light-green bg-white text-sm sm:w-[190px]">
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>

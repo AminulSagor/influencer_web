@@ -24,7 +24,7 @@ const BrandProfileDetailsCard = ({
   serviceFee,
 }: Props) => {
   return (
-    <Card className="h-full">
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-Primary text-base">
           Profile Details

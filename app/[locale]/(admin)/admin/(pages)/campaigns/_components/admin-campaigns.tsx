@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useSearchParams } from "next/navigation";
 import {
   getAllCampaigns
 } from "@/service/admin/campaign/get-campaign";
@@ -10,7 +11,7 @@ import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";
 import CampaignsListTable from "./campaigns-list-table";
 import CampaignsGrid from "./campaigns-grid";
-import CampaignsStatusTabs, { type CampaignTabKey } from "./campaigns-status-tabs";
+import CampaignsStatusTabs, { ORDER, type CampaignTabKey } from "./campaigns-status-tabs";
 import CampaignsPagination from "./campaigns-pagination";
 
 import type {
@@ -101,13 +102,23 @@ function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
 }
 
 export default function AdminCampaigns() {
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as CampaignTabKey) || "all";
+
   const [campaigns, setCampaigns] = useState<CampaignUI[]>([]);
   const [view, setView] = useState<CampaignView>("grid");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [tab, setTab] = useState<CampaignTabKey>("all");
+  const [tab, setTab] = useState<CampaignTabKey>(initialTab);
   const [campaignType, setCampaignType] = useState<CampaignTypeFilter>("all");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const t = searchParams.get("tab") as CampaignTabKey;
+    if (t && ORDER.includes(t)) {
+      setTab(t);
+    }
+  }, [searchParams]);
 
   const [meta, setMeta] = useState({
     total: 0,

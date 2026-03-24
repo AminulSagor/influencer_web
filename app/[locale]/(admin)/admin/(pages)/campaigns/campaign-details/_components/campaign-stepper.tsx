@@ -91,11 +91,11 @@ function getQuotedStatuses() {
 function mapStatusToStep(status?: string | null) {
   const s = normalizeStatus(status);
 
-  if (s === "completed") return 4;
-  if (s === "active") return 3;
+  if (["completed", "done", "finished", "success"].includes(s)) return 4;
+  if (["active", "promoting", "live", "running"].includes(s)) return 3;
   if (getQuotedStatuses().includes(s)) return 1;
-  if (s === "received") return 0;
-  if (s === "declined") return 0;
+  if (["received", "request", "requested", "pending"].includes(s)) return 0;
+  if (["declined", "cancelled", "canceled", "rejected"].includes(s)) return 0;
 
   return 0;
 }
