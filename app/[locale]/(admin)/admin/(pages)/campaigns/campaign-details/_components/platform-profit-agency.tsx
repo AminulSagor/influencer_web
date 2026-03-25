@@ -575,6 +575,7 @@ export default function PlatformProfitAgency({
       setLastAppliedDraftSig(currentSig);
 
       onRefreshDraft?.();
+      window.dispatchEvent(new Event("agency-assigned"));
     } catch (e: any) {
       toast.error("Failed to assign agencies");
     } finally {

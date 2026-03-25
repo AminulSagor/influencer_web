@@ -192,6 +192,22 @@ export default function Page() {
   }, [campaignId, fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
 
   useEffect(() => {
+    const handler = () => {
+      fetchCampaign();
+      fetchNegotiations();
+      fetchAssignedAgencies();
+    };
+
+    window.addEventListener("influencer-assigned", handler);
+    window.addEventListener("agency-assigned", handler);
+
+    return () => {
+      window.removeEventListener("influencer-assigned", handler);
+      window.removeEventListener("agency-assigned", handler);
+    };
+  }, [fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
+
+  useEffect(() => {
     if (!campaign) return;
     const suggested = campaign?.suggestedAgencies ?? [];
     fetchPreferredAgenciesFromSuggested(Array.isArray(suggested) ? suggested : []);

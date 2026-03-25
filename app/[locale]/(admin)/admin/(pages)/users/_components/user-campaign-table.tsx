@@ -134,19 +134,19 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
 
   return (
     <Card className="border-none shadow-none p-4">
-      <CardHeader className="px-0 pt-0 pb-6 flex flex-row items-center justify-between">
+      <CardHeader className="px-0 pt-0 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <CardTitle className="text-2xl font-semibold text-Primary">Campaigns</CardTitle>
           <CardDescription>Browse and manage the campaigns</CardDescription>
         </div>
 
-        <div className="flex bg-gray-100 rounded-full p-1">
+        <div className="flex bg-gray-100 rounded-full p-1 overflow-x-auto max-w-full">
           {TABS.map((tab) => (
             <button
               key={tab.value}
               onClick={() => updateFilters({ tab: tab.value })}
               className={cn(
-                "px-4 py-2 text-xs font-medium rounded-full transition-all",
+                "px-4 py-2 text-xs font-medium rounded-full transition-all whitespace-nowrap",
                 currentTab === tab.value
                   ? "bg-light-green text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
@@ -171,14 +171,14 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
             />
           </div>
 
-          <div className="flex items-center justify-between bg-Secondary/30 p-2 rounded-xl border border-light-green/20">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-Secondary/30 p-2 rounded-xl border border-light-green/20 gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <div className="bg-light-green text-white px-4 py-1.5 rounded-lg text-sm font-medium">
                 {selectedIds.length} Selected
               </div>
               
               <Select>
-                <SelectTrigger className="w-[180px] bg-white border-light-green/30 h-9 text-sm">
+                <SelectTrigger className="w-full sm:w-[180px] bg-white border-light-green/30 h-9 text-sm">
                   <SelectValue placeholder="Bulk Action" />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,7 +193,7 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
 
             <div className="flex items-center gap-2">
               <Select defaultValue="range">
-                <SelectTrigger className="w-[180px] bg-white border-light-green/30 h-9 text-sm">
+                <SelectTrigger className="w-full sm:w-[180px] bg-white border-light-green/30 h-9 text-sm">
                   <SelectValue placeholder="Nov 20 - Dec 20" />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,7 +205,7 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
         </div>
 
         {/* Table */}
-        <div className="rounded-xl border border-gray-100 overflow-hidden bg-white">
+        <div className="rounded-xl border border-gray-100 overflow-hidden bg-white overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-light-green hover:bg-light-green border-none">
@@ -374,7 +374,7 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
         </div>
 
         {/* Pagination */ meta && (
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           <div className="text-sm text-gray-500">
             Showing <span className="font-semibold text-gray-700">
                 {((currentPage - 1) * 10) + 1}-{Math.min(currentPage * 10, meta.total)}

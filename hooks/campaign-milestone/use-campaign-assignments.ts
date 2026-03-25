@@ -8,6 +8,13 @@ export function useCampaignAssignments(
 ) {
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [assignmentRows, setAssignmentRows] = useState<any[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setRefreshTrigger((prev) => prev + 1);
+    window.addEventListener("influencer-assigned", handler);
+    return () => window.removeEventListener("influencer-assigned", handler);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -40,7 +47,7 @@ export function useCampaignAssignments(
     return () => {
       cancelled = true;
     };
-  }, [campaignId, isEditableAssignmentMode]);
+  }, [campaignId, isEditableAssignmentMode, refreshTrigger]);
 
   return {
     assignmentsLoading,

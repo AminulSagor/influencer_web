@@ -1,9 +1,13 @@
+"use client";
+
 import React from "react";
 import CollapsibleCard from "./collapsible-card";
 import IconText from "./icon-text";
+import NotifyUser from "./notify-user";
 import { MdEmail, MdLocationOn } from "react-icons/md";
 import { BsTelephoneFill } from "react-icons/bs";
 import Image from "next/image";
+import type { VerifyReminderTargetRole } from "@/service/admin/verification-center/send-verify-reminder";
 
 interface PersonalInfo {
   firstName: string;
@@ -18,9 +22,18 @@ interface PersonalInfo {
 interface Props {
   personalInfo: PersonalInfo;
   type: string;
+  userId: string;
 }
 
-const ProfileDetailsCard = ({ personalInfo, type }: Props) => {
+const TYPE_TO_ROLE: Record<string, VerifyReminderTargetRole> = {
+  Influencer: "influencer",
+  Agency: "agency",
+  Brand: "client",
+  Client: "client",
+};
+
+const ProfileDetailsCard = ({ personalInfo, type, userId }: Props) => {
+  const targetRole = TYPE_TO_ROLE[type] || "influencer";
   return (
     <CollapsibleCard heading="Profile Details">
       <div className="flex p-4 gap-6">
@@ -87,7 +100,15 @@ const ProfileDetailsCard = ({ personalInfo, type }: Props) => {
           <div className="space-y-2">
             <div>
               <p className="text-light-green">Email Address</p>
-              <p className="text-lg">{personalInfo.email}</p>
+              <div className="flex items-center gap-3">
+                <p className="text-lg">{personalInfo.email}</p>
+                <NotifyUser
+                  userId={userId}
+                  targetRole={targetRole}
+                  reminderKey="email"
+                  customLabel="Email"
+                />
+              </div>
             </div>
 
             <div>

@@ -46,7 +46,7 @@ const CampaignTable = () => {
       </CardHeader>
 
       <CardContent className="space-y-2">
-        <div className="flex justify-between items-center gap-4 mx-2">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mx-2">
           <div className="flex-1">
             <div className="relative w-full">
               <Search
@@ -59,14 +59,14 @@ const CampaignTable = () => {
         </div>
 
         <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
                 1 selected
               </div>
 
               <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-full sm:w-[180px]">
                   <SelectValue placeholder="Bulk Actions" />
                 </SelectTrigger>
                 <SelectContent>
@@ -85,7 +85,7 @@ const CampaignTable = () => {
             </Select>
           </div>
         </div>
-        <div className="rounded-md overflow-hidden border mt-2">
+        <div className="rounded-md overflow-hidden border mt-2 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-light-green hover:bg-light-green">

@@ -18,12 +18,16 @@ const VerificationBreadcrumb = ({
   type,
   name,
 }: VerificationBreadcrumbProps) => {
-  const typeLabel = type === "agency" ? "Verify Agency" : "Verify Influencer";
+  let typeLabel = type === "agency" ? "Agency" : "Influencer";
+  if(type === "brand"){
+    typeLabel = "Brand";
+  }
+
 
   const typePath =
     type === "agency"
-      ? "/verification-center/agency"
-      : "/verification-center/influencer";
+      ? "/users/agency"
+      : "/users/influencer";
 
   return (
     <div className="space-y-2">
@@ -34,15 +38,15 @@ const VerificationBreadcrumb = ({
         <div>
           {/* Title */}
           <h2 className="font-bold text-Primary text-2xl">
-            Verification Center
+            Browse User
           </h2>
 
           {/* Breadcrumb under h2 */}
           <Breadcrumb>
             <BreadcrumbList className="text-sm text-muted-foreground">
               <BreadcrumbItem>
-                <BreadcrumbLink href="/verification-center">
-                  Verification Center
+                <BreadcrumbLink href="/en/admin/users/influencer">
+                  Browse User
                 </BreadcrumbLink>
               </BreadcrumbItem>
 

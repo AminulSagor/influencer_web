@@ -82,6 +82,12 @@ export default function InviteAgencyBar({
     loadDrafts();
   }, [loadDrafts]);
 
+  useEffect(() => {
+    const handler = () => loadDrafts();
+    window.addEventListener("agency-assigned", handler);
+    return () => window.removeEventListener("agency-assigned", handler);
+  }, [loadDrafts]);
+
   const selectedRow = useMemo(() => {
     return draftRows.find((r) => String(r?.id) === selectedAgencyId) || null;
   }, [draftRows, selectedAgencyId]);
@@ -101,6 +107,7 @@ export default function InviteAgencyBar({
 
       await loadDrafts();
       await onRefreshDraft?.();
+      window.dispatchEvent(new Event("agency-assigned"));
     } catch (e) {
       toast.error("Failed to send invitation");
     } finally {

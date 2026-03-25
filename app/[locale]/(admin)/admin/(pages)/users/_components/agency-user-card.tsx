@@ -139,7 +139,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
   return (
     <Card>
       <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-2">
             <CardTitle className="text-Primary">{cardTitle}</CardTitle>
             <CardDescription>
@@ -169,7 +169,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="flex justify-between items-center gap-4 mx-2">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mx-2">
           <div className="flex-1">
             <div className="relative w-full">
               <Search
@@ -188,7 +188,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
             </div>
           </div>
 
-          <div className="space-x-2">
+          <div className="flex gap-2 shrink-0">
             <Button
               className={cn(baseBtn, view === "list" && activeBtn)}
               onClick={() => setView("list")}
@@ -206,14 +206,14 @@ const AgencyUserCard = ({ users, meta }: Props) => {
         </div>
 
         <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
                 1 Selected
               </div>
 
               <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-full sm:w-[180px]">
                   <SelectValue placeholder="Bulk Action" />
                 </SelectTrigger>
                 <SelectContent>
@@ -229,7 +229,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
               </Button>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Select
                 value={niche || "all"}
                 onValueChange={(value) =>
@@ -238,7 +238,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[140px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[140px]">
                   <SelectValue placeholder="Niche" />
                 </SelectTrigger>
                 <SelectContent>
@@ -260,7 +260,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[190px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[190px]">
                   <SelectValue placeholder="Revenue Generated" />
                 </SelectTrigger>
                 <SelectContent>
@@ -277,7 +277,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[140px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[140px]">
                   <SelectValue placeholder="Rating" />
                 </SelectTrigger>
                 <SelectContent>
@@ -297,7 +297,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[150px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[150px]">
                   <SelectValue placeholder="Job Completed" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +317,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[180px]">
                   <SelectValue placeholder="Revenue Generated" />
                 </SelectTrigger>
                 <SelectContent>
@@ -333,7 +333,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
         </div>
 
         {view === "list" ? (
-          <div className="rounded-md overflow-hidden border">
+          <div className="rounded-md overflow-hidden border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-light-green hover:bg-light-green">
@@ -442,7 +442,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
             </Table>
 
             {meta && totalItems > 0 && (
-              <div className="flex items-center justify-between px-6 py-5 border-t">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t">
                 <div className="text-sm text-muted-foreground">
                   Showing {startItem} - {endItem} of {totalItems} Agencies
                 </div>
@@ -486,7 +486,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-12 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {users.map((user) => (
               <AgencyCardItem agency={user} key={user.id} />
             ))}

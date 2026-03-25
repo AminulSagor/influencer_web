@@ -66,6 +66,14 @@ export default function InviteInfluencerBar({
     CampaignMilestoneLite[]
   >([]);
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setRefreshTrigger((prev) => prev + 1);
+    window.addEventListener("influencer-assigned", handler);
+    return () => window.removeEventListener("influencer-assigned", handler);
+  }, []);
+
   const sortedMilestones = useMemo(() => {
     return [...campaignMilestones]
       .filter((m) => String(m?.id ?? "").trim().length > 0)
@@ -133,7 +141,7 @@ export default function InviteInfluencerBar({
     loadCampaign();
     loadRemaining();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  }, [campaignId, refreshTrigger]);
 
   const selectedInfluencer = useMemo(() => {
     return draftedInfluencers.find((x) => x.id === selectedInfluencerId) || null;
@@ -182,6 +190,7 @@ export default function InviteInfluencerBar({
       });
 
       await loadRemaining();
+      window.dispatchEvent(new Event("influencer-assigned"));
     } catch (error) {
       toast.error("Failed to Assign");
     } finally {
