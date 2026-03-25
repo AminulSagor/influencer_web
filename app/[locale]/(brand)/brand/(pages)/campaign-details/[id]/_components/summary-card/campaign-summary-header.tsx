@@ -39,7 +39,7 @@ const platformIconMap: Record<string, React.ReactNode> = {
 };
 
 const IconPill = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-Primary shadow-sm">
+  <div className="flex h-6 w-6 items-center justify-center rounded-sm  bg-white/95 text-Primary shadow-sm">
     {children}
   </div>
 );

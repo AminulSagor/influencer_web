@@ -28,8 +28,8 @@ export default function CampaignSummaryDeadlineCard({
 
   return (
     <>
-      {isPartialPaid && dueAmount > 0 && (
-        <div className="order-2 flex min-h-[170px] min-w-[170px] flex-col items-center justify-center gap-2 rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green p-4 lg:order-1">
+      {isPartialPaid || dueAmount > 0 && (
+        <div className="order-2 flex h-full min-w-[170px] flex-col items-center justify-center gap-2 rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green p-4 lg:order-1">
           <Image
             src="/client-panel/money.png"
             alt={t("campaignSummaryDeadlineCard.moneyImgAlt")}

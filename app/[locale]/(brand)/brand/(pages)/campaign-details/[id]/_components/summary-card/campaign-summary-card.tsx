@@ -3,52 +3,28 @@ import CampaignSummaryHeader from "./campaign-summary-header";
 import CampaignSummaryStatusCard from "./campaign-summary-status-card";
 import CampaignSummaryDeadlineCard from "./campaign-summary-deadline-card";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import {
+  addDays,
+  formatDate,
+  daysBetween,
+  toNumber,
+} from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/summary-card/helpers/helper";
 
 type CampaignSummaryCardProps = {
   campaign: ClientCampaignDetails;
   label?: string;
 };
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
-};
-
-const addDays = (iso: string, days: number) => {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
-};
-
-const daysBetween = (aIso?: string | null, bIso?: string | null) => {
-  if (!aIso || !bIso) return null;
-  const a = new Date(aIso).getTime();
-  const b = new Date(bIso).getTime();
-  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
-  return Math.ceil((b - a) / (1000 * 60 * 60 * 24));
-};
-
-const toNumber = (value?: string | number | null) => {
-  if (value == null) return 0;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 export default function CampaignSummaryCard({
   campaign,
   label = "Campaign Details",
 }: CampaignSummaryCardProps) {
+  // Campaign type flags
   const title = campaign.campaignName;
   const isInfluencerCampaign = campaign.campaignType === "influencer_promotion";
   const isPaidAdCampaign = campaign.campaignType === "paid_ad";
 
+  //
   const endIso =
     campaign.startingDate && campaign.duration
       ? addDays(campaign.startingDate, campaign.duration)
