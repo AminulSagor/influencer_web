@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import ReportAdminDialog from "./report-admin-dialog";
-import SubmittedReportsDialog from "./submitted-reports-dialog";
+import SubmittedReportsDialog from "./submissions/submitted-reports-dialog";
 
 type Props = {
   milestoneId?: string | null;

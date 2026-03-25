@@ -17,9 +17,9 @@ import {
 import {
   formatSubmissionStatusLabel,
   getSubmissionStatusClasses,
-} from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-ui.helpers";
+} from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-ui.helpers";
 import { useSubmissionDetails } from "@/hooks/use-submission-details";
-import SubmissionDetailsPanel from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-details-panel";
+import SubmissionDetailsPanel from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/influencer-submission-details-panel";
 
 type Props = {
   submission: SubmissionSummary;

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { campaignSubmissionService } from "@/service/client/campaigns/campaign-submission.service";
 import { SubmissionDetail } from "@/types/client/campaigns/campaign-submission.types";
-import { mapClientSubmissionDetailToSubmissionDetail } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-mappers";
+import { mapClientSubmissionDetailToSubmissionDetail } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-mappers";
 
 type Params = {
   submissionId: string;
@@ -28,7 +28,7 @@ export function useSubmissionDetails({
     setItem(prefetchedDetail ?? null);
     setError(null);
     setIsLoading(false);
-  }, [prefetchedDetail, submissionId]);
+  }, [submissionId, prefetchedDetail]);
 
   React.useEffect(() => {
     if (!submissionId || !enabled) return;
@@ -49,17 +49,15 @@ export function useSubmissionDetails({
             submissionId,
           );
 
-        if (!ignore) {
-          setItem(mapClientSubmissionDetailToSubmissionDetail(res.data));
-        }
+        if (ignore) return;
+
+        setItem(mapClientSubmissionDetailToSubmissionDetail(res.data));
       } catch {
-        if (!ignore) {
-          setError("Failed to load submission details.");
-        }
+        if (ignore) return;
+        setError("Failed to load submission details.");
       } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
+        if (ignore) return;
+        setIsLoading(false);
       }
     }
 

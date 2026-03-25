@@ -7,7 +7,7 @@ import {
   InfluencerPromotionSubmissionListItem,
   SubmissionSummary,
 } from "@/types/client/campaigns/campaign-submission.types";
-import { buildInfluencerPromotionSubmissionItems } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submission-mappers";
+import { buildInfluencerPromotionSubmissionItems } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-mappers";
 
 type Params = {
   campaignId?: string;

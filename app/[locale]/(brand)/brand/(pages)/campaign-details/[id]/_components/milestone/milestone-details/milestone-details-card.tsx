@@ -12,10 +12,10 @@ import {
   CampaignMilestone,
   ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
-import MilestoneSubmissionsSection from "./milestone-submissions-section";
+import MilestoneSubmissionsSection from "./submissions/milestone-submissions-section";
 import InfluencerPromotionMilestoneContent from "./influencer-promotion-milestone-content";
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
-import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/milestone-bonus-card";
+import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/bonus/milestone-bonus-card";
 
 type Props = {
   campaign: ClientCampaignDetails;

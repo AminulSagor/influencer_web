@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Gift } from "lucide-react";
 import { useTranslations } from "next-intl";
-import MilestoneBonusDialog from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/milestone-bonus-dialog";
+import MilestoneBonusDialog from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/bonus/milestone-bonus-dialog";
 
 export default function MilestoneBonusCard({
   milestoneId,

@@ -7,42 +7,32 @@ export type SubmissionStatus =
 
 export type SubmissionSummary = {
   id: string;
-  campaignId: string;
-  campaignName: string;
-  influencerName: string | null;
-  influencerImage: string | null;
-  milestoneTitle: string;
-  amount: number;
-  attachments: string[];
-  liveLinks: string[];
-  status: SubmissionStatus;
-  isApproved: boolean;
-  submittedAt: string;
-};
-
-export type SubmissionDetail = {
-  id: string;
+  milestoneId: string | null;
+  assignedMilestoneId: string | null;
+  assignmentId: string | null;
   submissionDescription: string | null;
-  submissionAttachments: string[];
-  submissionLiveLinks: string[];
-  requestedAmount: string;
-  submittedByRole: string;
-  rejectionReason: string | null;
+  submissionAttachments?: string[] | null;
+  submissionLiveLinks?: string[] | null;
+  requestedAmount: string | number | null;
+  status: SubmissionStatus;
+  submittedByRole: string | null;
   isClientApproved: boolean;
   achievedReach: number | null;
   achievedViews: number | null;
   achievedLikes: number | null;
   achievedComments: number | null;
-  paidAmount: string;
-  paymentStatus: string;
-  adminFeedback: string | null;
-  status: SubmissionStatus;
-  assignmentId: string;
-  milestoneId: string;
-  assignedMilestoneId: string;
+  achievedFollows: number | null;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
-  milestoneTitle: string;
+};
+
+export type SubmissionDetail = Omit<
+  SubmissionSummary,
+  "submissionAttachments" | "submissionLiveLinks"
+> & {
+  submissionAttachments: string[];
+  submissionLiveLinks: string[];
 };
 
 export type ClientSubmissionDetailResponse = {

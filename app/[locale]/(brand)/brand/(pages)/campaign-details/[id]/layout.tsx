@@ -27,6 +27,9 @@ export default async function Layout({ children, params }: LayoutProps) {
     campaign.status,
   );
 
+  console.log(campaign.id)
+  console.log(campaign.status)
+
   return (
     <div className="space-y-4">
       <CampaignSummaryCard campaign={campaign} />
