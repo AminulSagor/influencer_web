@@ -9,7 +9,7 @@ interface Props {
 
 const UserCardItem = ({ influencer }: Props) => {
   return (
-    <div className="px-6 py-4 bg-linear-to-r from-light-green to-Primary rounded-md col-span-12 md:col-span-3 flex flex-col items-center text-center gap-2">
+    <div className="px-6 py-4 bg-linear-to-r from-light-green to-Primary rounded-md flex flex-col items-center text-center gap-2">
       <Avatar className="h-20 w-20">
         <AvatarImage src={influencer.image ?? ""} />
         <AvatarFallback>

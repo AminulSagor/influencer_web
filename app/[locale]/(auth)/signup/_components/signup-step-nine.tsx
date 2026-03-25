@@ -16,6 +16,8 @@ import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
+import { uploadFile } from "@/service/upload";
+import { notifyError } from "@/utils/toast_util";
 import { useOnboardingStore } from "@/store/onboarding_store";
 import { useAuthStore } from "@/store/auth_store";
 
@@ -47,21 +49,28 @@ const SignUpStepNine = ({ nextStep }: Props) => {
     reValidateMode: "onChange",
   });
 
-  const onSubmit = (formData: FormDataWithFiles) => {
+  const onSubmit = async (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
-      // Store TIN/BIN info in Zustand store - EXACTLY LIKE OTHER STEPS
+      let tinImageUrl = "";
+
+      // Upload TIN image if provided
+      if (formData.tinImage?.[0]) {
+        const result = await uploadFile(formData.tinImage[0], "onboarding/tin");
+        tinImageUrl = result.publicUrl;
+      }
+
       setTinBinInfo({
         tinNumber: formData.tinNumber || "",
-        tinImage: formData.tinImage?.[0] ? "pending-upload" : "",
+        tinImage: tinImageUrl,
         binNumber: formData.binNumber || "",
       });
 
-      // Move to next step - NO service CALL
       nextStep();
     } catch (error: unknown) {
       console.error("Error in step 9:", error);
+      notifyError("Failed to upload file. Please try again.");
     } finally {
       setLoading(false);
     }

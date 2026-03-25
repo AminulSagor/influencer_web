@@ -37,7 +37,8 @@ const BrandNidInfoCard = ({ nidNumber, frontImage, backImage }: Props) => {
             <h3 className="text-Primary font-semibold text-xs">Front Side Of NID</h3>
             <div className="border rounded-md border-dashed h-[140px] w-full bg-gray-50 relative overflow-hidden">
               {frontSrc ? (
-                <Image src={frontSrc} alt="NID Front" fill className="object-cover" />
+                // <Image src={frontSrc} alt="NID Front" fill className="object-cover" />
+                <img src={frontSrc} alt="NID Front" className="object-cover" />
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
                   Front Side Of NID
@@ -50,7 +51,8 @@ const BrandNidInfoCard = ({ nidNumber, frontImage, backImage }: Props) => {
             <h3 className="text-Primary font-semibold text-xs">Back Side Of NID</h3>
             <div className="border rounded-md border-dashed h-[140px] w-full bg-gray-50 relative overflow-hidden">
               {backSrc ? (
-                <Image src={backSrc} alt="NID Back" fill className="object-cover" />
+                // <Image src={backSrc} alt="NID Back" fill className="object-cover" />
+                <img src={backSrc} alt="NID Back" className="object-cover" />
               ) : (
                 <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">
                   Back Side Of NID

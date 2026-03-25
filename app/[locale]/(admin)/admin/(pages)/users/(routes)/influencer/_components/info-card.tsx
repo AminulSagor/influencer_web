@@ -47,30 +47,32 @@ const InfoCard = ({
   role,
 }: Props) => {
   return (
-    <div className="p-5 rounded-xl bg-linear-to-r from-Primary to-light-green text-white h-full flex flex-col justify-between">
-      <div className="flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Avatar className="w-24 h-24 border-4 border-white/30">
+    <div className="rounded-xl bg-linear-to-r from-Primary to-light-green p-4 text-white sm:p-5">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+          <Avatar className="h-20 w-20 border-4 border-white/30 sm:h-24 sm:w-24">
             <AvatarImage src={image ?? ""} />
-            <AvatarFallback className="text-2xl text-Primary">
+            <AvatarFallback className="text-xl text-Primary sm:text-2xl">
               {name?.[0]?.toUpperCase() ?? "U"}
             </AvatarFallback>
           </Avatar>
 
-          <div>
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              {name}
+          <div className="min-w-0">
+            <h2 className="flex flex-wrap items-center justify-center gap-2 text-lg font-semibold sm:justify-start sm:text-xl">
+              <span className="break-words">{name}</span>
               <span className="inline-block h-2.5 w-2.5 rounded-full bg-white" />
             </h2>
+
             <p className="text-sm opacity-90">{formatRole(role)}</p>
-            <p className="text-sm opacity-90">{location}</p>
+            <p className="break-words text-sm opacity-90">{location}</p>
+
             <Badge className="mt-2 bg-white text-Primary hover:bg-white">
               {verifiedStatus}
             </Badge>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 min-w-[180px]">
+        <div className="flex w-full flex-col gap-2 lg:w-auto lg:min-w-[180px]">
           {socialHandles &&
             Object.entries(socialHandles).map(([key, value]) => {
               if (!value) return null;
@@ -81,8 +83,11 @@ const InfoCard = ({
               const Icon = config.icon;
 
               return (
-                <p key={key} className="flex items-center gap-2 text-sm">
-                  <Icon className="text-lg" />
+                <p
+                  key={key}
+                  className="flex items-center justify-center gap-2 text-sm sm:justify-start"
+                >
+                  <Icon className="shrink-0 text-lg" />
                   <span className="truncate">{value}</span>
                 </p>
               );
@@ -90,7 +95,7 @@ const InfoCard = ({
 
           <Button
             variant="secondary"
-            className="mt-2 bg-white text-Primary hover:bg-white/90 h-8"
+            className="mt-2 h-9 w-full bg-white text-Primary hover:bg-white/90 lg:w-auto"
           >
             Log Out
           </Button>

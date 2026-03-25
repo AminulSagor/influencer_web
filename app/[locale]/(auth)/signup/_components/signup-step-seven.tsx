@@ -16,6 +16,8 @@ import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
+import { uploadFile } from "@/service/upload";
+import { notifyError } from "@/utils/toast_util";
 import { useOnboardingStore } from "@/store/onboarding_store";
 import { useAuthStore } from "@/store/auth_store";
 
@@ -47,18 +49,34 @@ const SignUpStepSeven = ({ nextStep }: Props) => {
     reValidateMode: "onChange",
   });
 
-  const onSubmit = (formData: FormDataWithFiles) => {
+  const onSubmit = async (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
+      let nidFrontUrl = "";
+      let nidBackUrl = "";
+
+      // Upload NID front image if provided
+      if (formData.nidFrontImg?.[0]) {
+        const result = await uploadFile(formData.nidFrontImg[0], "onboarding/nid");
+        nidFrontUrl = result.publicUrl;
+      }
+
+      // Upload NID back image if provided
+      if (formData.nidBackImg?.[0]) {
+        const result = await uploadFile(formData.nidBackImg[0], "onboarding/nid");
+        nidBackUrl = result.publicUrl;
+      }
+
       setNidInfo({
         nidNumber: formData.nidNumber,
-        nidFrontImg: formData.nidFrontImg?.[0] ? "pending-upload" : "", 
-        nidBackImg: formData.nidBackImg?.[0] ? "pending-upload" : "", 
+        nidFrontImg: nidFrontUrl,
+        nidBackImg: nidBackUrl,
       });
       nextStep();
     } catch (error: unknown) {
       console.error("Error in step 7:", error);
+      notifyError("Failed to upload file. Please try again.");
     } finally {
       setLoading(false);
     }
