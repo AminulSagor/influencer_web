@@ -20,24 +20,39 @@ export type CampaignBid = {
 };
 
 export type RawCampaignBid = {
-  agencyId: string;
-  agencyName: string;
-  email: string;
-  phone: string;
-  logo: string | null;
-  niche: Array<{
-    niche: string;
-    status: string;
-    rejectReason?: string;
-  }>;
-  appliedFeePercent: number | string;
-  proposedServiceFeePercent?: string;
-  totalpayableExcludingAgencyServiceFee: number | string;
-  agencyServiceFeeAmount: number | string;
-  dollarRate: number | string;
-  totalCampaignSpentInDollar: number | string;
-  hasRequoted?: boolean;
+  id?: string;
+  agencyId?: string;
+  agencyName?: string;
+  agencyLogo?: string | null;
+  logo?: string | null;
+
+  agencyFeePercent?: string | number | null;
+  appliedFeePercent?: string | number | null;
+  proposedServiceFeePercent?: string | number | null;
+
+  agencyFeeAmount?: string | number | null;
+  agencyServiceFeeAmount?: string | number | null;
+
+  budgetExcludingAgencyFee?: string | number | null;
+  totalpayableExcludingAgencyServiceFee?: string | number | null;
+
+  inDollar?: string | number | null;
+  totalCampaignSpentInDollar?: string | number | null;
+
+  dollarRate?: string | number | null;
+
+  nicheLabels?: string[];
+  niche?: { niche?: string; status?: string; rejectReason?: string }[];
+
+  createdAt?: string;
   submittedAt?: string;
+
+  agency?: {
+    id?: string;
+    agencyName?: string;
+    logo?: string | null;
+    niches?: { name?: string }[];
+  };
 };
 
 export type CampaignBidsResponse = {
