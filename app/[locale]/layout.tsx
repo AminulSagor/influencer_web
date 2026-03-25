@@ -6,6 +6,7 @@ import { getMessages } from "next-intl/server";
 import "@/app/globals.css";
 import { Toaster } from "react-hot-toast";
 import AuthInit from "./(auth)/login/_components/auth-init";
+import FcmInitializer from "@/lib/fcm-initializer";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className={`${poppins.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <AuthInit>
+            <FcmInitializer/>
           {children}
           </AuthInit>
           <Toaster position="top-center" reverseOrder={false} />

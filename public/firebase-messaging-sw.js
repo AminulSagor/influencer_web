@@ -1,0 +1,13 @@
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
+
+firebase.initializeApp({
+  apiKey: "AIzaSyBHG5uGw2AOxh1Vt9caLzaEUH6K7MM8mzg",
+  authDomain: "brandguru-4016e.firebaseapp.com",
+  projectId: "brandguru-4016e",
+  storageBucket: "brandguru-4016e.firebasestorage.app",
+  messagingSenderId: "72364811038",
+  appId: "1:72364811038:web:ec04c1f92a93e9449b5f0f",
+});
+
+firebase.messaging();

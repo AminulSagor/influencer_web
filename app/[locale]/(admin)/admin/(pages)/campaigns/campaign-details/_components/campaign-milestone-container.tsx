@@ -12,6 +12,7 @@ import {
   Heart,
   MessageCircle,
   Play,
+  MailCheck,
 } from "lucide-react";
 import { CgWebsite } from "react-icons/cg";
 import { FaClock } from "react-icons/fa";
@@ -28,6 +29,11 @@ import InReviewActions from "./in-review-actions";
 import MilestoneApproveModal from "./modals/milestone-approve-modal";
 import MilestoneDeclineModal from "./modals/milestone-decline-modal";
 import MilestonePartialPaidModal from "./modals/milestone-partial-paid-modal";
+import MilestoneChangeStatusModal, { type MilestoneStatusValue } from "./modals/milestone-change-status-modal";
+import MilestoneSubmittedReportModal from "./modals/milestone-submitted-report-modal";
+
+import { updateMilestoneStatus } from "@/service/admin/campaign/update-milestone-status";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -102,6 +108,10 @@ export default function CampaignMilestoneContainer({
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
   );
+
+  const [changeStatusOpen, setChangeStatusOpen] = useState(false);
+  const [viewReportOpen, setViewReportOpen] = useState(false);
+  const [statusChangeLoading, setStatusChangeLoading] = useState(false);
 
   const isActiveInfluencerMode = !isPaidAd && campaignStatus === "active";
   const isEditableAssignmentMode =
@@ -598,6 +608,32 @@ export default function CampaignMilestoneContainer({
     ]
   );
 
+  // --- Modals Handlers ---
+  const handleStatusChange = async (newStatus: MilestoneStatusValue) => {
+    if (!activeMilestoneIdSafe) return;
+    setStatusChangeLoading(true);
+    try {
+      await updateMilestoneStatus({
+        milestoneId: activeMilestoneIdSafe,
+        status: newStatus,
+      });
+      toast.success("Milestone status updated successfully");
+      setChangeStatusOpen(false);
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to update milestone status");
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  const isSelectedInfluencerInvited = useMemo(() => {
+    if (!isEditableAssignmentMode) return false;
+    if (!selectedAssignment) return false;
+    const s = safeStr(selectedAssignment?.status).toLowerCase();
+    return s !== "" && s !== "draft";
+  }, [isEditableAssignmentMode, selectedAssignment]);
+
   return (
     <div className="space-y-4 p-2">
       {canInviteAgency && (
@@ -682,15 +718,33 @@ export default function CampaignMilestoneContainer({
         </Card>
       )}
 
-      <CampaignMilestone
-        influencers={milestoneInfluencers}
-        campaignStatus={campaignStatus}
-        milestones={visibleMilestones}
-        activeMilestoneId={activeMilestoneId}
-        onSelectMilestone={(id) => setActiveMilestoneId(id)}
-        offeredAmountPerInfluencer={milestoneBudgetMax}
-        readOnlyAmounts={campaignStatus === "active"}
-      />
+      {isSelectedInfluencerInvited ? (
+        <div className="mt-6 flex flex-col items-center justify-center rounded-[20px] border border-dashed border-[#B7C997] bg-[#F8F8EF] p-12 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF0E1]">
+            <MailCheck className="h-8 w-8 text-[#7D8A61]" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-Primary">
+            Invitation Sent Successfully
+          </h3>
+          <p className="mx-auto max-w-sm text-sm text-[#5E6E57]">
+            The campaign invitation has been sent to{" "}
+            <span className="font-semibold text-[#7D8A61]">
+              {selectedInfluencerLabel || "this influencer"}
+            </span>
+            . Please wait for their response to proceed with the milestones.
+          </p>
+        </div>
+      ) : (
+        <>
+          <CampaignMilestone
+            influencers={milestoneInfluencers}
+            campaignStatus={campaignStatus}
+            milestones={visibleMilestones}
+            activeMilestoneId={activeMilestoneId}
+            onSelectMilestone={(id) => setActiveMilestoneId(id)}
+            offeredAmountPerInfluencer={milestoneBudgetMax}
+            readOnlyAmounts={campaignStatus === "active"}
+          />
 
       {activeMilestone && (
         <div className="space-y-4">
@@ -801,6 +855,7 @@ export default function CampaignMilestoneContainer({
                       <div className="space-y-3">
                         <Button
                           type="button"
+                          onClick={() => setChangeStatusOpen(true)}
                           disabled={changeStatusDisabled}
                           className="h-12 w-full rounded-[12px] border-0 bg-[#7EA055] text-[15px] font-medium text-white hover:brightness-95 disabled:bg-[#F3F3F3] disabled:text-[#B8B8B8] disabled:opacity-100"
                         >
@@ -808,6 +863,8 @@ export default function CampaignMilestoneContainer({
                         </Button>
 
                         <Button
+                          type="button"
+                          onClick={() => setViewReportOpen(true)}
                           className="h-12 w-full rounded-[12px] border border-[#DADADA] bg-white text-[15px] font-medium text-[#232323] hover:bg-white disabled:bg-[#F8F8F8] disabled:text-[#C2C2C2] disabled:opacity-100"
                           variant="outline"
                           disabled={submittedReportDisabled}
@@ -865,6 +922,8 @@ export default function CampaignMilestoneContainer({
           </Card>
         </div>
       )}
+        </>
+      )}
 
       <MilestoneApproveModal
         open={approveOpen}
@@ -904,6 +963,20 @@ export default function CampaignMilestoneContainer({
         onClose={() => setPartialPaidOpen(false)}
         onSubmit={handlePartialPaidSubmit}
         loading={actionLoading}
+      />
+
+      <MilestoneChangeStatusModal
+        open={changeStatusOpen}
+        onClose={() => setChangeStatusOpen(false)}
+        onSubmit={handleStatusChange}
+        loading={statusChangeLoading}
+        currentStatus={activeMilestoneStatus}
+      />
+
+      <MilestoneSubmittedReportModal
+        open={viewReportOpen}
+        onClose={() => setViewReportOpen(false)}
+        milestoneId={activeMilestoneIdSafe}
       />
     </div>
   );
