@@ -34,7 +34,7 @@ export default function CampaignSummaryStatusCard({
   const t = useTranslations("brand.CampaignDetailsPage");
 
   return (
-    <div className="order-1 border">
+    <div className="order-1">
       <div className="w-full rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green px-5 py-5 backdrop-blur-sm sm:min-w-60 lg:w-[250px]">
         <div className="text-center text-sm font-medium text-white">
           {t("campaignSummaryStatusCard.status")}
