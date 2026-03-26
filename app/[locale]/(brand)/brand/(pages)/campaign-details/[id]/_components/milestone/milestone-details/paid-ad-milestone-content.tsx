@@ -13,7 +13,25 @@ type Props = {
   milestone: CampaignMilestone;
 };
 
+function getPaidAdTarget(milestone: CampaignMilestone) {
+  const targets = [
+    { label: "Reach", value: milestone.expectedReach },
+    { label: "Comments", value: milestone.expectedComments },
+    { label: "Views", value: milestone.expectedViews },
+    { label: "Likes", value: milestone.expectedLikes },
+    { label: "Follows", value: milestone.expectedFollows },
+  ];
+
+  const activeTarget = targets.find(
+    (item) => item.value !== null && item.value !== undefined,
+  );
+
+  return activeTarget ?? { label: "Reach", value: null };
+}
+
 export default function PaidAdMilestoneContent({ milestone }: Props) {
+  const target = getPaidAdTarget(milestone);
+
   return (
     <div className="rounded-[18px] border border-[#A8C381] bg-linear-to-r from-[#F5F5DC] to-white px-4 py-4 sm:rounded-[20px] sm:px-5 sm:py-5 lg:px-6 lg:py-6">
       <div className="grid grid-cols-1 gap-4 sm:gap-5 xl:grid-cols-[1.2fr_0.8fr_0.85fr_0.78fr] xl:items-center xl:gap-6">
@@ -25,8 +43,8 @@ export default function PaidAdMilestoneContent({ milestone }: Props) {
         <div className="min-w-0">
           <PromotionTargetBlock
             platform={milestone.platform}
-            label="Reach"
-            value={milestone.expectedReach}
+            label={target.label}
+            value={target.value}
           />
         </div>
 

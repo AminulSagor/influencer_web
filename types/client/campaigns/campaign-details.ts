@@ -1,6 +1,4 @@
-import {
-  CampaignAssignedInfluencer,
-} from "@/types/client/campaigns/campaign-submission.types";
+import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
 
 export type CampaignType = "influencer_promotion" | "paid_ad";
 
@@ -48,6 +46,7 @@ export type CampaignMilestone = {
   expectedReach: number | null;
   expectedViews: number | null;
   expectedLikes: number | null;
+  expectedFollows: number | null;
   expectedComments: number | null;
   promotionGoal: string | null;
   amount: string;
