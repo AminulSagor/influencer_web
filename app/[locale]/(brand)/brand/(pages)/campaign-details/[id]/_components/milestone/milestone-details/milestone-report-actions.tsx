@@ -4,11 +4,11 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import ReportAdminDialog from "./report-admin-dialog";
 import SubmittedReportsDialog from "./submissions/submitted-reports-dialog";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   milestoneId?: string | null;
   milestoneStatus?: string | null;
-  reportId?: string | null;
 };
 
 function normalizeStatus(value?: string | null) {
@@ -20,22 +20,28 @@ function normalizeStatus(value?: string | null) {
 export default function MilestoneReportActions({
   milestoneId,
   milestoneStatus,
-  reportId,
 }: Props) {
   const [reportOpen, setReportOpen] = React.useState(false);
   const [reportsOpen, setReportsOpen] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
 
-  const status = normalizeStatus(milestoneStatus);
+  const getResolvedMilestoneStatus = useMilestoneStatusStore(
+    (state) => state.getResolvedMilestoneStatus,
+  );
 
-  const isCompleted = status === "completed" || status === "complete";
+  const resolvedStatus = milestoneId
+    ? getResolvedMilestoneStatus(milestoneId, milestoneStatus)
+    : String(milestoneStatus ?? "");
+
+  const status = normalizeStatus(resolvedStatus);
+
+  const isPending = status === "pending";
+  const isCompleted =
+    status === "completed" || status === "completed_plus_plus";
   const isInReview = status === "in_review" || status === "in review";
-  const isDeclined = status === "declined";
 
-  const disableReportAdmin =
-    !milestoneId || isCompleted || !(isInReview || isDeclined);
-
-  const disableViewSubmittedReport = !reportId || isInReview;
+  const disableReportAdmin = !milestoneId || isPending || isCompleted;
+  const disableViewSubmittedReport = !milestoneId || isPending || isInReview;
 
   return (
     <>
@@ -73,11 +79,11 @@ export default function MilestoneReportActions({
         />
       ) : null}
 
-      {reportId ? (
+      {milestoneId ? (
         <SubmittedReportsDialog
           open={reportsOpen}
           onOpenChange={setReportsOpen}
-          reportId={reportId}
+          milestoneId={milestoneId}
           refreshKey={refreshKey}
         />
       ) : null}

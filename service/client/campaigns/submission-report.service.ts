@@ -28,9 +28,9 @@ export async function createSubmissionReport(
   return res.data;
 }
 
-export async function getSubmissionReport(reportId: string) {
-  const res = await serviceClient.get<ServiceResponse<SubmissionReportItem>>(
-    `/campaign/milestone/report/${reportId}`,
+export async function getMilestoneReports(milestoneId: string) {
+  const res = await serviceClient.get<ServiceResponse<SubmissionReportItem[]>>(
+    `/campaign/client/milestones/${milestoneId}/reports`,
   );
 
   return res.data;
