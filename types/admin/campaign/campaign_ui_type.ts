@@ -34,4 +34,5 @@ export type CampaignUI = {
     count: number;
     influencers: any[];
   };
+  paymentStatus?: string;
 };

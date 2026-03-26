@@ -11,8 +11,6 @@ export type Platform = {
 export type Influencer = {
   name: string;
   imageUrl: string;
-  // ✅ if you have id in future, add it here and use it for keys
-  // id?: string;
 };
 
 export type Status = "Need Quote" | "Pending Invitations" | "Active" | "Completed" | "Paid";

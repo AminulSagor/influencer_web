@@ -71,7 +71,11 @@ export default function InviteInfluencerBar({
   useEffect(() => {
     const handler = () => setRefreshTrigger((prev) => prev + 1);
     window.addEventListener("influencer-assigned", handler);
-    return () => window.removeEventListener("influencer-assigned", handler);
+    window.addEventListener("app-notification", handler);
+    return () => {
+      window.removeEventListener("influencer-assigned", handler);
+      window.removeEventListener("app-notification", handler);
+    };
   }, []);
 
   const sortedMilestones = useMemo(() => {

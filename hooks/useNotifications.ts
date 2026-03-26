@@ -73,6 +73,9 @@ export function useNotifications() {
     if (listenerSetUp.current) return;
     listenerSetUp.current = true;
 
+    // Initial fetch of notifications
+    fetchNotifications();
+
     const setup = async () => {
       try {
         if (typeof window === "undefined") return;
@@ -93,9 +96,10 @@ export function useNotifications() {
           }
 
           // A new push arrived while the app is in the foreground
-          // Increment unread count and refetch
+          // Increment unread count, refetch, and broadcast
           setUnreadCount((prev) => prev + 1);
           fetchNotifications();
+          window.dispatchEvent(new CustomEvent("app-notification", { detail: payload }));
         });
       } catch (err) {
         console.error("FCM onMessage setup error:", err);

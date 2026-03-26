@@ -85,7 +85,11 @@ export default function InviteAgencyBar({
   useEffect(() => {
     const handler = () => loadDrafts();
     window.addEventListener("agency-assigned", handler);
-    return () => window.removeEventListener("agency-assigned", handler);
+    window.addEventListener("app-notification", handler);
+    return () => {
+      window.removeEventListener("agency-assigned", handler);
+      window.removeEventListener("app-notification", handler);
+    };
   }, [loadDrafts]);
 
   const selectedRow = useMemo(() => {

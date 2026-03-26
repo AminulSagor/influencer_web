@@ -65,24 +65,6 @@ export default function CampaignsToolbar({
             Grid View
           </Button>
         </div>
-
-        <Select
-          value={campaignType}
-          onValueChange={(value) =>
-            setCampaignType(value as CampaignTypeFilter)
-          }
-        >
-          <SelectTrigger className="w-full border border-light-green bg-white text-sm sm:w-[190px]">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Campaigns</SelectItem>
-            <SelectItem value="influencer_promotion">
-              Influencer Promotion
-            </SelectItem>
-            <SelectItem value="paid_ad">Paid Ad</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
     </div>
   );

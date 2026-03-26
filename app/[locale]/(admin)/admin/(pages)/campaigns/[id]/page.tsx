@@ -77,7 +77,24 @@ export default function Page() {
   const fetchCampaign = useCallback(async () => {
     if (!campaignId) return;
     const res = await getAdminCampaignById(campaignId);
-    setCampaign(res?.data ?? null);
+    
+    let assignedInfluencers = undefined;
+    try {
+      const { getAllCampaigns } = await import("@/service/admin/campaign/get-campaign");
+      // Search by campaign name to ensure it is returned in the list
+      const allRes = await getAllCampaigns({ search: res?.data?.campaignName });
+      const match = allRes?.data?.find((c: any) => c.id === campaignId);
+      if (match?.assignedInfluencers) {
+        assignedInfluencers = match.assignedInfluencers;
+      }
+    } catch (err) {
+      console.error("Failed to fetch assignedInfluencers from all campaigns API", err);
+    }
+
+    setCampaign({
+      ...(res?.data ?? {}),
+      assignedInfluencers,
+    });
   }, [campaignId]);
 
   const fetchNegotiations = useCallback(async () => {
@@ -200,10 +217,12 @@ export default function Page() {
 
     window.addEventListener("influencer-assigned", handler);
     window.addEventListener("agency-assigned", handler);
+    window.addEventListener("app-notification", handler);
 
     return () => {
       window.removeEventListener("influencer-assigned", handler);
       window.removeEventListener("agency-assigned", handler);
+      window.removeEventListener("app-notification", handler);
     };
   }, [fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
 
@@ -281,8 +300,13 @@ export default function Page() {
   );
 
   const influencers = useMemo(
-    () => getInfluencerAvatars(campaign?.preferredInfluencers ?? []),
-    [campaign?.preferredInfluencers]
+    () => {
+      const list = campaign?.assignedInfluencers?.length 
+        ? campaign.assignedInfluencers 
+        : (campaign?.preferredInfluencers ?? []);
+      return getInfluencerAvatars(list);
+    },
+    [campaign?.assignedInfluencers, campaign?.preferredInfluencers]
   );
 
   const assignedInfluencersForPayment = useMemo(() => {

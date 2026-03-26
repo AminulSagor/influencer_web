@@ -24,6 +24,13 @@ export type AdminCampaignApiItem = {
     id: string;
     brandName: string;
   } | null;
+  assignedInfluencers?: {
+    id: string;
+    name: string;
+    profileImage?: string;
+    ImageUrl?: string;
+    imageUrl?: string;
+  }[];
   createdAt: string;
 };
 
