@@ -21,7 +21,6 @@ export function useNotifications() {
     setLoading(true);
     try {
       const res = await getNotifications(1, 10);
-      console.log(res.data);
       setNotifications(res.data);
       // Initialize unread count from the server response
       if (res.meta && res.meta.unreadCount !== undefined) {
