@@ -36,6 +36,7 @@ import {
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import PageFooterPagination from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/page-footer-pagination";
 import { CAMPAIGN_TAB_ITEMS } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-tab-items";
+import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
 
 const PER_PAGE = 6;
 
@@ -102,6 +103,8 @@ export default function CampaignsPage() {
   const searchQuery = searchParams.get("q") ?? "";
   const currentPage = parsePage(searchParams.get("page"));
   const sortBy = parseSort(searchParams.get("sort"));
+
+  const setStep = useCampaignStore((s) => s.setStep);
 
   const updateQueryParams = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -218,6 +221,11 @@ export default function CampaignsPage() {
     label: t(item.labelKey),
   }));
 
+  //handle redirection
+  const handleRedirectCreateCampaignPage = () => {
+    router.push("/brand/create-campaign");
+    setStep(1);
+  };
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -232,10 +240,12 @@ export default function CampaignsPage() {
               </CardDescription>
             </div>
 
-            <PrimaryButton type="button" className="sm:max-w-54">
-              <Link href="/brand/create-campaign">
-                {t("createNewCampaign")}
-              </Link>
+            <PrimaryButton
+              type="button"
+              className="sm:max-w-54"
+              onClick={handleRedirectCreateCampaignPage}
+            >
+              {t("createNewCampaign")}
             </PrimaryButton>
           </div>
 
