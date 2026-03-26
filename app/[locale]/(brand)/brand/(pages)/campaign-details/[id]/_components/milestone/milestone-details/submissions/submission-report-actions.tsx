@@ -16,11 +16,14 @@ import Loader from "@/components/spin-loader";
 type ActionType = "approve" | "decline" | null;
 
 type Props = {
-  submissionId: string;
+  submissionIds: string[];
   status: SubmissionStatus | string;
-  onApprove?: (submissionId: string) => void | Promise<void>;
-  onDecline?: (submissionId: string, reason: string) => void | Promise<void>;
+  onApprove?: (submissionIds: string[]) => void | Promise<void>;
+  onDecline?: (submissionIds: string[], reason: string) => void | Promise<void>;
   isSubmitting?: boolean;
+  approveButtonText?: string;
+  declineButtonText?: string;
+  disabled?: boolean;
 };
 
 function normalizeStatus(value?: string) {
@@ -30,11 +33,14 @@ function normalizeStatus(value?: string) {
 }
 
 export default function SubmissionReportActions({
-  submissionId,
+  submissionIds,
   status,
   onApprove,
   onDecline,
   isSubmitting = false,
+  approveButtonText = "Approve",
+  declineButtonText = "Decline",
+  disabled = false,
 }: Props) {
   const value = normalizeStatus(status);
   const [open, setOpen] = React.useState(false);
@@ -43,6 +49,7 @@ export default function SubmissionReportActions({
 
   const showReviewActions = value === "in_review";
   const isFinished = ["approved", "completed", "declined"].includes(value);
+  const hasSelection = submissionIds.length > 0;
 
   if (!showReviewActions && isFinished) {
     return null;
@@ -52,13 +59,17 @@ export default function SubmissionReportActions({
     return null;
   }
 
+  const isDisabled = disabled || !hasSelection || isSubmitting;
+
   const handleOpenApprove = () => {
+    if (isDisabled) return;
     setActionType("approve");
     setText("");
     setOpen(true);
   };
 
   const handleOpenDecline = () => {
+    if (isDisabled) return;
     setActionType("decline");
     setText("");
     setOpen(true);
@@ -72,15 +83,17 @@ export default function SubmissionReportActions({
   };
 
   const handleSubmit = async () => {
+    if (!hasSelection) return;
+
     if (actionType === "approve") {
-      await onApprove?.(submissionId);
+      await onApprove?.(submissionIds);
       return;
     }
 
     if (actionType === "decline") {
       const reason = text.trim();
       if (!reason) return;
-      await onDecline?.(submissionId, reason);
+      await onDecline?.(submissionIds, reason);
     }
   };
 
@@ -89,7 +102,7 @@ export default function SubmissionReportActions({
   const placeholder = isApprove
     ? "Write your report..."
     : "Write your reasons...";
-  const buttonText = isSubmitting
+  const submitButtonText = isSubmitting
     ? ""
     : isApprove
       ? "Approve & Submit Report"
@@ -102,19 +115,19 @@ export default function SubmissionReportActions({
           type="button"
           variant="outline"
           onClick={handleOpenDecline}
-          disabled={isSubmitting}
+          disabled={isDisabled}
           className="h-10 flex-1 rounded-xl border border-[#D5D5D5] bg-[#FAFAFA] px-4 text-sm font-medium text-black hover:bg-[#F3F3F3] disabled:bg-[#F1F1F1] disabled:text-[#BDBDBD]"
         >
-          Decline
+          {declineButtonText}
         </Button>
 
         <Button
           type="button"
           onClick={handleOpenApprove}
-          disabled={isSubmitting}
+          disabled={isDisabled}
           className="h-10 flex-1 rounded-xl bg-[#81A35A] px-4 text-sm font-medium text-white hover:bg-[#73944e] disabled:bg-[#B7B7B7] disabled:text-white"
         >
-          Approve
+          {approveButtonText}
         </Button>
       </div>
 
@@ -166,7 +179,9 @@ export default function SubmissionReportActions({
                 type="button"
                 onClick={handleSubmit}
                 disabled={
-                  isSubmitting || (actionType === "decline" && !text.trim())
+                  isSubmitting ||
+                  !hasSelection ||
+                  (actionType === "decline" && !text.trim())
                 }
                 className={`h-11 min-w-[235px] rounded-[10px] px-6 text-sm font-semibold text-white ${
                   isApprove
@@ -177,7 +192,7 @@ export default function SubmissionReportActions({
                 {isSubmitting ? (
                   <Loader className="h-4 w-4 border-2" />
                 ) : (
-                  buttonText
+                  submitButtonText
                 )}
               </Button>
             </div>

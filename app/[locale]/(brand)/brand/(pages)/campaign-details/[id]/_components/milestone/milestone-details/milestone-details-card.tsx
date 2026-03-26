@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
@@ -16,8 +18,10 @@ import MilestoneSubmissionsSection from "./submissions/milestone-submissions-sec
 import InfluencerPromotionMilestoneContent from "./influencer-promotion-milestone-content";
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
 import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/bonus/milestone-bonus-card";
+import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-report-actions";
 import { shouldShowBonus } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-ui.helpers";
 import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
+import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -32,7 +36,16 @@ export default function MilestoneDetailsCard({
   milestoneIndex,
   submissionId,
 }: Props) {
+  const router = useRouter();
   const t = useTranslations("brand.CampaignDetailsPage");
+
+  const [selectedSubmissionIds, setSelectedSubmissionIds] = React.useState<
+    string[]
+  >([]);
+  const [primarySubmissionId, setPrimarySubmissionId] = React.useState<
+    string | null
+  >(submissionId ?? null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const isInfluencerPromotion =
     String(campaign.campaignType ?? "").toLowerCase() ===
@@ -46,6 +59,9 @@ export default function MilestoneDetailsCard({
   );
   const getMilestonePerformance = useMilestoneStatusStore(
     (state) => state.getMilestonePerformance,
+  );
+  const removeMilestoneOverride = useMilestoneStatusStore(
+    (state) => state.removeMilestoneOverride,
   );
 
   const resolvedMilestoneStatus = getResolvedMilestoneStatus(
@@ -62,6 +78,64 @@ export default function MilestoneDetailsCard({
     resolvedMilestoneStatus,
     hasTargetMetrics,
   );
+
+  React.useEffect(() => {
+    setSelectedSubmissionIds([]);
+    setPrimarySubmissionId(submissionId ?? null);
+  }, [milestone.id, submissionId]);
+
+  const reviewableSubmissionIds = isInfluencerPromotion
+    ? primarySubmissionId
+      ? [primarySubmissionId]
+      : []
+    : selectedSubmissionIds;
+
+  const reviewAnchorSubmissionId =
+    reviewableSubmissionIds[0] ?? primarySubmissionId ?? null;
+
+  const handleApprove = async (submissionIds: string[]) => {
+    const anchorSubmissionId = submissionIds[0] ?? primarySubmissionId;
+
+    if (!anchorSubmissionId) return;
+
+    try {
+      setIsSubmitting(true);
+
+      await reviewSubmission(anchorSubmissionId, {
+        action: "approve",
+        ...(isInfluencerPromotion ? {} : { submissionIds }),
+      });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Approve submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDecline = async (submissionIds: string[], reason: string) => {
+    const anchorSubmissionId = submissionIds[0] ?? primarySubmissionId;
+
+    if (!anchorSubmissionId) return;
+
+    try {
+      setIsSubmitting(true);
+
+      await reviewSubmission(anchorSubmissionId, {
+        action: "decline",
+        reason,
+        ...(isInfluencerPromotion ? {} : { submissionIds }),
+      });
+
+      removeMilestoneOverride(milestone.id);
+      router.refresh();
+    } catch (error) {
+      console.error("Decline submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Accordion
@@ -107,15 +181,35 @@ export default function MilestoneDetailsCard({
               <MilestoneSubmissionsSection
                 campaign={campaign}
                 milestone={milestone}
+                selectedSubmissionIds={selectedSubmissionIds}
+                onSelectedSubmissionIdsChange={setSelectedSubmissionIds}
+                onPrimarySubmissionIdChange={setPrimarySubmissionId}
               />
             </div>
           </AccordionContent>
 
-          {/* approve and decline milestone here*/}
-
-          {milestone.status === "in_review" && (
-            <div>approve and decline area</div>
-          )}
+          {resolvedMilestoneStatus === "in_review" &&
+          reviewAnchorSubmissionId ? (
+            <div className="mt-5">
+              <SubmissionReportActions
+                submissionIds={reviewableSubmissionIds}
+                status={resolvedMilestoneStatus}
+                onApprove={handleApprove}
+                onDecline={handleDecline}
+                isSubmitting={isSubmitting}
+                approveButtonText={
+                  isInfluencerPromotion ? "Approve" : "Approve Selected"
+                }
+                declineButtonText={
+                  isInfluencerPromotion ? "Decline" : "Decline Selected"
+                }
+                disabled={
+                  
+                  !isInfluencerPromotion && reviewableSubmissionIds.length === 0
+                }
+              />
+            </div>
+          ) : null}
 
           {shouldShowBonusCard ? (
             <div className="mt-5">

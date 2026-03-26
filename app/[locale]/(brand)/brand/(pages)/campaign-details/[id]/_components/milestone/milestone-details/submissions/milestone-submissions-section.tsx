@@ -10,11 +10,17 @@ import PaidAdSubmissionsSection from "@/app/[locale]/(brand)/brand/(pages)/campa
 type Props = {
   campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
+  selectedSubmissionIds: string[];
+  onSelectedSubmissionIdsChange: (ids: string[]) => void;
+  onPrimarySubmissionIdChange: (id: string | null) => void;
 };
 
 export default function MilestoneSubmissionsSection({
   campaign,
   milestone,
+  selectedSubmissionIds,
+  onSelectedSubmissionIdsChange,
+  onPrimarySubmissionIdChange,
 }: Props) {
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
@@ -24,9 +30,17 @@ export default function MilestoneSubmissionsSection({
       <InfluencerPromotionSubmissionsSection
         campaign={campaign}
         milestone={milestone}
+        onPrimarySubmissionIdChange={onPrimarySubmissionIdChange}
       />
     );
   }
 
-  return <PaidAdSubmissionsSection campaign={campaign} milestone={milestone} />;
+  return (
+    <PaidAdSubmissionsSection
+      campaign={campaign}
+      milestone={milestone}
+      selectedSubmissionIds={selectedSubmissionIds}
+      onSelectedSubmissionIdsChange={onSelectedSubmissionIdsChange}
+    />
+  );
 }

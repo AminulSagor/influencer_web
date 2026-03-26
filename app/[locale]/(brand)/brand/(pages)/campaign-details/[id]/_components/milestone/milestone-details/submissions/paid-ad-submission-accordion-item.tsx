@@ -22,6 +22,8 @@ type Props = {
   index: number;
   campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 };
 
 export default function PaidAdSubmissionAccordionItem({
@@ -29,6 +31,8 @@ export default function PaidAdSubmissionAccordionItem({
   index,
   campaign,
   milestone,
+  isSelected,
+  onToggleSelect,
 }: Props) {
   const t = useTranslations("brand.CampaignDetailsPage");
 
@@ -41,16 +45,30 @@ export default function PaidAdSubmissionAccordionItem({
       className={`rounded-[18px] border bg-white px-3 ${statusClasses.panel}`}
     >
       <AccordionTrigger className="py-4 hover:no-underline">
-        <div className="flex items-center gap-3 text-left">
-          <h4 className="text-sm font-semibold text-[#3B5D2A]">
-            {t("submission")} {index + 1}
-          </h4>
+        <div className="flex w-full items-center justify-between gap-3 text-left">
+          <div className="flex items-center gap-3">
+            <h4 className="text-sm font-semibold text-[#3B5D2A]">
+              {t("submission")} {index + 1}
+            </h4>
 
-          <span
-            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusClasses.badge}`}
+            <span
+              className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${statusClasses.badge}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          <div
+            className="flex items-center"
+            onClick={(e) => e.stopPropagation()}
           >
-            {statusLabel}
-          </span>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className="h-4 w-4 cursor-pointer rounded border-[#CFCFCF]"
+            />
+          </div>
         </div>
       </AccordionTrigger>
 

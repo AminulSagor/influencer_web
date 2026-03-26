@@ -50,7 +50,7 @@ export const useMilestoneStatusStore = create<MilestoneStatusStore>(
           },
         };
 
-        if (averagePerformance > 100) {
+        if (hasTargetMetrics && averagePerformance > 100) {
           nextOverrides[milestoneId] = "completed_plus_plus";
         } else {
           delete nextOverrides[milestoneId];
@@ -81,7 +81,9 @@ export const useMilestoneStatusStore = create<MilestoneStatusStore>(
     },
 
     getResolvedMilestoneStatus: (milestoneId, fallbackStatus) => {
-      return get().overrides[milestoneId] ?? String(fallbackStatus ?? "pending");
+      return (
+        get().overrides[milestoneId] ?? String(fallbackStatus ?? "pending")
+      );
     },
 
     getMilestonePerformance: (milestoneId) => {

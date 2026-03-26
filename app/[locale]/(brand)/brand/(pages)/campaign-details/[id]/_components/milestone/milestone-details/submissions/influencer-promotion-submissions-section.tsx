@@ -13,11 +13,13 @@ import { useMilestoneSubmissions } from "@/hooks/use-milestone-submissions";
 type Props = {
   campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
+  onPrimarySubmissionIdChange: (id: string | null) => void;
 };
 
 export default function InfluencerPromotionSubmissionsSection({
   campaign,
   milestone,
+  onPrimarySubmissionIdChange,
 }: Props) {
   const t = useTranslations("brand.CampaignDetailsPage");
   const [openValue, setOpenValue] = React.useState<string>("");
@@ -36,16 +38,19 @@ export default function InfluencerPromotionSubmissionsSection({
 
   React.useEffect(() => {
     setOpenValue("");
-  }, [milestone.id]);
+    onPrimarySubmissionIdChange(null);
+  }, [milestone.id, onPrimarySubmissionIdChange]);
 
   React.useEffect(() => {
     if (!items.length) {
       setOpenValue("");
+      onPrimarySubmissionIdChange(null);
       return;
     }
 
     setOpenValue(items[0].id);
-  }, [items]);
+    onPrimarySubmissionIdChange(items[0].id);
+  }, [items, onPrimarySubmissionIdChange]);
 
   if (isLoading) {
     return (

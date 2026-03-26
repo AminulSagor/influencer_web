@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import SubmissionAttachmentsGrid from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-attachments-grid";
 import SubmissionDescriptionBlock from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-description-block";
 import SubmissionPerformanceMetrics from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-performance-metrics";
 import SubmissionPerformanceRing from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-performance-ring";
-import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-report-actions";
 import {
   buildSubmissionMetrics,
   getAveragePerformance,
@@ -20,7 +18,6 @@ import {
   SubmissionDetail,
   SubmissionSummary,
 } from "@/types/client/campaigns/campaign-submission.types";
-import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
 import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
@@ -36,14 +33,8 @@ export default function InfluencerSubmissionDetailsPanel({
   submission,
   detail,
 }: Props) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
   const syncMilestonePerformance = useMilestoneStatusStore(
     (state) => state.syncMilestonePerformance,
-  );
-  const removeMilestoneOverride = useMilestoneStatusStore(
-    (state) => state.removeMilestoneOverride,
   );
 
   const metrics = buildSubmissionMetrics(
@@ -70,47 +61,6 @@ export default function InfluencerSubmissionDetailsPanel({
     syncMilestonePerformance,
   ]);
 
-  const handleApprove = async (submissionId: string) => {
-    try {
-      setIsSubmitting(true);
-
-      await reviewSubmission(submissionId, {
-        action: "approve",
-      });
-
-      syncMilestonePerformance({
-        milestoneId: milestone.id,
-        averagePerformance,
-        hasTargetMetrics,
-      });
-
-      router.refresh();
-    } catch (error) {
-      console.error("Approve submission failed:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDecline = async (submissionId: string, reason: string) => {
-    try {
-      setIsSubmitting(true);
-
-      await reviewSubmission(submissionId, {
-        action: "decline",
-        reason,
-      });
-
-      removeMilestoneOverride(milestone.id);
-
-      router.refresh();
-    } catch (error) {
-      console.error("Decline submission failed:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="space-y-4 rounded-[18px] p-4">
       <SubmissionDescriptionBlock description={detail.submissionDescription} />
@@ -135,14 +85,6 @@ export default function InfluencerSubmissionDetailsPanel({
           </div>
         ) : null}
       </div>
-
-      <SubmissionReportActions
-        submissionId={submission.id}
-        status={detail.status}
-        onApprove={handleApprove}
-        onDecline={handleDecline}
-        isSubmitting={isSubmitting}
-      />
     </div>
   );
 }

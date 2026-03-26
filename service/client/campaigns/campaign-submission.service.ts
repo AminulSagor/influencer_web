@@ -25,13 +25,15 @@ export const campaignSubmissionService = {
   },
 };
 
-type ReviewSubmissionPayload =
+export type ReviewSubmissionPayload =
   | {
       action: "approve";
+      submissionIds?: string[];
     }
   | {
       action: "decline";
       reason: string;
+      submissionIds?: string[];
     };
 
 type ReviewSubmissionResponse = {
