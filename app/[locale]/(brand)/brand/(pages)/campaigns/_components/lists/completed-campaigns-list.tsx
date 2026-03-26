@@ -35,20 +35,14 @@ export default function CompletedCampaignsList({
   );
 }
 
-function fakeRatingFromId(id: string) {
-  const n = Array.from(id).reduce((a, ch) => a + ch.charCodeAt(0), 0);
-  return 2 + (n % 4);
-}
 
 function CompletedCard({ c }: { c: CampaignOverView }) {
   const t = useTranslations("brand.CampaignsPage");
 
-  const rating = fakeRatingFromId(c.id);
+  const rating = Math.max(0, Math.min(5, Number(c.rating ?? 0)));
 
   const campaignType =
-    c.campaignType === "paid_ad"
-      ? t("paidAd")
-      : t("influencerPromotion");
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);

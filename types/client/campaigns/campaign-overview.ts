@@ -20,5 +20,6 @@ export interface CampaignOverView {
   budgetPendingAmount: number;
   negotiationRevisedTimes: number;
   totalQuotationsReceived: number;
-  currentStep : number
+  currentStep: number;
+  rating: string;
 }
