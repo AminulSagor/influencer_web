@@ -21,6 +21,7 @@ import {
   SubmissionSummary,
 } from "@/types/client/campaigns/campaign-submission.types";
 import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -29,7 +30,7 @@ type Props = {
   detail: SubmissionDetail;
 };
 
-export default function SubmissionDetailsPanel({
+export default function InfluencerSubmissionDetailsPanel({
   campaign,
   milestone,
   submission,
@@ -38,6 +39,13 @@ export default function SubmissionDetailsPanel({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const syncMilestonePerformance = useMilestoneStatusStore(
+    (state) => state.syncMilestonePerformance,
+  );
+  const removeMilestoneOverride = useMilestoneStatusStore(
+    (state) => state.removeMilestoneOverride,
+  );
+
   const metrics = buildSubmissionMetrics(
     detail,
     milestone,
@@ -45,6 +53,22 @@ export default function SubmissionDetailsPanel({
   );
 
   const averagePerformance = getAveragePerformance(metrics);
+  const hasTargetMetrics = metrics.some((item) => item.target > 0);
+
+  React.useEffect(() => {
+    if (!milestone.id) return;
+
+    syncMilestonePerformance({
+      milestoneId: milestone.id,
+      averagePerformance,
+      hasTargetMetrics,
+    });
+  }, [
+    milestone.id,
+    averagePerformance,
+    hasTargetMetrics,
+    syncMilestonePerformance,
+  ]);
 
   const handleApprove = async (submissionId: string) => {
     try {
@@ -52,6 +76,12 @@ export default function SubmissionDetailsPanel({
 
       await reviewSubmission(submissionId, {
         action: "approve",
+      });
+
+      syncMilestonePerformance({
+        milestoneId: milestone.id,
+        averagePerformance,
+        hasTargetMetrics,
       });
 
       router.refresh();
@@ -70,6 +100,8 @@ export default function SubmissionDetailsPanel({
         action: "decline",
         reason,
       });
+
+      removeMilestoneOverride(milestone.id);
 
       router.refresh();
     } catch (error) {

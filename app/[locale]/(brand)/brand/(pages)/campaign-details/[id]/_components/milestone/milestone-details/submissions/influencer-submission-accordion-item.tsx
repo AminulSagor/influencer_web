@@ -19,7 +19,7 @@ import {
   getSubmissionStatusClasses,
 } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-ui.helpers";
 import { useSubmissionDetails } from "@/hooks/use-submission-details";
-import SubmissionDetailsPanel from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/influencer-submission-details-panel";
+import InfluencerSubmissionDetailsPanel from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/influencer-submission-details-panel";
 
 type Props = {
   submission: SubmissionSummary;
@@ -82,7 +82,7 @@ export default function SubmissionAccordionItem({
             {error}
           </div>
         ) : item ? (
-          <SubmissionDetailsPanel
+          <InfluencerSubmissionDetailsPanel
             campaign={campaign}
             milestone={milestone}
             submission={submission}

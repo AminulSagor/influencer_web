@@ -16,6 +16,8 @@ import MilestoneSubmissionsSection from "./submissions/milestone-submissions-sec
 import InfluencerPromotionMilestoneContent from "./influencer-promotion-milestone-content";
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
 import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/bonus/milestone-bonus-card";
+import { shouldShowBonus } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-ui.helpers";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -39,12 +41,27 @@ export default function MilestoneDetailsCard({
   const safeTitle =
     milestone.contentTitle?.trim() || `${t("milestone")} ${milestoneIndex + 1}`;
 
-  const normalizedMilestoneStatus = String(
-    milestone.status ?? "",
-  ).toLowerCase();
-  const shouldShowBonusCard = normalizedMilestoneStatus === "completed";
+  const getResolvedMilestoneStatus = useMilestoneStatusStore(
+    (state) => state.getResolvedMilestoneStatus,
+  );
+  const getMilestonePerformance = useMilestoneStatusStore(
+    (state) => state.getMilestonePerformance,
+  );
 
-  console.log("id", milestone.id);
+  const resolvedMilestoneStatus = getResolvedMilestoneStatus(
+    milestone.id,
+    milestone.status,
+  );
+
+  const { averagePerformance, hasTargetMetrics } = getMilestonePerformance(
+    milestone.id,
+  );
+
+  const shouldShowBonusCard = shouldShowBonus(
+    averagePerformance,
+    resolvedMilestoneStatus,
+    hasTargetMetrics,
+  );
 
   return (
     <Accordion

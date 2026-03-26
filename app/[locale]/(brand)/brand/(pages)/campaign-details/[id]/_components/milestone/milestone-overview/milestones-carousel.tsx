@@ -9,6 +9,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { CampaignMilestone } from "@/types/client/campaigns/campaign-details";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   milestones: CampaignMilestone[];
@@ -24,6 +25,7 @@ const normalizeStatus = (status?: string) =>
 const getStatusLabel = (status?: string) => {
   const value = normalizeStatus(status);
 
+  if (value === "completed_plus_plus") return "Completed++";
   if (value === "completed") return "Completed";
   if (value === "in_review") return "In Review";
   if (value === "declined") return "Declined";
@@ -40,6 +42,19 @@ const getStatusLabel = (status?: string) => {
 
 const getStatusClasses = (status?: string) => {
   const value = normalizeStatus(status);
+
+  if (value === "completed_plus_plus") {
+    return {
+      card: "border-[#7F9B54] bg-[#7F9B54]",
+      activeBorder: "ring-[#7F9B54] border-[3px] border-[#7F9B54]",
+      badge:
+        "border-transparent bg-[#E8F0DB] text-[#7F9B54] hover:bg-[#E8F0DB]",
+      index: "bg-[#93AE69] text-white",
+      title: "text-white",
+      meta: "text-white/90",
+      day: "text-white/90",
+    };
+  }
 
   if (value === "completed") {
     return {
@@ -93,6 +108,10 @@ export default function MilestonesCarousel({
   expandedMilestoneId,
   onSelectMilestone,
 }: Props) {
+  const getResolvedMilestoneStatus = useMilestoneStatusStore(
+    (state) => state.getResolvedMilestoneStatus,
+  );
+
   if (!milestones.length) {
     return (
       <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-black/10 bg-black/[0.02] text-sm text-black/50">
@@ -111,8 +130,12 @@ export default function MilestonesCarousel({
     >
       <CarouselContent className="-ml-3">
         {milestones.map((milestone, idx) => {
+          const resolvedStatus = getResolvedMilestoneStatus(
+            milestone.id,
+            milestone.status,
+          );
           const isActive = milestone.id === expandedMilestoneId;
-          const statusClasses = getStatusClasses(milestone.status);
+          const statusClasses = getStatusClasses(resolvedStatus);
 
           return (
             <CarouselItem
@@ -167,7 +190,7 @@ export default function MilestonesCarousel({
                       statusClasses.badge,
                     ].join(" ")}
                   >
-                    {getStatusLabel(milestone.status)}
+                    {getStatusLabel(resolvedStatus)}
                   </Badge>
                 </div>
 

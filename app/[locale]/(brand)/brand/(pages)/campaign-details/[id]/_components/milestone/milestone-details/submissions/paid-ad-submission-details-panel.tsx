@@ -21,6 +21,7 @@ import {
   SubmissionSummary,
 } from "@/types/client/campaigns/campaign-submission.types";
 import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -35,6 +36,13 @@ export default function PaidAdSubmissionDetailsPanel({
 }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const syncMilestonePerformance = useMilestoneStatusStore(
+    (state) => state.syncMilestonePerformance,
+  );
+  const removeMilestoneOverride = useMilestoneStatusStore(
+    (state) => state.removeMilestoneOverride,
+  );
 
   const detail: SubmissionDetail = {
     ...submission,
@@ -61,13 +69,37 @@ export default function PaidAdSubmissionDetailsPanel({
   );
 
   const averagePerformance = getAveragePerformance(metrics);
+  const hasTargetMetrics = metrics.some((item) => item.target > 0);
+
+  React.useEffect(() => {
+    if (!milestone.id) return;
+
+    syncMilestonePerformance({
+      milestoneId: milestone.id,
+      averagePerformance,
+      hasTargetMetrics,
+    });
+  }, [
+    milestone.id,
+    averagePerformance,
+    hasTargetMetrics,
+    syncMilestonePerformance,
+  ]);
 
   const handleApprove = async (submissionId: string) => {
     try {
       setIsSubmitting(true);
+
       await reviewSubmission(submissionId, {
         action: "approve",
       });
+
+      syncMilestonePerformance({
+        milestoneId: milestone.id,
+        averagePerformance,
+        hasTargetMetrics,
+      });
+
       router.refresh();
     } catch (error) {
       console.error("Approve submission failed:", error);
@@ -79,10 +111,14 @@ export default function PaidAdSubmissionDetailsPanel({
   const handleDecline = async (submissionId: string, reason: string) => {
     try {
       setIsSubmitting(true);
+
       await reviewSubmission(submissionId, {
         action: "decline",
         reason,
       });
+
+      removeMilestoneOverride(milestone.id);
+
       router.refresh();
     } catch (error) {
       console.error("Decline submission failed:", error);

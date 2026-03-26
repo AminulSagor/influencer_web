@@ -132,13 +132,15 @@ export function buildSubmissionMetrics(
 export function shouldShowBonus(
   averagePerformance: number,
   status: SubmissionStatus | string,
-  metrics: SubmissionMetricRow[] = [],
+  hasTargetMetrics: boolean,
 ) {
   const normalizedStatus = String(status ?? "").toLowerCase();
-  const hasTargetMetrics = metrics.some((item) => item.target > 0);
+
   return (
     hasTargetMetrics &&
-    (normalizedStatus === "approved" || normalizedStatus === "completed") &&
+    (normalizedStatus === "approved" ||
+      normalizedStatus === "completed" ||
+      normalizedStatus === "completed_plus_plus") &&
     averagePerformance > 100
   );
 }
