@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +21,7 @@ import {
 import { progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
 import ProgressBar from "./progress-bar";
+import { deleteCampaign } from "@/service/admin/campaign/delete-campaign";
 
 export default function CampaignsGrid({
   campaigns,
@@ -29,6 +32,21 @@ export default function CampaignsGrid({
   view: CampaignView;
   onStatusChange: (id: string, status: CampaignStatus) => void;
 }) {
+  const router = useRouter();
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeletingId(id);
+      await deleteCampaign(id);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to delete campaign", error);
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {campaigns.map((campaign) => {
@@ -117,8 +135,12 @@ export default function CampaignsGrid({
                   <Link href={`/admin/campaigns/${campaign.id}`}>View Details</Link>
                 </Button>
 
-                <Button variant="outline">
-                  <FaRegTrashCan />
+                <Button 
+                  variant="outline" 
+                  disabled={isDeletingId === campaign.id}
+                  onClick={() => void handleDelete(campaign.id)}
+                >
+                  {isDeletingId === campaign.id ? "..." : <FaRegTrashCan />}
                 </Button>
               </div>
             </CardContent>

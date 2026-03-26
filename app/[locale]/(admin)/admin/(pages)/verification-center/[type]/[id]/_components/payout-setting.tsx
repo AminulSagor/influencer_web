@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -70,6 +71,7 @@ const PayoutSettings = ({
   payoutSettings,
   verificationType = "influencer",
 }: Props) => {
+  const router = useRouter();
   const [openIds, setOpenIds] = useState<(number | string)[]>([]);
   const [items, setItems] = useState<PayoutSettingsItem[]>(payoutSettings);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -166,6 +168,7 @@ const PayoutSettings = ({
       });
 
       updateLocalItem(payout.id, "Approved");
+      router.refresh();
     } catch (error) {
       console.error("approve payout failed", error);
     } finally {
@@ -196,6 +199,7 @@ const PayoutSettings = ({
       updateLocalItem(selectedItem.id, "Rejected", reason);
       setRejectOpen(false);
       setSelectedItem(null);
+      router.refresh();
     } catch (error) {
       console.error("reject payout failed", error);
     } finally {
@@ -226,20 +230,24 @@ const PayoutSettings = ({
               !!payout.bankSequence &&
               payout.bankSequence > 1;
 
-            const borderClass = isSecondOrMoreBank
-              ? "border-orange"
-              : "border-light-green";
-
-            const bgClass = isSecondOrMoreBank
-              ? "bg-gradient-to-r from-white to-orange/20"
-              : "bg-linear-to-r from-white to-Secondary";
-
-            const textClass = isSecondOrMoreBank
-              ? "text-orange"
-              : "text-light-green";
-
             const normalizedStatusValue = payout.status.toLowerCase();
             const isPending = normalizedStatusValue === "pending";
+            const isApproved = normalizedStatusValue === "accepted" || normalizedStatusValue === "approved";
+            const isRejected = normalizedStatusValue === "rejected";
+
+            let borderClass = "border-orange";
+            let bgClass = "bg-gradient-to-r from-white to-orange/20";
+            let textClass = "text-orange";
+
+            if (isApproved) {
+              borderClass = "border-light-green";
+              bgClass = "bg-linear-to-r from-white to-Secondary";
+              textClass = "text-light-green";
+            } else if (isRejected) {
+              borderClass = "border-[#e73508]/20";
+              bgClass = "bg-[#fff1f0]";
+              textClass = "text-[#e73508]";
+            }
             const isOpen = openIds.includes(payout.id);
             const isLoading = loadingId === payout.id;
 
