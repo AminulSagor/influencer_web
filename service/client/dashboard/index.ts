@@ -12,25 +12,48 @@ import {
   ServiceResult,
 } from "@/types/service-response";
 
-//total jobs
+// total jobs
 export async function getActiveJobsTotal(): Promise<number> {
-  const res = await serviceServer.get<
-    ServiceResponse<ActiveJobsResponse, PaginationMeta>
-  >("/client/dashboard/active-jobs?page=1&limit=1");
+  try {
+    const res = await serviceServer.get<
+      ServiceResponse<ActiveJobsResponse, PaginationMeta>
+    >("/client/dashboard/active-jobs?page=1&limit=1");
 
-  return res.data.meta?.total ?? 0;
+    return res.data.meta?.total ?? 0;
+  } catch (error) {
+    console.error("getActiveJobsTotal failed:", error);
+    return 0;
+  }
 }
 
-//lifetime summary
+// lifetime summary
 export async function getLifetimeSummary(): Promise<LifetimeSummaryData> {
-  const res = await serviceServer.get<ServiceResponse<LifetimeSummaryData>>(
-    "/client/lifetime-summary",
-  );
+  try {
+    const res = await serviceServer.get<ServiceResponse<LifetimeSummaryData>>(
+      "/client/lifetime-summary",
+    );
 
-  return res.data.data;
+    return res.data.data;
+  } catch (error) {
+    console.error("getLifetimeSummary failed:", error);
+
+    return {
+      totalCompleted: 0,
+      totalDeclined: 0,
+      topInfluencer: {
+        name: "",
+        totalEarned: 0,
+        logo: "",
+        totalJobsCompleted: 0,
+        lastCompletedJobId: "",
+        lastCompletedJobName: "",
+        lastCompletedJobDate: "",
+      },
+    };
+  }
 }
 
-//action required
+// action required
 export const getActionRequired = async (): Promise<ActionRequiredItem[]> => {
   try {
     const { data } = await serviceServer.get<
@@ -39,12 +62,12 @@ export const getActionRequired = async (): Promise<ActionRequiredItem[]> => {
 
     return data.data ?? [];
   } catch (error) {
-    console.log(error);
+    console.error("getActionRequired failed:", error);
     return [];
   }
 };
 
-//upcomming datelines
+// upcoming deadlines
 export const getUpcomingDeadlines = async (
   page = 1,
   limit = 5,
@@ -55,7 +78,9 @@ export const getUpcomingDeadlines = async (
     >(`/client/dashboard/upcoming-deadlines?page=${page}&limit=${limit}`);
 
     return data;
-  } catch {
+  } catch (error) {
+    console.error("getUpcomingDeadlines failed:", error);
+
     return {
       success: false,
       data: [],
@@ -70,7 +95,7 @@ export const getUpcomingDeadlines = async (
   }
 };
 
-//pending campaigns
+// pending campaigns
 export const getPendingCampaigns = async (): Promise<ServiceResult<number>> => {
   try {
     const { data } = await serviceServer.get<
@@ -81,7 +106,9 @@ export const getPendingCampaigns = async (): Promise<ServiceResult<number>> => {
       data: data.meta?.total ?? 0,
       error: null,
     };
-  } catch {
+  } catch (error) {
+    console.error("getPendingCampaigns failed:", error);
+
     return {
       data: null,
       error: "Failed to load pending campaigns",
