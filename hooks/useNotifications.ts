@@ -70,11 +70,11 @@ export function useNotifications() {
 
   // Listen for FCM foreground messages
   useEffect(() => {
-    if (listenerSetUp.current) return;
-    listenerSetUp.current = true;
-
     // Initial fetch of notifications
     fetchNotifications();
+
+    let unsubscribe: any = null;
+    let isMounted = true;
 
     const setup = async () => {
       try {
@@ -84,7 +84,7 @@ export function useNotifications() {
 
         const messaging = getMessaging(app);
 
-        onMessage(messaging, (payload) => {
+        const unsub = onMessage(messaging, (payload) => {
           // Firebase suppresses native OS popups when the app is in the foreground
           // So we manually trigger the Notification API here
           if (payload.notification && Notification.permission === "granted") {
@@ -95,18 +95,30 @@ export function useNotifications() {
             });
           }
 
-          // A new push arrived while the app is in the foreground
-          // Increment unread count, refetch, and broadcast
           setUnreadCount((prev) => prev + 1);
           fetchNotifications();
           window.dispatchEvent(new CustomEvent("app-notification", { detail: payload }));
         });
+
+        if (isMounted) {
+          unsubscribe = unsub;
+        } else {
+          // Component unmounted while async setup was checking for support
+          unsub();
+        }
       } catch (err) {
         console.error("FCM onMessage setup error:", err);
       }
     };
 
     setup();
+
+    return () => {
+      isMounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [fetchNotifications]);
 
   return {
