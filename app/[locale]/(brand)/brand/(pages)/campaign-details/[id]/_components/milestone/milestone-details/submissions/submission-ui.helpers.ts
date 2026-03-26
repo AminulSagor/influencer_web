@@ -118,7 +118,7 @@ export function buildSubmissionMetrics(
     return metrics.filter((item) => item.achieved > 0 || item.target > 0);
   }
 
-  return [
+  const paidAdMetrics: SubmissionMetricRow[] = [
     {
       key: "reach",
       label: "Reach",
@@ -126,9 +126,35 @@ export function buildSubmissionMetrics(
       target: reachTarget,
       percent: calculatePercent(reachAchieved, reachTarget),
     },
-  ].filter((item) => item.achieved > 0 || item.target > 0);
-}
+    {
+      key: "likes",
+      label: "Likes",
+      achieved: likesAchieved,
+      target: likesTarget,
+      percent: calculatePercent(likesAchieved, likesTarget),
+    },
+    {
+      key: "views",
+      label: "Views",
+      achieved: viewsAchieved,
+      target: viewsTarget,
+      percent: calculatePercent(viewsAchieved, viewsTarget),
+    },
+    {
+      key: "comments",
+      label: "Comments",
+      achieved: commentsAchieved,
+      target: commentsTarget,
+      percent: calculatePercent(commentsAchieved, commentsTarget),
+    },
+  ];
 
+  const activePaidAdMetric = paidAdMetrics.find(
+    (item) => item.target > 0 || item.achieved > 0,
+  );
+
+  return activePaidAdMetric ? [activePaidAdMetric] : [];
+}
 export function shouldShowBonus(
   averagePerformance: number,
   status: SubmissionStatus | string,
