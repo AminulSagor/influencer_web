@@ -236,35 +236,35 @@ const VerificationActionDocumentCard = ({
             )}
           </div>
 
-          {itemStatus === "Pending" ? (
-            <div className="flex shrink-0 items-center justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
-                disabled={loadingType !== null}
-                onClick={() => setRejectOpen(true)}
-              >
-                {loadingType === "reject" ? "Please wait..." : "Reject"}
-              </Button>
+          <div className="flex shrink-0 items-center justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className={`min-w-[108px] rounded-2xl ${
+                itemStatus === "Rejected"
+                  ? "border-[#fff1f0] bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]/90"
+                  : "border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
+              }`}
+              disabled={loadingType !== null || itemStatus === "Rejected"}
+              onClick={() => setRejectOpen(true)}
+            >
+              {loadingType === "reject" ? "Please wait..." : itemStatus === "Rejected" ? "Rejected" : "Reject"}
+            </Button>
 
-              <Button
-                type="button"
-                variant="lightGreen"
-                className="min-w-[108px] rounded-2xl bg-[#86a857] text-white hover:bg-[#78994d]"
-                disabled={loadingType !== null}
-                onClick={handleApprove}
-              >
-                {loadingType === "approve" ? "Please wait..." : "Approve"}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex justify-end">
-              <Badge className={statusBadgeMap[itemStatus].className}>
-                {statusBadgeMap[itemStatus].label}
-              </Badge>
-            </div>
-          )}
+            <Button
+              type="button"
+              variant="lightGreen"
+              className={`min-w-[108px] rounded-2xl ${
+                itemStatus === "Accepted"
+                  ? "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]/90"
+                  : "bg-[#86a857] text-white hover:bg-[#78994d]"
+              }`}
+              disabled={loadingType !== null || itemStatus === "Accepted"}
+              onClick={handleApprove}
+            >
+              {loadingType === "approve" ? "Please wait..." : itemStatus === "Accepted" ? "Approved" : "Approve"}
+            </Button>
+          </div>
         </div>
       </CollapsibleCard>
 
