@@ -2,15 +2,19 @@
 export type CampaignType = "paid_ad" | "influencer_promotion";
 export interface campaignStoreType {
   step: number;
+  setStep: (step: number) => void;
   increaseStep: () => void;
   decreaseStep: () => void;
+
   open: boolean;
   toggleOpen: () => void;
 
   campaignType: CampaignType;
   campaignId: string;
+
   setCampaignId: (id: string) => void;
-  setCampaignType: (t: "paid_ad" | "influencer_promotion") => void;
+  setCampaignType: (t: CampaignType) => void;
+  resetCampaignStore: () => void;
 }
 
 //create campaign step 4 types
