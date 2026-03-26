@@ -111,6 +111,12 @@ export default function MilestoneDetailsCard({
             </div>
           </AccordionContent>
 
+          {/* approve and decline milestone here*/}
+
+          {milestone.status === "in_review" && (
+            <div>approve and decline area</div>
+          )}
+
           {shouldShowBonusCard ? (
             <div className="mt-5">
               <MilestoneBonusCard
