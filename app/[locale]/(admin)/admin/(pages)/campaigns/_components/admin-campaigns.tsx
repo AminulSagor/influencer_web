@@ -9,10 +9,12 @@ import {
 
 import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";
+import CampaignsBulkActionBar from "./campaigns-bulk-action-bar";
 import CampaignsListTable from "./campaigns-list-table";
 import CampaignsGrid from "./campaigns-grid";
 import CampaignsStatusTabs, { ORDER, type CampaignTabKey } from "./campaigns-status-tabs";
 import CampaignsPagination from "./campaigns-pagination";
+import { exportCampaignsToCSV } from "@/utils/admin/campaign/campaign_export_util";
 
 import type {
   CampaignStatus,
@@ -94,8 +96,12 @@ function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
     endDate: addDays(item.startingDate, item.duration),
     status: item.status as CampaignStatus,
     assignedPersonals: {
-      count: 0,
-      influencers: [],
+      count: item.assignedInfluencers?.length || 0,
+      influencers: (item.assignedInfluencers || []).map((inf: any) => ({
+        id: inf.id,
+        name: inf.name,
+        avatar: inf.profileImage || inf.ImageUrl || inf.imageUrl || "",
+      })),
     },
     paymentStatus: normalizePaymentStatus(item.paymentStatus),
   } as CampaignUI;
@@ -112,6 +118,7 @@ export default function AdminCampaigns() {
   const [tab, setTab] = useState<CampaignTabKey>(initialTab);
   const [campaignType, setCampaignType] = useState<CampaignTypeFilter>("all");
   const [page, setPage] = useState(1);
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
 
   useEffect(() => {
     const t = searchParams.get("tab") as CampaignTabKey;
@@ -221,6 +228,18 @@ export default function AdminCampaigns() {
           setCampaignType={setCampaignType}
         />
 
+        <CampaignsBulkActionBar
+          selectedCount={selectedCampaignIds.length}
+          onExport={() => {
+            const selectedCampaigns = campaigns.filter((c) =>
+              selectedCampaignIds.includes(c.id)
+            );
+            exportCampaignsToCSV(selectedCampaigns);
+          }}
+          campaignType={campaignType}
+          setCampaignType={setCampaignType}
+        />
+
         {loading ? (
           <div className="mx-2 rounded-md border border-dashed border-light-green p-10 text-center text-sm text-muted-foreground">
             Loading campaigns...
@@ -239,6 +258,12 @@ export default function AdminCampaigns() {
             campaigns={campaigns}
             view={view}
             onStatusChange={handleStatusChange}
+            selectedCampaignIds={selectedCampaignIds}
+            onToggleSelect={(id, checked) => {
+              setSelectedCampaignIds((prev) =>
+                checked ? [...prev, id] : prev.filter((p) => p !== id)
+              );
+            }}
           />
         )}
 

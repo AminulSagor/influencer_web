@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,23 +21,51 @@ import {
 import { progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
 import ProgressBar from "./progress-bar";
+import { deleteCampaign } from "@/service/admin/campaign/delete-campaign";
 
 export default function CampaignsGrid({
   campaigns,
   view,
   onStatusChange,
+  selectedCampaignIds = [],
+  onToggleSelect,
 }: {
   campaigns: CampaignUI[];
   view: CampaignView;
   onStatusChange: (id: string, status: CampaignStatus) => void;
+  selectedCampaignIds?: string[];
+  onToggleSelect?: (id: string, checked: boolean) => void;
 }) {
+  const router = useRouter();
+  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeletingId(id);
+      await deleteCampaign(id);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to delete campaign", error);
+    } finally {
+      setIsDeletingId(null);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {campaigns.map((campaign) => {
         const progress = progressMap[campaign.status] ?? 0;
+        const isSelected = selectedCampaignIds.includes(campaign.id);
 
         return (
-          <Card key={campaign.id} className="relative overflow-hidden">
+          <Card 
+            key={campaign.id} 
+            className={`relative overflow-hidden transition-colors ${
+              isSelected 
+                ? "border-light-green bg-linear-to-b from-light-green/10 to-transparent" 
+                : "border-border"
+            }`}
+          >
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -43,20 +73,30 @@ export default function CampaignsGrid({
                   <p className="text-sm text-gray-400">{campaign.category}</p>
                   <p className="text-xs text-gray-400">Niches: {campaign.niches}</p>
                 </div>
-                <Checkbox />
+                {onToggleSelect && (
+                  <Checkbox 
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onToggleSelect(campaign.id, checked as boolean)}
+                    className="data-[state=checked]:bg-light-green data-[state=checked]:border-light-green border-gray-300"
+                  />
+                )}
               </div>
 
               <div className="rounded-md border px-4 py-2">
                 <div className="flex items-center gap-2">
-                  <Avatar>
+                  <span className="text-sm font-medium text-orange">Client:</span>
+                  <Avatar className="h-6 w-6">
                     <AvatarImage src={campaign.avatar} />
-                    <AvatarFallback>{campaign.client?.[0] || "C"}</AvatarFallback>
+                    <AvatarFallback className="bg-light-green text-white text-xs">
+                      {campaign.client?.[0] || "C"}
+                    </AvatarFallback>
                   </Avatar>
                   <p className="text-sm text-Primary">{campaign.client}</p>
                 </div>
               </div>
 
-              <div className="rounded-md border px-4 py-2">
+              <div className="rounded-md border px-4 py-2 flex items-center gap-2">
+                <span className="text-sm font-medium text-orange">Influencers:</span>
                 <AssignedPersonalsCell
                   count={campaign.assignedPersonals.count}
                   influencers={campaign.assignedPersonals.influencers}
@@ -114,12 +154,17 @@ export default function CampaignsGrid({
 
               <div className="flex gap-2">
                 <Button asChild variant="lightGreen" className="flex-1">
-                  <Link href={`/admin/campaigns/${campaign.id}`}>View Details</Link>
+                  <Link href={`/admin/campaigns/${campaign.id}`}>View Campaign Details</Link>
                 </Button>
 
-                <Button variant="outline">
-                  <FaRegTrashCan />
-                </Button>
+                {/* <Button 
+                  variant="outline"
+                  className="px-3"
+                  disabled={isDeletingId === campaign.id}
+                  onClick={() => void handleDelete(campaign.id)}
+                >
+                  {isDeletingId === campaign.id ? "..." : <FaRegTrashCan className="text-gray-500" />}
+                </Button> */}
               </div>
             </CardContent>
           </Card>

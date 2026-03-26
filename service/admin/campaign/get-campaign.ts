@@ -13,7 +13,7 @@ export const getAllCampaigns = async (
   const res = await serviceClient.get<GetCampaignResponse>("/campaign/admin/all", {
     params: {
       page: params.page ?? 1,
-      limit: params.limit ?? 9,
+      limit: 6,
       campaignType: params.campaignType || undefined,
       status: params.status || undefined,
       search: params.search || undefined,
