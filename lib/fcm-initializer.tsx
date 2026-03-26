@@ -11,7 +11,8 @@ export default function FcmInitializer() {
       if (!token) return;
 
       try {
-        await registerFcmDevice(token);
+         await registerFcmDevice(token);
+        
       } catch (err) {
         console.error("Failed to register FCM device:", err);
       }
