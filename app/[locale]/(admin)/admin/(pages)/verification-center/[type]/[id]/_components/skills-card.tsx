@@ -133,34 +133,36 @@ const SkillsCard = ({ userId, skills }: Props) => {
                   {skill.name}
                 </Badge>
 
-                {skill.status === "Pending" ? (
-                  <div className="flex shrink-0 items-center gap-3">
-                    <Button
-                      variant="outline"
-                      className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
-                      disabled={isLoading}
-                      onClick={() => {
-                        setSelectedName(skill.name);
-                        setRejectOpen(true);
-                      }}
-                    >
-                      {isLoading ? "Please wait..." : "Reject"}
-                    </Button>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Button
+                    variant="outline"
+                    className={`min-w-[108px] rounded-2xl ${
+                      skill.status === "Rejected"
+                        ? "border-[#fff1f0] bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]/90"
+                        : "border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
+                    }`}
+                    disabled={isLoading || skill.status === "Rejected"}
+                    onClick={() => {
+                      setSelectedName(skill.name);
+                      setRejectOpen(true);
+                    }}
+                  >
+                    {isLoading && loadingName === skill.name ? "Please wait..." : skill.status === "Rejected" ? "Rejected" : "Reject"}
+                  </Button>
 
-                    <Button
-                      variant="lightGreen"
-                      className="min-w-[108px] rounded-2xl bg-[#86a857] text-white hover:bg-[#78994d]"
-                      disabled={isLoading}
-                      onClick={() => handleApprove(skill.name)}
-                    >
-                      {isLoading ? "Please wait..." : "Approve"}
-                    </Button>
-                  </div>
-                ) : (
-                  <Badge className={statusBadgeMap[skill.status].className}>
-                    {statusBadgeMap[skill.status].label}
-                  </Badge>
-                )}
+                  <Button
+                    variant="lightGreen"
+                    className={`min-w-[108px] rounded-2xl ${
+                      skill.status === "Accepted"
+                        ? "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]/90"
+                        : "bg-[#86a857] text-white hover:bg-[#78994d]"
+                    }`}
+                    disabled={isLoading || skill.status === "Accepted"}
+                    onClick={() => handleApprove(skill.name)}
+                  >
+                    {isLoading && loadingName === skill.name ? "Please wait..." : skill.status === "Accepted" ? "Approved" : "Approve"}
+                  </Button>
+                </div>
               </div>
             );
           })}

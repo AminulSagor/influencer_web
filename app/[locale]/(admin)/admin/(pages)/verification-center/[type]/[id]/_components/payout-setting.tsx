@@ -319,53 +319,46 @@ const PayoutSettings = ({
                   </ItemContent>
 
                   <ItemActions className="flex shrink-0 items-center gap-3">
-                    {isPending ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
-                          disabled={isLoading}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setSelectedItem(payout);
-                            setRejectOpen(true);
-                          }}
-                        >
-                          {isLoading ? "Please wait..." : "Reject"}
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant={approvedBtnVariant}
-                          size="sm"
-                          className="min-w-[108px] rounded-2xl"
-                          disabled={isLoading}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            void handleApprove(payout);
-                          }}
-                        >
-                          {isLoading ? "Please wait..." : "Approve"}
-                        </Button>
-                      </>
-                    ) : (
+                    <>
                       <Button
                         type="button"
+                        variant="outline"
                         size="sm"
-                        className={cn(
-                          "min-w-[92px] border-0",
-                          statusBadgeClassMap[
-                            payout.status as Exclude<VerificationStatus, "Pending">
-                          ]
-                        )}
+                        className={`min-w-[108px] rounded-2xl ${
+                          !isPending && payout.status.toLowerCase() === "rejected"
+                            ? "border-[#fff1f0] bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]/90"
+                            : "border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
+                        }`}
+                        disabled={isLoading || (!isPending && payout.status.toLowerCase() === "rejected")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedItem(payout);
+                          setRejectOpen(true);
+                        }}
                       >
-                        {payout.status}
+                        {isLoading ? "Please wait..." : (!isPending && payout.status.toLowerCase() === "rejected") ? "Rejected" : "Reject"}
                       </Button>
-                    )}
+
+                      <Button
+                        type="button"
+                        variant={!isPending && (payout.status.toLowerCase() === "accepted" || payout.status.toLowerCase() === "approved") ? "lightGreen" : approvedBtnVariant}
+                        size="sm"
+                        className={`min-w-[108px] rounded-2xl ${
+                          !isPending && (payout.status.toLowerCase() === "accepted" || payout.status.toLowerCase() === "approved")
+                            ? "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]/90"
+                            : ""
+                        }`}
+                        disabled={isLoading || (!isPending && (payout.status.toLowerCase() === "accepted" || payout.status.toLowerCase() === "approved"))}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          void handleApprove(payout);
+                        }}
+                      >
+                        {isLoading ? "Please wait..." : (!isPending && (payout.status.toLowerCase() === "accepted" || payout.status.toLowerCase() === "approved")) ? "Approved" : "Approve"}
+                      </Button>
+                    </>
 
                     <button
                       type="button"
