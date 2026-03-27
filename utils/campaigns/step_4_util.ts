@@ -43,21 +43,27 @@ export const toPlatformEnum = (platform: string) => {
 
 const getPaidAdMetricField = (
   title?: string,
-): "expectedReach" | "expectedViews" | "expectedLikes" | "expectedComments" => {
+):
+  | "expectedReach"
+  | "expectedViews"
+  | "expectedLikes"
+  | "expectedComments"
+  | "expectedFollows" => {
   const metric = title?.trim().toLowerCase() || "";
 
   if (metric.includes("reach")) return "expectedReach";
   if (metric.includes("view")) return "expectedViews";
   if (metric.includes("like")) return "expectedLikes";
   if (metric.includes("comment")) return "expectedComments";
+  if (metric.includes("follow")) return "expectedFollows";
 
-  return "expectedViews";
+  return "expectedViews"; // Default fallback
 };
 
 export const buildStepFourPayload = (
   budget: string,
   milestones: any[],
-  campaignType: string, // Add campaignType parameter
+  campaignType: string,
 ): StepFourPayload => {
   return {
     baseBudget: parseBudget(budget),
@@ -66,7 +72,7 @@ export const buildStepFourPayload = (
       const isPaidAd = campaignType === "paid_ad";
 
       if (isPaidAd) {
-        // Paid ad logic
+        // Paid ad logic - INCLUDES follows field
         const promotionTargetAmount = extractNumber(m.promotionTarget?.amount);
         const metricField = getPaidAdMetricField(m.promotionTarget?.title);
 
@@ -96,11 +102,16 @@ export const buildStepFourPayload = (
               ? promotionTargetAmount
               : extractNumber(m.expectedComments),
 
+          expectedFollows:
+            metricField === "expectedFollows"
+              ? promotionTargetAmount
+              : extractNumber(m.expectedFollows),
+
           promotionGoal: m.promotionGoal?.trim(),
           order: index + 1,
         };
       } else {
-        // Influencer promotion logic
+        // Influencer promotion logic - NO follows field
         return {
           contentTitle: m.title.trim(),
           platform: toPlatformEnum(m.platform),
