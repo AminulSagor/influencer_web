@@ -140,12 +140,12 @@ function DoDont({ dos, donts }: { dos: string; donts: string }) {
 
   return (
     <div className="space-y-3 mt-4 w-full ">
-      <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
+      <div className="rounded-xl border border-light-green-200 bg-[#BBF7D0] p-4">
         <div className="flex items-center gap-2 text-light-green-700 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
           <span>Do&apos;s</span>
         </div>
-        <ul className="text-sm text-light-green-700 space-y-1">
+        <ul className="text-sm text-green-400 space-y-1">
           {dosList.map((item, index) => (
             <li key={index}>• {item}</li>
           ))}
