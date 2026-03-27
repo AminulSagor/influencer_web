@@ -4,18 +4,30 @@ export const parseBudget = (budget: string): number => {
   return parseInt(budget.replace(/,/g, ""), 10) || 0;
 };
 
-export const extractNumber = (value?: string): number | undefined => {
-  if (!value) return undefined;
+export const extractNumber = (value?: string | number): number => {
+  // Handle if value is already a number
+  if (typeof value === "number") return value;
 
-  const raw = value.trim().toLowerCase().replace(/,/g, "");
+  // Handle undefined or empty string
+  if (!value || value === "") return 0;
+
+  // Convert to string and clean
+  const raw = String(value).trim().toLowerCase().replace(/,/g, "");
+
+  // Handle K/M abbreviations
+  if (raw.endsWith("k")) {
+    const num = parseFloat(raw.slice(0, -1));
+    return !isNaN(num) ? Math.round(num * 1000) : 0;
+  }
+
+  if (raw.endsWith("m")) {
+    const num = parseFloat(raw.slice(0, -1));
+    return !isNaN(num) ? Math.round(num * 1000000) : 0;
+  }
+
+  // Handle regular numbers
   const num = parseFloat(raw);
-
-  if (!Number.isFinite(num)) return undefined;
-
-  if (raw.endsWith("m")) return Math.round(num * 1_000_000);
-  if (raw.endsWith("k")) return Math.round(num * 1_000);
-
-  return Math.round(num);
+  return !isNaN(num) ? Math.round(num) : 0;
 };
 
 export const toPlatformEnum = (platform: string) => {
@@ -45,42 +57,65 @@ const getPaidAdMetricField = (
 export const buildStepFourPayload = (
   budget: string,
   milestones: any[],
+  campaignType: string, // Add campaignType parameter
 ): StepFourPayload => {
   return {
     baseBudget: parseBudget(budget),
     milestones: milestones.map((m, index) => {
-      const promotionTargetAmount = extractNumber(m.promotionTarget?.amount);
-      const metricField = getPaidAdMetricField(m.promotionTarget?.title);
+      // Determine if this is a paid ad milestone based on campaign type
+      const isPaidAd = campaignType === "paid_ad";
 
-      return {
-        contentTitle: m.title.trim(),
-        platform: toPlatformEnum(m.platform),
-        contentQuantity: m.subtitle.trim(),
-        deliveryDays: parseInt(m.day.replace(/[^0-9]/g, ""), 10) || 0,
+      if (isPaidAd) {
+        // Paid ad logic
+        const promotionTargetAmount = extractNumber(m.promotionTarget?.amount);
+        const metricField = getPaidAdMetricField(m.promotionTarget?.title);
 
-        expectedReach:
-          metricField === "expectedReach"
-            ? promotionTargetAmount
-            : extractNumber(m.expectedReach),
+        return {
+          contentTitle: m.title.trim(),
+          platform: toPlatformEnum(m.platform),
+          contentQuantity: m.subtitle.trim(),
+          deliveryDays: parseInt(m.day.replace(/[^0-9]/g, ""), 10) || 0,
 
-        expectedViews:
-          metricField === "expectedViews"
-            ? promotionTargetAmount
-            : extractNumber(m.expectedViews),
+          expectedReach:
+            metricField === "expectedReach"
+              ? promotionTargetAmount
+              : extractNumber(m.expectedReach),
 
-        expectedLikes:
-          metricField === "expectedLikes"
-            ? promotionTargetAmount
-            : extractNumber(m.expectedLikes),
+          expectedViews:
+            metricField === "expectedViews"
+              ? promotionTargetAmount
+              : extractNumber(m.expectedViews),
 
-        expectedComments:
-          metricField === "expectedComments"
-            ? promotionTargetAmount
-            : extractNumber(m.expectedComments),
+          expectedLikes:
+            metricField === "expectedLikes"
+              ? promotionTargetAmount
+              : extractNumber(m.expectedLikes),
 
-        promotionGoal: m.promotionGoal?.trim(),
-        order: index + 1,
-      };
+          expectedComments:
+            metricField === "expectedComments"
+              ? promotionTargetAmount
+              : extractNumber(m.expectedComments),
+
+          promotionGoal: m.promotionGoal?.trim(),
+          order: index + 1,
+        };
+      } else {
+        // Influencer promotion logic
+        return {
+          contentTitle: m.title.trim(),
+          platform: toPlatformEnum(m.platform),
+          contentQuantity: m.subtitle.trim(),
+          deliveryDays: parseInt(m.day.replace(/[^0-9]/g, ""), 10) || 0,
+
+          expectedReach: extractNumber(m.expectedReach),
+          expectedViews: extractNumber(m.expectedViews),
+          expectedLikes: extractNumber(m.expectedLikes),
+          expectedComments: extractNumber(m.expectedComments),
+
+          promotionGoal: undefined,
+          order: index + 1,
+        };
+      }
     }),
   };
 };
