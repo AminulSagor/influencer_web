@@ -42,9 +42,21 @@ export default function PaidAdSubmissionAccordionItem({
   return (
     <AccordionItem
       value={submission.id}
-      className={`rounded-[18px] border bg-white px-3 ${statusClasses.panel}`}
+      className={`
+        overflow-hidden 
+        rounded-xl 
+        border 
+        ${statusClasses.panel}
+        bg-white 
+        px-3
+        [&:not(:last-child)]:mb-4
+      `}
+      style={{
+        borderWidth: "1px",
+        borderStyle: "solid",
+      }}
     >
-      <AccordionTrigger className="py-4 hover:no-underline">
+      <AccordionTrigger className="py-4 hover:no-underline [&[data-state=open]>div>svg]:rotate-180">
         <div className="flex w-full items-center justify-between gap-3 text-left">
           <div className="flex items-center gap-3">
             <h4 className="text-sm font-semibold text-[#3B5D2A]">
