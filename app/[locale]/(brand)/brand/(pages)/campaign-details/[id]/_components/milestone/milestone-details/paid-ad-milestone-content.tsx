@@ -13,6 +13,7 @@ type Props = {
   milestone: CampaignMilestone;
 };
 
+
 function getPaidAdTarget(milestone: CampaignMilestone) {
   const targets = [
     { label: "Reach", value: milestone.expectedReach },
@@ -21,11 +22,9 @@ function getPaidAdTarget(milestone: CampaignMilestone) {
     { label: "Likes", value: milestone.expectedLikes },
     { label: "Follows", value: milestone.expectedFollows },
   ];
-
   const activeTarget = targets.find(
-    (item) => item.value !== null && item.value !== undefined,
+    (item) => item.value !== null && item.value !== undefined && item.value > 0,
   );
-
   return activeTarget ?? { label: "Reach", value: null };
 }
 
