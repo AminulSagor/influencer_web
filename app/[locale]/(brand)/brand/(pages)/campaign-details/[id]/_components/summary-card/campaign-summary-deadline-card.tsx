@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 type CampaignSummaryDeadlineCardProps = {
   deadlineLabel: string;
+  campaignStatus: string;
   deadlineDate: string;
   dueAmount: number;
   isPartialPaid: boolean;
@@ -22,12 +23,13 @@ export default function CampaignSummaryDeadlineCard({
   dueAmount,
   showBudgetPendingPill,
   showAgencyConfirmationPendingPill,
+  campaignStatus,
 }: CampaignSummaryDeadlineCardProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
 
   return (
     <>
-      {dueAmount > 0 && (
+      {dueAmount > 0 && campaignStatus !== "negotiating" && (
         <div className="order-2 flex h-full min-w-[170px] flex-col items-center justify-center gap-2 rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green p-4 lg:order-1">
           <Image
             src="/client-panel/money.png"
