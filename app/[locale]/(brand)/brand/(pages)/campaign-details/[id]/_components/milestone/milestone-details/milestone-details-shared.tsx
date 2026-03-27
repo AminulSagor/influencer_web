@@ -9,6 +9,7 @@ import {
   getMilestoneStatusLabel,
 } from "../milestone-ui-helpers";
 import MilestoneReportActions from "./milestone-report-actions";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store"; // Add this import
 
 type ActionButtonsProps = {
   milestone: CampaignMilestone;
@@ -232,9 +233,22 @@ export function MilestoneActions({ milestone }: ActionButtonsProps) {
   );
 }
 
+// FIXED: Updated MilestoneStatusCard to use store
 export function MilestoneStatusCard({ milestone }: StatusCardProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
-  const effectiveStatus = getEffectiveStatus(milestone);
+
+  // Get resolved status from store
+  const getResolvedMilestoneStatus = useMilestoneStatusStore(
+    (state) => state.getResolvedMilestoneStatus,
+  );
+
+  // Use the store to get the resolved status (handles completed_plus_plus)
+  const resolvedStatus = getResolvedMilestoneStatus(
+    milestone.id,
+    milestone.status,
+  );
+
+  const effectiveStatus = normalizeStatus(resolvedStatus);
   const statusClasses = getMilestoneStatusClasses(effectiveStatus);
   const label = getMilestoneStatusLabel(effectiveStatus) || t("pending");
   const statusDate = getStatusDate(milestone);
