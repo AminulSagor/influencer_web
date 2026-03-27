@@ -5,7 +5,7 @@ import {
   acceptCampaignQuote,
   payClientCampaignDue,
   submitCampaignCounterOffer,
-} from "@/service/client/campaigns/quote-actions";
+} from "@/service/client/negotiation/quote-actions";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 type UseQuoteActionsProps = {

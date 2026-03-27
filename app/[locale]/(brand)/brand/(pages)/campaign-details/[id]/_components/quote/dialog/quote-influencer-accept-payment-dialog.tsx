@@ -218,7 +218,7 @@ export default function QuoteInfluencerAcceptPaymentDialog({
                 <span>{t("processing")}</span>
               </span>
             ) : (
-              `${t("acceptQuotePay")} ${formatBDT(payAmount)}`
+              `${t("acceptQuotePay")}`
             )}
           </PrimaryButton>
         </div>
