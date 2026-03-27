@@ -10,9 +10,28 @@ import {
 import { useTranslations } from "next-intl";
 import { BsDownload, BsFileEarmarkText } from "react-icons/bs";
 import { PiImageLight, PiVideoLight } from "react-icons/pi";
+import { CampaignAsset } from "@/types/influencer/job_types";
 
-const ContentAssetCard = () => {
-  const t = useTranslations("influencer.campaign-details")
+function getAssetIcon(mimeType: string) {
+  if (mimeType?.startsWith("image/")) return <PiImageLight size={30} />;
+  if (mimeType?.startsWith("video/")) return <PiVideoLight size={30} />;
+  return <BsFileEarmarkText size={30} />;
+}
+
+function formatFileSize(sizeStr: string) {
+  const bytes = parseInt(sizeStr, 10);
+  if (isNaN(bytes)) return sizeStr;
+  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)}MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${bytes}B`;
+}
+
+interface ContentAssetCardProps {
+  assets: CampaignAsset[];
+}
+
+const ContentAssetCard = ({ assets }: ContentAssetCardProps) => {
+  const t = useTranslations("influencer.campaign-details");
   return (
     <Card className="h-full">
       <CardHeader>
@@ -21,75 +40,37 @@ const ContentAssetCard = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <Item
-          variant="outline"
-          className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
-        >
-          <div>
-            <PiImageLight size={30} />
-          </div>
-          <ItemContent>
-            <ItemTitle>Brand Logo Pack</ItemTitle>
-            <ItemDescription className="text-light-green text-xs">
-              PNG, SVG - 2.4MB
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
+        {assets.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No assets available</p>
+        ) : (
+          assets.map((asset) => (
+            <Item
+              key={asset.id}
               variant="outline"
-              size="sm"
-              className="hover:text-light-green/90 border border-light-green"
+              className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
             >
-              <BsDownload />
-            </Button>
-          </ItemActions>
-        </Item>
-        <Item
-          variant="outline"
-          className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
-        >
-          <div>
-            <PiVideoLight size={30} />
-          </div>
-          <ItemContent>
-            <ItemTitle>Product Demo Video</ItemTitle>
-            <ItemDescription className="text-light-green text-xs">
-              MP4 - 90MB
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover:text-light-green/90 border border-light-green"
-            >
-              <BsDownload />
-            </Button>
-          </ItemActions>
-        </Item>
-        <Item
-          variant="outline"
-          className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
-        >
-          <div>
-            <BsFileEarmarkText size={30} />
-          </div>
-          <ItemContent>
-            <ItemTitle>Brand Guideline</ItemTitle>
-            <ItemDescription className="text-light-green text-xs">
-              PDF - 750KB
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover:text-light-green/90 border border-light-green"
-            >
-              <BsDownload />
-            </Button>
-          </ItemActions>
-        </Item>
+              <div>{getAssetIcon(asset.mimeType)}</div>
+              <ItemContent>
+                <ItemTitle>{asset.description || asset.fileName}</ItemTitle>
+                <ItemDescription className="text-light-green text-xs">
+                  {asset.assetType} - {formatFileSize(asset.fileSize)}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hover:text-light-green/90 border border-light-green"
+                  asChild
+                >
+                  <a href={asset.fileUrl} target="_blank" rel="noopener noreferrer" download>
+                    <BsDownload />
+                  </a>
+                </Button>
+              </ItemActions>
+            </Item>
+          ))
+        )}
       </CardContent>
     </Card>
   );

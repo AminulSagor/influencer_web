@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
 import { useTranslations } from "next-intl";
 import { getInfluencerProfile } from "@/service/influencer/profile/profile";
-import { InfluencerProfileData } from "@/types/influencer/profile_type";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 import PayoutItem from "./payout-item";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +26,7 @@ import {
   BankPayoutFormData,
   MobileBankingPayoutFormData,
 } from "@/schemas/influencer/payout-validation";
-import { addBankPayout, addMobileBankingPayout } from "@/service/influencer/payout/payout";
+import { addBankPayout, addMobileBankingPayout, deletePayout } from "@/service/influencer/payout/payout";
 import { notifySuccess, notifyError } from "@/utils/toast_util";
 
 const PayoutSettingsCard = () => {
@@ -123,6 +123,25 @@ const PayoutSettingsCard = () => {
     }
   };
 
+  const handleDelete = async (type: "bank" | "mobileBanking", identifier: string, accountName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to remove this ${type === "bank" ? "bank account" : "mobile banking account"} (${accountName})?`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      // Map mobileBanking to mobile for API
+      const apiType = type === "mobileBanking" ? "mobile" : "bank";
+      await deletePayout({ type: apiType, identifier });
+      notifySuccess("Payment method removed successfully");
+      await fetchProfile(); // Refresh the list
+    } catch (error: any) {
+      console.error("Failed to delete payout method:", error);
+      notifyError(error?.response?.data?.message || "Failed to remove payment method");
+    }
+  };
+
   // Update account type when mobile banking method is selected
   useEffect(() => {
     if (payoutMethod && payoutMethod !== "bank") {
@@ -145,7 +164,7 @@ const PayoutSettingsCard = () => {
                   key={`bank-${index}`}
                   type="bank"
                   data={bankAccount}
-                  onRemove={() => console.log("Remove bank account", index)}
+                  onRemove={() => handleDelete("bank", bankAccount.bankAccNo, bankAccount.bankName)}
                 />
               ))}
 
@@ -155,7 +174,7 @@ const PayoutSettingsCard = () => {
                   key={`mobile-${index}`}
                   type="mobileBanking"
                   data={mobileAccount}
-                  onRemove={() => console.log("Remove mobile account", index)}
+                  onRemove={() => handleDelete("mobileBanking", mobileAccount.accountNo, mobileAccount.accountType)}
                 />
               ))}
 

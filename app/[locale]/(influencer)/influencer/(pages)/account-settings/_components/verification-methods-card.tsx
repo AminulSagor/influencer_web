@@ -8,6 +8,7 @@ import {
   XCircle,
   FileText,
   Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Accordion,
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { updateNid } from "@/service/influencer/nid/nid_service";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 import { toast } from "sonner";
 
 type UploadKey = "frontNid" | "backNid";
@@ -33,7 +35,13 @@ const MAX_MB = 2;
 const MAX_BYTES = MAX_MB * 1024 * 1024;
 const ACCEPT = "image/png,image/jpeg,image/jpg,application/pdf,.png,.jpg,.jpeg,.pdf";
 
-export default function VerificationMethodsCard() {
+interface VerificationMethodsCardProps {
+  profileData: InfluencerProfileData | null;
+  loading: boolean;
+  refreshProfile: () => void;
+}
+
+export default function VerificationMethodsCard({ profileData, loading, refreshProfile }: VerificationMethodsCardProps) {
   const [nidNumber, setNidNumber] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploadProgress, setUploadProgress] = React.useState<
@@ -51,8 +59,15 @@ export default function VerificationMethodsCard() {
 
   const { upload } = useFileUpload({
     module: "brandguru/influencer/docs",
-    showToast: false, // We'll handle toasts manually
+    showToast: false,
   });
+
+  // Sync nidNumber with profileData when it changes
+  React.useEffect(() => {
+    if (profileData?.nidNumber) {
+      setNidNumber(profileData.nidNumber);
+    }
+  }, [profileData]);
 
   React.useEffect(() => {
     return () => {
@@ -60,7 +75,6 @@ export default function VerificationMethodsCard() {
         if (u.previewUrl) URL.revokeObjectURL(u.previewUrl);
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const validateFile = (file: File) => {
@@ -73,7 +87,6 @@ export default function VerificationMethodsCard() {
   const setUpload = (key: UploadKey, file: File | null) => {
     setErrors((p) => ({ ...p, [key]: undefined }));
 
-    // clear
     if (!file) {
       setUploads((prev) => {
         const old = prev[key];
@@ -100,9 +113,7 @@ export default function VerificationMethodsCard() {
   };
 
   const openFileDialog = (key: UploadKey) => {
-    const input = document.getElementById(
-      `file-${key}`
-    ) as HTMLInputElement | null;
+    const input = document.getElementById(`file-${key}`) as HTMLInputElement | null;
     input?.click();
   };
 
@@ -113,9 +124,7 @@ export default function VerificationMethodsCard() {
     if (file) setUpload(key, file);
   };
 
-  // Submit NID verification - uploads files ONLY when submitting
   const handleSubmit = async () => {
-    // Validation
     if (!nidNumber.trim()) {
       toast.error("Please enter your NID number");
       return;
@@ -130,7 +139,6 @@ export default function VerificationMethodsCard() {
     const toastId = toast.loading("Uploading documents...");
 
     try {
-      // Upload front NID
       console.log("Uploading front NID:", uploads.frontNid.file.name);
       setUploadProgress({ frontNid: 0 });
       const frontResult = await upload(uploads.frontNid.file);
@@ -138,7 +146,6 @@ export default function VerificationMethodsCard() {
       console.log("Front NID uploaded:", frontResult.publicUrl);
       setUploadProgress((p) => ({ ...p, frontNid: 100 }));
 
-      // Upload back NID
       console.log("Uploading back NID:", uploads.backNid.file.name);
       setUploadProgress((p) => ({ ...p, backNid: 0 }));
       const backResult = await upload(uploads.backNid.file);
@@ -146,10 +153,8 @@ export default function VerificationMethodsCard() {
       console.log("Back NID uploaded:", backResult.publicUrl);
       setUploadProgress((p) => ({ ...p, backNid: 100 }));
 
-      // Update toast
       toast.loading("Submitting verification...", { id: toastId });
 
-      // Submit to backend
       const payload = {
         nidNumber: nidNumber.trim(),
         nidFrontImg: frontResult.publicUrl,
@@ -161,20 +166,18 @@ export default function VerificationMethodsCard() {
       console.log("Backend response:", response);
 
       if (response.success) {
-        toast.success(response.message || "NID submitted successfully", {
-          id: toastId,
-        });
-        // Reset form on success
+        toast.success(response.message || "NID submitted successfully", { id: toastId });
         setNidNumber("");
         setUploads({ frontNid: { file: null }, backNid: { file: null } });
         setUploadProgress({});
+        // Refresh profile data to show updated NID status
+        refreshProfile();
       } else {
         toast.error(response.message || "Failed to update NID", { id: toastId });
       }
     } catch (error) {
       console.error("Error submitting NID:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to submit NID verification";
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit NID verification";
       toast.error(errorMessage, { id: toastId });
     } finally {
       setIsSubmitting(false);
@@ -182,12 +185,16 @@ export default function VerificationMethodsCard() {
     }
   };
 
+  const nidStatus = profileData?.nidVerification?.nidStatus;
+  const hasExistingNid = !!(profileData?.nidNumber && profileData?.nidFrontImg && profileData?.nidBackImg);
+  const isNidLocked = nidStatus === "verified" || nidStatus === "approved" || nidStatus === "pending";
+  const canResubmit = hasExistingNid && !isNidLocked;
+
   return (
     <Card className="py-0 relative">
       <CardContent className="py-4 px-6">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
-            {/* Header */}
             <div className="relative">
               <AccordionTrigger className="py-0 hover:no-underline">
                 <div className="flex items-center justify-between w-full pr-16">
@@ -202,77 +209,128 @@ export default function VerificationMethodsCard() {
             </div>
 
             <AccordionContent className="pt-4 pb-6">
-              {/* Warning */}
-              <div className="flex items-center gap-2 bg-[#FDECEC] text-[#E74C3C] text-sm rounded-lg px-4 py-2 mb-6 border border-[#FAD2D2]">
-                <AlertTriangle className="w-4 h-4" />
-                <span>Verification Required. Please Provide Documents</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* NID number */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-orange">
-                    Your NID Number
-                  </label>
-                  <Input
-                    value={nidNumber}
-                    onChange={(e) => setNidNumber(e.target.value)}
-                    placeholder="Enter your NID Number"
-                    className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Must be 10, 13, or 17 digits
-                  </p>
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-orange" />
                 </div>
+              ) : (
+                <>
+                  {hasExistingNid && (
+                    <div className={`flex items-center gap-2 text-sm rounded-lg px-4 py-2 mb-6 border ${
+                      nidStatus === "verified" || nidStatus === "approved"
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : nidStatus === "pending"
+                        ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                        : nidStatus === "rejected"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-[#FDECEC] text-[#E74C3C] border-[#FAD2D2]"
+                    }`}>
+                      {nidStatus === "verified" || nidStatus === "approved" ? (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Your NID has been verified</span>
+                        </>
+                      ) : nidStatus === "pending" ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>NID verification is pending review</span>
+                        </>
+                      ) : nidStatus === "rejected" ? (
+                        <>
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>
+                            NID verification was rejected
+                            {profileData?.nidVerification?.nidRejectReason && 
+                              `: ${profileData.nidVerification.nidRejectReason}`
+                            }
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Verification Required. Please Provide Documents</span>
+                        </>
+                      )}
+                    </div>
+                  )}
 
-                {/* Front side */}
-                <UploadBoxUI
-                  label="Front Side of NID"
-                  state={uploads.frontNid}
-                  error={errors.frontNid}
-                  accept={ACCEPT}
-                  inputId="file-frontNid"
-                  onPick={() => openFileDialog("frontNid")}
-                  onRemove={() => setUpload("frontNid", null)}
-                  onDrop={onDrop("frontNid")}
-                  onDragOver={(e) => e.preventDefault()}
-                  onChange={(f) => setUpload("frontNid", f)}
-                  isUploading={isSubmitting && uploadProgress.frontNid !== undefined}
-                  progress={uploadProgress.frontNid}
-                />
+                  {!hasExistingNid && (
+                    <div className="flex items-center gap-2 bg-[#FDECEC] text-[#E74C3C] text-sm rounded-lg px-4 py-2 mb-6 border border-[#FAD2D2]">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Verification Required. Please Provide Documents</span>
+                    </div>
+                  )}
 
-                {/* Back side */}
-                <UploadBoxUI
-                  label="Back Side of NID"
-                  state={uploads.backNid}
-                  error={errors.backNid}
-                  accept={ACCEPT}
-                  inputId="file-backNid"
-                  onPick={() => openFileDialog("backNid")}
-                  onRemove={() => setUpload("backNid", null)}
-                  onDrop={onDrop("backNid")}
-                  onDragOver={(e) => e.preventDefault()}
-                  onChange={(f) => setUpload("backNid", f)}
-                  isUploading={isSubmitting && uploadProgress.backNid !== undefined}
-                  progress={uploadProgress.backNid}
-                />
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-orange">
+                        Your NID Number
+                      </label>
+                      <Input
+                        value={nidNumber}
+                        onChange={(e) => setNidNumber(e.target.value)}
+                        placeholder="Enter your NID Number"
+                        className="h-10 border-black/10 focus-visible:ring-1 focus-visible:ring-orange/30"
+                        disabled={isNidLocked}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Must be 10, 13, or 17 digits
+                      </p>
+                    </div>
 
-              {/* Submit Button */}
-              <div className="mt-6 flex justify-end">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={
-                    isSubmitting || 
-                    !nidNumber.trim() || 
-                    !uploads.frontNid.file || 
-                    !uploads.backNid.file
-                  }
-                  className="bg-orange hover:bg-orange/90 text-white px-8"
-                >
-                  {isSubmitting ? "Processing..." : "Submit for Verification"}
-                </Button>
-              </div>
+                    <UploadBoxUI
+                      label="Front Side of NID"
+                      state={uploads.frontNid}
+                      error={errors.frontNid}
+                      accept={ACCEPT}
+                      inputId="file-frontNid"
+                      onPick={() => openFileDialog("frontNid")}
+                      onRemove={() => setUpload("frontNid", null)}
+                      onDrop={onDrop("frontNid")}
+                      onDragOver={(e) => e.preventDefault()}
+                      onChange={(f) => setUpload("frontNid", f)}
+                      isUploading={isSubmitting && uploadProgress.frontNid !== undefined}
+                      progress={uploadProgress.frontNid}
+                      existingImageUrl={profileData?.nidFrontImg}
+                      disabled={isNidLocked}
+                    />
+
+                    <UploadBoxUI
+                      label="Back Side of NID"
+                      state={uploads.backNid}
+                      error={errors.backNid}
+                      accept={ACCEPT}
+                      inputId="file-backNid"
+                      onPick={() => openFileDialog("backNid")}
+                      onRemove={() => setUpload("backNid", null)}
+                      onDrop={onDrop("backNid")}
+                      onDragOver={(e) => e.preventDefault()}
+                      onChange={(f) => setUpload("backNid", f)}
+                      isUploading={isSubmitting && uploadProgress.backNid !== undefined}
+                      progress={uploadProgress.backNid}
+                      existingImageUrl={profileData?.nidBackImg}
+                      disabled={isNidLocked}
+                    />
+                  </div>
+
+                  {(!hasExistingNid || canResubmit) && (
+                    <div className="mt-6 flex justify-end">
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={
+                          isSubmitting || 
+                          !nidNumber.trim() || 
+                          !uploads.frontNid.file || 
+                          !uploads.backNid.file
+                        }
+                        className="bg-orange hover:bg-orange/90 text-white px-8"
+                      >
+                        {isSubmitting ? "Processing..." : hasExistingNid ? "Resubmit for Verification" : "Submit for Verification"}
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -280,8 +338,6 @@ export default function VerificationMethodsCard() {
     </Card>
   );
 }
-
-/* ---------------- UI Upload Box (same style as previous) ---------------- */
 
 function UploadBoxUI({
   label,
@@ -296,6 +352,8 @@ function UploadBoxUI({
   onChange,
   isUploading,
   progress,
+  existingImageUrl,
+  disabled,
 }: {
   label: string;
   state: UploadState;
@@ -309,8 +367,11 @@ function UploadBoxUI({
   onChange: (file: File | null) => void;
   isUploading?: boolean;
   progress?: number;
+  existingImageUrl?: string | null;
+  disabled?: boolean;
 }) {
   const hasFile = !!state.file;
+  const hasExisting = !!existingImageUrl;
 
   return (
     <div className="space-y-2">
@@ -318,21 +379,22 @@ function UploadBoxUI({
 
       <div
         role="button"
-        tabIndex={0}
-        onClick={onPick}
+        tabIndex={disabled ? -1 : 0}
+        onClick={disabled ? undefined : onPick}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") onPick();
+          if (!disabled && (e.key === "Enter" || e.key === " ")) onPick();
         }}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
+        onDrop={disabled ? undefined : onDrop}
+        onDragOver={disabled ? undefined : onDragOver}
         className={[
           "w-full rounded-lg border border-dashed",
           "bg-muted/30",
           "min-h-35",
           "flex items-center justify-center",
-          "cursor-pointer select-none",
+          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          "select-none",
           "transition",
-          "hover:bg-muted/40",
+          !disabled && "hover:bg-muted/40",
           "focus:outline-none focus:ring-2 focus:ring-orange/20",
           "border-black/10",
         ].join(" ")}
@@ -343,16 +405,17 @@ function UploadBoxUI({
           accept={accept}
           className="hidden"
           onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+          disabled={disabled}
         />
 
-        {!hasFile ? (
+        {!hasFile && !hasExisting ? (
           <div className="flex flex-col items-center gap-3 text-center px-4">
             <div className="h-11 w-11 rounded-full bg-black/5 grid place-items-center">
               <Upload className="h-5 w-5 text-black/40" />
             </div>
             <p className="text-xs text-black/50">PNG, JPG, PDF (Max 2MB)</p>
           </div>
-        ) : (
+        ) : hasFile ? (
           <div className="w-full px-4 py-4">
             {isUploading ? (
               <div className="flex flex-col items-center gap-3 py-4">
@@ -374,24 +437,25 @@ function UploadBoxUI({
                     </div>
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove();
-                    }}
-                    className="h-9 w-9 p-0 hover:bg-black/5"
-                    aria-label="Remove file"
-                    title="Remove"
-                  >
-                    <XCircle className="h-4 w-4 text-black/40" />
-                  </Button>
+                  {!disabled && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove();
+                      }}
+                      className="h-9 w-9 p-0 hover:bg-black/5"
+                      aria-label="Remove file"
+                      title="Remove"
+                    >
+                      <XCircle className="h-4 w-4 text-black/40" />
+                    </Button>
+                  )}
                 </div>
 
                 {state.previewUrl && (
                   <div className="mt-3 rounded-md overflow-hidden border border-black/10">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={state.previewUrl}
                       alt="Preview"
@@ -402,7 +466,22 @@ function UploadBoxUI({
               </>
             )}
           </div>
-        )}
+        ) : hasExisting ? (
+          <div className="w-full px-4 py-4">
+            <div className="flex flex-col items-center gap-3">
+              <div className="mt-3 rounded-md overflow-hidden border border-black/10 w-full">
+                <img
+                  src={existingImageUrl}
+                  alt="Existing NID"
+                  className="w-full h-28 object-cover"
+                />
+              </div>
+              <p className="text-sm font-medium text-green-600">
+                ✓ Uploaded
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {error && <p className="text-xs text-red-500">{error}</p>}

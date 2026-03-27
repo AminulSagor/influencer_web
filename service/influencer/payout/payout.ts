@@ -36,3 +36,45 @@ export const addMobileBankingPayout = async (
   const response = await serviceClient.post(`/influencer/profile/payouts`, data);
   return response.data;
 };
+
+export interface DeletePayoutRequest {
+  type: "bank" | "mobile";
+  identifier: string;
+}
+
+export const deletePayout = async (
+  data: DeletePayoutRequest
+): Promise<PayoutResponse> => {
+  const response = await serviceClient.delete(`/influencer/profile/payouts`, {
+    data: data
+  });
+  return response.data;
+};
+
+/**
+ * Update payout settings (bank + mobile banking)
+ * PATCH /influencer/profile/edit/payouts
+ */
+export interface UpdatePayoutRequest {
+  bank?: Array<{
+    bankName: string;
+    bankAccHolderName: string;
+    bankAccNo: string;
+    bankBranchName: string;
+    bankRoutingNo: string;
+    accStatus: string;
+  }>;
+  mobileBanking?: Array<{
+    accountType: string;
+    accountHolderName: string;
+    accountNo: string;
+    accStatus: string;
+  }>;
+}
+
+export const updatePayout = async (
+  data: UpdatePayoutRequest
+): Promise<PayoutResponse> => {
+  const response = await serviceClient.patch(`/influencer/profile/edit/payouts`, data);
+  return response.data;
+};

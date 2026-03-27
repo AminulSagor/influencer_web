@@ -6,19 +6,31 @@ export interface InfluencerProfilePayload {
 export interface Address {
   thana: string;
   zilla: string;
-  country: string;
+  country?: string;
   addressName: string;
   fullAddress: string;
+  isDefault?: boolean;
 }
 
 export interface SocialLink {
   url: string;
   platform: string;
+  status?: "verified" | "unverified" | "pending" | "rejected";
+}
+
+export interface Niche {
+  niche: string;
+  status: "verified" | "unverified" | "pending" | "rejected" | "approved";
+}
+
+export interface Skill {
+  skill: string;
+  status: "verified" | "unverified" | "pending" | "rejected" | "approved";
 }
 
 export interface BankAccount {
   bankName: string;
-  accStatus: "pending" | "verified" | "rejected";
+  accStatus: "pending" | "verified" | "rejected" | "approved" | "active";
   bankAccNo: string;
   bankRoutingNo: string;
   bankBranchName: string;
@@ -29,7 +41,7 @@ export interface MobileBankingAccount {
   accountNo: string;
   accountHolderName: string;
   accountType: string;
-  accStatus: "pending" | "verified" | "rejected";
+  accStatus: "pending" | "verified" | "rejected" | "approved" | "active";
 }
 
 export interface Payouts {
@@ -38,7 +50,7 @@ export interface Payouts {
 }
 
 export interface NidVerification {
-  nidStatus: "pending" | "verified" | "rejected";
+  nidStatus: "pending" | "verified" | "rejected" | "approved";
   nidRejectReason: string;
 }
 
@@ -48,8 +60,8 @@ export interface InfluencerProfileData {
   lastName: string;
   bio: string | null;
   addresses: Address[];
-  niches: string[] | null;
-  skills: string[] | null;
+  niches: Niche[] | null;
+  skills: Skill[] | null;
   website: string | null;
   socialLinks: SocialLink[];
   nidNumber: string | null;
@@ -62,6 +74,9 @@ export interface InfluencerProfileData {
   averageRating: string;
   totalReviews: number;
   isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  isVerified: boolean;
+  isBlocked: boolean;
   userId: string;
   createdAt: string;
   updatedAt: string;

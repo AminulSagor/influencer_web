@@ -3,8 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
-import { removeToken } from "@/utils/cookies_util";
-import { useProfileStore } from "@/store/client-profile-store";
+import { logout as logoutService } from "@/service/auth/logout";
 
 export function useLogout() {
   const router = useRouter();
@@ -15,13 +14,17 @@ export function useLogout() {
     if (loading) return;
 
     setLoading(true);
-
     try {
-      useProfileStore.getState().resetProfile();
+      // Call logout service (clears token and calls backend)
+      await logoutService();
 
-      removeToken();
-
-      router.replace(`/${locale}/login`);
+      // Redirect to login page
+      router.push(`/${locale}/login`);
+      router.refresh();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if there's an error, redirect to login since token is cleared
+      router.push(`/${locale}/login`);
       router.refresh();
     } finally {
       setLoading(false);

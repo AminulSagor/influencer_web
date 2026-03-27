@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { BadgeCheck, Check, Clock3, HelpCircle } from "lucide-react";
-import { InfluencerProfileData } from "@/types/influencer/profile_type";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 
-type Status = "done" | "pending";
+type Status = "approved" | "pending" | "in-review" | "rejected";
 
 interface ProfileCompletionCardProps {
   profileData: InfluencerProfileData | null;
@@ -19,41 +19,79 @@ interface ProfileCompletionCardProps {
 
 export default function ProfileCompletionCard({ profileData }: ProfileCompletionCardProps) {
   // Determine completion statuses based on profile data
-  const profilePictureStatus: Status = profileData?.profileImg ? "done" : "pending";
-  const nichesStatus: Status = profileData?.niches && profileData.niches.length > 0 ? "done" : "pending";
-  const websiteStatus: Status = profileData?.website ? "done" : "pending";
-  const bioStatus: Status = profileData?.bio ? "done" : "pending";
+  const profilePictureStatus: Status = profileData?.profileImg ? "approved" : "pending";
+  
+  // For niches: check if exists and get status from first item
+  const nichesStatus: Status = !profileData?.niches || profileData.niches.length === 0 
+    ? "pending" 
+    : profileData.niches[0].status === "unverified" 
+      ? "in-review" 
+      : profileData.niches[0].status === "verified" || profileData.niches[0].status === "approved"
+        ? "approved" 
+        : profileData.niches[0].status === "rejected" 
+          ? "rejected" 
+          : "pending";
+  
+  // For skills: check if exists and get status from first item
+  const skillsStatus: Status = !profileData?.skills || profileData.skills.length === 0 
+    ? "pending" 
+    : profileData.skills[0].status === "unverified" 
+      ? "in-review" 
+      : profileData.skills[0].status === "verified" || profileData.skills[0].status === "approved"
+        ? "approved" 
+        : profileData.skills[0].status === "rejected" 
+          ? "rejected" 
+          : "pending";
+  
+  // For bio: just check if exists (no status field)
+  const bioStatus: Status = profileData?.bio ? "approved" : "pending";
 
   // Calculate progress percentage
   const totalSteps = 4;
   const completedSteps = [
     profilePictureStatus,
     nichesStatus,
-    websiteStatus,
+    skillsStatus,
     bioStatus
-  ].filter(status => status === "done").length;
+  ].filter(status => status === "approved").length;
   const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
   // Determine subtitle messages
   const getProfilePictureSubtitle = () => {
-    if (profilePictureStatus === "done") return "Looking good!";
+    if (profilePictureStatus === "approved") return "Looking good!";
     return "Pending";
   };
 
   const getNichesSubtitle = () => {
-    if (nichesStatus === "done" && profileData?.niches) {
-      return `${profileData.niches.length} niche(s) added`;
+    if (nichesStatus === "pending") return "Pending";
+    if (nichesStatus === "in-review" && profileData?.niches) {
+      return `${profileData.niches.length} niche(s) - In Review`;
+    }
+    if (nichesStatus === "approved" && profileData?.niches) {
+      return `${profileData.niches.length} niche(s) - Approved`;
+    }
+    if (nichesStatus === "rejected" && profileData?.niches) {
+      return `${profileData.niches.length} niche(s) - Rejected`;
     }
     return "Pending";
   };
 
-  const getWebsiteSubtitle = () => {
-    if (websiteStatus === "done") return "Website added";
+  const getSkillsSubtitle = () => {
+    if (skillsStatus === "pending") return "Pending";
+    if (skillsStatus === "in-review" && profileData?.skills) {
+      return `${profileData.skills.length} skill(s) - In Review`;
+    }
+    if (skillsStatus === "approved" && profileData?.skills) {
+      return `${profileData.skills.length} skill(s) - Approved`;
+    }
+    if (skillsStatus === "rejected" && profileData?.skills) {
+      return `${profileData.skills.length} skill(s) - Rejected`;
+    }
     return "Pending";
   };
 
   const getBioSubtitle = () => {
-    if (bioStatus === "done") return "Bio added";
+    if (bioStatus === "approved") return "Bio added";
     return "Pending";
   };
 
@@ -104,15 +142,15 @@ export default function ProfileCompletionCard({ profileData }: ProfileCompletion
                       status={nichesStatus} 
                       title="Add Niches" 
                       sub={getNichesSubtitle()} 
-                      isFirst={profilePictureStatus === "done"}
+                      isFirst={profilePictureStatus === "approved"}
                       isLast={false}
                       showHelp 
                     />
                     <ProfileItem 
-                      status={websiteStatus} 
-                      title="Add Website" 
-                      sub={getWebsiteSubtitle()} 
-                      isFirst={nichesStatus === "done"}
+                      status={skillsStatus} 
+                      title="Add Skill" 
+                      sub={getSkillsSubtitle()} 
+                      isFirst={nichesStatus === "approved"}
                       isLast={false}
                       showHelp 
                     />
@@ -120,7 +158,7 @@ export default function ProfileCompletionCard({ profileData }: ProfileCompletion
                       status={bioStatus} 
                       title="Add Bio" 
                       sub={getBioSubtitle()} 
-                      isFirst={websiteStatus === "done"}
+                      isFirst={skillsStatus === "approved"}
                       isLast={true}
                       showHelp={false}
                     />
@@ -150,16 +188,20 @@ function ProfileItem({
   isLast?: boolean;
   showHelp?: boolean;
 }) {
-  // Define bubble colors
-  const bubble = status === "done" ? "bg-light-green" : "bg-gray-200";
+  // Define bubble colors and icons based on status
+  let bubble = "bg-gray-200";
+  let icon = <Clock3 className="w-5 h-5 text-gray-400 stroke-[2.5]" />;
   
-  // Define icon with bolder stroke
-  const icon =
-    status === "done" ? (
-      <Check className="w-5 h-5 text-white stroke-[2.5]" />
-    ) : (
-      <Clock3 className="w-5 h-5 text-gray-400 stroke-[2.5]" />
-    );
+  if (status === "approved") {
+    bubble = "bg-light-green";
+    icon = <Check className="w-5 h-5 text-white stroke-[2.5]" />;
+  } else if (status === "in-review") {
+    bubble = "bg-[#FFF3C9]";
+    icon = <Clock3 className="w-5 h-5 text-[#B77900] stroke-[2.5]" />;
+  } else if (status === "rejected") {
+    bubble = "bg-red-500";
+    icon = <span className="text-white text-xl font-bold">✕</span>;
+  }
 
   return (
     <div className="flex items-start justify-between gap-4 relative">
@@ -174,7 +216,7 @@ function ProfileItem({
           {/* Top connector for all items except first */}
           {!isFirst && (
             <div 
-              className={`absolute w-[2px] top-[-28px] h-7 ${status === "done" ? "bg-light-green" : "bg-gray-200"}`}
+              className={`absolute w-[2px] top-[-28px] h-7 ${status === "approved" ? "bg-light-green" : "bg-gray-200"}`}
               style={{ left: '50%', transform: 'translateX(-50%)' }}
             />
           )}
