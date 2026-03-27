@@ -26,6 +26,7 @@ type DerivedAssignedWork = {
   expectedViews?: number;
   expectedLikes?: number;
   expectedComments?: number;
+  expectedFollows?: number;
   promotionGoal?: string;
   order?: number;
   amount?: number;
@@ -89,6 +90,7 @@ function deriveMilestonesFromSelectedInfluencer(
         expectedViews: work.expectedViews ?? null,
         expectedLikes: work.expectedLikes ?? null,
         expectedComments: work.expectedComments ?? null,
+        expectedFollows: work.expectedFollows ?? null,
         promotionGoal: work.promotionGoal ?? "",
         amount: String(Number(work.amount ?? 0)),
         bonusAmount: "0",

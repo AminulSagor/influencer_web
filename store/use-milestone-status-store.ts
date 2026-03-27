@@ -15,6 +15,7 @@ type MilestoneStatusStore = {
     milestoneId: string;
     averagePerformance: number;
     hasTargetMetrics: boolean;
+    fallbackStatus?: string | null;
   }) => void;
 
   removeMilestoneOverride: (milestoneId: string) => void;
@@ -28,6 +29,17 @@ type MilestoneStatusStore = {
   getMilestonePerformance: (milestoneId: string) => MilestonePerformanceState;
 };
 
+function normalizeStatus(value?: string | null) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function canBeCompletedPlusPlus(status?: string | null) {
+  const normalized = normalizeStatus(status);
+  return normalized === "completed" || normalized === "completed_plus_plus";
+}
+
 export const useMilestoneStatusStore = create<MilestoneStatusStore>(
   (set, get) => ({
     overrides: {},
@@ -37,6 +49,7 @@ export const useMilestoneStatusStore = create<MilestoneStatusStore>(
       milestoneId,
       averagePerformance,
       hasTargetMetrics,
+      fallbackStatus,
     }) => {
       if (!milestoneId) return;
 
@@ -50,7 +63,11 @@ export const useMilestoneStatusStore = create<MilestoneStatusStore>(
           },
         };
 
-        if (hasTargetMetrics && averagePerformance > 100) {
+        if (
+          canBeCompletedPlusPlus(fallbackStatus) &&
+          hasTargetMetrics &&
+          averagePerformance > 100
+        ) {
           nextOverrides[milestoneId] = "completed_plus_plus";
         } else {
           delete nextOverrides[milestoneId];
@@ -62,7 +79,6 @@ export const useMilestoneStatusStore = create<MilestoneStatusStore>(
         };
       });
     },
-
     removeMilestoneOverride: (milestoneId) => {
       set((state) => {
         const nextOverrides = { ...state.overrides };

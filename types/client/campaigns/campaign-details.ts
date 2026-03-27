@@ -67,7 +67,6 @@ export type CampaignPaymentInfo = {
 };
 
 export type CampaignStatus =
-  | "draft"
   | "received"
   | "negotiating"
   | "quoted"
@@ -87,7 +86,6 @@ export type CampaignStatus =
   | "pending_influencer"
   | "budget_quoting"
   | "budget_building"
-  | string;
 
 export type CampaignPaymentStatus = "pending" | "partial" | "paid" | string;
 

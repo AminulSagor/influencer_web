@@ -28,18 +28,14 @@ import { BsEye } from "react-icons/bs";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
 import { useCampaignStore } from "@/app/[locale]/(brand)/brand/zustand-store/create-Campaign-Store";
-//import axiosInstance from "@/lib/axios";
-import axios from "axios";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-//import { useToken } from "@/hooks/useGetToken";
 import {
   serviceMilestone,
   NewMilestoneForm,
 } from "@/types/client/campaigns/create-campaign-types";
 import { submitCampaignStepFour } from "@/service/campaign/update-step-4";
 import { stepFourSchema } from "@/schemas/campaign/step4_campaign_validation";
-import { StepFourPayload } from "@/types/campaign/step4_campaign_type";
 import { buildStepFourPayload } from "@/utils/campaigns/step_4_util";
 import { useTranslations } from "next-intl";
 
@@ -329,7 +325,7 @@ const toPlatformEnum = (platform: string) => {
   return p || "instagram";
 };
 
-const extractNumber = (value: string) => {
+const extractNumberLegacy = (value: string) => {
   const cleaned = value.replace(/[^0-9]/g, "");
   const n = parseInt(cleaned, 10);
   return Number.isFinite(n) ? n : 0;
@@ -338,7 +334,6 @@ const extractNumber = (value: string) => {
 const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
   const t = useTranslations("brand.CreateCampaignsPage");
   const campaignId = useCampaignStore((s) => s.campaignId);
-  //const { token } = useToken();
   const { increaseStep, decreaseStep } = useCampaignStore();
   const campaignType = useCampaignStore((s) => s.campaignType);
 
@@ -514,11 +509,13 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
 
   const buildserviceMilestones = (): serviceMilestone[] => {
     return milestones.map((m) => {
-      const deliveryDays = extractNumber(m.day) || 0;
+      const deliveryDays = extractNumberLegacy(m.day) || 0;
 
       if (campaignType === "paid_ad") {
         const metricTitle = (m.promotionTarget?.title || "").toLowerCase();
-        const metricValue = extractNumber(m.promotionTarget?.amount || "");
+        const metricValue = extractNumberLegacy(
+          m.promotionTarget?.amount || "",
+        );
 
         const base: serviceMilestone = {
           contentTitle: m.title.trim(),
@@ -544,24 +541,16 @@ const CampaignMilestonesSection = ({ budget }: { budget: string }) => {
         platform: toPlatformEnum(m.platform),
         contentQuantity: m.subtitle.trim(),
         deliveryDays,
-        expectedReach: extractNumber(m.expectedReach || ""),
-        expectedViews: extractNumber(m.expectedViews || ""),
-        expectedLikes: extractNumber(m.expectedLikes || ""),
-        expectedComments: extractNumber(m.expectedComments || ""),
+        expectedReach: extractNumberLegacy(m.expectedReach || ""),
+        expectedViews: extractNumberLegacy(m.expectedViews || ""),
+        expectedLikes: extractNumberLegacy(m.expectedLikes || ""),
+        expectedComments: extractNumberLegacy(m.expectedComments || ""),
       };
     });
   };
 
-  const validateBeforeSubmit = () => {
-    if (milestones.length === 0)
-      return t("pleaseAddAtLeastOneCampaignMilestone");
-    else if (!budget) return t("pleaseEnterYourBudgetFirst");
-    return "";
-  };
-
   const handleNextStep = async () => {
-    const payload = buildStepFourPayload(budget, milestones);
-
+    const payload = buildStepFourPayload(budget, milestones, campaignType);
     const validation = stepFourSchema.safeParse(payload);
 
     if (!validation.success) {

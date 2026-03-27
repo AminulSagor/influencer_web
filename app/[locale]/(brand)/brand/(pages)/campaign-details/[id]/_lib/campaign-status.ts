@@ -1,27 +1,8 @@
-export type CampaignStatusKey =
-  | "draft"
-  | "received"
-  | "negotiating"
-  | "quoted"
-  | "paid"
-  | "partial_paid"
-  | "promoting"
-  | "accepted"
-  | "approved"
-  | "active"
-  | "in_review"
-  | "pending_agency"
-  | "agency_accepted"
-  | "agency_negotiating"
-  | "completed"
-  | "cancelled"
-  | "declined"
-  | "pending_influencer"
-  | string;
+import { CampaignStatus } from "@/types/client/campaigns/campaign-details";
 
-export type CampaignType = "paid_ad" | "influencer_promotion" | string;
+export type CampaignType = "paid_ad" | "influencer_promotion";
 
-export const PAID_AD_QUOTATION_STATUSES: CampaignStatusKey[] = [
+export const PAID_AD_QUOTATION_STATUSES: CampaignStatus[] = [
   "pending_agency",
   "agency_negotiating",
   "received",
@@ -30,7 +11,7 @@ export const PAID_AD_QUOTATION_STATUSES: CampaignStatusKey[] = [
 
 export function shouldShowAgencyQuotationTabs(
   campaignType: CampaignType,
-  status: CampaignStatusKey,
+  status: CampaignStatus,
 ) {
   if (campaignType !== "paid_ad") {
     return false;
@@ -41,7 +22,7 @@ export function shouldShowAgencyQuotationTabs(
 
 export function getDefaultCampaignTab(
   campaignType: CampaignType,
-  status: CampaignStatusKey,
+  status: CampaignStatus,
 ) {
   if (shouldShowAgencyQuotationTabs(campaignType, status)) {
     return "agency-quotations";

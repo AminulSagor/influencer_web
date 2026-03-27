@@ -53,9 +53,11 @@ export default function InfluencerSubmissionDetailsPanel({
       milestoneId: milestone.id,
       averagePerformance,
       hasTargetMetrics,
+      fallbackStatus: milestone.status,
     });
   }, [
     milestone.id,
+    milestone.status,
     averagePerformance,
     hasTargetMetrics,
     syncMilestonePerformance,
