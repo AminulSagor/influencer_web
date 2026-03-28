@@ -38,10 +38,12 @@ export default function MilestoneReportActions({
   const isPending = status === "pending";
   const isCompleted =
     status === "completed" || status === "completed_plus_plus";
-  const isInReview = status === "in_review" || status === "in review";
+  const isInReview = status === "in_review" || status === "in_progress";
+  const isTodo = status === "todo";
 
-  const disableReportAdmin = !milestoneId || isPending || isCompleted;
-  const disableViewSubmittedReport = !milestoneId || isPending || isInReview;
+  const disableReportAdmin = !milestoneId || isPending || isCompleted || isTodo;
+  const disableViewSubmittedReport =
+    !milestoneId || isPending || isInReview || isTodo;
 
   return (
     <>
