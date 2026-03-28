@@ -143,9 +143,7 @@ function shouldShowMilestoneDetails(
   const normalizedCampaignStatus = String(campaignStatus ?? "").toLowerCase();
 
   // First check if campaign status allows showing details
-  if (
-    !["active", "completed", "cancelled"].includes(normalizedCampaignStatus)
-  ) {
+  if (!["active", "completed"].includes(normalizedCampaignStatus)) {
     return false;
   }
 
@@ -159,6 +157,7 @@ function shouldShowMilestoneDetails(
 
     const allowedStatuses = [
       "in_review",
+      "in_progress",
       "decline",
       "completed",
       "completed_plus_plus",
@@ -173,6 +172,7 @@ function shouldShowMilestoneDetails(
     "decline",
     "completed",
     "completed_plus_plus",
+    "in_progress",
   ];
   return allowedStatuses.includes(normalizedMilestoneStatus);
 }

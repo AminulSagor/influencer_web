@@ -47,7 +47,8 @@ export default function SubmissionReportActions({
   const [actionType, setActionType] = React.useState<ActionType>(null);
   const [text, setText] = React.useState("");
 
-  const showReviewActions = value === "in_review";
+  // FIX: Allow both "in_review" and "in_progress" to show review actions
+  const showReviewActions = value === "in_review" || value === "in_progress";
   const isFinished = ["approved", "completed", "declined"].includes(value);
   const hasSelection = submissionIds.length > 0;
 

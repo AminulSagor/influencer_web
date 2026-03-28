@@ -137,6 +137,14 @@ export default function MilestoneDetailsCard({
     }
   };
 
+  const shouldShowActionButtons = React.useMemo(() => {
+    const allowedStatuses = ["in_review", "in_progress"];
+    return (
+      allowedStatuses.includes(resolvedMilestoneStatus) &&
+      reviewAnchorSubmissionId
+    );
+  }, [resolvedMilestoneStatus, reviewAnchorSubmissionId]);
+
   return (
     <Accordion
       type="single"
@@ -184,12 +192,12 @@ export default function MilestoneDetailsCard({
                 selectedSubmissionIds={selectedSubmissionIds}
                 onSelectedSubmissionIdsChange={setSelectedSubmissionIds}
                 onPrimarySubmissionIdChange={setPrimarySubmissionId}
+                submissionId={submissionId}
               />
             </div>
           </AccordionContent>
 
-          {resolvedMilestoneStatus === "in_review" &&
-          reviewAnchorSubmissionId ? (
+          {shouldShowActionButtons ? (
             <div className="mt-5">
               <SubmissionReportActions
                 submissionIds={reviewableSubmissionIds}
@@ -204,7 +212,6 @@ export default function MilestoneDetailsCard({
                   isInfluencerPromotion ? "Decline" : "Decline Selected"
                 }
                 disabled={
-                  
                   !isInfluencerPromotion && reviewableSubmissionIds.length === 0
                 }
               />

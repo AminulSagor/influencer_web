@@ -27,7 +27,7 @@ const getStatusLabel = (status?: string) => {
 
   if (value === "completed_plus_plus") return "Completed++";
   if (value === "completed") return "Completed";
-  if (value === "in_review") return "In Review";
+  if (value === "in_review" || value === "in_progress") return "In Review";
   if (value === "declined") return "Declined";
   if (value === "accepted") return "Accepted";
   if (value === "pending") return "Pending";
@@ -68,7 +68,7 @@ const getStatusClasses = (status?: string) => {
     };
   }
 
-  if (value === "in_review") {
+  if (value === "in_review" || value === "in_progress") {
     return {
       card: "border-orange bg-linear-to-r from-white to-orange/10",
       activeBorder: "ring-orange border-[3px] border-orange",

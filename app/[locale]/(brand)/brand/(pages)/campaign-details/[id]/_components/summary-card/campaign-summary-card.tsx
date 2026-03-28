@@ -116,6 +116,8 @@ export default function CampaignSummaryCard({
 
   const numericRating = toNumber(campaign.rating);
 
+  const status = campaign.status;
+
   return (
     <Card className="overflow-hidden border-0 bg-linear-to-r from-Primary to-light-green p-0 shadow-none">
       <CardContent className="p-0">
@@ -142,6 +144,7 @@ export default function CampaignSummaryCard({
               ) : (
                 <CampaignSummaryDeadlineCard
                   deadlineLabel={deadlineLabel}
+                  campaignStatus = {status}
                   deadlineDate={deadlineDate}
                   dueAmount={dueAmount}
                   isPartialPaid={isPartialPaid}
