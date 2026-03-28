@@ -10,6 +10,7 @@ import {
 } from "@/types/client/campaigns/campaign-details";
 import { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
 import { useCampaignOverallProgress } from "@/hooks/use-campaign-overall-progress";
+import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -130,9 +131,50 @@ function getAssignmentIdForSelectedInfluencerMilestone(
   return hasMilestone ? influencer.assignmentId : undefined;
 }
 
-function shouldShowMilestoneDetails(status?: string) {
-  const normalized = String(status ?? "").toLowerCase();
-  return ["active", "completed", "cancelled"].includes(normalized);
+function shouldShowMilestoneDetails(
+  campaignStatus?: string,
+  milestoneStatus?: string | null,
+  getResolvedMilestoneStatus?: (
+    milestoneId: string,
+    fallbackStatus?: string | null,
+  ) => string,
+  milestoneId?: string,
+) {
+  const normalizedCampaignStatus = String(campaignStatus ?? "").toLowerCase();
+
+  // First check if campaign status allows showing details
+  if (
+    !["active", "completed", "cancelled"].includes(normalizedCampaignStatus)
+  ) {
+    return false;
+  }
+
+  // If we have milestone status resolution, use it to check for allowed statuses
+  if (getResolvedMilestoneStatus && milestoneId) {
+    const resolvedStatus = getResolvedMilestoneStatus(
+      milestoneId,
+      milestoneStatus,
+    );
+    const normalizedResolvedStatus = resolvedStatus.toLowerCase();
+
+    const allowedStatuses = [
+      "in_review",
+      "decline",
+      "completed",
+      "completed_plus_plus",
+    ];
+    return allowedStatuses.includes(normalizedResolvedStatus);
+  }
+
+  // Fallback to checking the raw milestone status
+  const normalizedMilestoneStatus = String(milestoneStatus ?? "").toLowerCase();
+  const allowedStatuses = [
+    "in_review",
+    "decline",
+    "completed",
+    "completed_plus_plus",
+  ];
+  return allowedStatuses.includes(normalizedMilestoneStatus);
 }
 
 export default function CampaignMilestonesSection({ campaign }: Props) {
@@ -283,10 +325,19 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     return progressPercentage < 50;
   }, [progressPercentage]);
 
-  const showMilestoneDetails = React.useMemo(
-    () => shouldShowMilestoneDetails(campaign.status),
-    [campaign.status],
-  );
+  // Get the milestone status store methods
+  const { getResolvedMilestoneStatus } = useMilestoneStatusStore();
+
+  const showMilestoneDetails = React.useMemo(() => {
+    if (!expandedMilestone) return false;
+
+    return shouldShowMilestoneDetails(
+      campaign.status,
+      expandedMilestone.status,
+      getResolvedMilestoneStatus,
+      expandedMilestone.id,
+    );
+  }, [campaign.status, expandedMilestone, getResolvedMilestoneStatus]);
 
   const handleSelectInfluencer = React.useCallback((influencerId: string) => {
     setSelectedInfluencerId(influencerId);
