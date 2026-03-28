@@ -313,19 +313,22 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
           submissionId={milestoneSubmissionId}
         />
       )}
-
-      {showDangerZone ? (
-        <DangerZoneCard
-          campaignId={campaign.id}
-          targetType={
-            campaign.campaignType === "influencer_promotion"
-              ? "influencer"
-              : "agency"
-          }
-          assignmentId={milestoneAssignmentId}
-          agencyOfferId={campaign.agencyOfferId}
-        />
-      ) : null}
+      {campaign.status === "active" && (
+        <>
+          {showDangerZone ? (
+            <DangerZoneCard
+              campaignId={campaign.id}
+              targetType={
+                campaign.campaignType === "influencer_promotion"
+                  ? "influencer"
+                  : "agency"
+              }
+              assignmentId={milestoneAssignmentId}
+              agencyOfferId={campaign.agencyOfferId}
+            />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
