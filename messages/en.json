@@ -918,7 +918,10 @@
       "dangerZone": "Danger Zone",
       "cancelCampaign": "Cancel Campaign",
       "writeYourReason": "Write your reason...",
-      "requestCancellationAndSubmitReason": "Request Cancellation & Submit Reason"
+      "requestCancellationAndSubmitReason": "Request Cancellation & Submit Reason",
+      "minimumFundNeededToStartTheCampaign": "Minimum Fund Needed To Start The Campaign ({percent}%)",
+      "fundYourCampaign": "Fund Your Campaign"
+
     },
     "explore": {
     "title": "Explore",
@@ -1099,6 +1102,29 @@
       "verificationInProgressDescription": "We’ll notify you once all items are verified",
       "verificationUpdatedDescription": "Your latest verification status is shown below",
       "profileCompletion": "Profile Completion"
+    },
+    "payment" :{
+      "paymentSuccessful": "Payment Successful!",
+      "paymentSuccessMessage": "Your payment has been completed successfully. Your campaign will start soon.",
+      "viewCampaign": "View Campaign",
+      "backToCampaigns": "Back to Campaigns",
+      "processingPayment": "Processing your payment...",
+      "paymentFailed": "Payment Failed",
+      "paymentFailMessage": "Your payment could not be processed. Please try again.",
+      "paymentFailHelpMessage": "This could be due to insufficient funds, incorrect card details, or network issues. Please check your payment method and try again.",
+      "retryPayment": "Retry Payment",
+      "paymentCancelled": "Payment Cancelled",
+      "paymentCancelMessage": "You have cancelled the payment. You can try again anytime.",
+      "fundYourCampaign": "Fund Your Campaign",
+      "payNow": "Pay Now",
+      "processing": "Processing...",
+      "paymentMethod": "Payment Method",
+      "totalCampaignCost": "Total Campaign Cost",
+      "payInFull100": "Pay In Full (100%)",
+      "payMinimum50": "Pay Minimum (50%)",
+      "pay75": "Pay 75%",
+      "minimumFundNeededToStartTheCampaign": "Minimum Fund Needed To Start The Campaign ({percent}%)",
+      "acceptAndPay": "Accept & Pay"
     }
   }
 }

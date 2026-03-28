@@ -917,7 +917,9 @@
       "dangerZone": "ডেঞ্জার জোন",
       "cancelCampaign": "ক্যাম্পেইন বাতিল করুন",
       "writeYourReason": "আপনার কারণ লিখুন...",
-      "requestCancellationAndSubmitReason": "ক্যানসেলেশন রিকোয়েস্ট করুন এবং কারণ সাবমিট করুন"
+      "requestCancellationAndSubmitReason": "ক্যানসেলেশন রিকোয়েস্ট করুন এবং কারণ সাবমিট করুন",
+       "minimumFundNeededToStartTheCampaign": "ক্যাম্পেইন শুরু করতে ন্যূনতম প্রয়োজনীয় তহবিল ({percent}%)",
+      "fundYourCampaign": "আপনার ক্যাম্পেইন ফান্ড করুন"
     },
     "explore": {
     "title": "এক্সপ্লোর",
@@ -1098,6 +1100,28 @@
       "verificationInProgressDescription": "সব আইটেম ভেরিফায়েড হলে আমরা আপনাকে জানাব",
       "verificationUpdatedDescription": "আপনার সর্বশেষ ভেরিফিকেশন স্ট্যাটাস নিচে দেখানো হয়েছে",
       "profileCompletion": "প্রোফাইল সম্পূর্ণতা"
+    },
+    "payement" :{
+      "paymentSuccessful": "পেমেন্ট সফল হয়েছে!",
+      "paymentSuccessMessage": "আপনার পেমেন্ট সফলভাবে সম্পন্ন হয়েছে। আপনার ক্যাম্পেইন শীঘ্রই শুরু হবে।",
+      "viewCampaign": "ক্যাম্পেইন দেখুন",
+      "backToCampaigns": "ক্যাম্পেইন列表中 ফিরে যান",
+      "processingPayment": "আপনার পেমেন্ট প্রক্রিয়াকরণ হচ্ছে...",
+      "paymentFailed": "পেমেন্ট ব্যর্থ হয়েছে",
+      "paymentFailMessage": "আপনার পেমেন্ট প্রক্রিয়া করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+      "paymentFailHelpMessage": "অপর্যাপ্ত তহবিল, ভুল কার্ডের তথ্য, বা নেটওয়ার্ক সমস্যার কারণে এটি হতে পারে। অনুগ্রহ করে আপনার পেমেন্ট পদ্ধতি চেক করে আবার চেষ্টা করুন।",
+      "retryPayment": "পুনরায় পেমেন্ট করুন",
+      "paymentCancelled": "পেমেন্ট বাতিল করা হয়েছে",
+      "paymentCancelMessage": "আপনি পেমেন্ট বাতিল করেছেন। আপনি যেকোনো সময় আবার চেষ্টা করতে পারেন।",
+      "fundYourCampaign": "আপনার ক্যাম্পেইন ফান্ড করুন",
+      "payNow": "এখনই পেমেন্ট করুন",
+      "processing": "প্রক্রিয়াকরণ হচ্ছে...",
+      "paymentMethod": "পেমেন্ট পদ্ধতি",
+      "totalCampaignCost": "মোট ক্যাম্পেইন খরচ",
+      "payInFull100": "পূর্ণ পেমেন্ট (১০০%)",
+      "payMinimum50": "সর্বনিম্ন পেমেন্ট (৫০%)",
+      "pay75": "৭৫% পেমেন্ট করুন",
+      "acceptAndPay": "গ্রহণ করুন এবং পেমেন্ট করুন"
     }
   }
 }
