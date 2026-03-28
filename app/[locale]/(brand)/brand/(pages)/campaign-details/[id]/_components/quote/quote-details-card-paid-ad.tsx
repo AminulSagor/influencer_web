@@ -1,6 +1,6 @@
 "use client";
 
-import QuotePaidAdPayDueDialog from "./dialog/quote-paid-ad-pay-due-dialog";
+import PayDueDialog from "../../../../payment/_components/pay-due-dialog";
 import {
   ActionButton,
   SharedQuoteLayout,
@@ -75,7 +75,7 @@ export default function QuoteDetailsCardPaidAd({
       )}
 
       {!showQuoteActions && canPay && !isPaid && (
-        <QuotePaidAdPayDueDialog
+        <PayDueDialog
           campaign={campaign}
           dueAmount={dueAmount}
           isSubmitting={isSubmittingPayment}

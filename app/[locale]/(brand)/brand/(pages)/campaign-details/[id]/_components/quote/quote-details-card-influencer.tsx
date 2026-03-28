@@ -1,14 +1,15 @@
 "use client";
 
 import React from "react";
-import QuoteInfluencerAcceptPaymentDialog from "./dialog/quote-influencer-accept-payment-dialog";
-import QuotePaidAdPayDueDialog from "./dialog/quote-paid-ad-pay-due-dialog";
+import { useTranslations } from "next-intl";
 import {
   ActionButton,
   SharedQuoteLayout,
   StatusButton,
 } from "./quote-details-shared";
 import type { QuoteDetailsCampaign } from "./quote-utils";
+import PaymentDialog from "@/app/[locale]/(brand)/brand/(pages)/payment/_components/payment-dialog";
+import PayDueDialog from "../../../../payment/_components/pay-due-dialog";
 
 type QuoteDetailsCardInfluencerProps = {
   campaign: QuoteDetailsCampaign;
@@ -77,7 +78,7 @@ function QuoteDetailsCardInfluencer({
       )}
 
       {!showQuoteActions && canPay && !isPaid && (
-        <QuotePaidAdPayDueDialog
+        <PayDueDialog
           campaign={campaign}
           dueAmount={dueAmount}
           isSubmitting={isSubmittingPayment}
@@ -133,15 +134,31 @@ function InfluencerAcceptPaymentDialog({
   isSubmitting,
   onSubmit,
 }: PaymentDialogProps) {
+  const t = useTranslations("brand.payment");
+
+  const handleBeforePayment = async (amount: number) => {
+    // First, accept the quote
+    await onSubmit(amount);
+  };
+
   return (
-    <QuoteInfluencerAcceptPaymentDialog
+    <PaymentDialog
+      campaignId={campaign.id}
+      campaignName={campaign.campaignName}
+      config={{
+        amount: dueAmount,
+        minPaymentPercent: 50,
+        dialogTitle: t("fundYourCampaign"),
+        buttonText: t("payNow"),
+        successMessage: "Payment initiated successfully!",
+        errorMessage: "Failed to initiate payment. Please try again.",
+        showPaymentMethod: true,
+      }}
+      onBeforePayment={handleBeforePayment}
       open={open}
       onOpenChange={onOpenChange}
-      campaign={campaign}
-      dueAmount={dueAmount}
-      isSubmitting={isSubmitting}
-      onSubmit={onSubmit}
-      hideTrigger
+      hideTrigger={true}
+      triggerLabel={t("acceptAndPay")}
     />
   );
 }

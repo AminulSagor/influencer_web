@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronDown, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import { useCampaignBids } from "@/hooks/use-campaign-bids";
 import { CampaignBid } from "@/types/client/campaigns/campaign-bids.types";
-import SelectAgencyDialog from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/agency-quotations/_components/select-agency-dialog";
+import { campaignBidsService } from "@/service/client/campaigns/campaign-bids.service";
+import { notifySuccess, notifyError } from "@/utils/toast_util";
+import PaymentDialog from "@/app/[locale]/(brand)/brand/(pages)/payment/_components/payment-dialog";
 
 type AgencyQuotationsSectionProps = {
   campaign: ClientCampaignDetails;
@@ -76,10 +79,12 @@ const isWithinDateFilter = (
 export default function AgencyQuotationsSection({
   campaign,
 }: AgencyQuotationsSectionProps) {
+  const t = useTranslations("brand.payment");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState<CampaignBid | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("agencyName");
   const [sortAsc, setSortAsc] = useState(true);
   const [dateFilter, setDateFilter] = useState<DateFilterKey>("last30Days");
@@ -178,9 +183,36 @@ export default function AgencyQuotationsSection({
     return pages;
   }, [totalPages]);
 
-  const handleOpenAccept = (bid: CampaignBid) => {
+  const handleAccept = async (bid: CampaignBid) => {
     setSelectedBid(bid);
-    setDialogOpen(true);
+    setPaymentDialogOpen(true);
+  };
+
+  const handleBeforePayment = async (amount: number) => {
+    if (!selectedBid) return;
+
+    // First, select the agency
+    try {
+      await campaignBidsService.selectAgency({
+        campaignId: campaign.id,
+        agencyId: selectedBid.agencyId,
+      });
+
+      // Store the selected agency ID
+      setSelectedAgencyId(selectedBid.agencyId);
+
+      notifySuccess("Agency selected successfully!");
+    } catch (error) {
+      console.error("Failed to select agency:", error);
+      notifyError("Failed to select agency. Please try again.");
+      throw error; // Prevent payment from proceeding
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentDialogOpen(false);
+    setSelectedBid(null);
+    refetch(); // Refresh to update the selected status
   };
 
   const handleSortToggle = (key: SortKey) => {
@@ -199,6 +231,10 @@ export default function AgencyQuotationsSection({
     DATE_FILTER_OPTIONS.find((option) => option.key === dateFilter)?.label ??
     "Last 30 Days";
 
+  // Get the total due amount from campaign
+  const totalDue = Number(
+    campaign.paymentInfo?.dueAmount ?? campaign.dueAmount ?? 0,
+  );
   return (
     <>
       <section className="overflow-hidden rounded-3xl border border-light-gray bg-white">
@@ -364,6 +400,9 @@ export default function AgencyQuotationsSection({
                             )
                           : "N/A";
 
+                        // Check if this agency is selected
+                        const isSelected = selectedAgencyId === item.agencyId;
+
                         return (
                           <tr
                             key={item.id}
@@ -434,10 +473,15 @@ export default function AgencyQuotationsSection({
                             <td className="px-6 py-5 text-right">
                               <button
                                 type="button"
-                                onClick={() => handleOpenAccept(item)}
-                                className="inline-flex h-10 min-w-[104px] items-center justify-center rounded-[12px] bg-[#7FA35A] px-5 text-sm text-white transition hover:opacity-90"
+                                onClick={() => handleAccept(item)}
+                                disabled={isSelected}
+                                className={`inline-flex h-10 min-w-[104px] items-center justify-center rounded-[12px] px-5 text-sm text-white transition ${
+                                  isSelected
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-[#7FA35A] hover:opacity-90"
+                                }`}
                               >
-                                Accept
+                                {isSelected ? "Selected" : "Accept"}
                               </button>
                             </td>
                           </tr>
@@ -510,12 +554,24 @@ export default function AgencyQuotationsSection({
         </div>
       </section>
 
-      <SelectAgencyDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        campaign={campaign}
-        bid={selectedBid}
-        onSuccess={refetch}
+      {/* Generic Payment Dialog */}
+      <PaymentDialog
+        campaignId={campaign.id}
+        campaignName={campaign.campaignName}
+        config={{
+          amount: totalDue,
+          minPaymentPercent: 50,
+          dialogTitle: t("fundYourCampaign"),
+          buttonText: t("payNow"),
+          successMessage: "Payment initiated successfully!",
+          errorMessage: "Failed to initiate payment. Please try again.",
+          showPaymentMethod: true,
+        }}
+        onBeforePayment={handleBeforePayment}
+        onSuccess={handlePaymentSuccess}
+        open={paymentDialogOpen}
+        onOpenChange={setPaymentDialogOpen}
+        hideTrigger={true}
       />
     </>
   );
