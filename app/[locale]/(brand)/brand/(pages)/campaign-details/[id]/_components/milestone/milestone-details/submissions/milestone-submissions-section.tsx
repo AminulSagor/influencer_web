@@ -13,6 +13,7 @@ type Props = {
   selectedSubmissionIds: string[];
   onSelectedSubmissionIdsChange: (ids: string[]) => void;
   onPrimarySubmissionIdChange: (id: string | null) => void;
+  submissionId?: string | null;
 };
 
 export default function MilestoneSubmissionsSection({
@@ -21,6 +22,7 @@ export default function MilestoneSubmissionsSection({
   selectedSubmissionIds,
   onSelectedSubmissionIdsChange,
   onPrimarySubmissionIdChange,
+  submissionId, // ← Add this
 }: Props) {
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
@@ -31,6 +33,7 @@ export default function MilestoneSubmissionsSection({
         campaign={campaign}
         milestone={milestone}
         onPrimarySubmissionIdChange={onPrimarySubmissionIdChange}
+        submissionId={submissionId}
       />
     );
   }

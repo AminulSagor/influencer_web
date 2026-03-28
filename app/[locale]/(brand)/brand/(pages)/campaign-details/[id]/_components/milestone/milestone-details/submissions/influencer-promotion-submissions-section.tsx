@@ -14,12 +14,14 @@ type Props = {
   campaign: ClientCampaignDetails;
   milestone: CampaignMilestone;
   onPrimarySubmissionIdChange: (id: string | null) => void;
+  submissionId?: string | null; // ← Add this
 };
 
 export default function InfluencerPromotionSubmissionsSection({
   campaign,
   milestone,
   onPrimarySubmissionIdChange,
+  submissionId, // ← Add this
 }: Props) {
   const t = useTranslations("brand.CampaignDetailsPage");
   const [openValue, setOpenValue] = React.useState<string>("");
@@ -36,21 +38,34 @@ export default function InfluencerPromotionSubmissionsSection({
       enabled: Boolean(campaign.id && milestone.id),
     });
 
+  // Find the specific submission that matches the submissionId
+  const targetSubmission = React.useMemo(() => {
+    if (!submissionId || !items.length) return null;
+    return items.find((item) => item.id === submissionId) || null;
+  }, [items, submissionId]);
+
+  // If we have a specific submissionId but it's not found in items, use the first one as fallback
+  const effectiveSubmission = React.useMemo(() => {
+    if (targetSubmission) return targetSubmission;
+    if (items.length > 0 && !submissionId) return items[0];
+    return null;
+  }, [targetSubmission, items, submissionId]);
+
   React.useEffect(() => {
     setOpenValue("");
     onPrimarySubmissionIdChange(null);
   }, [milestone.id, onPrimarySubmissionIdChange]);
 
   React.useEffect(() => {
-    if (!items.length) {
+    if (!effectiveSubmission) {
       setOpenValue("");
       onPrimarySubmissionIdChange(null);
       return;
     }
 
-    setOpenValue(items[0].id);
-    onPrimarySubmissionIdChange(items[0].id);
-  }, [items, onPrimarySubmissionIdChange]);
+    setOpenValue(effectiveSubmission.id);
+    onPrimarySubmissionIdChange(effectiveSubmission.id);
+  }, [effectiveSubmission, onPrimarySubmissionIdChange]);
 
   if (isLoading) {
     return (
@@ -68,20 +83,10 @@ export default function InfluencerPromotionSubmissionsSection({
     );
   }
 
-  if (!items.length) {
+  if (!effectiveSubmission) {
     return (
       <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center text-sm text-red-500">
         {t("noSubmissionsFoundForThisMilestonesss")}
-      </div>
-    );
-  }
-
-  const submission = items[0];
-
-  if (!submission) {
-    return (
-      <div className="rounded-2xl border border-[#E5E7EB] bg-white p-5 text-center text-sm text-red-400">
-        {t("noSubmissionsFoundForThisMilestoness")}
       </div>
     );
   }
@@ -95,12 +100,12 @@ export default function InfluencerPromotionSubmissionsSection({
       onValueChange={setOpenValue}
     >
       <SubmissionAccordionItem
-        submission={submission}
+        submission={effectiveSubmission}
         index={0}
         campaign={campaign}
         milestone={milestone}
-        isOpen={openValue === submission.id}
-        prefetchedDetail={prefetchedDetailsById[submission.id] ?? null}
+        isOpen={openValue === effectiveSubmission.id}
+        prefetchedDetail={prefetchedDetailsById[effectiveSubmission.id] ?? null}
       />
     </Accordion>
   );
