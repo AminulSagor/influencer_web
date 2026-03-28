@@ -1,12 +1,15 @@
 export const normalizeMilestoneStatus = (status?: string) =>
-  String(status ?? "").trim().toLowerCase();
+  String(status ?? "")
+    .trim()
+    .toLowerCase();
 
 export const getMilestoneStatusLabel = (status?: string) => {
   const value = normalizeMilestoneStatus(status);
 
   if (value === "completed") return "Completed";
   if (value === "accepted") return "Completed++";
-  if (value === "in_review") return "In Review";
+  // FIX: Add "in_progress" to show "In Review"
+  if (value === "in_review" || value === "in_progress") return "In Review";
   if (value === "declined") return "Declined";
   if (value === "pending") return "Pending";
 
@@ -31,7 +34,8 @@ export const getMilestoneStatusClasses = (status?: string) => {
     };
   }
 
-  if (value === "in_review") {
+  // FIX: Add "in_progress" to use same styling as "in_review"
+  if (value === "in_review" || value === "in_progress") {
     return {
       wrapper: "border-[#F2C38B] bg-[#FFFDF9]",
       badge: "bg-[#D68426] text-white",
