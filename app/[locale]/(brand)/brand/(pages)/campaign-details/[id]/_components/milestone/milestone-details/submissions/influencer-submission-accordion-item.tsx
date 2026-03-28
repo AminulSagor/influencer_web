@@ -58,7 +58,19 @@ export default function SubmissionAccordionItem({
   return (
     <AccordionItem
       value={submission.id}
-      className={`rounded-[18px] border bg-white px-3 ${statusClasses.panel}`}
+      className={`
+        overflow-hidden 
+        rounded-xl 
+        border 
+        ${statusClasses.panel}
+        bg-white 
+        px-3
+        [&:not(:last-child)]:mb-4
+      `}
+      style={{
+        borderWidth: "1px",
+        borderStyle: "solid",
+      }}
     >
       <AccordionTrigger className="py-4 hover:no-underline">
         <div className="flex items-center gap-3 text-left">
