@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 import { SubmissionStatus } from "@/types/client/campaigns/campaign-submission.types";
 import Loader from "@/components/spin-loader";
+import { notifySuccess, notifyError } from "@/utils/toast_util";
 
-type ActionType = "approve" | "decline" | null;
+type ActionType = "decline" | null;
 
 type Props = {
   submissionIds: string[];
@@ -24,6 +25,8 @@ type Props = {
   approveButtonText?: string;
   declineButtonText?: string;
   disabled?: boolean;
+  successMessage?: string;
+  errorMessage?: string;
 };
 
 function normalizeStatus(value?: string) {
@@ -41,13 +44,15 @@ export default function SubmissionReportActions({
   approveButtonText = "Approve",
   declineButtonText = "Decline",
   disabled = false,
+  successMessage = "Submission approved successfully!",
+  errorMessage = "Failed to approve submission. Please try again.",
 }: Props) {
   const value = normalizeStatus(status);
   const [open, setOpen] = React.useState(false);
-  const [actionType, setActionType] = React.useState<ActionType>(null);
   const [text, setText] = React.useState("");
+  const [localSubmitting, setLocalSubmitting] = React.useState(false);
 
-  // FIX: Allow both "in_review" and "in_progress" to show review actions
+  // Allow both "in_review" and "in_progress" to show review actions
   const showReviewActions = value === "in_review" || value === "in_progress";
   const isFinished = ["approved", "completed", "declined"].includes(value);
   const hasSelection = submissionIds.length > 0;
@@ -60,54 +65,61 @@ export default function SubmissionReportActions({
     return null;
   }
 
-  const isDisabled = disabled || !hasSelection || isSubmitting;
+  const isDisabled =
+    disabled || !hasSelection || isSubmitting || localSubmitting;
 
-  const handleOpenApprove = () => {
+  // Approve button: Direct API call without dialog
+  const handleApprove = async () => {
     if (isDisabled) return;
-    setActionType("approve");
-    setText("");
-    setOpen(true);
+
+    setLocalSubmitting(true);
+    try {
+      await onApprove?.(submissionIds);
+      notifySuccess(successMessage);
+    } catch (error) {
+      console.error("Approve failed:", error);
+      notifyError(errorMessage);
+    } finally {
+      setLocalSubmitting(false);
+    }
   };
 
+  // Decline button: Open dialog to enter reason
   const handleOpenDecline = () => {
     if (isDisabled) return;
-    setActionType("decline");
     setText("");
     setOpen(true);
   };
 
   const handleClose = () => {
-    if (isSubmitting) return;
+    if (isSubmitting || localSubmitting) return;
     setOpen(false);
-    setActionType(null);
     setText("");
   };
 
-  const handleSubmit = async () => {
+  const handleDeclineSubmit = async () => {
     if (!hasSelection) return;
 
-    if (actionType === "approve") {
-      await onApprove?.(submissionIds);
-      return;
-    }
+    const reason = text.trim();
+    if (!reason) return;
 
-    if (actionType === "decline") {
-      const reason = text.trim();
-      if (!reason) return;
+    setLocalSubmitting(true);
+    try {
       await onDecline?.(submissionIds, reason);
+      notifySuccess("Submission declined successfully!");
+      setOpen(false);
+      setText("");
+    } catch (error) {
+      console.error("Decline failed:", error);
+      notifyError("Failed to decline submission. Please try again.");
+    } finally {
+      setLocalSubmitting(false);
     }
   };
 
-  const isApprove = actionType === "approve";
-  const title = isApprove ? "Write Approval Report" : "Write Decline Reason";
-  const placeholder = isApprove
-    ? "Write your report..."
-    : "Write your reasons...";
-  const submitButtonText = isSubmitting
-    ? ""
-    : isApprove
-      ? "Approve & Submit Report"
-      : "Decline & Submit Reason";
+  const title = "Write Decline Reason";
+  const placeholder = "Write your reasons...";
+  const submitButtonText = localSubmitting ? "" : "Decline & Submit Reason";
 
   return (
     <>
@@ -124,17 +136,24 @@ export default function SubmissionReportActions({
 
         <Button
           type="button"
-          onClick={handleOpenApprove}
+          onClick={handleApprove}
           disabled={isDisabled}
           className="h-10 flex-1 rounded-xl bg-[#81A35A] px-4 text-sm font-medium text-white hover:bg-[#73944e] disabled:bg-[#B7B7B7] disabled:text-white"
         >
-          {approveButtonText}
+          {localSubmitting ? (
+            <Loader className="h-4 w-4 border-2 border-white" />
+          ) : (
+            approveButtonText
+          )}
         </Button>
       </div>
 
+      {/* Dialog only for Decline */}
       <Dialog
         open={open}
-        onOpenChange={(next) => (!isSubmitting ? setOpen(next) : undefined)}
+        onOpenChange={(next) =>
+          !isSubmitting && !localSubmitting ? setOpen(next) : undefined
+        }
       >
         <DialogContent className="max-w-[520px] rounded-[18px] border-0 bg-white p-0 shadow-none sm:rounded-[18px]">
           <DialogHeader className="sr-only">
@@ -146,52 +165,37 @@ export default function SubmissionReportActions({
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={isSubmitting}
-                className={`flex h-6 w-6 items-center justify-center rounded-full text-white ${
-                  isApprove ? "bg-[#81A35A]" : "bg-[#EF3D2F]"
-                }`}
+                disabled={isSubmitting || localSubmitting}
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EF3D2F] text-white"
               >
                 <X className="h-4 w-4" />
               </button>
 
-              <h3
-                className={`text-base font-medium ${
-                  isApprove ? "text-[#81A35A]" : "text-[#EF3D2F]"
-                }`}
-              >
-                {title}
-              </h3>
+              <h3 className="text-base font-medium text-[#EF3D2F]">{title}</h3>
             </div>
 
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder={placeholder}
-              disabled={isSubmitting}
-              className={`min-h-[150px] resize-none rounded-[14px] bg-white px-4 py-3 text-sm shadow-none focus-visible:ring-0 ${
-                isApprove
-                  ? "border-[#81A35A] placeholder:text-[#A3A3A3]"
-                  : "border-[#FF8A8A] placeholder:text-[#A3A3A3]"
-              }`}
+              disabled={isSubmitting || localSubmitting}
+              className="min-h-[150px] resize-none rounded-[14px] border-[#FF8A8A] bg-white px-4 py-3 text-sm shadow-none focus-visible:ring-0 placeholder:text-[#A3A3A3]"
             />
 
             <div className="mt-6 flex justify-center">
               <Button
                 type="button"
-                onClick={handleSubmit}
+                onClick={handleDeclineSubmit}
                 disabled={
                   isSubmitting ||
+                  localSubmitting ||
                   !hasSelection ||
-                  (actionType === "decline" && !text.trim())
+                  !text.trim()
                 }
-                className={`h-11 min-w-[235px] rounded-[10px] px-6 text-sm font-semibold text-white ${
-                  isApprove
-                    ? "bg-[#81A35A] hover:bg-[#73944e] disabled:bg-[#B7B7B7]"
-                    : "bg-[#F01408] hover:bg-[#d91207] disabled:bg-[#B7B7B7]"
-                }`}
+                className="h-11 min-w-[235px] rounded-[10px] bg-[#F01408] px-6 text-sm font-semibold text-white hover:bg-[#d91207] disabled:bg-[#B7B7B7]"
               >
-                {isSubmitting ? (
-                  <Loader className="h-4 w-4 border-2" />
+                {localSubmitting ? (
+                  <Loader className="h-4 w-4 border-2 border-white" />
                 ) : (
                   submitButtonText
                 )}

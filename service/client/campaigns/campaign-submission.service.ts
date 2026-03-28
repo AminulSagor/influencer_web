@@ -46,6 +46,9 @@ export async function reviewSubmission(
   submissionId: string,
   payload: ReviewSubmissionPayload,
 ) {
+  console.log("id", submissionId);
+  console.log("payload", payload);
+
   const res = await serviceClient.post<
     ServiceResponse<ReviewSubmissionResponse>
   >(`/campaign/client/submission/${submissionId}/review`, payload);

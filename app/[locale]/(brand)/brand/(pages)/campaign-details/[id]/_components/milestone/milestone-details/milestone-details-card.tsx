@@ -109,6 +109,7 @@ export default function MilestoneDetailsCard({
       router.refresh();
     } catch (error) {
       console.error("Approve submission failed:", error);
+      throw error; // ← Added: Re-throw error for parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -132,6 +133,7 @@ export default function MilestoneDetailsCard({
       router.refresh();
     } catch (error) {
       console.error("Decline submission failed:", error);
+      throw error; // ← Added: Re-throw error for parent component
     } finally {
       setIsSubmitting(false);
     }
@@ -214,6 +216,8 @@ export default function MilestoneDetailsCard({
                 disabled={
                   !isInfluencerPromotion && reviewableSubmissionIds.length === 0
                 }
+                successMessage="Submission approved successfully!"
+                errorMessage="Failed to approve submission. Please try again."
               />
             </div>
           ) : null}
