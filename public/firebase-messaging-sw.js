@@ -1,11 +1,15 @@
-importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js");
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js",
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js",
+);
 
-self.addEventListener('install', function (event) {
+self.addEventListener("install", function (event) {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', function (event) {
+self.addEventListener("activate", function (event) {
   event.waitUntil(clients.claim());
 });
 
@@ -18,4 +22,18 @@ firebase.initializeApp({
   appId: "1:72364811038:web:ec04c1f92a93e9449b5f0f",
 });
 
-firebase.messaging();
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  console.log("Background message received:", payload);
+
+  const notificationTitle = payload.notification?.title || "BrandGuru";
+  const notificationOptions = {
+    body: payload.notification?.body || "You have a new notification",
+    icon: "/favicon.ico",
+    badge: "/favicon.ico",
+    data: payload.data || {},
+  };
+
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
