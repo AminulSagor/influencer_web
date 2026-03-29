@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Accordion,
   AccordionContent,
@@ -9,10 +8,99 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X, Clock3, BadgeCheck } from "lucide-react";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 
 type Status = "done" | "review" | "rejected" | "pending";
 
-export default function VerificationProgressCard() {
+interface VerificationProgressCardProps {
+  profileData: InfluencerProfileData | null;
+}
+
+export default function VerificationProgressCard({ profileData }: VerificationProgressCardProps) {
+
+  // Determine verification statuses based on profile data
+  const basicInfoStatus: Status = profileData?.firstName && profileData?.lastName ? "done" : "pending";
+  const socialPortfolioStatus: Status = profileData?.socialLinks && profileData.socialLinks.length > 0 ? "done" : "pending";
+  const nidStatus: Status = profileData?.nidVerification?.nidStatus === "verified" || profileData?.nidVerification?.nidStatus === "approved"
+    ? "done" 
+    : profileData?.nidVerification?.nidStatus === "rejected" 
+    ? "rejected"
+    : profileData?.nidVerification?.nidStatus === "pending"
+    ? "review"
+    : "pending";
+
+  // Check if any payout method is verified
+  const hasVerifiedPayout = 
+    profileData?.payouts?.bank?.some(acc => acc.accStatus === "verified" || acc.accStatus === "approved") ||
+    profileData?.payouts?.mobileBanking?.some(acc => acc.accStatus === "verified" || acc.accStatus === "approved");
+  
+  const hasPendingPayout = 
+    profileData?.payouts?.bank?.some(acc => acc.accStatus === "pending") ||
+    profileData?.payouts?.mobileBanking?.some(acc => acc.accStatus === "pending");
+  
+  const hasRejectedPayout = 
+    profileData?.payouts?.bank?.some(acc => acc.accStatus === "rejected") ||
+    profileData?.payouts?.mobileBanking?.some(acc => acc.accStatus === "rejected");
+
+  const paymentStatus: Status = hasVerifiedPayout
+    ? "done"
+    : hasRejectedPayout
+    ? "rejected"
+    : hasPendingPayout
+    ? "review"
+    : "pending";
+
+  const emailStatus: Status = profileData?.isEmailVerified === true
+    ? "done"
+    : "pending";
+
+  // Calculate progress percentage
+  const totalSteps = 5;
+  const completedSteps = [
+    basicInfoStatus,
+    socialPortfolioStatus,
+    nidStatus,
+    paymentStatus,
+    emailStatus
+  ].filter(status => status === "done").length;
+  const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
+
+  // Determine subtitle messages
+  const getNidSubtitle = () => {
+    if (nidStatus === "done") return "Verified";
+    if (nidStatus === "rejected") {
+      const reason = profileData?.nidVerification?.nidRejectReason;
+      return reason ? `Declined: ${reason}` : "Declined, please resubmit your NID documents";
+    }
+    if (nidStatus === "review") return "In Review";
+    return "Pending";
+  };
+
+  const getSocialSubtitle = () => {
+    if (socialPortfolioStatus === "done" && profileData?.socialLinks) {
+      return `${profileData.socialLinks.length} platform(s) added. You can always add more`;
+    }
+    return "Pending";
+  };
+
+  const getBasicInfoSubtitle = () => {
+    if (basicInfoStatus === "done") return "That's How We Are Going To Reach You";
+    return "Pending";
+  };
+
+  const getPaymentSubtitle = () => {
+    if (paymentStatus === "done") return "Verified";
+    if (paymentStatus === "rejected") return "Declined, please resubmit your payment information";
+    if (paymentStatus === "review") return "In Review";
+    return "Pending";
+  };
+
+  const getEmailSubtitle = () => {
+    if (emailStatus === "done") return "Verified";
+    return "Pending";
+  };
+
+  
   return (
     <Card className="py-0 relative bg-white">
       <CardContent className="py-5 px-6">
@@ -34,7 +122,10 @@ export default function VerificationProgressCard() {
             <AccordionContent className="pt-4 pb-2">
               {/* Progress bar */}
               <div className="h-3 rounded-full bg-light-green/15 overflow-hidden">
-                <div className="h-full w-[38%] bg-light-green rounded-full" />
+                <div 
+                  className="h-full bg-light-green rounded-full transition-all duration-500" 
+                  style={{ width: `${progressPercentage}%` }}
+                />
               </div>
 
               {/* Timeline list with continuous vertical line */}
@@ -46,52 +137,38 @@ export default function VerificationProgressCard() {
                   {/* Timeline items container */}
                   <div className="relative space-y-7 z-10">
                     <TimelineItem
-                      status="done"
+                      status={basicInfoStatus}
                       title="Basic Informations"
-                      sub="That's How We Are Going To Reach You"
+                      sub={getBasicInfoSubtitle()}
                       isFirst={true}
                       isLast={false}
                     />
                     <TimelineItem
-                      status="done"
+                      status={socialPortfolioStatus}
                       title="Social Portfolio"
-                      sub="I Added You Can Always Add More"
-                      isFirst={false}
+                      sub={getSocialSubtitle()}
+                      isFirst={basicInfoStatus === "done"}
                       isLast={false}
                     />
                     <TimelineItem
-                      status="review"
+                      status={nidStatus}
                       title="NID"
-                      sub="In Review"
-                      isFirst={false}
+                      sub={getNidSubtitle()}
+                      isFirst={socialPortfolioStatus === "done"}
                       isLast={false}
                     />
                     <TimelineItem
-                      status="rejected"
-                      title="Trade License"
-                      sub="Declined, documents details don't match with the provided information"
-                      isFirst={false}
+                      status={paymentStatus}
+                      title="Payment Setup"
+                      sub={getPaymentSubtitle()}
+                      isFirst={nidStatus === "done"}
                       isLast={false}
                     />
                     <TimelineItem 
-                      status="pending" 
-                      title="TIN" 
-                      sub="Pending" 
-                      isFirst={false}
-                      isLast={false}
-                    />
-                    <TimelineItem 
-                      status="pending" 
-                      title="BIN" 
-                      sub="Pending" 
-                      isFirst={false}
-                      isLast={false}
-                    />
-                    <TimelineItem 
-                      status="pending" 
+                      status={emailStatus} 
                       title="Verify Email" 
-                      sub="Pending" 
-                      isFirst={false}
+                      sub={getEmailSubtitle()} 
+                      isFirst={paymentStatus === "done"}
                       isLast={true}
                     />
                   </div>

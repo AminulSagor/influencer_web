@@ -1,3 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { getInfluencerProfile } from "@/service/influencer/profile/profile";
+import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
+import { toast } from "sonner";
 import ProfileSummaryCard from "./_components/profile-summary-card";
 import ProfileCompletionCard from "./_components/profile-completion-card";
 import SkillsCard from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/skills-card";
@@ -9,14 +15,34 @@ import PayoutSettingsCard from "@/app/[locale]/(influencer)/influencer/(pages)/a
 import VerificationMethodsCard from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/verification-methods-card";
 
 export default function AccountSettingsPage() {
+  const [profileData, setProfileData] = useState<InfluencerProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await getInfluencerProfile();
+      setProfileData(data);
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      toast.error("Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
   return (
     <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left */}
-        <ProfileSummaryCard />
+        <ProfileSummaryCard profileData={profileData} loading={loading} />
 
         {/* Right */}
-        <ProfileCompletionCard />
+        <ProfileCompletionCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         <SkillsCard />
@@ -28,8 +54,8 @@ export default function AccountSettingsPage() {
         {/* Left column */}
         <div className="lg:col-span-8">
           <div className="flex flex-col gap-4">
-            <ProfileEditCard />
-            <YourLocationsCard />
+            <ProfileEditCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
+            <YourLocationsCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
           </div>
         </div>
 
@@ -39,7 +65,7 @@ export default function AccountSettingsPage() {
         </div>
       </div>
       <div className="mt-6">
-        <VerificationMethodsCard />
+        <VerificationMethodsCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
       </div>
     </div>
   );
