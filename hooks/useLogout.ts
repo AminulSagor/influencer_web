@@ -32,12 +32,7 @@ export function useLogout() {
       removeToken();
       clearAuth();
 
-    try {
-      useProfileStore.getState().resetProfile();
-
-      removeToken();
-
-      router.replace(`/${locale}/login`);
+      router.push(`/${locale}/login`);
       router.refresh();
     } finally {
       setLoading(false);
