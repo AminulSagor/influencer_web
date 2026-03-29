@@ -1101,7 +1101,7 @@
       "verificationUpdatedDescription": "আপনার সর্বশেষ ভেরিফিকেশন স্ট্যাটাস নিচে দেখানো হয়েছে",
       "profileCompletion": "প্রোফাইল সম্পূর্ণতা"
     },
-    "payement" :{
+    "payment" :{
       "paymentSuccessful": "পেমেন্ট সফল হয়েছে!",
       "paymentSuccessMessage": "আপনার পেমেন্ট সফলভাবে সম্পন্ন হয়েছে। আপনার ক্যাম্পেইন শীঘ্রই শুরু হবে।",
       "viewCampaign": "ক্যাম্পেইন দেখুন",
@@ -1121,7 +1121,8 @@
       "payInFull100": "পূর্ণ পেমেন্ট (১০০%)",
       "payMinimum50": "সর্বনিম্ন পেমেন্ট (৫০%)",
       "pay75": "৭৫% পেমেন্ট করুন",
-      "acceptAndPay": "গ্রহণ করুন এবং পেমেন্ট করুন"
+      "acceptAndPay": "গ্রহণ করুন এবং পেমেন্ট করুন",
+      "minimumFundNeededToStartTheCampaign" : "ক্যাম্পেইন শুরু করতে ন্যূনতম প্রয়োজনীয় ফান্ড ({percent}%)"
     }
   }
 }
