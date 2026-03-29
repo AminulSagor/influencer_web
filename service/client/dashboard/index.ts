@@ -1,4 +1,4 @@
-import { serviceServer } from "@/service/base/axios_server";
+import { serviceClient } from "@/service/base/axios_client";
 import {
   ActionRequiredItem,
   ActiveJobsResponse,
@@ -15,7 +15,7 @@ import {
 // total jobs
 export async function getActiveJobsTotal(): Promise<number> {
   try {
-    const res = await serviceServer.get<
+    const res = await serviceClient.get<
       ServiceResponse<ActiveJobsResponse, PaginationMeta>
     >("/client/dashboard/active-jobs?page=1&limit=1");
 
@@ -29,7 +29,7 @@ export async function getActiveJobsTotal(): Promise<number> {
 // lifetime summary
 export async function getLifetimeSummary(): Promise<LifetimeSummaryData> {
   try {
-    const res = await serviceServer.get<ServiceResponse<LifetimeSummaryData>>(
+    const res = await serviceClient.get<ServiceResponse<LifetimeSummaryData>>(
       "/client/lifetime-summary",
     );
 
@@ -56,7 +56,7 @@ export async function getLifetimeSummary(): Promise<LifetimeSummaryData> {
 // action required
 export const getActionRequired = async (): Promise<ActionRequiredItem[]> => {
   try {
-    const { data } = await serviceServer.get<
+    const { data } = await serviceClient.get<
       ServiceResponse<ActionRequiredItem[]>
     >("/client/dashboard/action-required");
 
@@ -73,7 +73,7 @@ export const getUpcomingDeadlines = async (
   limit = 5,
 ): Promise<ServiceResponse<UpcomingDeadlineItem[], PaginationMeta>> => {
   try {
-    const { data } = await serviceServer.get<
+    const { data } = await serviceClient.get<
       ServiceResponse<UpcomingDeadlineItem[], PaginationMeta>
     >(`/client/dashboard/upcoming-deadlines?page=${page}&limit=${limit}`);
 
@@ -98,7 +98,7 @@ export const getUpcomingDeadlines = async (
 // pending campaigns
 export const getPendingCampaigns = async (): Promise<ServiceResult<number>> => {
   try {
-    const { data } = await serviceServer.get<
+    const { data } = await serviceClient.get<
       ServiceResponse<QuotingJobsResponse, PaginationMeta>
     >("/campaign/my-campaigns?status=quoting");
 

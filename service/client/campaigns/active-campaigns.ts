@@ -1,10 +1,10 @@
-import { serviceServer } from "@/service/base/axios_server";
+import { serviceClient } from "@/service/base/axios_client";
 import { Campaign } from "@/types/client/campaigns/campaign";
 import { ServiceResponse } from "@/types/service-response";
 
 export const getActiveCampaigns = async (): Promise<Campaign[]> => {
   try {
-    const { data } = await serviceServer.get<ServiceResponse<Campaign[]>>(
+    const { data } = await serviceClient.get<ServiceResponse<Campaign[]>>(
       "/campaign/my-campaigns?status=active",
     );
 
