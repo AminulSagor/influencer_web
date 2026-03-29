@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import Notification from "@/app/[locale]/(brand)/brand/_components/notification";
 import Link from "next/link";
-import Image from "next/image";
 import Loader from "@/components/spin-loader";
 import { useProfileStore } from "@/store/client-profile-store";
 
