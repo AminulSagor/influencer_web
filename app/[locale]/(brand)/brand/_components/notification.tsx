@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Popover,
   PopoverArrow,
@@ -16,39 +16,29 @@ import {
   BadgeCheck,
   CreditCard,
 } from "lucide-react";
-import { getClientNotifications } from "@/service/client/notification/notifications";
-import type { ClientNotification } from "@/types/client/notification/notifications";
-
-type NotificationMeta = {
-  total: number;
-  unreadCount: number;
-  page: number;
-  limit: number;
-};
+import { useNotifications } from "@/hooks/useNotifications";
+import type { NotificationItem } from "@/service/notification-service";
 
 const Notification = () => {
-  const [notifications, setNotifications] = useState<ClientNotification[]>([]);
-  const [meta, setMeta] = useState<NotificationMeta | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    notifications,
+    loading: isLoading,
+    unreadCount,
+    fetchNotifications, // ← Add this
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getClientNotifications(1, 10);
-        setNotifications(response.data ?? []);
-        setMeta(response.meta ?? null);
-      } catch (error) {
-        console.error("Failed to load notifications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  console.log("Notification component - unreadCount:", unreadCount);
+  console.log("Notification component - notifications:", notifications);
+  console.log("Notification component - loading:", isLoading);
 
-    fetchNotifications();
-  }, []);
-
-  const unreadCount = meta?.unreadCount ?? 0;
+  // Fetch notifications when popover opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      fetchNotifications();
+    }
+  };
 
   const groupedNotifications = useMemo(() => {
     const now = new Date();
@@ -85,7 +75,7 @@ const Notification = () => {
     });
   };
 
-  const getNotificationStyle = (type: string) => {
+  const getNotificationStyle = (type?: string) => {
     switch (type) {
       case "payment_due":
         return {
@@ -137,13 +127,18 @@ const Notification = () => {
     }
   };
 
-  const renderNotificationItem = (item: ClientNotification) => {
+  const handleNotificationClick = async (item: NotificationItem) => {
+    await markAsRead(item.id, item.isRead);
+  };
+
+  const renderNotificationItem = (item: NotificationItem) => {
     const style = getNotificationStyle(item.type);
 
     return (
       <button
         key={item.id}
         type="button"
+        onClick={() => handleNotificationClick(item)}
         className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#F9FAF5]"
       >
         <div
@@ -175,7 +170,9 @@ const Notification = () => {
   };
 
   return (
-    <Popover>
+    <Popover onOpenChange={handleOpenChange}>
+      {" "}
+      {/* ← Add this */}
       <PopoverTrigger asChild>
         <button type="button" className="relative cursor-pointer">
           <FaBell size={24} className="fill-light-green" />
@@ -187,7 +184,6 @@ const Notification = () => {
           )}
         </button>
       </PopoverTrigger>
-
       <PopoverContent
         side="bottom"
         align="end"
@@ -208,6 +204,7 @@ const Notification = () => {
 
             <button
               type="button"
+              onClick={markAllAsRead}
               className="text-sm font-medium text-[#202020] transition-opacity hover:opacity-70"
             >
               Mark All As Read
