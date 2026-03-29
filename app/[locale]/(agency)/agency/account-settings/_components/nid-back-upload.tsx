@@ -1,27 +1,58 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
+import { FileText, UploadCloud, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
-import { UploadCloud, FileText, X } from "lucide-react";
+import { notifyError } from "@/utils/toast_util";
 
 const MAX_SIZE = 2 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "application/pdf"];
 
-const NIDUploadBack = () => {
+type NIDUploadBackProps = {
+  value?: string;
+  disabled?: boolean;
+  onChange: (file: File | null) => void;
+};
+
+const isPdfUrl = (url?: string) => {
+  if (!url) return false;
+  return url.toLowerCase().includes(".pdf");
+};
+
+const NIDUploadBack = ({
+  value,
+  disabled = false,
+  onChange,
+}: NIDUploadBackProps) => {
   const [file, setFile] = React.useState<File | null>(null);
-  const [preview, setPreview] = React.useState<string | null>(null);
+  const [preview, setPreview] = React.useState<string | null>(value ?? null);
+
+  React.useEffect(() => {
+    if (!file) {
+      setPreview(value ?? null);
+    }
+  }, [value, file]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
+    if (!ALLOWED_TYPES.includes(selected.type)) {
+      notifyError("Only PNG, JPEG, or PDF files are allowed");
+      e.target.value = "";
+      return;
+    }
+
     if (selected.size > MAX_SIZE) {
-      alert("File size must be under 2MB");
+      notifyError("File size must be under 2MB");
+      e.target.value = "";
       return;
     }
 
     setFile(selected);
+    onChange(selected);
 
     if (selected.type.startsWith("image/")) {
       const reader = new FileReader();
@@ -35,7 +66,10 @@ const NIDUploadBack = () => {
   const removeFile = () => {
     setFile(null);
     setPreview(null);
+    onChange(null);
   };
+
+  const showPdfCard = file?.type === "application/pdf" || (!file && isPdfUrl(value));
 
   return (
     <div className="space-y-2">
@@ -44,19 +78,24 @@ const NIDUploadBack = () => {
       <div className="relative group">
         <label
           htmlFor="nid-back-upload"
-          className="flex h-44 w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition hover:bg-gray-100"
+          className={`flex h-44 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition ${disabled
+              ? "cursor-not-allowed opacity-70"
+              : "cursor-pointer hover:bg-gray-100"
+            }`}
         >
-          {preview ? (
+          {preview && !showPdfCard ? (
             <Image
               src={preview}
               alt="NID Back Preview"
               fill
               className="rounded-lg object-cover"
             />
-          ) : file && file.type === "application/pdf" ? (
+          ) : showPdfCard ? (
             <div className="flex flex-col items-center gap-2 text-gray-600">
               <FileText size={32} />
-              <p className="max-w-[90%] truncate text-sm">{file.name}</p>
+              <p className="max-w-[90%] truncate text-sm">
+                {file?.name ?? "Existing PDF uploaded"}
+              </p>
             </div>
           ) : (
             <>
@@ -69,7 +108,7 @@ const NIDUploadBack = () => {
           )}
         </label>
 
-        {file && (
+        {(file || preview || value) && !disabled && (
           <button
             type="button"
             onClick={removeFile}
@@ -86,6 +125,7 @@ const NIDUploadBack = () => {
         accept="image/png,image/jpeg,application/pdf"
         className="hidden"
         onChange={handleFileChange}
+        disabled={disabled}
       />
     </div>
   );

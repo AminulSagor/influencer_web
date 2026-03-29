@@ -136,10 +136,13 @@ export type UpdateAgencyBasicInfoPayload = {
     agencyBio: string;
     logo: string;
     firstName: string;
-    email: string;
     lastName: string;
     secondaryPhone: string;
     website: string;
+};
+
+export type UpdateAgencyEmailPayload = {
+    newEmail: string;
 };
 
 export type UpdateAgencyAddressPayload = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
     Card,
@@ -28,20 +28,34 @@ type JobsTabPageProps = {
 
 const PAGE_SIZE = 6;
 
+const jobsSharedUiState: {
+    search: string;
+    sort: "low_budget" | "high_budget";
+} = {
+    search: "",
+    sort: "low_budget",
+};
+
 const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
+    // Use refs so updatePageQueryParam never needs to be recreated
+    const pathnameRef = useRef(pathname);
+    const searchParamsRef = useRef(searchParams);
+    pathnameRef.current = pathname;
+    searchParamsRef.current = searchParams;
+
     const pageParam = Number(searchParams.get("page") || "1");
     const currentPage =
         Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
 
-    const currentSearch = searchParams.get("search") || "";
-    const currentSort =
-        searchParams.get("sort") === "high_budget" ? "high_budget" : "low_budget";
+    const [searchInput, setSearchInput] = useState(jobsSharedUiState.search);
+    const [sortValue, setSortValue] = useState<"low_budget" | "high_budget">(
+        jobsSharedUiState.sort
+    );
 
-    const [searchInput, setSearchInput] = useState(currentSearch);
     const [offers, setOffers] = useState<NewJobOfferItem[]>([]);
     const [meta, setMeta] = useState<NewJobOffersResponse["meta"]>({
         total: 0,
@@ -52,42 +66,51 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const updateQueryParams = useCallback(
-        (updates: Record<string, string | null>) => {
-            const params = new URLSearchParams(searchParams.toString());
+    // Stable function — never recreated, reads latest values via refs
+    const updatePageQueryParam = useCallback(
+        (page: string | null) => {
+            const params = new URLSearchParams(searchParamsRef.current.toString());
 
-            Object.entries(updates).forEach(([key, value]) => {
-                if (!value) {
-                    params.delete(key);
-                } else {
-                    params.set(key, value);
-                }
-            });
+            if (!page || page === "1") {
+                params.delete("page");
+            } else {
+                params.set("page", page);
+            }
 
             const query = params.toString();
-            router.replace(query ? `${pathname}?${query}` : pathname, {
-                scroll: false,
-            });
+            router.replace(
+                query ? `${pathnameRef.current}?${query}` : pathnameRef.current,
+                { scroll: false }
+            );
         },
-        [pathname, router, searchParams]
+        [router]
     );
 
     useEffect(() => {
-        setSearchInput(currentSearch);
-    }, [currentSearch]);
+        setSearchInput(jobsSharedUiState.search);
+        setSortValue(jobsSharedUiState.sort);
+    }, [tab]);
 
     useEffect(() => {
+        jobsSharedUiState.search = searchInput;
+    }, [searchInput]);
+
+    useEffect(() => {
+        jobsSharedUiState.sort = sortValue;
+    }, [sortValue]);
+
+    // Reset to page 1 only when search or sort changes — NOT on page changes
+    const isFirstRender = useRef(true);
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
         const timer = setTimeout(() => {
-            if (searchInput.trim() === currentSearch.trim()) return;
-
-            updateQueryParams({
-                search: searchInput.trim() || null,
-                page: "1",
-            });
+            updatePageQueryParam("1");
         }, 400);
-
         return () => clearTimeout(timer);
-    }, [searchInput, currentSearch, updateQueryParams]);
+    }, [searchInput, sortValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         let mounted = true;
@@ -101,14 +124,19 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
                     page: currentPage,
                     limit: PAGE_SIZE,
                     tab,
-                    search: currentSearch,
-                    sort: currentSort,
+                    search: searchInput,
+                    sort: sortValue,
                 });
 
                 if (!mounted) return;
 
                 setOffers(response.data);
-                setMeta(response.meta);
+                setMeta({
+                    total: response.meta.total,
+                    page: currentPage,
+                    limit: response.meta.limit,
+                    totalPages: response.meta.totalPages,
+                });
             } catch {
                 if (!mounted) return;
 
@@ -126,26 +154,25 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
         return () => {
             mounted = false;
         };
-    }, [currentPage, currentSearch, currentSort, tab]);
+    }, [currentPage, searchInput, sortValue, tab]);
 
     const showingCount = useMemo(() => {
-        const previousCount = (meta.page - 1) * PAGE_SIZE;
+        const previousCount = (currentPage - 1) * PAGE_SIZE;
         return previousCount + offers.length;
-    }, [meta.page, offers.length]);
+    }, [currentPage, offers.length]);
 
     const handleSortToggle = () => {
-        updateQueryParams({
-            sort: currentSort === "low_budget" ? "high_budget" : "low_budget",
-            page: "1",
-        });
+        setSortValue((prev) =>
+            prev === "low_budget" ? "high_budget" : "low_budget"
+        );
+        if (currentPage !== 1) {
+            updatePageQueryParam("1");
+        }
     };
 
     const handlePageChange = (nextPage: number) => {
         if (nextPage < 1 || nextPage > meta.totalPages) return;
-
-        updateQueryParams({
-            page: String(nextPage),
-        });
+        updatePageQueryParam(String(nextPage));
     };
 
     return (
@@ -171,15 +198,16 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
                         onSearchChange={setSearchInput}
                         showingCount={showingCount}
                         totalCount={meta.total}
-                        sortValue={currentSort}
+                        sortValue={sortValue}
                         onSortToggle={handleSortToggle}
                     />
 
                     <NewOfferList
+                        tab={tab}
                         items={offers}
                         loading={loading}
                         error={error}
-                        page={meta.page}
+                        page={currentPage}
                         totalPages={meta.totalPages}
                         onPageChange={handlePageChange}
                     />

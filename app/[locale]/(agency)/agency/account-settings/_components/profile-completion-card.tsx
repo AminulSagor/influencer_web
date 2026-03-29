@@ -70,7 +70,6 @@ const ProfileCompletionCard = ({
         agencyBio: bio,
         logo: profile.logo ?? "",
         firstName: profile.firstName ?? "",
-        email: profile.email ?? "",
         lastName: profile.lastName ?? "",
         secondaryPhone: profile.secondaryPhone ?? "",
         website: profile.website ?? "",

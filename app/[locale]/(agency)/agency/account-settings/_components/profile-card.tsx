@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -25,8 +25,10 @@ import type {
 import {
   updateAgencyAddress,
   updateAgencyBasicInfo,
+  updateAgencyEmail,
 } from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { uploadFile } from "@/service/common/upload/upload-file";
 
 type ProfileCardProps = {
   profile: AgencyProfileResponse | null;
@@ -48,6 +50,9 @@ type ProfileFormState = {
   fullAddress: string;
 };
 
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
+
 const ProfileCard = ({
   profile,
   isLoading,
@@ -55,6 +60,11 @@ const ProfileCard = ({
 }: ProfileCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [localLogoPreview, setLocalLogoPreview] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [form, setForm] = useState<ProfileFormState>({
     agencyName: "",
     firstName: "",
@@ -69,7 +79,9 @@ const ProfileCard = ({
     fullAddress: "",
   });
 
+  // Only sync form from profile when NOT editing to avoid overwriting user input
   useEffect(() => {
+    if (isEditing) return;
     setForm({
       agencyName: profile?.agencyName ?? "",
       firstName: profile?.firstName ?? "",
@@ -83,12 +95,16 @@ const ProfileCard = ({
       zilla: profile?.address?.zilla ?? "",
       fullAddress: profile?.address?.fullAddress ?? "",
     });
-  }, [profile]);
+    setSelectedLogoFile(null);
+    setLocalLogoPreview(null);
+  }, [profile, isEditing]);
 
   const ownerName =
     [form.firstName, form.lastName].filter(Boolean).join(" ") || "";
 
   const locationLine = [form.thana, form.zilla].filter(Boolean).join(", ");
+
+  const displayLogo = localLogoPreview || form.logo || "";
 
   const handleChange = (key: keyof ProfileFormState, value: string) => {
     setForm((prev) => ({
@@ -149,30 +165,65 @@ const ProfileCard = ({
     try {
       setIsSaving(true);
 
+      let finalLogo = form.logo;
+
+      if (selectedLogoFile) {
+        finalLogo = await uploadFile(selectedLogoFile);
+      }
+
       const basicInfoPayload: UpdateAgencyBasicInfoPayload = {
-        agencyName: form.agencyName,
-        agencyBio: form.agencyBio,
-        logo: form.logo,
-        firstName: form.firstName,
-        email: form.email,
-        lastName: form.lastName,
-        secondaryPhone: form.secondaryPhone,
-        website: form.website,
+        agencyName: form.agencyName.trim(),
+        agencyBio: form.agencyBio.trim(),
+        logo: finalLogo,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        secondaryPhone: form.secondaryPhone.trim(),
+        website: form.website.trim(),
       };
 
       const addressPayload: UpdateAgencyAddressPayload = {
         address: {
-          thana: form.thana,
-          zilla: form.zilla,
-          fullAddress: form.fullAddress,
+          thana: form.thana.trim(),
+          zilla: form.zilla.trim(),
+          fullAddress: form.fullAddress.trim(),
         },
       };
 
-      await updateAgencyBasicInfo(basicInfoPayload);
+      // Call email update separately only if email has changed
+      const emailChanged = form.email.trim() !== (profile.email ?? "");
+      if (emailChanged) {
+        await updateAgencyEmail({ newEmail: form.email.trim() });
+      }
+
+      const updatedBasicProfile = await updateAgencyBasicInfo(basicInfoPayload);
       const updatedProfile = await updateAgencyAddress(addressPayload);
 
-      onProfileUpdated(updatedProfile);
+      // Spread original profile first, then override with all updated fields
+      // This ensures no fields go missing if any API response is partial
+      const mergedProfile: AgencyProfileResponse = {
+        ...profile,
+        ...updatedProfile,
+        agencyName: updatedBasicProfile.agencyName,
+        firstName: updatedBasicProfile.firstName,
+        lastName: updatedBasicProfile.lastName,
+        agencyBio: updatedBasicProfile.agencyBio,
+        logo: finalLogo, // use finalLogo directly to ensure correct URL
+        secondaryPhone: updatedBasicProfile.secondaryPhone,
+        website: updatedBasicProfile.website,
+        address: updatedProfile.address,
+        email: emailChanged ? form.email.trim() : profile.email,
+      };
+
+      // Update form.logo immediately so displayLogo shows the new image
+      // before the useEffect syncs from profile prop
+      setForm((prev) => ({ ...prev, logo: finalLogo }));
+      setSelectedLogoFile(null);
+      setLocalLogoPreview(null);
+
+      // Set isEditing false BEFORE onProfileUpdated so the useEffect
+      // syncs the form correctly when the new profile prop arrives
       setIsEditing(false);
+      onProfileUpdated(mergedProfile);
       notifySuccess("Profile updated successfully");
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -185,14 +236,46 @@ const ProfileCard = ({
   const handleRemoveLogo = () => {
     if (!isEditing) return;
 
+    setSelectedLogoFile(null);
+    setLocalLogoPreview(null);
     setForm((prev) => ({
       ...prev,
       logo: "",
     }));
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleUploadPhoto = () => {
-    notifyError("Photo upload is not integrated yet");
+    if (!isEditing || isSaving) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(selected.type)) {
+      notifyError("Only PNG or JPEG image is allowed");
+      e.target.value = "";
+      return;
+    }
+
+    if (selected.size > MAX_IMAGE_SIZE) {
+      notifyError("Image size must be under 2MB");
+      e.target.value = "";
+      return;
+    }
+
+    setSelectedLogoFile(selected);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLocalLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(selected);
   };
 
   return (
@@ -209,9 +292,9 @@ const ProfileCard = ({
                 <div className="flex flex-1 justify-around gap-6">
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="relative flex h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-full border border-dashed border-light-green bg-Secondary text-light-green">
-                      {form.logo ? (
+                      {displayLogo ? (
                         <Image
-                          src={form.logo}
+                          src={displayLogo}
                           alt={form.agencyName || "Agency logo"}
                           fill
                           className="object-cover"
@@ -220,6 +303,15 @@ const ProfileCard = ({
                         <BiSolidUpArrowCircle size={30} />
                       )}
                     </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      className="hidden"
+                      onChange={handleLogoFileChange}
+                      disabled={!isEditing || isSaving}
+                    />
 
                     <div className="flex flex-col gap-2">
                       <Button

@@ -17,15 +17,13 @@ export type NewJobOffersParams = {
     sort?: "low_budget" | "high_budget";
 };
 
-export const getNewJobOffers = async (
-    {
-        page = 1,
-        limit = 6,
-        tab = "new_offer",
-        search = "",
-        sort = "low_budget",
-    }: NewJobOffersParams = {}
-): Promise<NewJobOffersResponse> => {
+export const getNewJobOffers = async ({
+    page = 1,
+    limit = 6,
+    tab = "new_offer",
+    search = "",
+    sort = "low_budget",
+}: NewJobOffersParams = {}): Promise<NewJobOffersResponse> => {
     const response = await serviceClient.get<NewJobOffersResponse>(
         "/campaign/agency/list",
         {
@@ -37,6 +35,31 @@ export const getNewJobOffers = async (
                 sort,
             },
         }
+    );
+
+    return response.data;
+};
+
+export const acceptAgencyCampaign = async (campaignId: string) => {
+    const response = await serviceClient.post(
+        `/campaign/agency/${campaignId}/accept`
+    );
+
+    return response.data;
+};
+
+export type RequoteAgencyCampaignPayload = {
+    proposedServiceFeePercent?: number;
+    proposedDollarRate?: number;
+};
+
+export const requoteAgencyCampaign = async (
+    campaignId: string,
+    payload: RequoteAgencyCampaignPayload
+) => {
+    const response = await serviceClient.post(
+        `/campaign/agency/${campaignId}/requote`,
+        payload
     );
 
     return response.data;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -32,6 +32,7 @@ import {
   updateAgencyTradeLicense,
 } from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { uploadFile } from "@/service/common/upload/upload-file";
 
 type VerificationMethodCardProps = {
   profile: AgencyProfileResponse | null;
@@ -84,6 +85,11 @@ const VerificationMethodCard = ({
   const [tinNumber, setTinNumber] = useState("");
   const [binNumber, setBinNumber] = useState("");
 
+  const [nidFrontFile, setNidFrontFile] = useState<File | null>(null);
+  const [nidBackFile, setNidBackFile] = useState<File | null>(null);
+  const [tradeLicenseFile, setTradeLicenseFile] = useState<File | null>(null);
+  const [tinFile, setTinFile] = useState<File | null>(null);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -103,38 +109,111 @@ const VerificationMethodCard = ({
     setBinNumber(profile?.binNumber ?? "");
   }, [profile?.binNumber]);
 
+  const initialValues = useMemo(
+    () => ({
+      nidNumber: profile?.nidNumber ?? "",
+      tradeLicenseNumber: profile?.tradeLicenseNumber ?? "",
+      tinNumber: profile?.tinNumber ?? "",
+      binNumber: profile?.binNumber ?? "",
+      nidFrontImg: profile?.nidFrontImg ?? "",
+      nidBackImg: profile?.nidBackImg ?? "",
+      tradeLicenseImage: profile?.tradeLicenseImage ?? "",
+      tinImage: profile?.tinImage ?? "",
+    }),
+    [profile]
+  );
+
+  const resetLocalFiles = () => {
+    setNidFrontFile(null);
+    setNidBackFile(null);
+    setTradeLicenseFile(null);
+    setTinFile(null);
+  };
+
   const handleSaveAll = async () => {
     if (!profile) return;
 
-    const nidPayload: UpdateAgencyNidPayload = {
-      nidNumber: nidNumber.trim(),
-      nidFrontImg: "",
-      nidBackImg: "",
-    };
+    const isNidChanged =
+      nidNumber.trim() !== initialValues.nidNumber ||
+      !!nidFrontFile ||
+      !!nidBackFile;
 
-    const tradeLicensePayload: UpdateAgencyTradeLicensePayload = {
-      tradeLicenseNumber: tradeLicenseNumber.trim(),
-      tradeLicenseImage: "",
-    };
+    const isTradeLicenseChanged =
+      tradeLicenseNumber.trim() !== initialValues.tradeLicenseNumber ||
+      !!tradeLicenseFile;
 
-    const tinPayload: UpdateAgencyTinPayload = {
-      tinNumber: tinNumber.trim(),
-      tinImage: "",
-    };
+    const isTinChanged =
+      tinNumber.trim() !== initialValues.tinNumber || !!tinFile;
 
-    const binPayload: UpdateAgencyBinPayload = {
-      binNumber: binNumber.trim(),
-    };
+    const isBinChanged = binNumber.trim() !== initialValues.binNumber;
+
+    if (
+      !isNidChanged &&
+      !isTradeLicenseChanged &&
+      !isTinChanged &&
+      !isBinChanged
+    ) {
+      setIsEditing(false);
+      notifySuccess("No changes to save");
+      return;
+    }
 
     try {
       setIsSaving(true);
 
-      await updateAgencyNid(nidPayload);
-      await updateAgencyTradeLicense(tradeLicensePayload);
-      await updateAgencyTin(tinPayload);
-      const finalUpdatedProfile = await updateAgencyBin(binPayload);
+      const [
+        uploadedNidFrontUrl,
+        uploadedNidBackUrl,
+        uploadedTradeLicenseUrl,
+        uploadedTinUrl,
+      ] = await Promise.all([
+        nidFrontFile ? uploadFile(nidFrontFile) : Promise.resolve(null),
+        nidBackFile ? uploadFile(nidBackFile) : Promise.resolve(null),
+        tradeLicenseFile ? uploadFile(tradeLicenseFile) : Promise.resolve(null),
+        tinFile ? uploadFile(tinFile) : Promise.resolve(null),
+      ]);
 
-      onProfileUpdated(finalUpdatedProfile);
+      let latestProfile = profile;
+
+      if (isNidChanged) {
+        const nidPayload: UpdateAgencyNidPayload = {
+          nidNumber: nidNumber.trim(),
+          nidFrontImg: uploadedNidFrontUrl ?? initialValues.nidFrontImg,
+          nidBackImg: uploadedNidBackUrl ?? initialValues.nidBackImg,
+        };
+
+        latestProfile = await updateAgencyNid(nidPayload);
+      }
+
+      if (isTradeLicenseChanged) {
+        const tradeLicensePayload: UpdateAgencyTradeLicensePayload = {
+          tradeLicenseNumber: tradeLicenseNumber.trim(),
+          tradeLicenseImage:
+            uploadedTradeLicenseUrl ?? initialValues.tradeLicenseImage,
+        };
+
+        latestProfile = await updateAgencyTradeLicense(tradeLicensePayload);
+      }
+
+      if (isTinChanged) {
+        const tinPayload: UpdateAgencyTinPayload = {
+          tinNumber: tinNumber.trim(),
+          tinImage: uploadedTinUrl ?? initialValues.tinImage,
+        };
+
+        latestProfile = await updateAgencyTin(tinPayload);
+      }
+
+      if (isBinChanged) {
+        const binPayload: UpdateAgencyBinPayload = {
+          binNumber: binNumber.trim(),
+        };
+
+        latestProfile = await updateAgencyBin(binPayload);
+      }
+
+      onProfileUpdated(latestProfile);
+      resetLocalFiles();
       setIsEditing(false);
       notifySuccess("Verification info updated successfully");
     } catch (error) {
@@ -156,6 +235,19 @@ const VerificationMethodCard = ({
     await handleSaveAll();
   };
 
+  const handleCancelEdit = () => {
+    if (!profile) return;
+
+    setNidNumber(profile.nidNumber ?? "");
+    setTradeLicenseNumber(profile.tradeLicenseNumber ?? "");
+    setTinNumber(profile.tinNumber ?? "");
+    setBinNumber(profile.binNumber ?? "");
+    resetLocalFiles();
+    setIsEditing(false);
+  };
+
+  const isFieldDisabled = isSaving || isLoading || !isEditing;
+
   return (
     <Card>
       <div className="px-4 py-4">
@@ -165,34 +257,51 @@ const VerificationMethodCard = ({
               <div className="flex w-full items-center justify-between pr-2">
                 <span>Verification Methods</span>
 
-                {isEditing ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="cursor-pointer bg-light-green hover:bg-light-green/90"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      void handleEditOrSave();
-                    }}
-                    disabled={isSaving || isLoading}
-                  >
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                ) : (
-                  <button
-                    type="button"
-                    className="cursor-pointer text-gray-500"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      void handleEditOrSave();
-                    }}
-                    disabled={isSaving || isLoading}
-                  >
-                    <BiSolidEdit size={20} />
-                  </button>
-                )}
+                <div
+                  className="flex items-center gap-2"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {isEditing && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="cursor-pointer"
+                      onClick={handleCancelEdit}
+                      disabled={isSaving || isLoading}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+
+                  {isEditing ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="cursor-pointer bg-light-green hover:bg-light-green/90"
+                      onClick={() => {
+                        void handleEditOrSave();
+                      }}
+                      disabled={isSaving || isLoading}
+                    >
+                      {isSaving ? "Saving..." : "Save"}
+                    </Button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="cursor-pointer text-gray-500"
+                      onClick={() => {
+                        void handleEditOrSave();
+                      }}
+                      disabled={isSaving || isLoading}
+                    >
+                      <BiSolidEdit size={20} />
+                    </button>
+                  )}
+                </div>
               </div>
             </AccordionTrigger>
 
@@ -222,13 +331,22 @@ const VerificationMethodCard = ({
                         placeholder="Enter your NID number"
                         value={isLoading ? "Loading..." : nidNumber}
                         onChange={(e) => setNidNumber(e.target.value)}
-                        disabled={isSaving || isLoading || !isEditing}
+                        disabled={isFieldDisabled}
                         readOnly={!isEditing}
                       />
                     </div>
 
-                    <NIDUploadFront />
-                    <NIDUploadBack />
+                    <NIDUploadFront
+                      value={profile?.nidFrontImg}
+                      disabled={isFieldDisabled}
+                      onChange={setNidFrontFile}
+                    />
+
+                    <NIDUploadBack
+                      value={profile?.nidBackImg}
+                      disabled={isFieldDisabled}
+                      onChange={setNidBackFile}
+                    />
                   </div>
 
                   <div className="col-span-12 space-y-4 md:col-span-4">
@@ -241,12 +359,16 @@ const VerificationMethodCard = ({
                         placeholder="Enter your Trade License number"
                         value={isLoading ? "Loading..." : tradeLicenseNumber}
                         onChange={(e) => setTradeLicenseNumber(e.target.value)}
-                        disabled={isSaving || isLoading || !isEditing}
+                        disabled={isFieldDisabled}
                         readOnly={!isEditing}
                       />
                     </div>
 
-                    <TradeLicenseUpload />
+                    <TradeLicenseUpload
+                      value={profile?.tradeLicenseImage}
+                      disabled={isFieldDisabled}
+                      onChange={setTradeLicenseFile}
+                    />
                   </div>
 
                   <div className="col-span-12 space-y-4 md:col-span-4">
@@ -256,12 +378,16 @@ const VerificationMethodCard = ({
                         placeholder="Enter your TIN number"
                         value={isLoading ? "Loading..." : tinNumber}
                         onChange={(e) => setTinNumber(e.target.value)}
-                        disabled={isSaving || isLoading || !isEditing}
+                        disabled={isFieldDisabled}
                         readOnly={!isEditing}
                       />
                     </div>
 
-                    <TinCertificateUpload />
+                    <TinCertificateUpload
+                      value={profile?.tinImage}
+                      disabled={isFieldDisabled}
+                      onChange={setTinFile}
+                    />
 
                     <div className="space-y-2">
                       <Label className="text-orange">Your BIN Number</Label>
@@ -269,7 +395,7 @@ const VerificationMethodCard = ({
                         placeholder="Enter your BIN number"
                         value={isLoading ? "Loading..." : binNumber}
                         onChange={(e) => setBinNumber(e.target.value)}
-                        disabled={isSaving || isLoading || !isEditing}
+                        disabled={isFieldDisabled}
                         readOnly={!isEditing}
                       />
                     </div>

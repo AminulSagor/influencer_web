@@ -9,6 +9,7 @@ import type {
     UpdateAgencyAddressPayload,
     UpdateAgencyBasicInfoPayload,
     UpdateAgencyBinPayload,
+    UpdateAgencyEmailPayload,
     UpdateAgencyNichesPayload,
     UpdateAgencyNidPayload,
     UpdateAgencySocialLinksPayload,
@@ -92,6 +93,17 @@ export const updateAgencyBasicInfo = async (
 ): Promise<AgencyProfileResponse> => {
     const response = await serviceClient.patch<AgencyProfileResponse>(
         "/agency/profile/basic-info",
+        payload
+    );
+
+    return response.data;
+};
+
+export const updateAgencyEmail = async (
+    payload: UpdateAgencyEmailPayload
+): Promise<AgencyProfileResponse> => {
+    const response = await serviceClient.patch<AgencyProfileResponse>(
+        "/influencer/auth/agency/email",
         payload
     );
 

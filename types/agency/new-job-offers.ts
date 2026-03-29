@@ -18,8 +18,12 @@ export type NewJobOfferItem = {
         duration: number;
         deadline: string;
     };
-    invitedAt: string;
-    timeLeftToRequoteMinutes: number;
+    invitedAt?: string;
+    timeLeftToRequoteMinutes?: number;
+    dueDays?: number;
+    progressPercent?: number;
+    completedOn?: string;
+    rating?: string;
 };
 
 export type NewJobOffersResponse = {
