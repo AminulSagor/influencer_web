@@ -7,7 +7,7 @@ import React from "react";
 type Props = {
   title: string;
   value: string;
-  Icon: any;
+  Icon: React.ElementType;
   date?: string;
   link?: string;
   linkTitle?: string;
@@ -23,44 +23,49 @@ const EarningCard = ({
   linkTitle,
   campaign,
 }: Props) => {
+  const isRecentCard = Boolean(date);
+
   return (
     <div
       className={cn(
-        "bg-linear-to-r from-[#405E2C]/90 to-[#7A9B57] rounded-lg p-5 space-y-4",
-        date &&
-          "bg-linear-to-r from-white to-Secondary border border-light-green/50"
+        "rounded-lg p-5 space-y-4 bg-linear-to-r from-[#405E2C]/90 to-[#7A9B57]",
+        isRecentCard &&
+        "bg-linear-to-r from-white to-Secondary border border-light-green/50"
       )}
     >
-      {/* Header Row */}
       <div className="flex items-center justify-between">
-        <p className={cn("text-white", date && "text-Primary")}>{title}</p>
+        <p className={cn("text-white", isRecentCard && "text-Primary")}>
+          {title}
+        </p>
+
         <Icon
           size={35}
-          className={cn("text-white", date && "text-light-green")}
+          className={cn("text-white", isRecentCard && "text-light-green")}
         />
       </div>
 
-      {/* Value + Link Row */}
       <div className="flex items-center justify-between">
         <p
           className={cn(
             "text-white font-bold text-2xl",
-            date && "text-Primary"
+            isRecentCard && "text-Primary"
           )}
         >
           {value}
         </p>
       </div>
 
-      <div className="flex items-center justify-between">
-        {date && (
-          <p className={cn("text-sm", date && "text-Primary")}>{date}</p>
-        )}
-        {campaign && (
+      <div className="flex items-center justify-between gap-2">
+        {date ? (
+          <p className="text-sm text-Primary">{date}</p>
+        ) : campaign !== undefined ? (
           <p className="text-off-white text-sm">{campaign} Campaigns</p>
+        ) : (
+          <div />
         )}
+
         {linkTitle && (
-          <Button variant="link" className="text-white p-0">
+          <Button variant="link" className="text-white p-0 h-auto">
             <Link href={link} className="flex items-center">
               {linkTitle} <ChevronRight />
             </Link>

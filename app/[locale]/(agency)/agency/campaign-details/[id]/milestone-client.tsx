@@ -1,28 +1,41 @@
 "use client";
+
 import PaymentMilestone from "../_components/payment-milestone-card";
-import { PaymanetMilestoneDataType, paymentMileStoneData } from "./consts";
+import { PaymanetMilestoneDataType } from "./consts";
 import MileStoneCard from "../_components/milestone-card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   isAccepted: boolean;
+  milestones: PaymanetMilestoneDataType[];
+  paid: number;
+  total: number;
 }
 
-const MilestoneClient = ({ isAccepted }: Props) => {
+const MilestoneClient = ({ isAccepted, milestones, paid, total }: Props) => {
   const [selectedMilestone, setSelectedMilestone] =
     useState<PaymanetMilestoneDataType | null>(null);
+
+  useEffect(() => {
+    if (milestones.length > 0) {
+      setSelectedMilestone(milestones[0]);
+    } else {
+      setSelectedMilestone(null);
+    }
+  }, [milestones]);
 
   return (
     <>
       <div>
         <PaymentMilestone
-          paymentMilestoneData={paymentMileStoneData}
-          paid={1}
-          total={4}
+          paymentMilestoneData={milestones}
+          paid={paid}
+          total={total}
           selectedMilestone={selectedMilestone}
           onSelectMilestone={setSelectedMilestone}
         />
       </div>
+
       {isAccepted && selectedMilestone && (
         <div>
           <MileStoneCard milestone={selectedMilestone} />

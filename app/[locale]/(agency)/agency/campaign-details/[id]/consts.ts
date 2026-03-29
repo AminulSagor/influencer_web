@@ -5,6 +5,7 @@ export const IN_REVIEW = "In Review";
 
 export interface PaymanetMilestoneDataType {
   id: number;
+  milestoneId: string;
   title: string;
   contentRequirement: string[];
   promotionTarget: string;
