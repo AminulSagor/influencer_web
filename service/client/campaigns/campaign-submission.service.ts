@@ -29,11 +29,15 @@ export type ReviewSubmissionPayload =
   | {
       action: "approve";
       submissionIds?: string[];
+      campaignType?: string;
+      milestoneId?: string; // Add milestoneId for paid_ad
     }
   | {
       action: "decline";
       reason: string;
       submissionIds?: string[];
+      campaignType?: string;
+      milestoneId?: string; // Add milestoneId for paid_ad
     };
 
 type ReviewSubmissionResponse = {
@@ -46,12 +50,37 @@ export async function reviewSubmission(
   submissionId: string,
   payload: ReviewSubmissionPayload,
 ) {
-  console.log("id", submissionId);
-  console.log("payload", payload);
+  // Determine which endpoint to use based on campaign type
+  const isInfluencerPromotion =
+    String(payload.campaignType ?? "").toLowerCase() === "influencer_promotion";
+
+  let endpoint: string;
+  let requestPayload: any;
+
+  if (isInfluencerPromotion) {
+    // Influencer promotion uses single review endpoint with submissionId
+    endpoint = `/campaign/client/submission/${submissionId}/review`;
+
+    // For influencer promotion, we only send the action and reason (if declining)
+    requestPayload = {
+      action: payload.action,
+      ...(payload.action === "decline" && { reason: payload.reason }),
+    };
+  } else {
+    // Paid ad uses bulk-review endpoint with milestoneId
+    endpoint = `/campaign/client/submissions/${payload.milestoneId}/bulk-review`;
+
+    // For paid ad, we include submissionIds if provided
+    requestPayload = {
+      action: payload.action,
+      ...(payload.action === "decline" && { reason: payload.reason }),
+      ...(payload.submissionIds && { submissionIds: payload.submissionIds }),
+    };
+  }
 
   const res = await serviceClient.post<
     ServiceResponse<ReviewSubmissionResponse>
-  >(`/campaign/client/submission/${submissionId}/review`, payload);
+  >(endpoint, requestPayload);
 
   return res.data;
 }

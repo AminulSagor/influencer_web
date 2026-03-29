@@ -103,13 +103,15 @@ export default function MilestoneDetailsCard({
 
       await reviewSubmission(anchorSubmissionId, {
         action: "approve",
+        campaignType: String(campaign.campaignType ?? ""),
+        milestoneId: milestone.id, // Pass milestoneId for paid_ad
         ...(isInfluencerPromotion ? {} : { submissionIds }),
       });
 
       router.refresh();
     } catch (error) {
       console.error("Approve submission failed:", error);
-      throw error; // ← Added: Re-throw error for parent component
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -126,6 +128,8 @@ export default function MilestoneDetailsCard({
       await reviewSubmission(anchorSubmissionId, {
         action: "decline",
         reason,
+        campaignType: String(campaign.campaignType ?? ""),
+        milestoneId: milestone.id, // Pass milestoneId for paid_ad
         ...(isInfluencerPromotion ? {} : { submissionIds }),
       });
 
@@ -133,7 +137,7 @@ export default function MilestoneDetailsCard({
       router.refresh();
     } catch (error) {
       console.error("Decline submission failed:", error);
-      throw error; // ← Added: Re-throw error for parent component
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
