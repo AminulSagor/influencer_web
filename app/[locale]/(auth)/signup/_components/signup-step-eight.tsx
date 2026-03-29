@@ -16,6 +16,8 @@ import { useTranslations } from "next-intl";
 import ImageUploader from "@/app/[locale]/(auth)/signup/_components/image-uploader";
 import { useState } from "react";
 import Loader from "@/components/spin-loader";
+import { uploadFile } from "@/service/upload";
+import { notifyError } from "@/utils/toast_util";
 import { useOnboardingStore } from "@/store/onboarding_store";
 import { useAuthStore } from "@/store/auth_store";
 
@@ -44,18 +46,27 @@ const SignUpStepEight = ({ nextStep }: Props) => {
     reValidateMode: "onChange",
   });
 
-  const onSubmit = (formData: FormDataWithFiles) => {
+  const onSubmit = async (formData: FormDataWithFiles) => {
     setLoading(true);
 
     try {
+      let tradeLicenseUrl = "";
+
+      // Upload trade license image if provided
+      if (formData.tradeLicenseImg?.[0]) {
+        const result = await uploadFile(formData.tradeLicenseImg[0], "onboarding/trade-license");
+        tradeLicenseUrl = result.publicUrl;
+      }
+
       setTradeLicenseInfo({
         tradeLicenseNumber: formData.tradeLicenseNumber || "",
-        tradeLicenseImg: formData.tradeLicenseImg?.[0] ? "pending-upload" : "",
+        tradeLicenseImg: tradeLicenseUrl,
       });
 
       nextStep();
     } catch (error: unknown) {
       console.error("Error in step 8:", error);
+      notifyError("Failed to upload file. Please try again.");
     } finally {
       setLoading(false);
     }

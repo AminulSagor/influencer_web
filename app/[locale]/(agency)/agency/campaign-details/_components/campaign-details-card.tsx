@@ -1,22 +1,54 @@
 "use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { AiFillTikTok } from "react-icons/ai";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import RequestToRequote from "./request-to-requote-drawer";
 import { useState } from "react";
-import { Divide } from "lucide-react";
+import type { AgencyCampaignDetails } from "@/types/agency/job-details";
+import { acceptAgencyCampaign } from "@/service/agency/new-job-offers";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 interface Props {
   isAccepted?: boolean;
+  campaign: AgencyCampaignDetails;
+  forceQuotedView?: boolean;
 }
-const CampaignDetailsCard = ({ isAccepted }: Props) => {
-  const [isQuotationSent, setIsQuotationSent] = useState(false);
+
+const CampaignDetailsCard = ({
+  isAccepted,
+  campaign,
+  forceQuotedView = false,
+}: Props) => {
+  const [isQuotationSent, setIsQuotationSent] = useState(forceQuotedView);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const router = useRouter();
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
+
+  const handleAcceptQuote = async () => {
+    try {
+      setIsAccepting(true);
+      await acceptAgencyCampaign(campaign.id);
+      notifySuccess("Quote accepted successfully.");
+      router.push(`/${locale}/agency/jobs/quoted`);
+      router.refresh();
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || "Failed to accept quote.";
+      notifyError(message);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
   return (
     <Card className="gap-2 h-full">
       <CardHeader>
@@ -32,10 +64,11 @@ const CampaignDetailsCard = ({ isAccepted }: Props) => {
             </Link>
           </Button>
         </div>
+
         <div className="flex items-center gap-8">
           <div>
             <CardTitle className="text-Primary font-semibold text-lg">
-              Summer Fashion Campaign
+              {campaign.campaignName}
             </CardTitle>
           </div>
           <div>
@@ -43,13 +76,18 @@ const CampaignDetailsCard = ({ isAccepted }: Props) => {
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-2">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={"https://github.com/ninjastorm24.png"} />
-            <AvatarFallback>N</AvatarFallback>
+            <AvatarImage src={campaign.client.profileImg ?? ""} />
+            <AvatarFallback>
+              {campaign.client.brandName?.charAt(0) ?? "B"}
+            </AvatarFallback>
           </Avatar>
-          <p className="text-orange text-sm font-medium">StyleCO.</p>
+          <p className="text-orange text-sm font-medium">
+            {campaign.client.brandName}
+          </p>
         </div>
 
         <div className="flex items-center gap-6">
@@ -66,52 +104,73 @@ const CampaignDetailsCard = ({ isAccepted }: Props) => {
             </span>
           </div>
         </div>
-        <div>
-          <label className="inline-flex items-center space-x-2 cursor-pointer">
-            <Checkbox
-              className="data-[state=checked]:bg-light-green data-[state=checked]:border-light-green"
-              id="terms"
-            />
-            <p className="text-sm text-dark-gray select-none">
-              You accept the&nbsp;
-              <span className="text-light-green font-medium">
-                <Link
-                  href="/agency/user-license-agreement"
-                  className="hover:underline"
-                >
-                  user license agreement
-                </Link>
-                &nbsp;
-              </span>
-              &&nbsp;
-              <span className="text-light-green font-medium">
-                <Link
-                  href="/agency/terms-and-conditions"
-                  className="hover:underline"
-                >
-                  Terms and condition
-                </Link>
-              </span>
-              &nbsp;of our app.
-            </p>
-          </label>
-        </div>
-        {/* ACTION BUTTONS */}
-        {isAccepted ? (
-          <Button className="w-full rounded-full bg-light-green hover:bg-light-green/90">
-            Ongoing Campaign
-          </Button>
-        ) : !isQuotationSent ? (
-          <div className="flex items-center justify-between gap-2">
-            <Button className="flex-1 rounded-full bg-light-green hover:bg-light-green/90">
-              Accept Quote
+
+        {isQuotationSent ? (
+          <>
+            <div className="pt-2">
+              <p className="text-center text-sm text-dark-gray">
+                Once The Client Accept Your Quote The Deal Will Be Confirmed.
+              </p>
+            </div>
+
+            <Button className="w-full bg-orange rounded-full hover:bg-orange/90">
+              Quote Sent For Client Review
             </Button>
-            <RequestToRequote setIsQuotationSent={setIsQuotationSent} />
-          </div>
+          </>
         ) : (
-          <Button className="w-full bg-orange rounded-full hover:bg-orange/90">
-            Quote Sent For Client Review
-          </Button>
+          <>
+            <div>
+              <label className="inline-flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  className="data-[state=checked]:bg-light-green data-[state=checked]:border-light-green"
+                  id="terms"
+                />
+                <p className="text-sm text-dark-gray select-none">
+                  You accept the&nbsp;
+                  <span className="text-light-green font-medium">
+                    <Link
+                      href="/agency/user-license-agreement"
+                      className="hover:underline"
+                    >
+                      user license agreement
+                    </Link>
+                    &nbsp;
+                  </span>
+                  &&nbsp;
+                  <span className="text-light-green font-medium">
+                    <Link
+                      href="/agency/terms-and-conditions"
+                      className="hover:underline"
+                    >
+                      Terms and condition
+                    </Link>
+                  </span>
+                  &nbsp;of our app.
+                </p>
+              </label>
+            </div>
+
+            {isAccepted ? (
+              <Button className="w-full rounded-full bg-light-green hover:bg-light-green/90">
+                Ongoing Campaign
+              </Button>
+            ) : (
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  className="flex-1 rounded-full bg-light-green hover:bg-light-green/90"
+                  onClick={handleAcceptQuote}
+                  disabled={isAccepting}
+                >
+                  {isAccepting ? "Accepting..." : "Accept Quote"}
+                </Button>
+
+                <RequestToRequote
+                  campaignId={campaign.id}
+                  setIsQuotationSent={setIsQuotationSent}
+                />
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

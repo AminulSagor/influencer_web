@@ -487,6 +487,14 @@
         "card2Time": "Yesterday, 4:30pm",
         "card2Button": "Review"
       },
+      "upcommingDateline" : {
+        "title": "Upcoming Deadlines",
+        "view": "View",
+        "dayLeft": "day left for completion",
+        "daysLeft": "days left for completion",
+        "dueNow": "Due now",
+        "emptyMessage": "No upcoming deadlines found"
+      },
       "earningOverviewCard": {
          "title": "Earning Overview",
           "footer": "Earning in Thousands"

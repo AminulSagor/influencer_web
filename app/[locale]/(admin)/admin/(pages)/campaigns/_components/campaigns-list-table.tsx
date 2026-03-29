@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,11 +17,16 @@ import { FaEye } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
 
 import AssignedPersonalsCell from "./assigned-personals-cell";
-import { isProgressStatus, progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
+import {
+  isProgressStatus,
+  progressMap,
+} from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
-import { CampaignStatus, CampaignUI } from "@/types/admin/campaign/campaign_ui_type";
+import {
+  CampaignStatus,
+  CampaignUI,
+} from "@/types/admin/campaign/campaign_ui_type";
 import ProgressBar from "./progress-bar";
-import Link from "next/link";
 
 export default function CampaignsListTable({
   campaigns,
@@ -30,7 +36,7 @@ export default function CampaignsListTable({
   onStatusChange: (id: string, status: CampaignStatus) => void;
 }) {
   return (
-    <div className="rounded-md overflow-hidden border">
+    <div className="overflow-hidden rounded-md border">
       <Table>
         <TableHeader>
           <TableRow className="bg-light-green hover:bg-light-green">
@@ -43,15 +49,15 @@ export default function CampaignsListTable({
             <TableHead className="text-white">Financials</TableHead>
             <TableHead className="text-white">Assigned Personals</TableHead>
             <TableHead className="text-white">Status</TableHead>
-            <TableHead className="text-white text-right">Actions</TableHead>
+            <TableHead className="text-right text-white">Actions</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {campaigns.map((campaign) => {
-            const progress = progressMap[campaign.status];
+            const progress = progressMap[campaign.status] ?? 0;
             const showProgress = isProgressStatus(campaign.status);
-          
+
             return (
               <TableRow key={campaign.id}>
                 <TableCell className="w-[40px]">
@@ -59,7 +65,7 @@ export default function CampaignsListTable({
                 </TableCell>
 
                 <TableCell className="space-y-1">
-                  <p className="font-medium text-lg">{campaign.name}</p>
+                  <p className="text-lg font-medium">{campaign.name}</p>
                   <p className="text-sm text-gray-500">{campaign.category}</p>
                   <p className="text-xs text-gray-500">Niches: {campaign.niches}</p>
                 </TableCell>
@@ -68,7 +74,7 @@ export default function CampaignsListTable({
                   <div className="flex items-center gap-2">
                     <Avatar>
                       <AvatarImage src={campaign.avatar} />
-                      <AvatarFallback>{campaign.client?.[0]}</AvatarFallback>
+                      <AvatarFallback>{campaign.client?.[0] || "C"}</AvatarFallback>
                     </Avatar>
                     <p className="text-xs">{campaign.client}</p>
                   </div>
@@ -77,15 +83,19 @@ export default function CampaignsListTable({
                 <TableCell>
                   <p className="font-semibold">Start</p>
                   <p className="text-gray-500">{campaign.startDate}</p>
-                  <p className="font-semibold mt-2">End</p>
+                  <p className="mt-2 font-semibold">End</p>
                   <p className="text-gray-500">{campaign.endDate}</p>
                 </TableCell>
 
                 <TableCell>
                   <p className="font-semibold">Client Budget</p>
-                  <p className="text-light-green font-semibold">৳{campaign.budget}</p>
-                  <p className="font-semibold mt-2">Final Quote</p>
-                  <p className="text-light-green font-semibold">৳{campaign.quote}</p>
+                  <p className="font-semibold text-light-green">
+                    ৳{Number(campaign.budget || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-2 font-semibold">Final Quote</p>
+                  <p className="font-semibold text-light-green">
+                    ৳{Number(campaign.quote || 0).toLocaleString()}
+                  </p>
                 </TableCell>
 
                 <TableCell>
@@ -97,7 +107,7 @@ export default function CampaignsListTable({
 
                 <TableCell>
                   {showProgress && (
-                    <div className="w-[180px] space-y-1 mb-2">
+                    <div className="mb-2 w-[180px] space-y-1">
                       <div className="flex justify-between text-sm font-semibold">
                         <span>Progress</span>
                         <span className="text-Primary">{progress}%</span>
@@ -109,17 +119,18 @@ export default function CampaignsListTable({
                   <StatusSelect
                     value={campaign.status}
                     onChange={(v) => onStatusChange(campaign.id, v)}
-                    className="w-[180px] border border-light-green cursor-pointer"
+                    className="w-[180px] cursor-pointer border border-light-green"
                   />
                 </TableCell>
 
                 <TableCell className="text-right">
-                  <div className="flex gap-2 justify-end">
-                    <Link href={`/admin/campaigns/${campaign.id}`}>
-                    <Button variant="outline">
-                      <FaEye />
+                  <div className="flex justify-end gap-2">
+                    <Button asChild variant="outline">
+                      <Link href={`/admin/campaigns/${campaign.id}`}>
+                        <FaEye />
+                      </Link>
                     </Button>
-                    </Link>
+
                     <Button variant="outline">
                       <FaRegTrashCan />
                     </Button>

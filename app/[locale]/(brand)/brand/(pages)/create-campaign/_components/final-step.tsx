@@ -34,7 +34,6 @@ const FinalStep = () => {
         setLoading(true);
         const res = await getCampaignById(campaignId);
         setCampaign(res.data as unknown as Campaignservice);
-        console.log("Fetched campaign:", res.data);
       } catch (err: any) {
         notifyError(err.message || "Failed to fetch campaign");
       } finally {
@@ -52,13 +51,11 @@ const FinalStep = () => {
     setPlacementLoading(true);
     try {
       const res = await placeCampaign(campaignId);
-      console.log("Placement service Response:", res);
 
       if (res.success) {
         const placedCampaign = res.data as unknown as Campaignservice;
         setCampaign(placedCampaign); // Update state to show final placed data
         toggleOpen();
-        console.log("Campaign state updated after placement:", placedCampaign);
       } else {
         notifyError(res.message || "Placement failed");
       }

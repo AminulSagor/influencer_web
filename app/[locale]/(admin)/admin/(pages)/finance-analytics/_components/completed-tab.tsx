@@ -1,5 +1,10 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
+import { toast } from "sonner";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,364 +24,585 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { TabsContent } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
-import { useState } from "react";
 
-/* ================= TYPES ================= */
+import { exportCompletedPayments } from "@/service/admin/finance/export-completed-payment";
 
-type UserRole = "agency" | "influencer" | "brand";
+import type {
+  AmountSortType,
+  CompletedPaymentResponse,
+  CompletedPaymentType,
+  FinanceTableTab,
+} from "@/types/admin/finance/finance_pending_completed_type";
 
-type PayeeInfo = {
-  id: string;
-  name: string;
-  role: "Agency" | "Influencer";
-  avatar?: string;
+type Props = {
+  tabsData: {
+    agency: CompletedPaymentResponse;
+    influencer: CompletedPaymentResponse;
+    brand: CompletedPaymentResponse;
+  };
 };
 
-type CampaignInfo = {
-  id: string;
-  title: string;
-  milestone: string;
-  dateTime: string;
+const formatCurrency = (amount?: number) => {
+  if (!amount) return "৳0";
+  return `৳${new Intl.NumberFormat("en-BD", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
 };
 
-type CompletedTalentPayment = {
-  id: string;
-  tab: "agency" | "influencer";
-  payee: PayeeInfo;
-  campaign: CampaignInfo;
-  agreedAmount: number;
-  totalPaid: number;
-  status: "full_paid";
+const formatDateTimeSmall = (date?: string) => {
+  if (!date) return "-";
+  return new Intl.DateTimeFormat("en-BD", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(date));
 };
 
-type CompletedBrandPayment = {
-  id: string;
-  tab: "brand";
-  brandName: string;
-  campaign: CampaignInfo;
-  campaignBudget: number;
-  paidByBrand: number;
-  talentFee: number;
-  profit: number;
+const getStatusLabel = (item: CompletedPaymentResponse["data"][number]) => {
+  if (
+    typeof item.totalPaid === "number" &&
+    typeof item.agreedAmount === "number" &&
+    item.totalPaid >= item.agreedAmount
+  ) {
+    return "Full Paid";
+  }
+
+  if (
+    typeof item.paidByClient === "number" &&
+    typeof item.campaignBudget === "number" &&
+    item.paidByClient >= item.campaignBudget
+  ) {
+    return "Full Paid";
+  }
+
+  return "Partial Paid";
 };
 
-type CompletedPayment = CompletedTalentPayment | CompletedBrandPayment;
+const getTabApiValue = (tab: FinanceTableTab) => {
+  if (tab === "agency") return "agencypayout";
+  if (tab === "influencer") return "influencerpayout";
+  return "brandpayment";
+};
 
-/* ================= MOCK DATA ================= */
+const downloadCsv = (
+  rows: Record<string, string | number | null>[],
+  fileName: string
+) => {
+  if (!rows.length) {
+    toast.error("No data available to export.");
+    return;
+  }
 
-const completedPayments: CompletedPayment[] = [
-  {
-    id: "1",
-    tab: "influencer",
-    payee: {
-      id: "u1",
-      name: "Rafsan the chotobhai",
-      role: "Influencer",
-    },
-    campaign: {
-      id: "c1",
-      title: "Summer Sale Fashion",
-      milestone: "Campaign Completed",
-      dateTime: "13-05-25 at 2:30 PM",
-    },
-    agreedAmount: 25000,
-    totalPaid: 25000,
-    status: "full_paid",
-  },
-  {
-    id: "2",
-    tab: "agency",
-    payee: {
-      id: "u2",
-      name: "Growthify Agency",
-      role: "Agency",
-    },
-    campaign: {
-      id: "c2",
-      title: "Tech Launch 2025",
-      milestone: "Final Invoice Settled",
-      dateTime: "15-05-25 at 6:00 PM",
-    },
-    agreedAmount: 60000,
-    totalPaid: 60000,
-    status: "full_paid",
-  },
-  {
-    id: "3",
-    tab: "brand",
-    brandName: "Venus Fashion Ltd",
-    campaign: {
-      id: "c3",
-      title: "Eid Special Campaign",
-      milestone: "Campaign Closed",
-      dateTime: "12-05-25 at 11:15 AM",
-    },
-    campaignBudget: 100000,
-    paidByBrand: 100000,
-    talentFee: 75000,
-    profit: 25000,
-  },
-  {
-    id: "4",
-    tab: "influencer",
-    payee: {
-      id: "u3",
-      name: "Nafisa Rahman",
-      role: "Influencer",
-    },
-    campaign: {
-      id: "c4",
-      title: "Skincare Awareness",
-      milestone: "Deliverables Approved",
-      dateTime: "14-05-25 at 9:45 PM",
-    },
-    agreedAmount: 18000,
-    totalPaid: 18000,
-    status: "full_paid",
-  },
-  {
-    id: "5",
-    tab: "brand",
-    brandName: "TechNova BD",
-    campaign: {
-      id: "c5",
-      title: "Gadget Review Blast",
-      milestone: "Accounts Closed",
-      dateTime: "16-05-25 at 4:10 PM",
-    },
-    campaignBudget: 120000,
-    paidByBrand: 120000,
-    talentFee: 90000,
-    profit: 30000,
-  },
-];
+  const headers = Object.keys(rows[0]);
 
-/* ================= COMPONENT ================= */
+  const escapeCsv = (value: string | number | null | undefined) => {
+    const stringValue = value == null ? "" : String(value);
+    const escaped = stringValue.replace(/"/g, '""');
+    return `"${escaped}"`;
+  };
 
-const CompletedTab = () => {
-  const [activeTab, setActiveTab] = useState<UserRole>("agency");
+  const csv = [
+    headers.map(escapeCsv).join(","),
+    ...rows.map((row) => headers.map((header) => escapeCsv(row[header])).join(",")),
+  ].join("\n");
 
-  const filteredData = completedPayments.filter(
-    (item) => item.tab === activeTab
-  );
+  const blob = new Blob([`\uFEFF${csv}`], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+};
+
+const CompletedTab = ({ tabsData }: Props) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const activeTab =
+    (searchParams.get("completedTab") as FinanceTableTab | null) ?? "agency";
+  const querySearch = searchParams.get("completedSearch") ?? "";
+  const paymentType =
+    (searchParams.get("completedPaymentType") as CompletedPaymentType | null) ??
+    "";
+  const amountSort =
+    (searchParams.get("completedAmountSort") as AmountSortType | null) ?? "";
+  const dateRange = searchParams.get("completedDateRange") ?? "all";
+  const dateFrom = searchParams.get("completedDateFrom") ?? undefined;
+  const dateTo = searchParams.get("completedDateTo") ?? undefined;
+
+  const [search, setSearch] = useState(querySearch);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    setSearch(querySearch);
+  }, [querySearch]);
+
+  const setCompletedParams = (
+    updates: Record<string, string | undefined>,
+    resetPage = true
+  ) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    if (resetPage) {
+      params.delete("completedPage");
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (search !== querySearch) {
+        setCompletedParams({
+          completedSearch: search || undefined,
+        });
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search, querySearch]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentRes = tabsData[activeTab];
+  const currentData = currentRes?.data ?? [];
+  const currentMeta = currentRes?.meta;
+
+  const filteredData = useMemo(() => currentData, [currentData]);
+
+  const currentIds = filteredData.map((item) => item.id);
+
+  const allSelected =
+    currentIds.length > 0 && currentIds.every((id) => selectedIds.includes(id));
+
+  const someSelected =
+    currentIds.some((id) => selectedIds.includes(id)) && !allSelected;
+
+  const toggleRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentIds])));
+    }
+  };
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [activeTab, querySearch, paymentType, amountSort, dateRange]);
+
+  const handleExport = async () => {
+    if (!selectedIds.length) {
+      toast.error("Please select at least one completed payment to export.");
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const res = await exportCompletedPayments({
+        search: querySearch || undefined,
+        tab: getTabApiValue(activeTab),
+        paymentType: paymentType || undefined,
+        amountSort: amountSort || undefined,
+        dateFrom,
+        dateTo,
+        exportIds: selectedIds,
+      });
+
+      const now = new Date().toISOString().slice(0, 10);
+      downloadCsv(res.data, `completed-payments-${activeTab}-${now}.csv`);
+      toast.success(res.message || "Completed payments exported successfully.");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to export completed payments.";
+
+      toast.error(
+        Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const tabLabelMap: Record<FinanceTableTab, string> = {
+    agency: "Agency",
+    influencer: "Influencer",
+    brand: "Brand",
+  };
 
   return (
-    <TabsContent value="completed" className="space-y-4">
-      <Card>
-        <CardHeader className="border-b flex items-center justify-between">
-          <div className="space-y-2">
-            <CardTitle className="text-Primary">Completed Payments</CardTitle>
-            <CardDescription>
-              View completed and settled payments
+    <TabsContent value="completed" className="mt-4">
+      <Card className="overflow-hidden rounded-[18px] border border-[#d6d6d6] shadow-none">
+        <CardHeader className="flex flex-row items-start justify-between border-b px-6 py-4">
+          <div>
+            <CardTitle className="text-[28px] font-semibold text-Primary">
+              Payment Completed
+            </CardTitle>
+            <CardDescription className="mt-1 text-sm text-[#9b9b9b]">
+              Analyze your profit & payments
             </CardDescription>
           </div>
 
-          <div className="flex gap-2">
-            {(["agency", "influencer", "brand"] as UserRole[]).map((tab) => (
-              <Button
-                key={tab}
-                variant={activeTab === tab ? "default" : "outline"}
-                className={
-                  activeTab === tab
-                    ? "bg-light-green text-white hover:bg-light-green"
-                    : "border-light-green text-light-green"
-                }
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Button>
-            ))}
+          <div className="flex items-center gap-2 rounded-full bg-white">
+            {(["agency", "influencer", "brand"] as FinanceTableTab[]).map(
+              (tab) => {
+                const active = activeTab === tab;
+
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() =>
+                      setCompletedParams({
+                        completedTab: tab,
+                      })
+                    }
+                    className={[
+                      "rounded-full px-5 py-2 text-xs font-medium transition",
+                      active
+                        ? "bg-light-green text-white shadow-sm"
+                        : "bg-transparent text-[#2b2b2b] hover:bg-[#f3f6ea]",
+                    ].join(" ")}
+                  >
+                    {tabLabelMap[tab]}
+                  </button>
+                );
+              }
+            )}
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-2">
-          {/* SEARCH */}
-          <div className="flex justify-between items-center gap-4 mx-2">
-            <div className="flex-1 relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                size={18}
-              />
-              <Input placeholder="Search by campaign name" className="pl-10" />
-            </div>
+        <CardContent className="space-y-4 px-4 py-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a7a7a7]" />
+            <Input
+              placeholder="Search by campaign name, Agency/Influencer name, phone number, email..."
+              className="h-11 rounded-[10px] border-[#cfcfcf] pl-10 text-sm placeholder:text-[#b1b1b1]"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
-          {/* BULK BAR */}
-          <div className="border border-light-green bg-Secondary p-2 rounded-md mx-2 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="bg-light-green px-4 py-1.5 border rounded-md border-Primary text-white text-sm">
-                {filteredData.length} selected
+          <div className="flex items-center justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
+                {selectedIds.length} Selected
               </div>
 
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[180px]">
-                  <SelectValue placeholder="Bulk Actions" />
+              <Button
+                type="button"
+                onClick={handleExport}
+                disabled={isExporting}
+                className="h-9 rounded-[8px] bg-light-green px-5 text-xs font-medium text-white hover:bg-light-green"
+              >
+                {isExporting ? "Exporting..." : "Export"}
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Select
+                value={paymentType || "all"}
+                onValueChange={(value) =>
+                  setCompletedParams({
+                    completedPaymentType: value === "all" ? undefined : value,
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                  <SelectValue placeholder="Payment Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="export">Export</SelectItem>
+                  <SelectItem value="all">All Payment Types</SelectItem>
+                  <SelectItem value="partialpayment">Partial Payment</SelectItem>
+                  <SelectItem value="milestonepayment">
+                    Milestone Payment
+                  </SelectItem>
+                  <SelectItem value="finalpayment">Full Payment</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={amountSort || "all"}
+                onValueChange={(value) =>
+                  setCompletedParams({
+                    completedAmountSort: value === "all" ? undefined : value,
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                  <SelectValue placeholder="Amount" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Amount</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={dateRange}
+                onValueChange={(value) =>
+                  setCompletedParams({
+                    completedDateRange: value === "all" ? undefined : value,
+                    completedDateFrom:
+                      value === "last30"
+                        ? new Date(
+                            Date.now() - 30 * 24 * 60 * 60 * 1000
+                          ).toISOString()
+                        : value === "thisMonth"
+                        ? new Date(
+                            new Date().getFullYear(),
+                            new Date().getMonth(),
+                            1
+                          ).toISOString()
+                        : undefined,
+                    completedDateTo:
+                      value === "all" ? undefined : new Date().toISOString(),
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 w-[135px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="last30">Last 30 Days</SelectItem>
+                  <SelectItem value="thisMonth">This Month</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <Select>
-              <SelectTrigger className="bg-white border border-light-green text-sm">
-                <SelectValue placeholder="Nov 20 - Dec 20" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">Nov 20 - Dec 20</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
-          {/* TABLE */}
-          <div className="rounded-md overflow-hidden border mt-2">
-            {(activeTab === "agency" || activeTab === "influencer") && (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-light-green hover:bg-light-green">
-                    <TableHead className="w-[40px]">
-                      <Checkbox />
-                    </TableHead>
-                    <TableHead className="text-white">Payee Info</TableHead>
-                    <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">Agreed Amount</TableHead>
-                    <TableHead className="text-white">Total Paid</TableHead>
-                    <TableHead className="text-white text-right">
-                      Status
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+          {(activeTab === "agency" || activeTab === "influencer") && (
+            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
+              <div className="grid grid-cols-[52px_1.6fr_1.8fr_1fr_1fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={
+                      allSelected ? true : someSelected ? "indeterminate" : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </div>
+                <div>Payee Info</div>
+                <div>Campaign</div>
+                <div>Agreed Amount</div>
+                <div>Total Paid</div>
+                <div className="text-right pr-3">Status</div>
+              </div>
 
-                <TableBody>
-                  {filteredData.map((item) => {
-                    if (item.tab === "brand") return null;
+              <div className="divide-y divide-[#e5e5e5]">
+                {filteredData.map((item) => {
+                  const selected = selectedIds.includes(item.id);
+                  const status = getStatusLabel(item);
+                  const isFull = status === "Full Paid";
 
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Checkbox />
-                        </TableCell>
+                  return (
+                    <div
+                      key={item.id}
+                      className={[
+                        "grid grid-cols-[52px_1.6fr_1.8fr_1fr_1fr_1fr] items-center px-2 py-3 transition",
+                        selected ? "bg-[#f5f6eb]" : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleRow(item.id)}
+                        />
+                      </div>
 
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar>
-                              <AvatarImage src={item.payee.avatar || "/"} />
-                              <AvatarFallback>
-                                {item.payee.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p>{item.payee.name}</p>
-                              <p className="text-xs text-gray-400">
-                                {item.payee.role}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={item.payeeInfo.image || "/"} />
+                          <AvatarFallback className="bg-[#a7d08c] text-[11px] text-white">
+                            {item.payeeInfo.name?.charAt(0) || "P"}
+                          </AvatarFallback>
+                        </Avatar>
 
-                        <TableCell>
-                          <p className="font-semibold">{item.campaign.title}</p>
-                          <p className="text-xs text-gray-400">
-                            {item.campaign.milestone}
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-medium text-[#222]">
+                            {item.payeeInfo.name}
                           </p>
-                          <p className="text-xs text-gray-400">
-                            {item.campaign.dateTime}
+                          <p className="text-[10px] capitalize leading-4 text-[#9a9a9a]">
+                            {item.payeeInfo.role}
                           </p>
-                        </TableCell>
+                        </div>
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold">
-                          ৳{item.agreedAmount.toLocaleString()}
-                        </TableCell>
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-medium text-[#222]">
+                          {item.campaign}
+                        </p>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          Milestone Completed:
+                        </p>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          {formatDateTimeSmall(item.milestoneCompleted)}
+                        </p>
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold">
-                          ৳{item.totalPaid.toLocaleString()}
-                        </TableCell>
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.agreedAmount ?? item.sortAmount)}
+                      </div>
 
-                        <TableCell className="text-right">
-                          <Badge className="border border-Primary px-6 py-2 rounded-md bg-Secondary text-light-green">
-                            Full Paid
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.totalPaid ?? item.sortAmount)}
+                      </div>
 
-            {activeTab === "brand" && (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-light-green hover:bg-light-green">
-                    <TableHead className="w-[40px]">
-                      <Checkbox />
-                    </TableHead>
-                    <TableHead className="text-white">Payee Info</TableHead>
-                    <TableHead className="text-white">Campaign</TableHead>
-                    <TableHead className="text-white">
-                      Campaign Budget
-                    </TableHead>
-                    <TableHead className="text-white">Paid By Brand</TableHead>
-                    <TableHead className="text-white">Talent Fee</TableHead>
-                    <TableHead className="text-white text-right">
-                      Profit
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+                      <div className="flex justify-end pr-2">
+                        <Badge
+                          className={[
+                            "rounded-full border px-4 py-1.5 text-[11px] font-medium shadow-none",
+                            isFull
+                              ? "border-[#c7d89a] bg-[#eef4d9] text-[#7ea24d]"
+                              : "border-[#d8c98f] bg-[#f8efc9] text-[#9d8b38]",
+                          ].join(" ")}
+                        >
+                          {status}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
 
-                <TableBody>
-                  {filteredData.map((item) => {
-                    if (item.tab !== "brand") return null;
+                {filteredData.length === 0 && (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No completed {activeTab} payments found.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Checkbox />
-                        </TableCell>
+          {activeTab === "brand" && (
+            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
+              <div className="grid grid-cols-[52px_1.4fr_1.7fr_1fr_1fr_1fr_0.9fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                <div className="flex items-center justify-center">
+                  <Checkbox
+                    checked={
+                      allSelected ? true : someSelected ? "indeterminate" : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </div>
+                <div>Payee Info</div>
+                <div>Campaign</div>
+                <div>Campaign Budget</div>
+                <div>Paid By Brand</div>
+                <div>Talent Fee</div>
+                <div className="text-right pr-3">Profit</div>
+              </div>
 
-                        <TableCell>{item.brandName}</TableCell>
+              <div className="divide-y divide-[#e5e5e5]">
+                {filteredData.map((item) => {
+                  const selected = selectedIds.includes(item.id);
 
-                        <TableCell>
-                          <p className="font-semibold">{item.campaign.title}</p>
-                          <p className="text-xs text-gray-400">
-                            {item.campaign.milestone}
+                  return (
+                    <div
+                      key={item.id}
+                      className={[
+                        "grid grid-cols-[52px_1.4fr_1.7fr_1fr_1fr_1fr_0.9fr] items-center px-2 py-3 transition",
+                        selected ? "bg-[#f5f6eb]" : "bg-white",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-center">
+                        <Checkbox
+                          checked={selected}
+                          onCheckedChange={() => toggleRow(item.id)}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-7 w-7">
+                          <AvatarImage src={item.payeeInfo.image || "/"} />
+                          <AvatarFallback className="bg-[#a7d08c] text-[11px] text-white">
+                            {item.payeeInfo.name?.charAt(0) || "B"}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-medium text-[#222]">
+                            {item.payeeInfo.name}
                           </p>
-                          <p className="text-xs text-gray-400">
-                            {item.campaign.dateTime}
+                          <p className="text-[10px] capitalize leading-4 text-[#9a9a9a]">
+                            {item.payeeInfo.role}
                           </p>
-                        </TableCell>
+                        </div>
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold">
-                          ৳{item.campaignBudget.toLocaleString()}
-                        </TableCell>
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-medium text-[#222]">
+                          {item.campaign}
+                        </p>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          Milestone Completed:
+                        </p>
+                        <p className="text-[10px] leading-4 text-[#a0a0a0]">
+                          {formatDateTimeSmall(item.milestoneCompleted)}
+                        </p>
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold">
-                          ৳{item.paidByBrand.toLocaleString()}
-                        </TableCell>
+                      <div className="text-[15px] font-semibold text-light-green">
+                        <p>{formatCurrency(item.campaignBudget)}</p>
+                        <p className="text-[10px] font-normal text-[#8e8e8e]">
+                          VAT ({item.vatPercent ?? 0}%)
+                        </p>
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold">
-                          ৳{item.talentFee.toLocaleString()}
-                        </TableCell>
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.paidByClient)}
+                      </div>
 
-                        <TableCell className="text-light-green font-semibold text-right">
-                          ৳{item.profit.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+                      <div className="text-[15px] font-semibold text-light-green">
+                        {formatCurrency(item.talentFee)}
+                      </div>
+
+                      <div className="text-right text-[15px] font-semibold text-light-green pr-2">
+                        {formatCurrency(item.profit)}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredData.length === 0 && (
+                  <div className="py-10 text-center text-sm text-muted-foreground">
+                    No completed brand payments found.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end text-sm text-muted-foreground">
+            Page {currentMeta?.page ?? 1} of {currentMeta?.totalPages ?? 1}
           </div>
         </CardContent>
       </Card>

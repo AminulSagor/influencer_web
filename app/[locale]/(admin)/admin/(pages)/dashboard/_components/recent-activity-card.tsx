@@ -1,172 +1,120 @@
-import { IoCheckmarkSharp, IoCloseSharp } from "react-icons/io5";
-import { CiCirclePlus } from "react-icons/ci";
+import { IoCheckmarkSharp } from "react-icons/io5";
 import { FaBangladeshiTakaSign, FaFile, FaStar } from "react-icons/fa6";
 import { ImUserPlus } from "react-icons/im";
 import { PiShieldCheckFill } from "react-icons/pi";
 import { Card, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TfiMenuAlt } from "react-icons/tfi";
 
-// Import ScrollArea components
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  DashboardActivityItem,
+  DashboardActivityType,
+} from "@/types/admin/dashboard/dashboard_activity_type";
 
-type Activity = {
-  id: number;
-  type:
-    | "accepted"
-    | "added"
-    | "payment"
-    | "newUser"
-    | "completed"
-    | "declined"
-    | "verified"
-    | "quoteSent"
-    | "rated";
-  title: string;
-  timeAgo: string;
-  // optionally other fields if needed
+type Props = {
+  activities: DashboardActivityItem[];
 };
 
-const iconMap = {
-  accepted: {
-    icon: IoCheckmarkSharp,
-    bgColor: "bg-light-green-200",
-    iconColor: "text-Primary",
-    size: 25,
-  },
-  added: {
-    icon: CiCirclePlus,
+const formatRelativeTime = (dateString: string) => {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffMs = now.getTime() - date.getTime();
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours} hr ago`;
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+};
+
+const activityIconMap: Record<
+  DashboardActivityType,
+  {
+    icon: React.ElementType;
+    bgColor: string;
+    iconColor: string;
+    size: number;
+  }
+> = {
+  campaign: {
+    icon: TfiMenuAlt,
     bgColor: "bg-blue-100",
     iconColor: "text-Blue",
-    size: 25,
+    size: 18,
+  },
+  submission: {
+    icon: FaFile,
+    bgColor: "bg-purple-200",
+    iconColor: "text-purple-600",
+    size: 18,
   },
   payment: {
     icon: FaBangladeshiTakaSign,
     bgColor: "bg-purple-200",
     iconColor: "text-purple-600",
-    size: 20,
+    size: 18,
   },
-  newUser: {
+  user: {
     icon: ImUserPlus,
     bgColor: "bg-yellow-200",
     iconColor: "text-orange",
-    size: 20,
+    size: 18,
   },
-  completed: {
-    icon: IoCheckmarkSharp,
-    bgColor: "bg-light-green-200",
-    iconColor: "text-Primary",
-    size: 25,
-  },
-  declined: {
-    icon: IoCloseSharp,
-    bgColor: "bg-rose-100",
-    iconColor: "text-rose-600",
-    size: 25,
-  },
-  verified: {
+  verification: {
     icon: PiShieldCheckFill,
     bgColor: "bg-blue-100",
     iconColor: "text-Blue",
-    size: 25,
-  },
-  quoteSent: {
-    icon: FaFile,
-    bgColor: "bg-purple-200",
-    iconColor: "text-purple-600",
     size: 20,
   },
-  rated: {
+  rating: {
     icon: FaStar,
     bgColor: "bg-yellow-200",
     iconColor: "text-orange",
-    size: 20,
+    size: 18,
   },
 };
 
-const activities: Activity[] = [
-  {
-    id: 1,
-    type: "accepted",
-    title: "Hania Amir accepted job - ‘Summer Sale’",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 2,
-    type: "added",
-    title: "Hania Amir accepted job - ‘Summer Sale’",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 3,
-    type: "payment",
-    title: "Payment of ৳33,200 processed to Hania Amir",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 4,
-    type: "newUser",
-    title: "New user registered as Influencer: Hania Amir",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 5,
-    type: "completed",
-    title: "Campaign Summer Sale completed",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 6,
-    type: "declined",
-    title: "@food_blogger declined job - ‘Summer Sale’",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 7,
-    type: "verified",
-    title: "Verification approved for TechStart Inc.",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 8,
-    type: "quoteSent",
-    title: "Quote sent to BeautyBrand Co.",
-    timeAgo: "2 minutes ago",
-  },
-  {
-    id: 9,
-    type: "rated",
-    title: "Client StyleCo rated the influencers",
-    timeAgo: "2 minutes ago",
-  },
-];
-
-const RecentActivityCard = () => {
+const RecentActivityCard = ({ activities }: Props) => {
   return (
-    <Card className="p-0 gap-0">
+    <Card className="gap-0 p-0">
       <div className="border-b">
         <div className="p-4">
           <CardTitle className="text-Primary">Recent Activity</CardTitle>
         </div>
       </div>
+
       <div className="p-4">
         <ScrollArea className="h-[360px]">
-          <div className="space-y-2 pr-4">
-            {activities.map(({ id, type, title, timeAgo }) => {
-              const Icon = iconMap[type].icon;
-              const bgColor = iconMap[type].bgColor;
-              const iconColor = iconMap[type].iconColor;
-              const size = iconMap[type].size;
+          <div className="space-y-3 pr-4">
+            {activities.map((activity, index) => {
+              const config =
+                activityIconMap[activity.type] ?? {
+                  icon: IoCheckmarkSharp,
+                  bgColor: "bg-light-green/20",
+                  iconColor: "text-Primary",
+                  size: 20,
+                };
+
+              const Icon = config.icon;
 
               return (
-                <div key={id} className="flex items-center gap-4">
+                <div key={`${activity.title}-${index}`} className="flex gap-4">
                   <div
-                    className={`h-10 aspect-square rounded-full ${bgColor} ${iconColor} flex items-center justify-center`}
+                    className={`flex h-10 aspect-square items-center justify-center rounded-full ${config.bgColor} ${config.iconColor}`}
                   >
-                    <Icon size={size} />
+                    <Icon size={config.size} />
                   </div>
+
                   <div>
-                    <h2 className="text-sm font-semibold">{title}</h2>
-                    <p className="text-xs font-light text-gray-400">
-                      {timeAgo}
+                    <h2 className="text-sm font-semibold">{activity.title}</h2>
+                    <p className="text-xs text-dark-gray">
+                      {activity.description}
+                    </p>
+                    <p className="pt-1 text-xs font-light text-light-gray">
+                      {formatRelativeTime(activity.date)}
                     </p>
                   </div>
                 </div>

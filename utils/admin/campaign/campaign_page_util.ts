@@ -12,6 +12,14 @@ export function normalize(v: any) {
   return String(v ?? "").trim().toLowerCase();
 }
 
+/**
+ * These statuses mean the quote is already accepted/confirmed enough
+ * for budget distribution / profit section to unlock.
+ *
+ * IMPORTANT:
+ * `pending_agency` is kept here so quoteState can still become "confirmed",
+ * but for campaign progression we will separately map it to "pending-invitations".
+ */
 export const CONFIRMED_QUOTE_STATUSES = new Set([
   "pending_influencer",
   "pending_agency",
@@ -39,16 +47,22 @@ export function mapStatusToUI(status: string | undefined): Status {
   if (s === "received" || s === "needs_quote") return "Need Quote";
 
   if (SENT_QUOTE_STATUSES.has(s)) return "Need Quote";
-  if (CONFIRMED_QUOTE_STATUSES.has(s)) return "Need Quote";
 
+  /**
+   * paid ad / agency invite stage
+   * should still visually behave like Pending Invitations
+   */
   if (
     s === "pending" ||
     s === "pending_invitations" ||
     s === "pending-invitations" ||
-    s === "pending_influencer"
+    s === "pending_influencer" ||
+    s === "pending_agency"
   ) {
     return "Pending Invitations";
   }
+
+  if (CONFIRMED_QUOTE_STATUSES.has(s)) return "Need Quote";
 
   if (ACTIVE_STATUSES.has(s)) return "Active";
   if (COMPLETED_STATUSES.has(s)) return "Completed";
@@ -62,11 +76,17 @@ export function mapCampaignStatus(status: string | undefined): CampaignStatusTyp
 
   if (s === "received" || s === "needs_quote") return "needs-quote";
 
+  /**
+   * FIX:
+   * for paid ad / agency flow, pending_agency must still be invitation stage
+   * otherwise invite-agency-bar never renders
+   */
   if (
     s === "pending" ||
     s === "pending_invitations" ||
     s === "pending-invitations" ||
-    s === "pending_influencer"
+    s === "pending_influencer" ||
+    s === "pending_agency"
   ) {
     return "pending-invitations";
   }
@@ -112,6 +132,7 @@ export function getCampaignTypeFlags(campaign: any) {
   const campaignType = normalize(campaign?.campaignType);
   const isPaidAd = campaignType === "paid_ad";
   const isInfluencerCampaign = !isPaidAd;
+
   return { campaignType, isPaidAd, isInfluencerCampaign };
 }
 
@@ -131,22 +152,23 @@ export function getPlatformListFromMilestones(milestones: any[]) {
       key === "instagram"
         ? "https://instagram.com"
         : key === "youtube"
-        ? "https://youtube.com"
-        : key === "tiktok"
-        ? "https://tiktok.com"
-        : key === "facebook"
-        ? "https://facebook.com"
-        : "#",
+          ? "https://youtube.com"
+          : key === "tiktok"
+            ? "https://tiktok.com"
+            : key === "facebook"
+              ? "https://facebook.com"
+              : "#",
   }));
 }
 
 export function getInfluencerAvatars(preferredInfluencers: any[]) {
-  return (preferredInfluencers ?? []).map((i: any, idx: number) => ({
-    imageUrl: i?.profileImg ?? "/avatar-fallback.png",
-    name:
-      `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() ||
-      `Influencer ${idx + 1}`,
-  }));
+  return (preferredInfluencers ?? []).map((i: any, idx: number) => {
+    const name = i?.name || `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
+    return {
+      imageUrl: i?.profileImg || i?.profileImage || i?.ImageUrl || i?.imageUrl || "/avatar-fallback.png",
+      name: name || `Influencer ${idx + 1}`,
+    };
+  });
 }
 
 export function getAssignedInfluencersForPayment(preferredInfluencers: any[]) {

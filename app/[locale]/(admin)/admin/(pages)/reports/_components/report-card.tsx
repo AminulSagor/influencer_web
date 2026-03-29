@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,234 +10,350 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
-import { FaClock, FaCheckCircle } from "react-icons/fa";
+import { ChevronRight, Search, CheckCircle2 } from "lucide-react";
+import { FaClock } from "react-icons/fa";
 import { RiUser2Fill } from "react-icons/ri";
-import { FiSearch } from "react-icons/fi";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-/* ================= TYPES ================= */
+import {
+  ReportsResponse,
+  ReportStatus,
+  ReportUserType,
+} from "@/types/admin/reports/reports_type";
 
-type ReportStatus = "Pending" | "Resolved";
+type Props = {
+  reports: ReportsResponse;
+  filters: {
+    page: number;
+    limit: number;
+    userType: ReportUserType;
+    status: ReportStatus | null;
+    search: string;
+  };
+};
 
-interface ReportItem {
-  id: number;
-  status: ReportStatus;
-  campaign: string;
-  milestone: string;
-  time: string;
-  description: string;
-  company: string;
-  date: string;
-}
-
-/* ================= CONFIG ================= */
+const USER_TYPE_OPTIONS: { label: string; value: ReportUserType }[] = [
+  { label: "Agency", value: "AGENCY" },
+  { label: "Influencer", value: "INFLUENCER" },
+  { label: "Brand", value: "CLIENT" },
+];
 
 const STATUS_CONFIG: Record<
   ReportStatus,
   {
-    Icon: React.ElementType;
-    badgeBg: string;
-    badgeBorder: string;
-    badgeText: string;
-    cardBg: string;
-    cardBorder: string;
+    badgeClass: string;
+    cardClass: string;
+    statCardClass: string;
+    statActiveClass: string;
+    statInactiveTextClass: string;
   }
 > = {
   Pending: {
-    Icon: FaClock,
-    badgeBg: "bg-yellow-500",
-    badgeBorder: "border-yellow-500",
-    badgeText: "text-white",
-    cardBg: "bg-yellow-100/40",
-    cardBorder: "border-yellow-300",
+    badgeClass: "bg-orange text-white",
+    cardClass: "bg-Secondary border-[#E5DEC1]",
+    statCardClass: "bg-Secondary border-orange",
+    statActiveClass: "bg-orange border-orange text-white",
+    statInactiveTextClass: "text-orange",
   },
   Resolved: {
-    Icon: FaCheckCircle,
-    badgeBg: "bg-light-green-600",
-    badgeBorder: "border-light-green-600",
-    badgeText: "text-white",
-    cardBg: "bg-light-green-100",
-    cardBorder: "border-light-green-300",
+    badgeClass: "bg-Primary text-white",
+    cardClass: "bg-[#EEF7F1] border-[#D5E6D9]",
+    statCardClass: "bg-[#EEF7F1] border-light-green",
+    statActiveClass: "bg-Primary border-Primary text-white",
+    statInactiveTextClass: "text-Primary",
   },
 };
 
-/* ================= SUMMARY ================= */
+const ReportCard = ({ reports, filters }: Props) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-const reportsData = [
-  { id: 1, tag: "Pending" as ReportStatus, count: 20 },
-  { id: 2, tag: "Resolved" as ReportStatus, count: 10 },
-];
+  const [searchValue, setSearchValue] = useState(filters.search);
 
-/* ================= DATA ================= */
+  useEffect(() => {
+    setSearchValue(filters.search);
+  }, [filters.search]);
 
-const reportItems: ReportItem[] = [
-  {
-    id: 1,
-    status: "Pending",
-    campaign: "Winter Fest",
-    milestone: "Milestone 2",
-    time: "Yesterday",
-    description: "Pending review for visual content",
-    company: "StyleCo.",
-    date: "Dec 10, 2025",
-  },
-  {
-    id: 2,
-    status: "Resolved",
-    campaign: "Spring Launch",
-    milestone: "Milestone 3",
-    time: "Last week",
-    description: "Issue resolved successfully",
-    company: "StyleCo.",
-    date: "Dec 1, 2025",
-  },
-  {
-    id: 3,
-    status: "Pending",
-    campaign: "Black Friday Deals",
-    milestone: "Milestone 2",
-    time: "5 hours ago",
-    description: "Awaiting brand approval",
-    company: "DealMart",
-    date: "Dec 16, 2025",
-  },
-  {
-    id: 4,
-    status: "Resolved",
-    campaign: "New Year Blast",
-    milestone: "Milestone 1",
-    time: "2 days ago",
-    description: "Copyright issue resolved",
-    company: "PromoHub",
-    date: "Dec 14, 2025",
-  },
-];
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const trimmedCurrent = searchValue.trim();
+      const trimmedInitial = filters.search.trim();
 
-/* ================= COMPONENT ================= */
+      if (trimmedCurrent === trimmedInitial) return;
 
-const ReportCard = () => {
-  const [activeFilter, setActiveFilter] = useState<ReportStatus | null>(null);
+      const params = new URLSearchParams(searchParams.toString());
 
-  const filteredReports = activeFilter
-    ? reportItems.filter((item) => item.status === activeFilter)
-    : reportItems;
+      if (trimmedCurrent) {
+        params.set("search", trimmedCurrent);
+      } else {
+        params.delete("search");
+      }
+
+      params.set("page", "1");
+      params.set("limit", String(filters.limit));
+      params.set("userType", filters.userType);
+
+      if (filters.status) {
+        params.set("status", filters.status);
+      } else {
+        params.delete("status");
+      }
+
+      router.replace(`${pathname}?${params.toString()}`);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [
+    searchValue,
+    filters.search,
+    filters.limit,
+    filters.userType,
+    filters.status,
+    pathname,
+    router,
+    searchParams,
+  ]);
+
+  const updateQuery = (updates: {
+    page?: number;
+    userType?: ReportUserType;
+    status?: ReportStatus | null;
+    search?: string;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const nextPage = updates.page ?? filters.page;
+    const nextUserType = updates.userType ?? filters.userType;
+    const nextStatus =
+      updates.status !== undefined ? updates.status : filters.status;
+    const nextSearch = updates.search ?? filters.search;
+
+    params.set("page", String(nextPage));
+    params.set("limit", String(filters.limit));
+    params.set("userType", nextUserType);
+
+    if (nextStatus) {
+      params.set("status", nextStatus);
+    } else {
+      params.delete("status");
+    }
+
+    if (nextSearch.trim()) {
+      params.set("search", nextSearch.trim());
+    } else {
+      params.delete("search");
+    }
+
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleStatusClick = (value: ReportStatus) => {
+    updateQuery({
+      page: 1,
+      status: filters.status === value ? null : value,
+    });
+  };
+
+  const handleUserTypeClick = (value: ReportUserType) => {
+    updateQuery({
+      page: 1,
+      userType: value,
+    });
+  };
+
+  const handlePrevPage = () => {
+    if (filters.page <= 1) return;
+    updateQuery({ page: filters.page - 1 });
+  };
+
+  const handleNextPage = () => {
+    if (filters.page >= reports.meta.totalPages) return;
+    updateQuery({ page: filters.page + 1 });
+  };
 
   return (
-    <Card>
-      <CardHeader className="border-b space-y-4">
-        <div className="space-y-2">
-          <CardTitle>Report Log</CardTitle>
-          <CardDescription>
+    <Card className="overflow-hidden rounded-2xl border border-[#D9D9D9] shadow-none">
+      <CardHeader className="space-y-5 border-b px-6 py-5">
+        <div>
+          <CardTitle className="text-base font-semibold text-Primary">
+            Report Log
+          </CardTitle>
+          <CardDescription className="text-xs text-dark-gray">
             View reports on your works, manage and resolve them
           </CardDescription>
         </div>
 
-        {/* FILTER CARDS */}
-        <div className="flex gap-4">
-          {reportsData.map((report) => {
-            const isActive = report.tag === activeFilter;
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => handleStatusClick("Pending")}
+            className={cn(
+              "rounded-lg border px-5 py-4 text-left transition-colors",
+              STATUS_CONFIG.Pending.statCardClass,
+              filters.status === "Pending"
+                ? STATUS_CONFIG.Pending.statActiveClass
+                : STATUS_CONFIG.Pending.statInactiveTextClass
+            )}
+          >
+            <p className="text-sm font-medium">Pending</p>
+            <p className="mt-1 text-[2rem] font-semibold">
+              {reports.stats.pending}
+            </p>
+          </button>
 
-            return (
-              <div
-                key={report.id}
-                onClick={() => setActiveFilter(report.tag)}
-                className={cn(
-                  "cursor-pointer flex-1 rounded-lg border p-3 transition-all select-none",
-                  report.tag === "Pending" &&
-                    "bg-yellow-100 border-yellow-300 text-yellow-700",
-                  report.tag === "Resolved" &&
-                    "bg-light-green-100 border-light-green-300 text-light-green-700",
-                  isActive &&
-                    cn(
-                      "ring-2 ring-offset-1",
-                      report.tag === "Pending" &&
-                        "ring-yellow-400 bg-yellow-500 text-white",
-                      report.tag === "Resolved" &&
-                        "ring-green-400 bg-light-green-600 text-white"
-                    )
-                )}
-              >
-                <p className="text-lg">{report.tag}</p>
-                <p className="text-2xl font-semibold">{report.count}</p>
-              </div>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => handleStatusClick("Resolved")}
+            className={cn(
+              "rounded-lg border px-5 py-4 text-left transition-colors",
+              STATUS_CONFIG.Resolved.statCardClass,
+              filters.status === "Resolved"
+                ? STATUS_CONFIG.Resolved.statActiveClass
+                : STATUS_CONFIG.Resolved.statInactiveTextClass
+            )}
+          >
+            <p className="text-sm font-medium">Resolved</p>
+            <p className="mt-1 text-[2rem] font-semibold">
+              {reports.stats.resolved}
+            </p>
+          </button>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {/* SEARCH */}
-        <div className="relative w-[40%]">
-          <FiSearch
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            size={18}
-          />
-          <Input placeholder="Search by campaign name" className="pl-10" />
+      <CardContent className="space-y-5 px-6 py-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-[270px]">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-light-gray"
+            />
+            <Input
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search By Campaign Name"
+              className="h-10 rounded-lg border-[#D9D9D9] pl-9 text-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {USER_TYPE_OPTIONS.map((item) => {
+              const isActive = filters.userType === item.value;
+
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => handleUserTypeClick(item.value)}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-xs transition-colors",
+                    isActive ? "bg-Primary text-white" : "text-black"
+                  )}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {filteredReports.length === 0 && (
-          <p className="text-center text-gray-500">No reports found</p>
+        {reports.data.length === 0 ? (
+          <div className="py-10 text-center text-sm text-dark-gray">
+            No reports found
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {reports.data.map((item) => {
+              const isPending = item.status === "Pending";
+              const config = STATUS_CONFIG[item.status];
+
+              return (
+                <div
+                  key={item.reportId}
+                  className={cn("rounded-lg border p-4", config.cardClass)}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-Primary">
+                        {item.campaignName}
+                      </h3>
+                      <p className="text-xs font-medium text-Primary">
+                        {item.milestone}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-Primary">
+                        Reported By
+                      </p>
+                      <p className="text-xs text-light-gray">
+                        {item.relatedEntity.type}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-lg border border-[#E5E7EB] bg-white px-4 py-3">
+                    <p className="text-xs text-light-gray">{item.milestone}</p>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-4">
+                    <div className="text-orange text-xs">
+                      <p className="flex items-center gap-1">
+                        <RiUser2Fill className="shrink-0" />
+                        {item.relatedEntity.name}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-full px-4 py-1 text-xs font-medium",
+                        config.badgeClass
+                      )}
+                    >
+                      {isPending ? (
+                        <FaClock className="text-[10px]" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      )}
+                      {item.status}
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* REPORT LIST */}
-        <div className="space-y-4">
-          {filteredReports.map((item) => {
-            const {
-              Icon,
-              badgeBg,
-              badgeBorder,
-              badgeText,
-              cardBg,
-              cardBorder,
-            } = STATUS_CONFIG[item.status];
+        <div className="flex items-center justify-end gap-3 pt-6">
+          <span className="text-xs text-dark-gray">Page</span>
 
-            return (
-              <div
-                key={item.id}
-                className={cn(
-                  "rounded-lg border p-3 space-y-2",
-                  cardBg,
-                  cardBorder
-                )}
-              >
-                <div>
-                  <h3 className="text-Primary font-semibold">
-                    {item.campaign}
-                  </h3>
-                  <p className="text-light-green text-sm">{item.milestone}</p>
-                  <p className="text-xs text-gray-400">{item.time}</p>
-                </div>
+          <div className="flex h-6 min-w-6 items-center justify-center rounded-md bg-Secondary px-2 text-xs text-Primary">
+            {reports.meta.page}
+          </div>
 
-                <div className="bg-white border rounded-lg p-3">
-                  <p className="text-sm text-gray-700">{item.description}</p>
-                </div>
+          <span className="text-xs text-dark-gray">
+            Of {reports.meta.totalPages}
+          </span>
 
-                <div className="flex justify-between items-center">
-                  <div className="text-orange text-sm space-y-1">
-                    <p className="flex items-center gap-1">
-                      <RiUser2Fill /> {item.company}
-                    </p>
-                    <p className="flex items-center gap-1">
-                      <FaClock /> {item.date}
-                    </p>
-                  </div>
+          <button
+            type="button"
+            onClick={handlePrevPage}
+            disabled={filters.page <= 1}
+            className="rounded-md border border-Primary px-3 py-1 text-xs text-Primary disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Prev
+          </button>
 
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-1 rounded-full border text-sm",
-                      badgeBg,
-                      badgeBorder,
-                      badgeText
-                    )}
-                  >
-                    <Icon />
-                    {item.status}
-                    <ChevronRight size={14} />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          <button
+            type="button"
+            onClick={handleNextPage}
+            disabled={filters.page >= reports.meta.totalPages}
+            className="rounded-md bg-Primary px-4 py-1 text-xs text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </CardContent>
     </Card>

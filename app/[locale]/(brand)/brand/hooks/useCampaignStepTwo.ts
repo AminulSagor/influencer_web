@@ -59,8 +59,6 @@ export const useCampaignStepTwo = ({ onSuccess }: Options) => {
         notPreferableInfluencerIds: stepTwo.notPreferableInfluencerIds, // must be UUIDs
       };
 
-      console.log("Submitting Step 2 payload:", payload, "campaignId:", campaignId);
-
       await CampaignService.updateStepTwo(campaignId, payload);
       increaseStep();
       onSuccess?.();

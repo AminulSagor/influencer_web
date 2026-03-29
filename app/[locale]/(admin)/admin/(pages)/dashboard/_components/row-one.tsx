@@ -3,50 +3,77 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { BiSolidBriefcaseAlt } from "react-icons/bi";
-import { FaHandHoldingHeart } from "react-icons/fa6";
 import { GoGoal } from "react-icons/go";
 import { IoIosHourglass } from "react-icons/io";
 
-const RowOne = () => {
+import { DashboardSummaryCardsData } from "@/types/admin/dashboard/dashboard_type";
+
+type Props = {
+  summaryData: DashboardSummaryCardsData;
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("en-BD", {
+    style: "currency",
+    currency: "BDT",
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+const RowOne = ({ summaryData }: Props) => {
   const dashboardCards = [
     {
       title: "Total Revenue",
-      value: "৳ 3,000,000",
+      value: `৳ ${summaryData.totalRevenue.toLocaleString()}`,
       icon: GoGoal,
     },
     {
       title: "Pending Payouts",
-      value: "৳ 120,000",
+      value: `৳ ${summaryData.pendingPayouts.toLocaleString()}`,
       icon: IoIosHourglass,
     },
     {
       title: "Active Campaigns",
-      value: "14",
+      value: String(summaryData.activeCampaigns),
       icon: BiSolidBriefcaseAlt,
-      link: "/",
+      link: "/admin/campaigns?tab=active",
+    },
+  ];
+
+  const secondaryCards = [
+    {
+      label: "Influencers",
+      value: summaryData.influencers,
+    },
+    {
+      label: "Agencies",
+      value: summaryData.agencies,
+    },
+    {
+      label: "Client",
+      value: summaryData.clients,
     },
   ];
 
   return (
-    <div className="grid grid-cols-12 gap-2 items-stretch">
-      {/* Primary cards */}
-      <div className="col-span-8 grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 lg:gap-4 items-stretch">
+      {/* Primary Dashboard Cards (Green) */}
+      <div className="md:col-span-12 lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
         {dashboardCards.map(({ icon: Icon, link, title, value }, index) => (
           <div key={index} className="h-full">
-            <div className="h-full flex flex-col justify-between bg-linear-to-r from-[#405E2C]/90 to-[#7A9B57] rounded-lg p-4 shadow-md gap-6">
-              <div className="flex items-center justify-between">
-                <p className="text-white">{title}</p>
-                <Icon size={35} className="text-white" />
+            <div className="h-full min-h-[140px] flex flex-col justify-between bg-linear-to-br from-[#5D7B45] to-[#364D23] rounded-2xl p-4 lg:p-5 shadow-sm hover:brightness-105 transition-all">
+              <div className="flex items-start justify-between">
+                <p className="text-white font-medium text-sm lg:text-base opacity-95">{title}</p>
+                <Icon size={32} className="text-white opacity-90" />
               </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-white font-bold text-2xl">{value}</p>
+              <div className="flex items-end justify-between gap-2 mt-4">
+                <p className="text-white font-bold text-2xl lg:text-3xl tracking-tight">{value}</p>
+
                 {link && (
-                  <Button variant="link" className="text-white p-0">
-                    <Link href={link} className="flex items-center">
-                      View All <ChevronRight />
-                    </Link>
-                  </Button>
+                  <Link href={link} className="flex items-center text-[10px] lg:text-xs text-white/90 hover:text-white mb-1 whitespace-nowrap">
+                    View All <ChevronRight size={10} className="ml-0.5" />
+                  </Link>
                 )}
               </div>
             </div>
@@ -54,13 +81,15 @@ const RowOne = () => {
         ))}
       </div>
 
-      {/* Secondary cards */}
-      <div className="col-span-4 grid grid-cols-3 gap-2">
-        {["Influencer", "Brands", "Campaigns"].map((label, i) => (
+      {/* Secondary Cards (White) */}
+      <div className="md:col-span-12 lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+        {secondaryCards.map((item, i) => (
           <div key={i} className="h-full">
-            <div className="h-full border border-light-green rounded-lg p-3 text-light-green bg-linear-to-r from-white to-Secondary flex flex-col justify-between">
-              <p className="text-sm">{label}</p>
-              <p className="text-2xl font-semibold">30</p>
+            <div className="h-full min-h-[140px] border border-[#DADADA] rounded-2xl p-4 lg:p-5 bg-linear-to-b from-white to-[#F9FAF8] flex flex-col justify-between hover:shadow-md transition-all">
+              <p className="text-[#364D23] font-medium text-sm lg:text-base">{item.label}</p>
+              <div className="mt-auto">
+                <p className="text-[#5D7B45] text-3xl lg:text-4xl font-bold tracking-tight">{item.value}</p>
+              </div>
             </div>
           </div>
         ))}
