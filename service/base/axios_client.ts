@@ -38,7 +38,10 @@ serviceClient.interceptors.response.use(
         const locale =
           document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] || "en";
 
-        if (!window.location.pathname.includes("/login")) {
+        if (
+          !window.location.pathname.includes("/login") &&
+          !window.location.pathname.includes("/signup")
+        ) {
           window.location.href = `/${locale}/login`;
         }
       }
