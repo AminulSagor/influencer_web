@@ -2,75 +2,220 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAllCampaigns } from "@/service/admin/campaign/get-campaign";
+import { useSearchParams } from "next/navigation";
+import {
+  getAllCampaigns
+} from "@/service/admin/campaign/get-campaign";
 
 import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";
-import CampaignsBulkBar from "./campaigns-bulkbar";
+import CampaignsBulkActionBar from "./campaigns-bulk-action-bar";
 import CampaignsListTable from "./campaigns-list-table";
 import CampaignsGrid from "./campaigns-grid";
+import CampaignsStatusTabs, { ORDER, type CampaignTabKey } from "./campaigns-status-tabs";
+import CampaignsPagination from "./campaigns-pagination";
+import { exportCampaignsToCSV } from "@/utils/admin/campaign/campaign_export_util";
 
-import type { CampaignStatus, CampaignUI, CampaignView } from "@/types/admin/campaign/campaign_ui_type";
-import type { GetCampaignResponse } from "@/types/campaign/get_campaign_type";
-import { mapserviceCampaignToUI } from "@/utils/admin/campaign/campaign_mapper_type_util";
+import type {
+  CampaignStatus,
+  CampaignUI,
+  CampaignView,
+} from "@/types/admin/campaign/campaign_ui_type";
+import { AdminCampaignApiItem, GetCampaignResponse } from "@/types/admin/campaign/get_campaign_type";
+import toast from "react-hot-toast";
 
-import type { CampaignTabKey } from "@/types/admin/campaign/campaign_filter_types";
-import CampaignsStatusTabs from "./campaigns-status-tabs";
-import { TAB_TO_BACKEND_STATUSES } from "@/utils/admin/campaign/campaign_status_tab_util";
+const LIMIT = 7;
 
-export default function CampaignsPage() {
+type CampaignTypeFilter = "all" | "influencer_promotion" | "paid_ad";
+
+const TAB_TO_BACKEND_STATUS: Record<Exclude<CampaignTabKey, "all">, string> = {
+  "needs-quote": "negotiating",
+  active: "active",
+  "pending-invitation": "pending_influencer",
+  completed: "completed",
+  canceled: "cancelled",
+};
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function addDays(dateStr?: string | null, duration?: number | null) {
+  if (!dateStr || !duration) return "—";
+
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  date.setDate(date.getDate() + duration);
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function normalizePaymentStatus(status?: string | null) {
+  const value = String(status || "").toLowerCase();
+
+  if (value === "full" || value === "paid") return "paid";
+  if (value === "partial" || value === "partial_paid") return "partial_paid";
+  return "pending";
+}
+
+function formatCampaignTypeLabel(type?: string | null) {
+  const value = String(type || "").toLowerCase();
+
+  if (value === "paid_ad") return "Paid Ad";
+  if (value === "influencer_promotion") return "Influencer Promotion";
+  return type || "—";
+}
+
+function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
+  const budget = Number(item.totalBudget || 0);
+
+  return {
+    id: item.id,
+    name: item.campaignName || "Untitled Campaign",
+    category: formatCampaignTypeLabel(item.campaignType),
+    niches: "—",
+    avatar: "",
+    client: item.client?.brandName || "—",
+    budget,
+    quote: budget,
+    startDate: formatDate(item.startingDate),
+    endDate: addDays(item.startingDate, item.duration),
+    status: item.status as CampaignStatus,
+    assignedPersonals: {
+      count: item.assignedInfluencers?.length || 0,
+      influencers: (item.assignedInfluencers || []).map((inf: any) => ({
+        id: inf.id,
+        name: inf.name,
+        avatar: inf.profileImage || inf.ImageUrl || inf.imageUrl || "",
+      })),
+    },
+    paymentStatus: normalizePaymentStatus(item.paymentStatus),
+  } as CampaignUI;
+}
+
+export default function AdminCampaigns() {
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as CampaignTabKey) || "all";
+
   const [campaigns, setCampaigns] = useState<CampaignUI[]>([]);
   const [view, setView] = useState<CampaignView>("grid");
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<CampaignTabKey>("all");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [tab, setTab] = useState<CampaignTabKey>(initialTab);
+  const [campaignType, setCampaignType] = useState<CampaignTypeFilter>("all");
+  const [page, setPage] = useState(1);
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const t = searchParams.get("tab") as CampaignTabKey;
+    if (t && ORDER.includes(t)) {
+      setTab(t);
+    }
+  }, [searchParams]);
+
+  const [meta, setMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: LIMIT,
+    totalPages: 1,
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query.trim());
+      setPage(1);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
-        const res = (await getAllCampaigns({ page: 1, limit: 10 })) as GetCampaignResponse;
-        const list = Array.isArray((res as any)?.data) ? (res as any).data : [];
-        const mapped: CampaignUI[] = list.map(mapserviceCampaignToUI);
+        setLoading(true);
 
-        // ✅ DEBUG: see what statuses you actually have from service
-        console.log("service STATUSES:", mapped.map((x) => x.status));
+        const backendStatus =
+          tab === "all" ? undefined : TAB_TO_BACKEND_STATUS[tab];
 
-        setCampaigns(mapped);
+        const backendCampaignType =
+          campaignType === "all" ? undefined : campaignType;
+
+        const res: GetCampaignResponse = await getAllCampaigns({
+          page,
+          limit: LIMIT,
+          campaignType: backendCampaignType,
+          status: backendStatus,
+          search: debouncedQuery || undefined,
+        });
+
+        const list = Array.isArray(res?.data) ? res.data : [];
+        setCampaigns(list.map(mapCampaignToUI));
+
+        setMeta({
+          total: res?.meta?.total ?? 0,
+          page: res?.meta?.page ?? 1,
+          limit: res?.meta?.limit ?? LIMIT,
+          totalPages: res?.meta?.totalPages ?? 1,
+        });
       } catch (err) {
-        console.error("Failed to fetch campaigns:", err);
+        toast.error("Failed to fetch campaigns:");
+        setCampaigns([]);
+        setMeta({
+          total: 0,
+          page: 1,
+          limit: LIMIT,
+          totalPages: 1,
+        });
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchCampaigns();
-  }, []);
+  }, [page, tab, debouncedQuery, campaignType]);
 
-  const filtered = useMemo(() => {
-    let list = campaigns;
-
-    // ✅ tab filter
-    if (tab !== "all") {
-      const allowed = TAB_TO_BACKEND_STATUSES[tab] || [];
-      list = list.filter((c) => allowed.includes(c.status));
-
-      // ✅ DEBUG: see filtering result
-      console.log("FILTER:", tab, "allowed:", allowed, "result:", list.length);
-    } else {
-      console.log("FILTER: all", "result:", list.length);
-    }
-
-    // ✅ search filter
-    const q = query.trim().toLowerCase();
-    if (!q) return list;
-
-    return list.filter((c) => c.name.toLowerCase().includes(q));
-  }, [campaigns, tab, query]);
+  useEffect(() => {
+    setPage(1);
+  }, [tab, campaignType]);
 
   const handleStatusChange = (id: string, status: CampaignStatus) => {
-    setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+    setCampaigns((prev) =>
+      prev.map((campaign) =>
+        campaign.id === id ? { ...campaign, status } : campaign
+      )
+    );
   };
+
+  const showingFrom = useMemo(() => {
+    if (meta.total === 0) return 0;
+    return (meta.page - 1) * meta.limit + 1;
+  }, [meta]);
+
+  const showingTo = useMemo(() => {
+    if (meta.total === 0) return 0;
+    return Math.min(meta.page * meta.limit, meta.total);
+  }, [meta]);
 
   return (
     <Card>
       <CampaignsHeader
-        tabs={<CampaignsStatusTabs items={campaigns} value={tab} onChange={setTab} />}
+        tabs={<CampaignsStatusTabs value={tab} onChange={setTab} />}
       />
 
       <CardContent className="space-y-4">
@@ -79,15 +224,57 @@ export default function CampaignsPage() {
           setView={setView}
           query={query}
           setQuery={setQuery}
+          campaignType={campaignType}
+          setCampaignType={setCampaignType}
         />
 
-        <CampaignsBulkBar />
+        <CampaignsBulkActionBar
+          selectedCount={selectedCampaignIds.length}
+          onExport={() => {
+            const selectedCampaigns = campaigns.filter((c) =>
+              selectedCampaignIds.includes(c.id)
+            );
+            exportCampaignsToCSV(selectedCampaigns);
+          }}
+          campaignType={campaignType}
+          setCampaignType={setCampaignType}
+        />
 
-        {view === "list" ? (
-          <CampaignsListTable campaigns={filtered} onStatusChange={handleStatusChange} />
+        {loading ? (
+          <div className="mx-2 rounded-md border border-dashed border-light-green p-10 text-center text-sm text-muted-foreground">
+            Loading campaigns...
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="mx-2 rounded-md border border-dashed border-light-green p-10 text-center text-sm text-muted-foreground">
+            No campaigns found
+          </div>
+        ) : view === "list" ? (
+          <CampaignsListTable
+            campaigns={campaigns}
+            onStatusChange={handleStatusChange}
+          />
         ) : (
-          <CampaignsGrid campaigns={filtered} view={view} onStatusChange={handleStatusChange} />
+          <CampaignsGrid
+            campaigns={campaigns}
+            view={view}
+            onStatusChange={handleStatusChange}
+            selectedCampaignIds={selectedCampaignIds}
+            onToggleSelect={(id, checked) => {
+              setSelectedCampaignIds((prev) =>
+                checked ? [...prev, id] : prev.filter((p) => p !== id)
+              );
+            }}
+          />
         )}
+
+        <CampaignsPagination
+          currentPage={meta.page}
+          totalPages={meta.totalPages}
+          totalItems={meta.total}
+          showingFrom={showingFrom}
+          showingTo={showingTo}
+          onPageChange={setPage}
+        />
       </CardContent>
     </Card>
   );

@@ -77,7 +77,24 @@ export default function Page() {
   const fetchCampaign = useCallback(async () => {
     if (!campaignId) return;
     const res = await getAdminCampaignById(campaignId);
-    setCampaign(res?.data ?? null);
+    
+    let assignedInfluencers = undefined;
+    try {
+      const { getAllCampaigns } = await import("@/service/admin/campaign/get-campaign");
+      // Search by campaign name to ensure it is returned in the list
+      const allRes = await getAllCampaigns({ search: res?.data?.campaignName });
+      const match = allRes?.data?.find((c: any) => c.id === campaignId);
+      if (match?.assignedInfluencers) {
+        assignedInfluencers = match.assignedInfluencers;
+      }
+    } catch (err) {
+      console.error("Failed to fetch assignedInfluencers from all campaigns API", err);
+    }
+
+    setCampaign({
+      ...(res?.data ?? {}),
+      assignedInfluencers,
+    });
   }, [campaignId]);
 
   const fetchNegotiations = useCallback(async () => {
@@ -142,7 +159,7 @@ export default function Page() {
               image: a?.logo ?? null,
             });
           });
-        } catch {}
+        } catch { }
 
         const results = await Promise.all(
           ids.map(async (profileId) => {
@@ -192,6 +209,24 @@ export default function Page() {
   }, [campaignId, fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
 
   useEffect(() => {
+    const handler = () => {
+      fetchCampaign();
+      fetchNegotiations();
+      fetchAssignedAgencies();
+    };
+
+    window.addEventListener("influencer-assigned", handler);
+    window.addEventListener("agency-assigned", handler);
+    window.addEventListener("app-notification", handler);
+
+    return () => {
+      window.removeEventListener("influencer-assigned", handler);
+      window.removeEventListener("agency-assigned", handler);
+      window.removeEventListener("app-notification", handler);
+    };
+  }, [fetchCampaign, fetchNegotiations, fetchAssignedAgencies]);
+
+  useEffect(() => {
     if (!campaign) return;
     const suggested = campaign?.suggestedAgencies ?? [];
     fetchPreferredAgenciesFromSuggested(Array.isArray(suggested) ? suggested : []);
@@ -200,14 +235,14 @@ export default function Page() {
   const rawStatus = normalize(campaign?.status);
   const rawQuoteStatus = normalize(
     campaign?.quote?.status ??
-      campaign?.negotiation?.status ??
-      campaign?.quoteStatus ??
-      campaign?.negotiationStatus
+    campaign?.negotiation?.status ??
+    campaign?.quoteStatus ??
+    campaign?.negotiationStatus
   );
   const waitingFor = normalize(
     campaign?.negotiation?.waitingFor ??
-      campaign?.quote?.waitingFor ??
-      campaign?.waitingFor
+    campaign?.quote?.waitingFor ??
+    campaign?.waitingFor
   );
 
   const fallbackQuoteState = useMemo(
@@ -265,8 +300,13 @@ export default function Page() {
   );
 
   const influencers = useMemo(
-    () => getInfluencerAvatars(campaign?.preferredInfluencers ?? []),
-    [campaign?.preferredInfluencers]
+    () => {
+      const list = campaign?.assignedInfluencers?.length 
+        ? campaign.assignedInfluencers 
+        : (campaign?.preferredInfluencers ?? []);
+      return getInfluencerAvatars(list);
+    },
+    [campaign?.assignedInfluencers, campaign?.preferredInfluencers]
   );
 
   const assignedInfluencersForPayment = useMemo(() => {
@@ -304,11 +344,29 @@ export default function Page() {
     [totalBudget, platformFeeAmount, availableForInfluencers]
   );
 
-  const useAgencyProfitUI = isPaidAd || rawStatus === "pending_agency";
+  const selectedAgencyForPayment = useMemo(() => {
+    const selectedAgencyId = safeStr(campaign?.selectedAgencyId);
+    if (!selectedAgencyId) return null;
+
+    const assignedAgency = (campaign?.assignedAgencies ?? []).find((item: any) => {
+      const agencyId = safeStr(item?.agencyId ?? item?.agency?.id ?? item?.id);
+      return agencyId === selectedAgencyId;
+    });
+
+    const agency = assignedAgency?.agency ?? assignedAgency;
+    if (!agency) return null;
+
+    return {
+      id: selectedAgencyId,
+      name: safeStr(agency?.agencyName ?? agency?.name) || "Assigned Agency",
+      image: agency?.logo ?? agency?.image ?? null,
+    };
+  }, [campaign?.selectedAgencyId, campaign?.assignedAgencies]);
+
+  const useAgencyProfitUI = isPaidAd || rawStatus === "pending_agency" || rawStatus === "agency_accepted";
   const isActiveInfluencerCampaign = !isPaidAd && campaignStatus === "active";
 
   if (loading || !campaign) return <div>Loading...</div>;
-
   return (
     <div className="p-4 space-y-4">
       <div className="grid grid-cols-12 gap-4">
@@ -345,7 +403,10 @@ export default function Page() {
         </div>
       </div>
 
-      <CampaignStepper campaignId={campaignId} />
+      <CampaignStepper
+        status={campaign?.status}
+        paymentStatus={campaign?.paymentStatus}
+      />
 
       {useAgencyProfitUI ? (
         <PlatformProfitAgency
@@ -362,6 +423,9 @@ export default function Page() {
           draftAssignedAgencies={assignedAgenciesDraft}
           loadingDraftAssignedAgencies={loadingAssignedAgencies}
           onRefreshDraft={fetchAssignedAgencies}
+          campaignStatusRaw={rawStatus}
+          selectedAgency={selectedAgencyForPayment ?? undefined}
+          offeredAmount={availableForAgency}
         />
       ) : (
         <PlatformProfit

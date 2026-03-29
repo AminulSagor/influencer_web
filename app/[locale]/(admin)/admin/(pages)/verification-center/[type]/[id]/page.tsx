@@ -16,100 +16,11 @@ import VerificationDetailsBreadcrumb from "./_components/verification-details-br
 import { getInfluencerProfile } from "@/service/admin/verification-center/influencer/get-influencer-profile";
 import { getAgencyVerificationProfile } from "@/service/admin/verification-center/agency/get-agency-profile";
 import { getBrandProfile } from "@/service/admin/verification-center/brand/get-brand-profile";
+import { ApprovalStep, CardStatus, getCountStep, getPaymentStep, getSimpleStep, getTypeKey, isApprovedStatus, mapStatus } from "@/utils/admin/verification-center/verification_center_util";
 
 interface Props {
   params: Promise<{ type: string; id: string }>;
 }
-
-type CardStatus = "Pending" | "Rejected" | "Accepted";
-
-type ApprovalStep = {
-  label: string;
-  status: "completed" | "pending";
-  subtitle: string;
-};
-
-const mapStatus = (value?: string | null, isVerified?: boolean): CardStatus => {
-  const normalized = (value ?? "").trim().toLowerCase();
-
-  if (
-    normalized === "accepted" ||
-    normalized === "approved" ||
-    normalized === "verified"
-  ) {
-    return "Accepted";
-  }
-
-  if (normalized === "rejected") {
-    return "Rejected";
-  }
-
-  if (normalized === "pending" || normalized === "unverified") {
-    return "Pending";
-  }
-
-  return isVerified ? "Accepted" : "Pending";
-};
-
-const getTypeKey = (type: string) =>
-  type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
-
-const isApprovedStatus = (value?: string | null) => {
-  const normalized = (value ?? "").trim().toLowerCase();
-
-  return (
-    normalized === "approved" ||
-    normalized === "accepted" ||
-    normalized === "verified"
-  );
-};
-
-const getSimpleStep = (
-  label: string,
-  completed: boolean,
-  completedText = "Approved"
-): ApprovalStep => ({
-  label,
-  status: completed ? "completed" : "pending",
-  subtitle: completed ? completedText : "Pending",
-});
-
-const getCountStep = (label: string, count: number): ApprovalStep => ({
-  label,
-  status: count > 0 ? "completed" : "pending",
-  subtitle: count > 0 ? `${count} Approved` : "Pending",
-});
-
-const getPaymentStep = (items: { status?: string | null }[]): ApprovalStep => {
-  const approved = items.filter((item) => isApprovedStatus(item.status)).length;
-  const pending = items.length - approved;
-
-  if (items.length === 0) {
-    return {
-      label: "Payment Setup",
-      status: "pending",
-      subtitle: "Pending",
-    };
-  }
-
-  if (pending === 0) {
-    return {
-      label: "Payment Setup",
-      status: "completed",
-      subtitle: `${approved} Approved`,
-    };
-  }
-
-  return {
-    label: "Payment Setup",
-    status: approved > 0 ? "completed" : "pending",
-    subtitle:
-      approved > 0
-        ? `${approved} Approved, ${pending} Pending`
-        : `${pending} Pending`,
-  };
-};
-
 const Page = async ({ params }: Props) => {
   const { type, id } = await params;
   const typeKey = getTypeKey(type);
@@ -746,6 +657,7 @@ const Page = async ({ params }: Props) => {
               />
 
               <ProfileDetailsCard
+                userId={verificationUserId}
                 type="Brand"
                 personalInfo={
                   personalInfo ?? {
@@ -826,6 +738,7 @@ const Page = async ({ params }: Props) => {
             />
 
             <ProfileDetailsCard
+              userId={verificationUserId}
               type={normalizedTypeKey}
               personalInfo={
                 personalInfo ?? {

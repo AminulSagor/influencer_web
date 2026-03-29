@@ -1,4 +1,4 @@
-import VerificationBreadcrumb from "../../_components/verification-breadcrumb";
+import VerificationBreadcrumb from "../../_components/user-breadcrumb";
 import VariantLinksCard from "../../_components/variants-links-card";
 import BrandUserCard from "../../_components/brand-user-card";
 import { getAdminUserCounts } from "@/service/admin/users/get-users-counts";

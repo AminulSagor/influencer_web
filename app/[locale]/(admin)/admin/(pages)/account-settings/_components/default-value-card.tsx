@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { updatePlatformFee } from "@/service/admin/settings/update-platform-fee";
+import toast from "react-hot-toast";
 
 type Props = {
   initialPlatformFee: string;
@@ -45,7 +46,7 @@ const DefaultValueCard = ({
 
       setIsEditingPlatform(false);
     } catch (error) {
-      console.error("Failed to update platform fee:", error);
+      toast.error("Failed to update platform fee:");
     } finally {
       setIsUpdatingPlatform(false);
     }
@@ -66,7 +67,7 @@ const DefaultValueCard = ({
 
       setIsEditingVat(false);
     } catch (error) {
-      console.error("Failed to update VAT tax:", error);
+      toast.error("Failed to update VAT tax");
     } finally {
       setIsUpdatingVat(false);
     }

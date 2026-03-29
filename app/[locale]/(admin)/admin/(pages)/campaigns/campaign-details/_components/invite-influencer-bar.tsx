@@ -17,6 +17,7 @@ import {
   RemainingInvitationInfluencer,
 } from "@/service/admin/campaign/assignment-remain";
 import { money } from "@/utils/admin/campaign/campaign_calculation_util";
+import toast from "react-hot-toast";
 
 type CampaignMilestoneLite = {
   id: string;
@@ -65,6 +66,18 @@ export default function InviteInfluencerBar({
     CampaignMilestoneLite[]
   >([]);
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setRefreshTrigger((prev) => prev + 1);
+    window.addEventListener("influencer-assigned", handler);
+    window.addEventListener("app-notification", handler);
+    return () => {
+      window.removeEventListener("influencer-assigned", handler);
+      window.removeEventListener("app-notification", handler);
+    };
+  }, []);
+
   const sortedMilestones = useMemo(() => {
     return [...campaignMilestones]
       .filter((m) => String(m?.id ?? "").trim().length > 0)
@@ -87,7 +100,7 @@ export default function InviteInfluencerBar({
 
       setCampaignMilestones(milestones);
     } catch (error) {
-      console.error("❌ loadCampaign failed:", error);
+      toast.error("Failed to load campaign details");
       setCampaignMasterId(campaignId);
       setCampaignMilestones([]);
     } finally {
@@ -118,7 +131,7 @@ export default function InviteInfluencerBar({
         onSelectedInfluencerChange(list?.[0]?.id || "");
       }
     } catch (error) {
-      console.error("❌ loadRemaining failed:", error);
+      toast.error("Failed to load remaining invitations");
       setDraftCount(0);
       setRemainingBudget(0);
       setDraftedInfluencers([]);
@@ -132,7 +145,7 @@ export default function InviteInfluencerBar({
     loadCampaign();
     loadRemaining();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  }, [campaignId, refreshTrigger]);
 
   const selectedInfluencer = useMemo(() => {
     return draftedInfluencers.find((x) => x.id === selectedInfluencerId) || null;
@@ -176,19 +189,14 @@ export default function InviteInfluencerBar({
     try {
       setInviting(true);
 
-      console.log("📤 invite payload", {
-        campaignId: campaignMasterId,
-        assignmentId: selectedAssignmentId,
-        milestoneSplits: validMilestoneSplits,
-      });
-
       await inviteAssignment(selectedAssignmentId, {
         milestoneSplits: validMilestoneSplits,
       });
 
       await loadRemaining();
+      window.dispatchEvent(new Event("influencer-assigned"));
     } catch (error) {
-      console.error("❌ inviteAssignment failed:", error);
+      toast.error("Failed to Assign");
     } finally {
       setInviting(false);
     }

@@ -70,8 +70,6 @@ const NicheListCard = ({ initialNiches }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to create niche:", error);
       toast.error("Failed to add niche");
     } finally {
       setIsAdding(false);
@@ -94,7 +92,6 @@ const NicheListCard = ({ initialNiches }: Props) => {
       toast.success("Niche deleted");
       router.refresh();
     } catch (error) {
-      console.error("Failed to delete niche:", error);
       toast.error("Failed to delete niche");
     } finally {
       setDeletingId(null);
@@ -149,8 +146,6 @@ const NicheListCard = ({ initialNiches }: Props) => {
           return;
         }
       }
-
-      console.error("Failed to update niche:", error);
       toast.error("Failed to update niche");
     } finally {
       setUpdatingId(null);

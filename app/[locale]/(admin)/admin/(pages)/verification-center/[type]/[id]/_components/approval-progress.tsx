@@ -181,47 +181,40 @@ const ApprovalProgress = ({
             </p>
 
             <div className="flex items-center gap-4">
-              {status === "pending" && (
-                <>
+              <div className="flex flex-col items-end gap-2">
+                <div className="flex items-center gap-4">
                   <Button
                     variant="outline"
-                    className="h-8 rounded-xl border-gray-300 bg-[#F4F4F4] px-5 text-xs"
+                    className={`h-8 rounded-xl px-5 text-xs ${
+                      status === "rejected"
+                        ? "border-[#fff1f0] bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]/90"
+                        : "border-gray-300 bg-[#F4F4F4] text-black hover:bg-gray-100"
+                    }`}
                     onClick={() => setRejectModalOpen(true)}
-                    disabled={isApproving || isRejecting}
+                    disabled={isApproving || isRejecting || status === "rejected"}
                   >
-                    Reject
+                    {isRejecting ? "Rejecting..." : status === "rejected" ? "Rejected" : "Reject"}
                   </Button>
 
                   <Button
                     variant="lightGreen"
-                    className="h-8 rounded-xl px-5 text-xs"
+                    className={`h-8 rounded-xl px-5 text-xs ${
+                      status === "approved"
+                        ? "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]/90"
+                        : "bg-[#86a857] text-white hover:bg-[#78994d]"
+                    }`}
                     onClick={handleApprove}
-                    disabled={isApproving || isRejecting}
+                    disabled={isApproving || isRejecting || status === "approved"}
                   >
-                    {isApproving ? "Approving..." : "Approve"}
+                    {isApproving ? "Approving..." : status === "approved" ? "Approved" : "Approve"}
                   </Button>
-                </>
-              )}
-
-              {status === "approved" && (
-                <span className="text-sm font-semibold text-[#078834]">
-                  Approved
-                </span>
-              )}
-
-              {status === "rejected" && (
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-semibold text-[#ef3b2d]">
-                    Rejected
-                  </span>
-
-                  {rejectReason ? (
-                    <span className="mt-1 max-w-[220px] text-right text-xs text-[#8B8B8B]">
-                      {rejectReason}
-                    </span>
-                  ) : null}
                 </div>
-              )}
+                {status === "rejected" && rejectReason ? (
+                  <span className="max-w-[220px] text-right text-xs text-[#8B8B8B]">
+                    {rejectReason}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

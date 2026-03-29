@@ -172,6 +172,27 @@ const getActionUi = (item: DashboardActionItem) => {
   }
 };
 
+const getComputedActionLink = (item: DashboardActionItem, metaType: string) => {
+  if (item.type === "campaign_approval") {
+    return "/admin/campaigns?tab=needs-quote";
+  }
+  if (item.type === "verification") {
+    const tabName = metaType === "Client" ? "brand" : metaType.toLowerCase();
+    return `/admin/verification-center?tab=${tabName}`;
+  }
+  if (item.type === "payout") {
+    return "/admin/finance-analytics";
+  }
+  if (item.type === "milestone_review") {
+    return "/admin/campaigns?tab=active";
+  }
+  if (item.type === "cancellation") {
+    return "/admin/campaigns?tab=canceled";
+  }
+  
+  return item.actionLink || "#";
+};
+
 const ActionRequiredCard = ({ actionsData, filters }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -273,7 +294,7 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
                     ui.cardBg
                   )}
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-3">
                       <div
                         className={cn(
@@ -319,9 +340,9 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
                     </div>
 
                     <Link
-                      href={item.actionLink}
+                      href={getComputedActionLink(item, metaType)}
                       className={cn(
-                        "shrink-0 rounded-lg px-4 py-2 text-xs font-medium transition",
+                        "w-full sm:w-auto text-center shrink-0 rounded-lg px-4 py-2 text-xs font-medium transition",
                         ui.buttonClass
                       )}
                     >

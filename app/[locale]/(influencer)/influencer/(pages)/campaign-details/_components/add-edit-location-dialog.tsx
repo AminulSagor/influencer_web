@@ -97,28 +97,26 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
     setThanas(location?.thanas || []);
   }, [selectedZilla, open]);
 
-  /* ---------------- Set Default ---------------- */
-  const handleSetDefault = async () => {
-    if (!editingLocation) return;
-    try {
-      setSettingDefault(true);
-      await updateAddress(editingLocation.addressName, {
-        addressName: editingLocation.addressName,
-        fullAddress: editingLocation.fullAddress,
-        thana: editingLocation.thana,
-        zilla: editingLocation.zilla,
-        isDefault: true,
-      });
-      toast.success("Address set as default!");
-      onOpenChange(false);
-      onSuccess();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to set default"
-      );
-    } finally {
-      setSettingDefault(false);
-    }
+    return () => clearTimeout(timer);
+  }, [districtId, open, form, districts]);
+
+  /* ---------------- Submit ---------------- */
+  const onSubmit = (values: LocationFormValues) => {
+    
+    // Find district name
+    const district = districts.find(d => d.id === values.districtId);
+    
+    const locationData: Omit<SavedLocation, 'id' | 'isSelected'> = {
+      name: values.name,
+      districtId: values.districtId,
+      districtName: district?.district || values.districtName,
+      thana: values.thana,
+      address: values.address,
+      type: values.type,
+    };
+    
+    onSave(locationData);
+    onOpenChange(false);
   };
 
   /* ---------------- Submit ---------------- */

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 type Props = {
   open: boolean;
@@ -32,9 +33,9 @@ export default function MilestonePartialPaidModal({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-[480px] rounded-[18px] border-0 bg-white p-0 shadow-xl">
         <div className="rounded-[18px] bg-white p-6">
-          <h2 className="text-[18px] font-semibold text-[#7EA055]">
+          <DialogTitle className="text-[18px] font-semibold text-[#7EA055]">
             Partial Paid Reason
-          </h2>
+          </DialogTitle>
 
           <p className="mt-2 text-[16px] font-semibold text-[#29411B]">
             To: {influencerName}

@@ -14,12 +14,14 @@ import {
 } from "@/components/ui/multi-select";
 
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { getAllAgencies } from "@/service/admin/campaign/agency/get-all-agencies";
 import { getAgencyServiceFee } from "@/service/admin/campaign/agency/get-agency-service-fee";
 import { assignAgencies } from "@/service/admin/campaign/agency/assign-agencies";
+import { getInfluencerPayoutProfile } from "@/service/admin/campaign/get-influencer-payout";
 import { getAdminCampaignById } from "@/service/admin/campaign/agency/get-campaign-agency-by-id";
 import {
   getGeneralSettings,
@@ -36,6 +38,8 @@ import type {
   Row,
   Statistics,
 } from "@/types/admin/campaign/agency/platform_profit_agency_type";
+import Image from "next/image";
+import { toast } from "sonner";
 
 type Props = {
   campaignId: string;
@@ -51,6 +55,14 @@ type Props = {
   onRefreshDraft?: () => void;
 
   onChangePlatformFeePercent?: (v: number) => void;
+
+  campaignStatusRaw?: string;
+  selectedAgency?: {
+    id: string;
+    name: string;
+    image?: string | null;
+  };
+  offeredAmount?: number;
 };
 
 const uniq = (arr: string[]) => Array.from(new Set(arr)).filter(Boolean);
@@ -72,6 +84,65 @@ const toNum = (v: any) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const normalizeText = (v: unknown) => String(v ?? "").trim();
+
+type PaymentMethodBank = {
+  type: "bank";
+  bankName: string;
+  accountNumber: string;
+  accountHolderName?: string;
+};
+
+type PaymentMethodWallet = {
+  type: "mobile_wallet";
+  walletName: string;
+  phoneNumber: string;
+  accountHolderName?: string;
+};
+
+type PaymentMethod = PaymentMethodBank | PaymentMethodWallet;
+
+function normalizePayoutMethods(raw: any): PaymentMethod[] {
+  const payouts = raw?.data?.payouts ?? {};
+
+  const bankList = Array.isArray(payouts?.bank) ? payouts.bank : [];
+  const mobileList = Array.isArray(payouts?.mobileBanking)
+    ? payouts.mobileBanking
+    : [];
+
+  const banks: PaymentMethodBank[] = bankList.map((item: any) => ({
+    type: "bank",
+    bankName: normalizeText(item?.bankName) || "Bank Account",
+    accountNumber: normalizeText(item?.bankAccNo),
+    accountHolderName: normalizeText(item?.bankAccHolderName),
+  }));
+
+  const wallets: PaymentMethodWallet[] = mobileList.map((item: any) => ({
+    type: "mobile_wallet",
+    walletName: normalizeText(item?.accountType) || "Mobile Banking",
+    phoneNumber: normalizeText(item?.accountNo),
+    accountHolderName: normalizeText(item?.accountHolderName),
+  }));
+
+  const unique = new Map<string, PaymentMethod>();
+
+  [...banks, ...wallets].forEach((item) => {
+    const uniqueKey =
+      item.type === "bank"
+        ? `bank:${item.accountNumber}`
+        : `wallet:${item.phoneNumber}:${item.walletName.toLowerCase()}`;
+
+    if (!unique.has(uniqueKey)) {
+      unique.set(uniqueKey, item);
+    }
+  });
+
+  return Array.from(unique.values()).filter((item) => {
+    if (item.type === "bank") return !!item.accountNumber;
+    return !!item.phoneNumber;
+  });
+}
+
 export default function PlatformProfitAgency({
   campaignId,
   stats,
@@ -86,8 +157,12 @@ export default function PlatformProfitAgency({
   onRefreshDraft,
 
   onChangePlatformFeePercent,
+  campaignStatusRaw,
+  selectedAgency,
+  offeredAmount = 0,
 }: Props) {
-  const locked = quoteState !== "confirmed";
+  const isAgencyAccepted = String(campaignStatusRaw ?? "").trim().toLowerCase() === "agency_accepted";
+  const locked = !isAgencyAccepted && quoteState !== "confirmed";
 
   const finalQuotedBudget = Number(stats?.[0]?.value ?? 0);
 
@@ -178,6 +253,40 @@ export default function PlatformProfitAgency({
   }, [locked, campaignId, platformFeePercentProp]);
 
   const effectiveFeePercent = feeEdit ? feePercent : committedFeePercent;
+
+  const [agencyPaymentMethods, setAgencyPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loadingAgencyPaymentMethods, setLoadingAgencyPaymentMethods] = useState(false);
+
+  useEffect(() => {
+    if (!isAgencyAccepted || !selectedAgency?.id) {
+      setAgencyPaymentMethods([]);
+      return;
+    }
+
+    let alive = true;
+
+    const loadAgencyPaymentMethods = async () => {
+      try {
+        setLoadingAgencyPaymentMethods(true);
+        const res = await getInfluencerPayoutProfile(selectedAgency.id);
+        if (!alive) return;
+        setAgencyPaymentMethods(normalizePayoutMethods(res));
+      } catch (error) {
+        console.error("❌ getInfluencerPayoutProfile failed:", error);
+        if (!alive) return;
+        setAgencyPaymentMethods([]);
+      } finally {
+        if (!alive) return;
+        setLoadingAgencyPaymentMethods(false);
+      }
+    };
+
+    loadAgencyPaymentMethods();
+
+    return () => {
+      alive = false;
+    };
+  }, [isAgencyAccepted, selectedAgency?.id]);
 
   const [allAgenciesservice, setAllAgenciesservice] = useState<AgencyOptionservice[]>([]);
   const [loadingAgencies, setLoadingAgencies] = useState(false);
@@ -466,9 +575,9 @@ export default function PlatformProfitAgency({
       setLastAppliedDraftSig(currentSig);
 
       onRefreshDraft?.();
+      window.dispatchEvent(new Event("agency-assigned"));
     } catch (e: any) {
-      console.error("❌ assignAgencies failed:", e);
-      console.log("Backend message:", e?.response?.data);
+      toast.error("Failed to assign agencies");
     } finally {
       setSaving(false);
     }
@@ -500,7 +609,8 @@ export default function PlatformProfitAgency({
         <div className="grid grid-cols-12 gap-4">
           <div
             className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
+              isAgencyAccepted ? "col-span-12 md:col-span-6" : "col-span-12 md:col-span-4",
+              "rounded-lg border p-4 space-y-2",
               locked
                 ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
                 : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
@@ -516,7 +626,8 @@ export default function PlatformProfitAgency({
 
           <div
             className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4",
+              isAgencyAccepted ? "col-span-12 md:col-span-6" : "col-span-12 md:col-span-4",
+              "rounded-lg border p-4",
               locked
                 ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
                 : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
@@ -535,7 +646,7 @@ export default function PlatformProfitAgency({
                         setFeePercent(clampPercent(Number(e.target.value || 0)))
                       }
                       className="pr-8"
-                      disabled={locked || feeSaving}
+                      disabled={locked || feeSaving || isAgencyAccepted}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
                       %
@@ -561,7 +672,7 @@ export default function PlatformProfitAgency({
                 </p>
               </div>
 
-              {!locked && (
+              {!locked && !isAgencyAccepted && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -587,29 +698,131 @@ export default function PlatformProfitAgency({
             </div>
           </div>
 
-          <div
-            className={cn(
-              "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
-              locked
-                ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
-                : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
-            )}
-          >
-            <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
-              ৳{moneyFmt(locked ? 0 : availableForAgency)}
-            </p>
-            <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-orange")}>
-              Available For Agency
-            </h3>
-            <p className={cn("text-sm font-normal", locked ? "text-gray-400" : "text-orange")}>
-              {loadingBudget ? "Loading..." : "amount assigned"}
-            </p>
-          </div>
+          {!isAgencyAccepted && (
+            <div
+              className={cn(
+                "col-span-12 md:col-span-4 rounded-lg border p-4 space-y-2",
+                locked
+                  ? "border-[rgba(100,116,139,0.14)] bg-[rgba(248,250,252,1)]"
+                  : "border-light-green/40 bg-linear-to-r from-white to-Secondary"
+              )}
+            >
+              <p className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-light-green")}>
+                ৳{moneyFmt(locked ? 0 : availableForAgency)}
+              </p>
+              <h3 className={cn("text-xl font-semibold", locked ? "text-gray-400" : "text-orange")}>
+                Available For Agency
+              </h3>
+              <p className={cn("text-sm font-normal", locked ? "text-gray-400" : "text-orange")}>
+                {loadingBudget ? "Loading..." : "amount assigned"}
+              </p>
+            </div>
+          )}
         </div>
 
         {locked ? (
           <div className="py-10 text-center text-sm text-gray-400">
             Client needs to confirm the quote first
+          </div>
+        ) : isAgencyAccepted ? (
+          <div className="mt-6">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-Primary">
+                Assigned Agency And Payment Methods Details
+              </h2>
+              <p className="text-xs font-medium text-orange">Campaign Ongoing</p>
+            </div>
+
+            <div className="grid grid-cols-12 gap-4 rounded-xl border border-slate-200 p-3 md:p-4">
+              <div className="col-span-12 md:col-span-5 rounded-xl border border-slate-200 p-4">
+                <p className="text-sm font-semibold text-Primary">Assigned Agency</p>
+
+                <div className="mt-4 flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={selectedAgency?.image ?? ""} alt={selectedAgency?.name ?? "Agency"} />
+                    <AvatarFallback>
+                      {normalizeText(selectedAgency?.name).charAt(0) || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0">
+                    <p className="text-[18px] font-semibold text-light-green truncate">
+                      {selectedAgency?.name ?? "Assigned Agency"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <p className="text-sm font-semibold text-black">Offered Amount</p>
+                  <p className="mt-2 text-[28px] font-semibold text-orange">
+                    ৳ {moneyFmt(offeredAmount)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="col-span-12 md:col-span-7 rounded-xl border border-slate-200 p-3 md:p-4">
+                {loadingAgencyPaymentMethods ? (
+                  <div className="py-10 text-center text-sm text-gray-400">
+                    Loading payment methods...
+                  </div>
+                ) : agencyPaymentMethods.length === 0 ? (
+                  <div className="py-10 text-center text-sm text-gray-400">
+                    No payment methods available.
+                  </div>
+                ) : (
+                  <ul className="max-h-[240px] space-y-3 overflow-y-auto pr-1">
+                    {agencyPaymentMethods.map((method, index) => (
+                      <li
+                        key={`${selectedAgency?.id ?? "agency"}-${index}`}
+                        className="rounded-2xl border border-light-green/50 bg-linear-to-r from-white to-Secondary/70 p-3"
+                      >
+                        {method.type === "bank" ? (
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl">
+                              <Image src="/icons/bank-icon.svg" alt="Bank Icon" fill />
+                            </div>
+
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-light-green">
+                                {method.bankName}
+                              </p>
+                              <p className="text-sm font-medium text-Primary break-all">
+                                Account No: {method.accountNumber}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {method.accountHolderName || selectedAgency?.name}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
+                              <Image
+                                src="/icons/bkash-icon.svg"
+                                alt="Wallet Icon"
+                                width={24}
+                                height={24}
+                                className="object-contain"
+                              />
+                            </div>
+
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-light-green break-all">
+                                {method.phoneNumber}
+                              </p>
+                              <p className="text-xs text-gray-500">{method.walletName}</p>
+                              <p className="text-sm font-medium text-Primary">
+                                {method.accountHolderName || selectedAgency?.name}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-12 gap-4 mt-6">

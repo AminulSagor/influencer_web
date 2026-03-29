@@ -162,12 +162,13 @@ export function getPlatformListFromMilestones(milestones: any[]) {
 }
 
 export function getInfluencerAvatars(preferredInfluencers: any[]) {
-  return (preferredInfluencers ?? []).map((i: any, idx: number) => ({
-    imageUrl: i?.profileImg ?? "/avatar-fallback.png",
-    name:
-      `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim() ||
-      `Influencer ${idx + 1}`,
-  }));
+  return (preferredInfluencers ?? []).map((i: any, idx: number) => {
+    const name = i?.name || `${i?.firstName ?? ""} ${i?.lastName ?? ""}`.trim();
+    return {
+      imageUrl: i?.profileImg || i?.profileImage || i?.ImageUrl || i?.imageUrl || "/avatar-fallback.png",
+      name: name || `Influencer ${idx + 1}`,
+    };
+  });
 }
 
 export function getAssignedInfluencersForPayment(preferredInfluencers: any[]) {

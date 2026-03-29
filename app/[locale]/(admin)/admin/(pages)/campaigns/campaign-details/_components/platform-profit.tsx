@@ -437,6 +437,7 @@ export default function PlatformProfitInfluencerAssign({
           )
         );
 
+        window.dispatchEvent(new Event("influencer-assigned"));
         return;
       }
 
@@ -468,6 +469,8 @@ export default function PlatformProfitInfluencerAssign({
             : x
         )
       );
+
+      window.dispatchEvent(new Event("influencer-assigned"));
     } catch {
       setRows((prev) =>
         prev.map((x) =>
@@ -492,6 +495,7 @@ export default function PlatformProfitInfluencerAssign({
 
       await deleteAssignment(r.assignmentId);
       await loadDraftAssignments();
+      window.dispatchEvent(new Event("influencer-assigned"));
     } catch {
       setRows((prev) =>
         prev.map((x) =>

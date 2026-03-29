@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 type Props = {
   open: boolean;
@@ -29,9 +30,9 @@ export default function MilestoneDeclineModal({
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F2341D] text-white">
               <X className="h-5 w-5" />
             </div>
-            <h2 className="text-[18px] font-semibold text-[#E53935]">
+            <DialogTitle className="text-[18px] font-semibold text-[#7EA055]">
               Write Decline Reason
-            </h2>
+            </DialogTitle>
           </div>
 
           <div className="mt-5">

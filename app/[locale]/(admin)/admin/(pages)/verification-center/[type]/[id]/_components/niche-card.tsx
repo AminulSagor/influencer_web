@@ -165,36 +165,38 @@ const NicheCard = ({
                   {niche.name}
                 </Badge>
 
-                {niche.status === "Pending" ? (
-                  <div className="flex shrink-0 items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="min-w-[108px] rounded-2xl border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
-                      disabled={isLoading}
-                      onClick={() => {
-                        setSelectedName(niche.name);
-                        setRejectOpen(true);
-                      }}
-                    >
-                      {isLoading ? "Please wait..." : "Reject"}
-                    </Button>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={`min-w-[108px] rounded-2xl ${
+                      niche.status === "Rejected"
+                        ? "border-[#fff1f0] bg-[#fff1f0] text-[#e73508] hover:bg-[#fff1f0]/90"
+                        : "border-[#d7d7d7] bg-white text-black hover:bg-[#fafafa]"
+                    }`}
+                    disabled={isLoading || niche.status === "Rejected"}
+                    onClick={() => {
+                      setSelectedName(niche.name);
+                      setRejectOpen(true);
+                    }}
+                  >
+                    {isLoading && loadingName === niche.name ? "Please wait..." : niche.status === "Rejected" ? "Rejected" : "Reject"}
+                  </Button>
 
-                    <Button
-                      type="button"
-                      variant="lightGreen"
-                      className="min-w-[108px] rounded-2xl bg-[#86a857] text-white hover:bg-[#78994d]"
-                      disabled={isLoading}
-                      onClick={() => handleApprove(niche.name)}
-                    >
-                      {isLoading ? "Please wait..." : "Approve"}
-                    </Button>
-                  </div>
-                ) : (
-                  <Badge className={statusBadgeMap[niche.status].className}>
-                    {statusBadgeMap[niche.status].label}
-                  </Badge>
-                )}
+                  <Button
+                    type="button"
+                    variant="lightGreen"
+                    className={`min-w-[108px] rounded-2xl ${
+                      niche.status === "Accepted"
+                        ? "bg-[#e8f8ee] text-[#078834] hover:bg-[#e8f8ee]/90"
+                        : "bg-[#86a857] text-white hover:bg-[#78994d]"
+                    }`}
+                    disabled={isLoading || niche.status === "Accepted"}
+                    onClick={() => handleApprove(niche.name)}
+                  >
+                    {isLoading && loadingName === niche.name ? "Please wait..." : niche.status === "Accepted" ? "Approved" : "Approve"}
+                  </Button>
+                </div>
               </div>
             );
           })}

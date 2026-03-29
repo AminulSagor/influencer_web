@@ -3,18 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-
-import CampaignMilestone from "./campaign-milestone";
-import CollapsibleCard from "./collapsible-card";
-import IconText from "./icon-text";
-import MilestonePerformanceStats from "./milestone-performance-stat";
-
-import { Button } from "@/components/ui/button";
-import { FaClock } from "react-icons/fa";
-import { FaUserPen } from "react-icons/fa6";
-import { CgWebsite } from "react-icons/cg";
-import { HiMiniIdentification } from "react-icons/hi2";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ChartColumnIncreasing,
   ChevronDown,
@@ -22,11 +12,37 @@ import {
   Heart,
   MessageCircle,
   Play,
+  MailCheck,
 } from "lucide-react";
-import Link from "next/link";
+import { CgWebsite } from "react-icons/cg";
+import { FaClock } from "react-icons/fa";
+import { FaUserPen } from "react-icons/fa6";
+import { HiMiniIdentification } from "react-icons/hi2";
 
+import CampaignMilestone from "./campaign-milestone";
+import CollapsibleCard, { type BadgeType } from "./collapsible-card";
+import IconText from "./icon-text";
+import MilestonePerformanceStats from "./milestone-performance-stat";
 import InviteInfluencerBar from "./invite-influencer-bar";
 import InviteAgencyBar from "./invite-agency-bar";
+import InReviewActions from "./in-review-actions";
+import MilestoneApproveModal from "./modals/milestone-approve-modal";
+import MilestoneDeclineModal from "./modals/milestone-decline-modal";
+import MilestonePartialPaidModal from "./modals/milestone-partial-paid-modal";
+import MilestoneChangeStatusModal, { type MilestoneStatusValue } from "./modals/milestone-change-status-modal";
+import MilestoneSubmittedReportModal from "./modals/milestone-submitted-report-modal";
+
+import { updateMilestoneStatus } from "@/service/admin/campaign/update-milestone-status";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import type {
   CampaignStatusType,
@@ -36,14 +52,31 @@ import type {
 
 import { safeStr } from "@/utils/admin/campaign/number_util";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { getInfluencerMilstoneProgress } from "@/service/admin/campaign/get-milstone-progress";
-import { getCampaignAssignments } from "@/service/admin/campaign/get-campaign-assignments";
+  getMilestoneStatusUi,
+  getSubmissionAccordionBadge,
+  normalizeCampaignMilestoneStatus,
+} from "@/utils/admin/campaign/campaign-milestone/milestone_status_util";
+import {
+  toAmount,
+  toNullableNumber,
+  moneyLabel,
+  compactNum,
+  roundMoney,
+} from "@/utils/admin/campaign/campaign-milestone/number_helpers";
+import {
+  formatDateLabel,
+  normalizeSubmissionStatus,
+  normalizePaymentStatus,
+  getSubmissionMetric,
+  computeAveragePerformance,
+  type SubmissionItem,
+} from "@/utils/admin/campaign/campaign-milestone/submission_helpers";
+
+import { useCampaignAssignments } from "@/hooks/campaign-milestone/use-campaign-assignments";
+import { useInfluencerSelection } from "@/hooks/campaign-milestone/use-influencer-selection";
+import { useMilestoneSubmissions } from "@/hooks/campaign-milestone/use-milestone-submissions";
+import { useMilestoneProgress } from "@/hooks/campaign-milestone/use-milestone-progress";
+import { useMilestoneActions } from "@/hooks/campaign-milestone/use-milestone-actions";
 
 const CircularProgressChart = dynamic(() => import("./circular-progress"), {
   ssr: false,
@@ -61,58 +94,6 @@ interface Props {
   assignedInfluencerOfferTotal?: number;
 }
 
-function toAmount(v: unknown) {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function moneyLabel(v: unknown) {
-  const n = Number(v ?? 0);
-  return Number.isFinite(n)
-    ? n.toLocaleString("en-US", {
-        minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-        maximumFractionDigits: 2,
-      })
-    : "0";
-}
-
-function compactNum(v: unknown) {
-  const n = Number(v ?? 0);
-  if (!Number.isFinite(n)) return "0";
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace(".0", "")}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
-  return `${n}`;
-}
-
-function isCompletedStatus(status?: string | null) {
-  const s = String(status ?? "").trim().toLowerCase();
-  return ["completed", "approved", "paid"].includes(s);
-}
-
-function extractProgressPercent(progressRes: any): number {
-  const percent = Number(progressRes?.data?.progressPercentage ?? 0);
-  return Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
-}
-
-function roundMoney(n: number) {
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 100) / 100;
-}
-
-function normalizeStatus(status?: string | null) {
-  return String(status ?? "").trim().toLowerCase();
-}
-
-function statusLabel(status?: string | null) {
-  const s = normalizeStatus(status);
-  if (s === "in_review") return "In Review";
-  if (s === "todo") return "To Do";
-  if (s === "completed") return "Completed";
-  if (s === "partial_paid") return "Partial Paid";
-  if (s === "approved") return "Approved";
-  return s || "To Do";
-}
-
 export default function CampaignMilestoneContainer({
   campaignId,
   campaignStatus,
@@ -127,12 +108,10 @@ export default function CampaignMilestoneContainer({
   const [activeMilestoneId, setActiveMilestoneId] = useState<string | null>(
     null
   );
-  const [selectedInfluencerId, setSelectedInfluencerId] = useState<string>("");
-  const [remoteProgress, setRemoteProgress] = useState<number | null>(null);
-  const [progressLoading, setProgressLoading] = useState(false);
 
-  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
-  const [assignmentRows, setAssignmentRows] = useState<any[]>([]);
+  const [changeStatusOpen, setChangeStatusOpen] = useState(false);
+  const [viewReportOpen, setViewReportOpen] = useState(false);
+  const [statusChangeLoading, setStatusChangeLoading] = useState(false);
 
   const isActiveInfluencerMode = !isPaidAd && campaignStatus === "active";
   const isEditableAssignmentMode =
@@ -143,154 +122,28 @@ export default function CampaignMilestoneContainer({
   const canInviteAgency =
     isPaidAd && campaignStatus === "pending-invitations";
 
-  useEffect(() => {
-    let cancelled = false;
+  // --- Assignments hook ---
+  const { assignmentsLoading, assignmentRows } = useCampaignAssignments(
+    campaignId,
+    isEditableAssignmentMode
+  );
 
-    const loadAssignments = async () => {
-      if (!isEditableAssignmentMode || !campaignId) {
-        setAssignmentRows([]);
-        return;
-      }
+  // --- Influencer selection hook ---
+  const {
+    selectedInfluencerId,
+    setSelectedInfluencerId,
+    activeInfluencerOptions,
+    selectedInfluencerLabel,
+    selectedAssignment,
+    assignmentBasedMilestones,
+  } = useInfluencerSelection(
+    milestones,
+    isEditableAssignmentMode,
+    assignmentRows
+  );
 
-      try {
-        setAssignmentsLoading(true);
-        const res = await getCampaignAssignments(campaignId);
-        if (cancelled) return;
-
-        const rows = Array.isArray(res?.data?.assignments)
-          ? res.data.assignments
-          : [];
-
-        setAssignmentRows(rows);
-
-        setSelectedInfluencerId((prev) => {
-          if (prev && rows.some((x: any) => safeStr(x?.assigneeId) === prev)) {
-            return prev;
-          }
-          return safeStr(rows?.[0]?.assigneeId);
-        });
-      } catch {
-        if (!cancelled) {
-          setAssignmentRows([]);
-        }
-      } finally {
-        if (!cancelled) setAssignmentsLoading(false);
-      }
-    };
-
-    loadAssignments();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignId, isEditableAssignmentMode]);
-
-  const activeInfluencerOptions = useMemo(() => {
-    if (isEditableAssignmentMode) {
-      return assignmentRows.map((a: any) => ({
-        id: safeStr(a?.assigneeId),
-        name: safeStr(a?.assigneeName) || "Unknown Influencer",
-        image: a?.assigneeImage ?? null,
-        jobStatus: safeStr(a?.status),
-      }));
-    }
-
-    const map = new Map<
-      string,
-      {
-        id: string;
-        name: string;
-        image?: string | null;
-        jobStatus?: string;
-      }
-    >();
-
-    (milestones ?? []).forEach((m: any) => {
-      const id = safeStr(m?.assignedToInfluencerId);
-      if (!id) return;
-
-      const prev = map.get(id);
-      const nextJobStatus = safeStr(m?.jobStatus).toLowerCase();
-
-      if (!prev) {
-        map.set(id, {
-          id,
-          name: safeStr(m?.influencerName) || "Unknown Influencer",
-          image: m?.influencerImage ?? null,
-          jobStatus: nextJobStatus,
-        });
-        return;
-      }
-
-      if (prev.jobStatus !== "active" && nextJobStatus === "active") {
-        map.set(id, {
-          ...prev,
-          jobStatus: nextJobStatus,
-        });
-      }
-    });
-
-    return Array.from(map.values()).sort((a, b) => {
-      const aActive = a.jobStatus === "active" ? 0 : 1;
-      const bActive = b.jobStatus === "active" ? 0 : 1;
-      if (aActive !== bActive) return aActive - bActive;
-      return a.name.localeCompare(b.name);
-    });
-  }, [milestones, isEditableAssignmentMode, assignmentRows]);
-
-  useEffect(() => {
-    if (selectedInfluencerId) return;
-    if (activeInfluencerOptions.length === 0) return;
-
-    const activeOne =
-      activeInfluencerOptions.find((x) => x.jobStatus === "active") ??
-      activeInfluencerOptions[0];
-
-    setSelectedInfluencerId(activeOne.id);
-  }, [selectedInfluencerId, activeInfluencerOptions]);
-
-  const selectedAssignment = useMemo(() => {
-    if (!isEditableAssignmentMode) return null;
-
-    return (
-      assignmentRows.find(
-        (x: any) => safeStr(x?.assigneeId) === safeStr(selectedInfluencerId)
-      ) ?? null
-    );
-  }, [assignmentRows, selectedInfluencerId, isEditableAssignmentMode]);
-
-  const assignmentBasedMilestones = useMemo(() => {
-    if (!selectedAssignment) return [];
-
-    return (selectedAssignment?.milestones ?? []).map((m: any, idx: number) => ({
-      id: safeStr(m?.id) || safeStr(m?.masterMilestoneId) || `m-${idx}`,
-      masterMilestoneId: safeStr(m?.masterMilestoneId),
-      order: idx,
-
-      contentTitle: safeStr(m?.title),
-      title: safeStr(m?.title),
-
-      contentQuantity: safeStr(m?.contentQuantity),
-      platform: safeStr(m?.platform),
-
-      amount: roundMoney(Number(m?.amount ?? 0)),
-      status: safeStr(m?.status),
-
-      assignedToInfluencerId: safeStr(selectedAssignment?.assigneeId),
-      influencerName: safeStr(selectedAssignment?.assigneeName),
-      influencerImage: selectedAssignment?.assigneeImage ?? null,
-
-      createdAt: selectedAssignment?.createdAt ?? null,
-      jobStatus: safeStr(selectedAssignment?.status),
-
-      expectedReach: Number(m?.expectedReach ?? 300000),
-      expectedViews: Number(m?.expectedViews ?? 250000),
-      expectedLikes: Number(m?.expectedLikes ?? 300000),
-      expectedComments: Number(m?.expectedComments ?? 300000),
-    }));
-  }, [selectedAssignment]);
-
-  const visibleMilestones = useMemo(() => {
+  // --- Base visible milestones ---
+  const baseVisibleMilestones = useMemo(() => {
     if (isEditableAssignmentMode) {
       return assignmentBasedMilestones;
     }
@@ -312,6 +165,16 @@ export default function CampaignMilestoneContainer({
     assignmentBasedMilestones,
   ]);
 
+  // --- Submissions hook ---
+  const {
+    submissionLoading,
+    milestoneSubmissionMap,
+    visibleMilestones,
+    refreshMilestoneSubmissions,
+    getActiveSubmissions,
+  } = useMilestoneSubmissions(baseVisibleMilestones);
+
+  // --- Active milestone selection ---
   useEffect(() => {
     const firstId =
       safeStr(visibleMilestones?.[0]?.id) ||
@@ -334,6 +197,55 @@ export default function CampaignMilestoneContainer({
     );
   }, [visibleMilestones, activeMilestoneId]);
 
+  const activeMilestoneIdSafe = safeStr((activeMilestone as any)?.id);
+
+  const activeSubmissions = useMemo(() => {
+    return getActiveSubmissions(activeMilestoneIdSafe);
+  }, [getActiveSubmissions, activeMilestoneIdSafe]);
+
+  // --- Progress hook ---
+  const { progress, progressLoading } = useMilestoneProgress(
+    campaignId,
+    selectedInfluencerId,
+    isActiveInfluencerMode,
+    visibleMilestones
+  );
+
+  // --- Actions hook ---
+  const {
+    paymentActionMap,
+    setPaymentActionMap,
+    approveOpen,
+    setApproveOpen,
+    declineOpen,
+    setDeclineOpen,
+    partialPaidOpen,
+    setPartialPaidOpen,
+    declineReason,
+    setDeclineReason,
+    partialReason,
+    setPartialReason,
+    partialAmount,
+    setPartialAmount,
+    actionLoading,
+    actionSubmission,
+    getSubmissionRequestedAmount,
+    getSubmissionPaidAmount,
+    getSubmissionRemainingAmount,
+    openApproveForSubmission,
+    openDeclineForSubmission,
+    openPayForSubmission,
+    handleApproveConfirm,
+    handleDeclineConfirm,
+    handlePartialPaidSubmit,
+  } = useMilestoneActions(
+    isPaidAd,
+    activeMilestone,
+    activeMilestoneIdSafe,
+    refreshMilestoneSubmissions
+  );
+
+  // --- Milestone influencers ---
   const milestoneInfluencers: InfluencerUI[] = useMemo(() => {
     const fallbackImg = "/avatar-fallback.png";
 
@@ -377,6 +289,7 @@ export default function CampaignMilestoneContainer({
       .filter((x) => safeStr(x.id).length > 0);
   }, [dropdownInfluencers, influencers]);
 
+  // --- Milestone budget max ---
   const milestoneBudgetMax = useMemo(() => {
     if (isPaidAd) return Math.max(0, Number(availableForAgency) || 0);
 
@@ -407,67 +320,319 @@ export default function CampaignMilestoneContainer({
     availableForInfluencers,
   ]);
 
-  const localProgress = useMemo(() => {
-    const total = visibleMilestones.length;
-    if (total === 0) return 0;
+  // --- Derived status values ---
+  const activeMilestoneStatus = normalizeCampaignMilestoneStatus(
+    (activeMilestone as any)?.status
+  );
+  const activeMilestoneStatusUi = getMilestoneStatusUi(
+    (activeMilestone as any)?.status
+  );
 
-    const completed = visibleMilestones.filter((m: any) =>
-      isCompletedStatus(m?.status)
-    ).length;
+  const hasSubmission = activeSubmissions.length > 0;
 
-    return Math.round((completed / total) * 100);
-  }, [visibleMilestones]);
+  const statusBoxWrapClass =
+    activeMilestoneStatus === "todo"
+      ? "border-[#D4D4D8] bg-[#F3F3F3]"
+      : activeMilestoneStatus === "in_review"
+        ? "border-[#F0C998] bg-[#FFF9F2]"
+        : activeMilestoneStatus === "declined"
+          ? "border-[#FF8F8F] bg-[#FFF1F1]"
+          : "border-[#B7C997] bg-[#F8F8EF]";
 
-  useEffect(() => {
-    let cancelled = false;
+  const statusMetaTextClass =
+    activeMilestoneStatus === "declined"
+      ? "text-[#FF1E1E]"
+      : activeMilestoneStatus === "todo"
+        ? "text-[#8E8E8E]"
+        : "text-[#7D8A61]";
 
-    const loadProgress = async () => {
-      if (!isActiveInfluencerMode || !campaignId || !selectedInfluencerId) {
-        setRemoteProgress(null);
-        return;
-      }
+  const changeStatusDisabled = !hasSubmission || activeMilestoneStatus === "todo";
+  const submittedReportDisabled = !hasSubmission;
 
-      try {
-        setProgressLoading(true);
-        const res = await getInfluencerMilstoneProgress(
-          campaignId,
-          selectedInfluencerId
-        );
-        if (cancelled) return;
-        setRemoteProgress(extractProgressPercent(res));
-      } catch {
-        if (cancelled) return;
-        setRemoteProgress(null);
-      } finally {
-        if (!cancelled) setProgressLoading(false);
-      }
-    };
+  const targetReach = toNullableNumber((activeMilestone as any)?.expectedReach);
+  const targetViews = toNullableNumber((activeMilestone as any)?.expectedViews);
+  const targetLikes = toNullableNumber((activeMilestone as any)?.expectedLikes);
+  const targetComments = toNullableNumber(
+    (activeMilestone as any)?.expectedComments
+  );
 
-    loadProgress();
+  const targetItems = [
+    targetReach !== null
+      ? {
+          label: "Reach",
+          value: compactNum(targetReach),
+          icon: <Eye className="h-4 w-4" />,
+        }
+      : null,
+    targetViews !== null
+      ? {
+          label: "Views",
+          value: compactNum(targetViews),
+          icon: <Play className="h-4 w-4 fill-current" />,
+        }
+      : null,
+    targetLikes !== null
+      ? {
+          label: "Reaction",
+          value: compactNum(targetLikes),
+          icon: <Heart className="h-4 w-4 fill-current" />,
+        }
+      : null,
+    targetComments !== null
+      ? {
+          label: "Comment",
+          value: compactNum(targetComments),
+          icon: <MessageCircle className="h-4 w-4 fill-current" />,
+        }
+      : null,
+  ].filter(Boolean) as {
+    label: string;
+    value: string;
+    icon: ReactNode;
+  }[];
 
-    return () => {
-      cancelled = true;
-    };
-  }, [campaignId, selectedInfluencerId, isActiveInfluencerMode]);
+  // --- Render submission content ---
+  const renderSubmissionContent = useCallback(
+    (submission: SubmissionItem, index: number) => {
+      const submissionStatus = normalizeSubmissionStatus(submission?.status);
+      const paymentStatus = normalizePaymentStatus(submission?.paymentStatus);
+      const submissionBadge: BadgeType | undefined = isPaidAd
+  ? getSubmissionAccordionBadge(submission?.status, submission?.paymentStatus)
+  : getSubmissionAccordionBadge(submission?.status, submission?.paymentStatus);
+      const metricReach = getSubmissionMetric(submission, "reach");
+      const metricViews = getSubmissionMetric(submission, "views");
+      const metricLikes = getSubmissionMetric(submission, "likes");
+      const metricComments = getSubmissionMetric(submission, "comments");
+      const averagePerformance = computeAveragePerformance(
+        {
+          reach: metricReach,
+          views: metricViews,
+          likes: metricLikes,
+          comments: metricComments,
+        },
+        {
+          reach: targetReach,
+          views: targetViews,
+          likes: targetLikes,
+          comments: targetComments,
+        }
+      );
 
-  const progress = remoteProgress ?? localProgress;
+      const heading = isPaidAd
+        ? `Submission ${index + 1}`
+        : activeSubmissions.length > 1
+          ? `Submission ${index + 1}`
+          : "Submission Details";
 
-  const selectedInfluencerLabel = useMemo(() => {
-    if (!selectedInfluencerId) return "";
-    return (
-      activeInfluencerOptions.find((x) => x.id === selectedInfluencerId)?.name ?? ""
-    );
-  }, [selectedInfluencerId, activeInfluencerOptions]);
+      return (
+        <CollapsibleCard
+          key={submission.id || `${heading}-${index}`}
+          heading={heading}
+          badge={submissionBadge}
+        >
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <IconText
+                    className="gap-2 text-base"
+                    icon={<FaUserPen />}
+                    text="Description / Update"
+                  />
 
-  const activeStatus = normalizeStatus((activeMilestone as any)?.status);
-  const isInReview = activeStatus === "in_review";
+                  {isPaidAd && (
+                    <span className="rounded-full bg-[#F7F1E7] px-3 py-1 text-xs font-medium text-[#D6852D]">
+                      {submission?.influencerName || "Unknown Influencer"}
+                    </span>
+                  )}
+                </div>
 
-  const submissionBadge =
-    activeStatus === "in_review"
-      ? "In Review"
-      : activeStatus === "completed"
-        ? "Completed"
-        : undefined;
+                <p>{submission?.description || "No description available."}</p>
+
+                {submission?.rejectionReason ? (
+                  <p className="text-sm font-medium text-[#FF1E1E]">
+                    Reason: {submission.rejectionReason}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="lg:min-w-[340px]">
+                <InReviewActions
+                  submissionStatus={submissionStatus}
+                  paymentStatus={paymentStatus}
+                  selectedPaymentAction={paymentActionMap[submission.id] || ""}
+                  onDecline={() => openDeclineForSubmission(submission)}
+                  onApprove={() => openApproveForSubmission(submission)}
+                  onPay={() => openPayForSubmission(submission)}
+                  onPaymentActionChange={(value) =>
+                    setPaymentActionMap((prev) => ({
+                      ...prev,
+                      [submission.id]: value,
+                    }))
+                  }
+                  loading={actionLoading}
+                />
+              </div>
+            </div>
+
+            <div className="mt-2 space-y-4 rounded-[12px] border border-[#DDDDDD] p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                <div className="flex flex-wrap gap-4 text-[#4B5563]">
+                  <span>
+                    Requested: <strong>৳ {moneyLabel(submission?.requestedAmount)}</strong>
+                  </span>
+                  <span>
+                    Paid: <strong>৳ {moneyLabel(submission?.paidAmount)}</strong>
+                  </span>
+                  <span>
+                    Due: <strong>৳ {moneyLabel(getSubmissionRemainingAmount(submission))}</strong>
+                  </span>
+                </div>
+
+                <span className="text-[#7D8A61]">
+                  {formatDateLabel(submission?.submittedAt)}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-6 lg:flex-row">
+                <div className="flex-1">
+                  <IconText
+                    className="gap-2 font-semibold"
+                    text="Platform / Live Link"
+                    icon={<CgWebsite size={20} />}
+                  />
+
+                  {(submission?.liveLinks ?? []).length > 0 ? (
+                    <div className="mt-2 flex flex-col gap-2">
+                      {(submission?.liveLinks ?? []).map(
+                        (liveLink: string, liveLinkIndex: number) => (
+                          <Link
+                            key={`${liveLink}-${liveLinkIndex}`}
+                            href={
+                              liveLink.startsWith("http")
+                                ? liveLink
+                                : `https://${liveLink}`
+                            }
+                            target="_blank"
+                            className="text-sm text-primary underline"
+                          >
+                            {liveLink}
+                          </Link>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-[#6B7280]">
+                      No live link submitted.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <IconText
+                    icon={<HiMiniIdentification size={20} />}
+                    className="gap-2 font-semibold"
+                    text="Attached Proof"
+                  />
+
+                  <div className="flex flex-wrap gap-3">
+                    {(submission?.attachments ?? []).length > 0 ? (
+                      (submission?.attachments ?? []).map(
+                        (fileUrl: string, attachmentIndex: number) => (
+                          <Link
+                            key={`${fileUrl}-${attachmentIndex}`}
+                            href={fileUrl}
+                            target="_blank"
+                            className="flex h-[96px] w-[104px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white px-2 text-center text-xs text-[#232323]"
+                          >
+                            Proof {attachmentIndex + 1}
+                          </Link>
+                        )
+                      )
+                    ) : (
+                      <p className="text-sm text-[#6B7280]">No proof attached.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <IconText
+                  className="gap-2 font-semibold"
+                  text="Performance Metrics"
+                  icon={<ChartColumnIncreasing size={18} />}
+                />
+
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 mt-4 p-2 lg:col-span-8">
+                    <MilestonePerformanceStats
+                      reach={metricReach}
+                      views={metricViews}
+                      likes={metricLikes}
+                      comments={metricComments}
+                      targetReach={targetReach ?? 0}
+                      targetViews={targetViews ?? 0}
+                      targetLikes={targetLikes ?? 0}
+                      targetComments={targetComments ?? 0}
+                    />
+                  </div>
+
+                  <div className="col-span-12 flex flex-col items-center justify-center gap-2 p-2 lg:col-span-4">
+                    <h2 className="text-lg font-semibold">Average Performance</h2>
+                    <CircularProgressChart
+                      percentage={averagePerformance}
+                      size={180}
+                      strokeWidth={30}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CollapsibleCard>
+      );
+    },
+    [
+      actionLoading,
+      activeSubmissions.length,
+      getSubmissionRemainingAmount,
+      isPaidAd,
+      openApproveForSubmission,
+      openDeclineForSubmission,
+      openPayForSubmission,
+      paymentActionMap,
+      targetComments,
+      targetLikes,
+      targetReach,
+      targetViews,
+    ]
+  );
+
+  // --- Modals Handlers ---
+  const handleStatusChange = async (newStatus: MilestoneStatusValue) => {
+    if (!activeMilestoneIdSafe) return;
+    setStatusChangeLoading(true);
+    try {
+      await updateMilestoneStatus({
+        milestoneId: activeMilestoneIdSafe,
+        status: newStatus,
+      });
+      toast.success("Milestone status updated successfully");
+      setChangeStatusOpen(false);
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to update milestone status");
+    } finally {
+      setStatusChangeLoading(false);
+    }
+  };
+
+  const isSelectedInfluencerInvited = useMemo(() => {
+    if (!isEditableAssignmentMode) return false;
+    if (!selectedAssignment) return false;
+    const s = safeStr(selectedAssignment?.status).toLowerCase();
+    return s !== "" && s !== "draft";
+  }, [isEditableAssignmentMode, selectedAssignment]);
 
   return (
     <div className="space-y-4 p-2">
@@ -489,23 +654,27 @@ export default function CampaignMilestoneContainer({
       {!isPaidAd && (isActiveInfluencerMode || isEditableAssignmentMode) && (
         <Card>
           <CardHeader className="flex gap-4">
-            <CardTitle className="text-Primary flex flex-1 items-center gap-2 text-base font-semibold">
+            <CardTitle className="text-Primary flex flex-1 items-center gap-2 text-lg">
               <Image
-                src={"/icons/milestone.svg"}
-                height={20}
+                src={"/icons/person-multiple.svg"}
                 width={20}
-                alt="milestone"
+                height={20}
+                alt="influencer"
               />
-              Campaign Milestones
+              <span>Influencer wise milestone progress</span>
             </CardTitle>
 
-            {isActiveInfluencerMode && (
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">Overall Progress</p>
-                  <p className="text-light-green text-sm font-semibold">
-                    {progressLoading ? "Loading..." : `${progress}% Completed`}
+            {progressLoading ? (
+              <div className="flex w-full max-w-md items-center gap-3">
+                <p className="text-sm text-gray-500">Loading progress...</p>
+              </div>
+            ) : (
+              <div className="flex w-full max-w-md flex-1 flex-col gap-2">
+                <div className="flex items-center justify-between text-sm">
+                  <p className="font-medium text-gray-700">
+                    Partial Payment Progress
                   </p>
+                  <p className="font-semibold text-light-green">{progress}%</p>
                 </div>
 
                 <div className="h-2 w-full overflow-hidden rounded-full bg-light-green/20">
@@ -549,15 +718,33 @@ export default function CampaignMilestoneContainer({
         </Card>
       )}
 
-      <CampaignMilestone
-        influencers={milestoneInfluencers}
-        campaignStatus={campaignStatus}
-        milestones={visibleMilestones}
-        activeMilestoneId={activeMilestoneId}
-        onSelectMilestone={(id) => setActiveMilestoneId(id)}
-        offeredAmountPerInfluencer={milestoneBudgetMax}
-        readOnlyAmounts={campaignStatus === "active"}
-      />
+      {isSelectedInfluencerInvited ? (
+        <div className="mt-6 flex flex-col items-center justify-center rounded-[20px] border border-dashed border-[#B7C997] bg-[#F8F8EF] p-12 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF0E1]">
+            <MailCheck className="h-8 w-8 text-[#7D8A61]" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-Primary">
+            Invitation Sent Successfully
+          </h3>
+          <p className="mx-auto max-w-sm text-sm text-[#5E6E57]">
+            The campaign invitation has been sent to{" "}
+            <span className="font-semibold text-[#7D8A61]">
+              {selectedInfluencerLabel || "this influencer"}
+            </span>
+            . Please wait for their response to proceed with the milestones.
+          </p>
+        </div>
+      ) : (
+        <>
+          <CampaignMilestone
+            influencers={milestoneInfluencers}
+            campaignStatus={campaignStatus}
+            milestones={visibleMilestones}
+            activeMilestoneId={activeMilestoneId}
+            onSelectMilestone={(id) => setActiveMilestoneId(id)}
+            offeredAmountPerInfluencer={milestoneBudgetMax}
+            readOnlyAmounts={campaignStatus === "active"}
+          />
 
       {activeMilestone && (
         <div className="space-y-4">
@@ -598,18 +785,20 @@ export default function CampaignMilestoneContainer({
                   </div>
                 </div>
 
-                <button type="button" className="mt-1 text-[#1F2A17]">
-                  <ChevronDown className="h-5 w-5" />
-                </button>
+                <div className="flex items-start gap-6">
+                  <button type="button" className="mt-1 text-[#1F2A17]">
+                    <ChevronDown className="h-5 w-5" />
+                  </button>
+                </div>
               </CardTitle>
             </CardHeader>
 
             <CardContent className="pt-0">
-              <div className="rounded-[16px] border border-[#B7C997] bg-[#F7F8E8] px-5 py-4">
-                <div className="grid grid-cols-12 gap-5">
+              <div className="rounded-[16px] border border-[#B7C997] bg-[#F7F8E8] px-6 py-6">
+                <div className="grid grid-cols-12 gap-6">
                   <div className="col-span-12 flex items-center lg:col-span-3">
                     <div className="w-full">
-                      <ul className="list-disc pl-5 text-[15px] text-[#4B5563]">
+                      <ul className="list-disc pl-5 text-[15px] text-[#35571C]">
                         <li>
                           {(activeMilestone as any).contentQuantity ||
                             (activeMilestone as any).platform ||
@@ -621,98 +810,93 @@ export default function CampaignMilestoneContainer({
 
                   <div className="col-span-12 lg:col-span-4">
                     <div className="flex h-full flex-col items-center justify-center">
-                      <h3 className="mb-3 text-center text-[18px] font-semibold text-Primary">
+                      <h3 className="mb-4 text-center text-[18px] font-semibold text-Primary">
                         Milestone Target
                       </h3>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          {
-                            label: "Reach",
-                            value: compactNum(
-                              (activeMilestone as any).expectedReach ?? 300000
-                            ),
-                            icon: <Eye className="h-3.5 w-3.5" />,
-                          },
-                          {
-                            label: "Views",
-                            value: compactNum(
-                              (activeMilestone as any).expectedViews ?? 250000
-                            ),
-                            icon: <Play className="h-3.5 w-3.5 fill-current" />,
-                          },
-                          {
-                            label: "Reaction",
-                            value: compactNum(
-                              (activeMilestone as any).expectedLikes ?? 300000
-                            ),
-                            icon: <Heart className="h-3.5 w-3.5 fill-current" />,
-                          },
-                          {
-                            label: "Comment",
-                            value: compactNum(
-                              (activeMilestone as any).expectedComments ?? 300000
-                            ),
-                            icon: (
-                              <MessageCircle className="h-3.5 w-3.5 fill-current" />
-                            ),
-                          },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            className="min-w-[78px] rounded-[10px] border border-[#8AA05A] bg-[#F8F8EC] px-3 py-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="text-[11px] leading-none text-[#5E6E57]">
-                                {item.label}
+                      {targetItems.length > 0 ? (
+                        <div
+                          className={`grid gap-3 ${
+                            targetItems.length === 1
+                              ? "grid-cols-1"
+                              : targetItems.length === 2
+                                ? "grid-cols-2"
+                                : "grid-cols-2"
+                          }`}
+                        >
+                          {targetItems.map((item) => (
+                            <div
+                              key={item.label}
+                              className="min-w-[124px] rounded-[14px] border border-[#7EA055] bg-[#F7F8E8] px-4 py-3"
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-[14px] leading-none text-[#35571C]">
+                                  {item.label}
+                                </p>
+                                <div className="text-[#4C5437]">{item.icon}</div>
+                              </div>
+
+                              <p className="mt-3 text-[22px] font-semibold leading-none text-Primary">
+                                {item.value}
                               </p>
-                              <div className="text-[#495336]">{item.icon}</div>
                             </div>
-                            <p className="mt-1 text-[16px] font-semibold leading-none text-Primary">
-                              {item.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="w-full rounded-[14px] border border-dashed border-[#B7C997] px-4 py-6 text-center text-[14px] text-[#6B7280]">
+                          No milestone target available
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-span-12 lg:col-span-5">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_160px]">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_190px]">
                       <div className="space-y-3">
-                        <Button className="h-11 w-full rounded-[10px] border-0 bg-[#7EA055] text-[14px] font-medium text-white hover:brightness-95">
+                        <Button
+                          type="button"
+                          onClick={() => setChangeStatusOpen(true)}
+                          disabled={changeStatusDisabled}
+                          className="h-12 w-full rounded-[12px] border-0 bg-[#7EA055] text-[15px] font-medium text-white hover:brightness-95 disabled:bg-[#F3F3F3] disabled:text-[#B8B8B8] disabled:opacity-100"
+                        >
                           Change Status
                         </Button>
 
                         <Button
-                          className="h-11 w-full rounded-[10px] border border-[#DADADA] bg-white text-[14px] font-medium text-[#232323] hover:bg-white"
+                          type="button"
+                          onClick={() => setViewReportOpen(true)}
+                          className="h-12 w-full rounded-[12px] border border-[#DADADA] bg-white text-[15px] font-medium text-[#232323] hover:bg-white disabled:bg-[#F8F8F8] disabled:text-[#C2C2C2] disabled:opacity-100"
                           variant="outline"
+                          disabled={submittedReportDisabled}
                         >
                           View Submitted Report
                         </Button>
                       </div>
 
-                      <div className="rounded-[12px] border border-[#F0C998] bg-[#FFF9F2] px-4 py-3">
-                        <p className="text-center text-[13px] font-medium text-[#D4872D]">
+                      <div
+                        className={`rounded-[14px] border px-4 py-4 ${statusBoxWrapClass}`}
+                      >
+                        <p className="text-center text-[14px] font-medium text-[#7D8A61]">
                           Status
                         </p>
 
-                        <div className="mt-3 flex justify-center">
+                        <div className="mt-4 flex justify-center">
                           <div
-                            className={`min-w-[118px] rounded-full px-6 py-1.5 text-center text-[14px] font-semibold text-white ${
-                              isInReview ? "bg-[#D6852D]" : "bg-[#8E8E8E]"
-                            }`}
+                            className={`min-w-[126px] rounded-full px-6 py-2 text-center text-[15px] font-semibold text-white ${activeMilestoneStatusUi.statusBoxClass}`}
                           >
-                            {statusLabel((activeMilestone as any).status)}
+                            {activeMilestoneStatusUi.label}
                           </div>
                         </div>
 
-                        <div className="mt-3 flex items-center justify-center gap-2 text-[12px] text-[#D4872D]">
+                        <div
+                          className={`mt-4 flex items-center justify-center gap-2 text-[13px] ${statusMetaTextClass}`}
+                        >
                           <FaClock className="text-[11px]" />
                           <span>
-                            {String(
-                              (activeMilestone as any).createdAt ?? ""
-                            ).slice(0, 10) || "Dec 15, 2025"}
+                            {formatDateLabel(
+                              activeSubmissions?.[0]?.submittedAt ||
+                                (activeMilestone as any).createdAt
+                            )}
                           </span>
                         </div>
                       </div>
@@ -721,109 +905,79 @@ export default function CampaignMilestoneContainer({
                 </div>
               </div>
 
-              <div className="mt-4">
-                <CollapsibleCard
-                  heading="Submission Details"
-                  badge={submissionBadge}
-                >
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-3">
-                        <IconText
-                          className="gap-2 text-base"
-                          icon={<FaUserPen />}
-                          text="Description / Update"
-                        />
-                        <p>Description of the proof will be visible here</p>
-                      </div>
-
-                      {isInReview && (
-                        <div className="flex flex-col gap-3 lg:min-w-[340px]">
-                          <div className="flex items-center gap-3">
-                            <Button
-                              variant="outline"
-                              className="h-10 min-w-[108px] rounded-[10px] border-[#D4D4D8] bg-white text-[#3F3F46] hover:bg-white"
-                            >
-                              Decline
-                            </Button>
-
-                            <Button className="h-10 min-w-[108px] rounded-[10px] border-0 bg-[#7EA055] text-white hover:brightness-95">
-                              Approve
-                            </Button>
-
-                            <div className="flex h-10 min-w-[150px] items-center justify-between rounded-[10px] border border-[#D4D4D8] bg-white px-3 text-[13px] text-[#232323]">
-                              <span>Completed</span>
-                              <ChevronDown className="h-4 w-4" />
-                            </div>
-                          </div>
-
-                          <div className="absolute right-0 top-[42px] hidden" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-2 space-y-4 rounded-[12px] border border-[#DDDDDD] p-4">
-                      <div className="flex flex-col gap-6 lg:flex-row">
-                        <div className="flex-1">
-                          <IconText
-                            className="gap-2 font-semibold"
-                            text="Platform 1"
-                            icon={<CgWebsite size={20} />}
-                          />
-                          <Button asChild className="mt-2 p-0" variant={"link"}>
-                            <Link href={"#"}>facebook.com/hania/live</Link>
-                          </Button>
-                        </div>
-
-                        <div className="flex-1 space-y-2">
-                          <IconText
-                            icon={<HiMiniIdentification size={20} />}
-                            className="gap-2 font-semibold"
-                            text="Attached Proof"
-                          />
-                          <div className="flex gap-3">
-                            {[1, 2, 3].map((i) => (
-                              <div
-                                key={i}
-                                className="h-[96px] w-[104px] rounded-md border border-dashed border-gray-300 bg-white"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <IconText
-                          className="gap-2 font-semibold"
-                          text="Performance Metrics"
-                          icon={<ChartColumnIncreasing size={18} />}
-                        />
-
-                        <div className="grid grid-cols-12 gap-4">
-                          <div className="col-span-12 mt-4 p-2 lg:col-span-8">
-                            <MilestonePerformanceStats />
-                          </div>
-
-                          <div className="col-span-12 flex flex-col items-center justify-center gap-2 p-2 lg:col-span-4">
-                            <h2 className="text-lg font-semibold">
-                              Average Performance
-                            </h2>
-                            <CircularProgressChart
-                              percentage={65.4}
-                              size={180}
-                              strokeWidth={30}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="mt-4 space-y-4">
+                {submissionLoading ? (
+                  <p className="text-sm text-[#6B7280]">Loading submission...</p>
+                ) : !hasSubmission ? (
+                  <div className="rounded-[12px] border border-dashed border-[#D9E3D0] bg-[#FAFBF7] p-6 text-sm text-[#6B7280]">
+                    No submission available for this milestone yet.
                   </div>
-                </CollapsibleCard>
+                ) : (
+                  activeSubmissions.map((submission, index) =>
+                    renderSubmissionContent(submission, index)
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       )}
+        </>
+      )}
+
+      <MilestoneApproveModal
+        open={approveOpen}
+        milestoneTitle={
+          safeStr((activeMilestone as any)?.contentTitle) ||
+          safeStr((activeMilestone as any)?.title)
+        }
+        influencerName={safeStr(actionSubmission?.influencerName)}
+        onClose={() => setApproveOpen(false)}
+        onApprove={handleApproveConfirm}
+        loading={actionLoading}
+      />
+
+      <MilestoneDeclineModal
+        open={declineOpen}
+        value={declineReason}
+        onChange={setDeclineReason}
+        onClose={() => setDeclineOpen(false)}
+        onSubmit={handleDeclineConfirm}
+        loading={actionLoading}
+      />
+
+      <MilestonePartialPaidModal
+        open={partialPaidOpen}
+        influencerName={safeStr(actionSubmission?.influencerName)}
+        reason={partialReason}
+        amount={partialAmount}
+        maxAmount={
+          actionSubmission
+            ? getSubmissionRemainingAmount(actionSubmission) > 0
+              ? getSubmissionRemainingAmount(actionSubmission)
+              : getSubmissionRequestedAmount(actionSubmission)
+            : 0
+        }
+        onReasonChange={setPartialReason}
+        onAmountChange={setPartialAmount}
+        onClose={() => setPartialPaidOpen(false)}
+        onSubmit={handlePartialPaidSubmit}
+        loading={actionLoading}
+      />
+
+      <MilestoneChangeStatusModal
+        open={changeStatusOpen}
+        onClose={() => setChangeStatusOpen(false)}
+        onSubmit={handleStatusChange}
+        loading={statusChangeLoading}
+        currentStatus={activeMilestoneStatus}
+      />
+
+      <MilestoneSubmittedReportModal
+        open={viewReportOpen}
+        onClose={() => setViewReportOpen(false)}
+        milestoneId={activeMilestoneIdSafe}
+      />
     </div>
   );
 }

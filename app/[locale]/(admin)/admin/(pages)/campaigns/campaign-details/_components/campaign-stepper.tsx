@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Check, Quote, CreditCard, Megaphone, Lock, XCircle } from "lucide-react";
+import {
+  Check,
+  Quote,
+  CreditCard,
+  Megaphone,
+  Lock,
+  XCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCampaignProgress } from "@/service/admin/campaign/get-campaign-progress";
 
-type StepperProps = { campaignId: string };
+type StepperProps = {
+  status?: string | null;
+  paymentStatus?: string | null;
+};
 
 const icons = {
   check: Check,
@@ -15,201 +23,241 @@ const icons = {
   lock: Lock,
 };
 
-const STEPS = [
-  { key: "request", title: "Request Received", subtitle: "Campaign Request Received", icon: "check" },
-  { key: "quoted", title: "Quoted", subtitle: "Quote Provided", icon: "quote" },
-  { key: "paid", title: "Paid", subtitle: "Payment Processed", icon: "card" },
-  { key: "promoting", title: "Promoting", subtitle: "Content is Live", icon: "megaphone" },
-  { key: "completed", title: "Completed", subtitle: "Campaign Finished", icon: "lock" },
-] as const;
+type StepKey = "request" | "quoted" | "paid" | "promoting" | "completed";
+type StepIconKey = "check" | "quote" | "card" | "megaphone" | "lock";
 
-type servicePayload = {
-  success?: boolean;
-  data?: {
-    status?: string; // ✅ main campaign status
-    paymentStatus?: string; // ✅ payment status
-    currentStep?: number; // ✅ optional backend step (fallback)
-  };
+type StepItem = {
+  key: StepKey;
+  title: string;
+  subtitle: string;
+  icon: StepIconKey;
 };
 
-const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+const STEPS: StepItem[] = [
+  {
+    key: "request",
+    title: "Request Received",
+    subtitle: "Campaign Request Received",
+    icon: "check",
+  },
+  {
+    key: "quoted",
+    title: "Quoted",
+    subtitle: "Quote Provided",
+    icon: "quote",
+  },
+  {
+    key: "paid",
+    title: "Paid",
+    subtitle: "Payment Processed",
+    icon: "card",
+  },
+  {
+    key: "promoting",
+    title: "Promoting",
+    subtitle: "Content is Live",
+    icon: "megaphone",
+  },
+  {
+    key: "completed",
+    title: "Completed",
+    subtitle: "Campaign Finished",
+    icon: "lock",
+  },
+];
 
-const isPaid = (paymentStatus?: string) => {
-  const p = (paymentStatus ?? "").toLowerCase();
-  return p === "paid" || p === "success" || p === "succeeded" || p === "completed";
-};
+function normalizeStatus(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
 
-const isCancelled = (status?: string) => {
-  const s = (status ?? "").toLowerCase();
-  return s === "cancelled" || s === "canceled";
-};
+function normalizePaymentStatus(value?: string | null) {
+  return String(value ?? "").trim().toLowerCase();
+}
 
-const mapStatusToStep = (status?: string) => {
-  const s = (status ?? "").toLowerCase();
+function isDeclined(status?: string | null) {
+  return normalizeStatus(status) === "declined";
+}
 
-  // 0: request
-  if (["received", "request", "requested", "pending", "pending_request"].includes(s)) return 0;
+function getQuotedStatuses() {
+  return [
+    "negotiating",
+    "pending_influencer",
+    "pending_agency",
+    "agency_negotiating",
+    "agency_accepted",
+  ];
+}
 
-  // 1: quoted (also includes agency/invite states BEFORE payment)
-  if (
-    [
-      "needs-quote",
-      "quoted",
-      "quote_sent",
-      "pending_quote",
-      "pending_agency",
-      "pending_invitations",
-      "agency_pending",
-      "influencer_pending",
-      "confirmed",
-      "approved",
-    ].includes(s)
-  )
-    return 1;
+function mapStatusToStep(status?: string | null) {
+  const s = normalizeStatus(status);
 
-  // 3: promoting
+  if (["completed", "done", "finished", "success"].includes(s)) return 4;
   if (["active", "promoting", "live", "running"].includes(s)) return 3;
-
-  // 4: completed
-  if (["completed", "finished"].includes(s)) return 4;
-
-  return -1; // unknown
-};
-
-const stepToPercent = (stepIndex: number) => {
-  if (STEPS.length <= 1) return 0;
-  return Math.round((clamp(stepIndex, 0, STEPS.length - 1) / (STEPS.length - 1)) * 100);
-};
-
-const deriveStep = (args: { status?: string; paymentStatus?: string; currentStep?: number }) => {
-  const mapped = mapStatusToStep(args.status);
-
-  if (isPaid(args.paymentStatus)) return mapped >= 3 ? mapped : 2; // at least "Paid"
-  if (mapped >= 0) return mapped;
-
-  // fallback to backend currentStep (often 1-based); unpaid must not pass quoted
-  if (typeof args.currentStep === "number") {
-    const zeroBased = args.currentStep >= 1 ? args.currentStep - 1 : args.currentStep;
-    return clamp(zeroBased, 0, 1);
-  }
+  if (getQuotedStatuses().includes(s)) return 1;
+  if (["received", "request", "requested", "pending"].includes(s)) return 0;
+  if (["declined", "cancelled", "canceled", "rejected"].includes(s)) return 0;
 
   return 0;
-};
+}
 
-export default function CampaignStepper({ campaignId }: StepperProps) {
-  const [loading, setLoading] = useState(true);
-  const [state, setState] = useState<{ status: string; paymentStatus: string; currentStep?: number } | null>(null);
+function getPaymentMeta(paymentStatus?: string | null) {
+  const p = normalizePaymentStatus(paymentStatus);
 
-  useEffect(() => {
-    if (!campaignId) return;
-
-    let alive = true;
-
-    (async () => {
-      try {
-        setLoading(true);
-        const res: servicePayload = await getCampaignProgress(campaignId);
-        const d = res?.data ?? {};
-
-        if (!alive) return;
-
-        setState({
-          status: String(d.status ?? ""),
-          paymentStatus: String(d.paymentStatus ?? ""),
-          currentStep: typeof d.currentStep === "number" ? d.currentStep : undefined,
-        });
-      } catch {
-        if (!alive) return;
-        setState(null);
-      } finally {
-        if (!alive) return;
-        setLoading(false);
-      }
-    })();
-
-    return () => {
-      alive = false;
+  if (p === "partial") {
+    return {
+      isPaid: true,
+      title: "Paid (Partially)",
+      note: "Payment: partial",
     };
-  }, [campaignId]);
+  }
 
-  const status = state?.status ?? "";
-  const paymentStatus = state?.paymentStatus ?? "";
-  const paid = useMemo(() => isPaid(paymentStatus), [paymentStatus]);
-  const cancelled = useMemo(() => isCancelled(status), [status]);
+  if (p === "full") {
+    return {
+      isPaid: true,
+      title: "Paid",
+      note: "Payment: full",
+    };
+  }
 
-  const currentStep = useMemo(
-    () => deriveStep({ status, paymentStatus, currentStep: state?.currentStep }),
-    [status, paymentStatus, state?.currentStep]
-  );
+  return {
+    isPaid: false,
+    title: "Paid",
+    note: "Payment: pending",
+  };
+}
 
-  const progressPercent = useMemo(() => stepToPercent(currentStep), [currentStep]);
+function isPaidStep(step: StepItem) {
+  return step.key === "paid";
+}
 
-  if (loading) return <div className="rounded-xl border bg-white p-6">Loading...</div>;
+export default function CampaignStepper({
+  status,
+  paymentStatus,
+}: StepperProps) {
+  const declined = isDeclined(status);
+  const currentStep = mapStatusToStep(status);
+  const paymentMeta = getPaymentMeta(paymentStatus);
+
+  const progressPercent = (() => {
+    let doneCount = 0;
+
+    for (const step of STEPS) {
+      if (step.key === "request" && currentStep >= 0) doneCount++;
+      if (step.key === "quoted" && currentStep >= 1) doneCount++;
+      if (step.key === "paid" && paymentMeta.isPaid) doneCount++;
+      if (step.key === "promoting" && currentStep >= 3) doneCount++;
+      if (step.key === "completed" && currentStep >= 4) doneCount++;
+    }
+
+    return Math.round((doneCount / STEPS.length) * 100);
+  })();
 
   return (
-    <div className="rounded-xl border bg-white p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className={cn("flex items-center gap-2 font-semibold", cancelled ? "text-red-600" : "text-light-green-700")}>
-          {cancelled ? <XCircle className="h-5 w-5" /> : <Check className="h-5 w-5" />}
+    <div className="rounded-[24px] border border-[#E5E7EB] bg-white p-6 md:p-8">
+      <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3
+          className={cn(
+            "flex items-center gap-3 text-[18px] font-semibold",
+            declined ? "text-red-600" : "text-[#35571C]"
+          )}
+        >
+          {declined ? (
+            <XCircle className="h-6 w-6" />
+          ) : (
+            <Check className="h-6 w-6" />
+          )}
           Campaign Progress
         </h3>
 
-        <p className="text-sm">
-          Overall Progress <span className="font-semibold text-orange-500">{progressPercent}% Completed</span>
-          {cancelled && <span className="ml-2 font-semibold text-red-600">Cancelled</span>}
+        <p className="text-sm md:text-base">
+          <span className="text-[#111827]">Overall Progress </span>
+          <span className="font-semibold text-[#F28C28]">
+            {progressPercent}% Completed
+          </span>
         </p>
       </div>
 
-      {/* Stepper */}
-      <div className="relative flex items-center justify-between">
-        {/* Line */}
-        <div className="absolute left-0 right-0 top-6 h-[2px] bg-gray-200">
-          <div
-            className={cn("h-full transition-all", cancelled ? "bg-red-600" : "bg-light-green-700")}
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+      <div className="relative">
+        <div className="absolute left-[4%] right-[4%] top-6 h-[2px] bg-[#D9DDE3]" />
 
-        {STEPS.map((step, index) => {
-          const Icon = icons[step.icon as keyof typeof icons];
+        <div className="relative grid grid-cols-5 gap-2 md:gap-4">
+          {STEPS.map((step, index) => {
+            const Icon = icons[step.icon];
 
-          // Base completion
-          const baseCompleted = index <= currentStep;
+            const completed = isPaidStep(step)
+              ? paymentMeta.isPaid
+              : step.key === "request"
+                ? currentStep >= 0
+                : step.key === "quoted"
+                  ? currentStep >= 1
+                  : step.key === "promoting"
+                    ? currentStep >= 3
+                    : step.key === "completed"
+                      ? currentStep >= 4
+                      : false;
 
-          // Paid step completion depends ONLY on paymentStatus
-          const completed = step.key === "paid" ? paid : baseCompleted;
+            const active = !completed &&
+              (step.key === "quoted"
+                ? currentStep === 1
+                : step.key === "paid"
+                  ? currentStep >= 1 && !paymentMeta.isPaid
+                  : step.key === "promoting"
+                    ? currentStep === 3
+                    : step.key === "completed"
+                      ? currentStep === 4
+                      : currentStep === index);
 
-          // Active ring; avoid highlighting Paid if unpaid
-          const active = step.key === "paid" ? paid && index === currentStep : index === currentStep;
+            const iconClass = completed
+              ? declined
+                ? "border-red-600 bg-red-600 text-white"
+                : "border-[#35571C] bg-[#35571C] text-white"
+              : active
+                ? "border-[#CFEAD7] bg-white text-[#9CA3AF] ring-4 ring-[#E4F5E8]"
+                : "border-[#D1D5DB] bg-white text-[#9CA3AF]";
 
-          return (
-            <div key={step.key} className="relative z-10 flex w-full flex-col items-center text-center">
+            const title = isPaidStep(step) ? paymentMeta.title : step.title;
+
+            return (
               <div
-                className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-full border-2 bg-white",
-                  completed
-                    ? cancelled
-                      ? "border-red-600 bg-red-600 text-white"
-                      : "border-light-green-700 bg-light-green-700 text-white"
-                    : "border-gray-300 text-gray-400",
-                  active && (cancelled ? "ring-4 ring-red-100" : "ring-4 ring-green-100")
-                )}
+                key={step.key}
+                className="relative z-10 flex flex-col items-center text-center"
               >
-                <Icon className="h-5 w-5" />
-              </div>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all md:h-14 md:w-14",
+                    iconClass
+                  )}
+                >
+                  {completed && step.key === "request" ? (
+                    <Check
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      strokeWidth={2.8}
+                    />
+                  ) : (
+                    <Icon
+                      className="h-5 w-5 md:h-6 md:w-6"
+                      strokeWidth={2.3}
+                    />
+                  )}
+                </div>
 
-              <p className="mt-3 text-sm font-medium">{step.title}</p>
-              <p className="text-xs text-muted-foreground">{step.subtitle}</p>
-
-              {step.key === "paid" && (
-                <p className={cn("mt-1 text-[11px]", paid ? "text-light-green-700" : "text-gray-400")}>
-                  {paid ? "Paid" : `Payment: ${paymentStatus || "pending"}`}
+                <p className="mt-3 text-sm font-semibold text-[#111827] md:text-[18px]">
+                  {title}
                 </p>
-              )}
-            </div>
-          );
-        })}
+
+                <p className="text-[11px] text-[#6B7280] md:text-[14px]">
+                  {step.subtitle}
+                </p>
+
+                {isPaidStep(step) && (
+                  <p className="mt-1 text-[11px] text-[#94A3B8] md:text-[14px]">
+                    {paymentMeta.note}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
