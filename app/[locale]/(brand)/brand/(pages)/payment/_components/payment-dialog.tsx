@@ -223,7 +223,7 @@ export default function PaymentDialog({
         </DialogTrigger>
       )}
 
-      <DialogContent className="max-h-[90vh] w-[30vw] max-w-md overflow-y-auto rounded-2xl p-4 sm:p-6">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold text-Primary sm:text-base">
             {dialogTitle}
