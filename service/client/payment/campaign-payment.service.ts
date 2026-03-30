@@ -1,6 +1,7 @@
-// service/client/campaigns/campaign-payment.service.ts
 import { serviceClient } from "@/service/base/axios_client";
 import { ServiceResponse } from "@/types/service-response";
+
+export type LocaleCode = "en" | "bn";
 
 export type PaymentSessionResponse = {
   campaignId: string;
@@ -19,24 +20,27 @@ export type PaymentSessionResponse = {
 export type CreatePaymentPayload = {
   campaignId: string;
   amount: number;
+  locale: LocaleCode;
 };
 
 export async function createPaymentSession(
-  payload: CreatePaymentPayload
+  payload: CreatePaymentPayload,
 ): Promise<ServiceResponse<PaymentSessionResponse>> {
-  const response = await serviceClient.post<ServiceResponse<PaymentSessionResponse>>(
-    "/campaign/client/campaign/pay",
-    payload
-  );
+  console.log("payload", payload);
+  const response = await serviceClient.post<
+    ServiceResponse<PaymentSessionResponse>
+  >("/campaign/client/campaign/pay", payload);
+
   return response.data;
 }
 
 export async function createPayDueSession(
-  payload: CreatePaymentPayload
+  payload: CreatePaymentPayload,
 ): Promise<ServiceResponse<PaymentSessionResponse>> {
-  const response = await serviceClient.post<ServiceResponse<PaymentSessionResponse>>(
-    "/campaign/client/pay-due",
-    payload
-  );
+  console.log(payload);
+  const response = await serviceClient.post<
+    ServiceResponse<PaymentSessionResponse>
+  >("/campaign/client/pay-due", payload);
+
   return response.data;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,10 @@ import {
 } from "../../campaign-details/[id]/_components/quote/quote-utils";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-import { createPayDueSession } from "@/service/client/payment/campaign-payment.service";
+import {
+  createPayDueSession,
+  type LocaleCode,
+} from "@/service/client/payment/campaign-payment.service";
 import Image from "next/image";
 
 type QuotePaidAdPayDueDialogProps = {
@@ -86,6 +89,11 @@ export default function PayDueDialog({
   triggerLabel = "Pay Due",
 }: QuotePaidAdPayDueDialogProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
+  const locale = useLocale();
+  const paymentLocale: LocaleCode = locale === "bn" ? "bn" : "en";
+
+  console.log(paymentLocale);
+
   const [internalOpen, setInternalOpen] = React.useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = React.useState(false);
 
@@ -130,10 +138,10 @@ export default function PayDueDialog({
       const result = await createPayDueSession({
         campaignId: campaign.id,
         amount: payAmount,
+        locale: paymentLocale,
       });
 
       if (result.success && result.data?.gatewayUrl) {
-        // Store payment info in sessionStorage for return page
         sessionStorage.setItem(
           "pendingPayment",
           JSON.stringify({
@@ -141,11 +149,11 @@ export default function PayDueDialog({
             paymentId: result.data.paymentId,
             amount: payAmount,
             type: "pay_due",
+            locale: paymentLocale,
             timestamp: Date.now(),
           }),
         );
 
-        // Redirect to SSL Commerz payment page
         window.location.href = result.data.gatewayUrl;
       } else {
         notifyError(result.message || "Failed to initiate payment");
@@ -161,15 +169,11 @@ export default function PayDueDialog({
   const handleSubmit = async () => {
     if (!isValidAmount) return;
 
-    // Call the parent onSubmit if exists (for any pre-payment actions)
     if (onSubmit) {
       await onSubmit(payAmount);
     }
 
-    // Initiate SSL Commerz payment
     await handlePayment();
-
-    // Dialog will close after redirect
     setDialogOpen(false);
   };
 
@@ -228,7 +232,7 @@ export default function PayDueDialog({
             className="h-11 rounded-lg border-light-gray text-center !text-xl placeholder:!text-xl sm:h-12 sm:text-base"
           />
 
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 max-w-sm mx-auto">
+          <div className="mx-auto flex max-w-sm flex-wrap justify-center gap-2 sm:gap-3">
             <PercentButton
               label={t("payInFull100")}
               active={activePreset === "full"}

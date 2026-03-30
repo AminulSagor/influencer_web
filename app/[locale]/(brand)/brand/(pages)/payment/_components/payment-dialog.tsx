@@ -3,7 +3,7 @@
 "use client";
 
 import React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,10 @@ import {
 } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/quote-utils";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-import { createPaymentSession } from "@/service/client/payment/campaign-payment.service";
+import {
+  createPaymentSession,
+  type LocaleCode,
+} from "@/service/client/payment/campaign-payment.service";
 import Image from "next/image";
 
 type PresetKey = "full" | "min" | "seventyFive";
@@ -106,6 +109,9 @@ export default function PaymentDialog({
   triggerLabel,
 }: PaymentDialogProps) {
   const t = useTranslations("brand.payment");
+  const locale = useLocale();
+  const paymentLocale: LocaleCode = locale === "bn" ? "bn" : "en";
+
   const [internalOpen, setInternalOpen] = React.useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = React.useState(false);
   const [activePreset, setActivePreset] = React.useState<PresetKey | null>(
@@ -122,7 +128,6 @@ export default function PaymentDialog({
   const minPaymentPercent = config.minPaymentPercent ?? 50;
   const minimumAmount = Math.ceil((config.amount * minPaymentPercent) / 100);
 
-  // Default presets with non-null keys
   const defaultPresets = [
     { label: t("payInFull100"), value: 100, key: "full" as PresetKey },
     {
@@ -168,6 +173,7 @@ export default function PaymentDialog({
       const result = await createPaymentSession({
         campaignId,
         amount: payAmount,
+        locale: paymentLocale,
       });
 
       if (result.success && result.data?.gatewayUrl) {
@@ -177,6 +183,7 @@ export default function PaymentDialog({
             campaignId,
             paymentId: result.data.paymentId,
             amount: payAmount,
+            locale: paymentLocale,
             timestamp: Date.now(),
           }),
         );
