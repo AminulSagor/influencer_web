@@ -335,14 +335,16 @@
         "Show All": "Show All",
         "Page": "Page",
         "Of": "Of",
-        "Next": "Next"
+        "Next": "Next",
+        "Previous": "Previous"
     },
     "earning":{
       "Recent Transactions" : "Recent Transactions",
       "Browse and manage your earnings of each campaigns" : "Browse and manage your earnings of each campaigns",
       "Search By Job name, client name" : "Search By Job name, client name...",
       "View Campaign Details": "View Campaign Details",
-      "Next": "Next"
+      "Next": "Next",
+      "Previous": "Previous"
     },
     "support-center" : {
       "Support Center": "Support Center",
@@ -423,8 +425,8 @@
       "Product/Service Details" : "Product/Service Details",
       "Content Requirements" : "Content Requirements",
       "Do’s & Don’ts" : "Do’s & Don’ts",
-      "Do’s" : "Do’s",
-      "Don’ts" : "Don’ts",
+      "Do's" : "Do’s",
+      "Don'ts" : "Don’ts",
       "Where to send the product?" : "Where to send the product?",
       "Payment Milestones" : "Payment Milestones",
       "Progress" : "Progress",

@@ -331,14 +331,16 @@
       "Show All": "সব দেখুন",
       "Page": "পৃষ্ঠা",
       "Of": "মোট",
-      "Next": "পরবর্তী"
+      "Next": "পরবর্তী",
+      "Previous": "পূর্ববর্তী"
       },
       "earning":{
       "Recent Transactions" : "সাম্প্রতিক লেনদেন",
       "Browse and manage your earnings of each campaigns": "প্রতিটি ক্যাম্পেইনের আয় সহজেই দেখুন ",
       "Search By Job name, client name":"ক্যাম্পেইন নাম বা ক্লায়েন্ট নাম দিয়ে খুঁজুন...",
       "View Campaign Details": "ক্যাম্পেইন বিস্তারিত দেখুন",
-      "Next": "পরবর্তী"
+      "Next": "পরবর্তী",
+      "Previous": "পূর্ববর্তী"
       },
      "support-center" : {
       "Support Center": "সাপোর্ট সেন্টার",
@@ -420,8 +422,8 @@
           "Product/Service Details" : "পণ্য/সেবার বিবরণ",
           "Content Requirements" : "যেমন কনটেন্ট প্রয়োজন ",
           "Do’s & Don’ts" : "করা উচিত ও করা উচিত নয়",
-          "Do’s" : "করা উচিত",
-          "Don’ts" : "করা উচিত নয়",
+          "Do's" : "করা উচিত",
+          "Don'ts" : "করা উচিত নয়",
           "Payment Milestones" : "পেমেন্ট মাইলস্টোন",
           "Progress" : "অগ্রগতি",
           "Where to send the product?" : "পণ্য কোথায় পাঠানো হবে?",
