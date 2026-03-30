@@ -25,6 +25,7 @@ type QuoteDetailsCardInfluencerProps = {
   canPay: boolean;
   showConfirmedState: boolean;
   showQuoteActions: boolean;
+  showDisabledQuoteActions: boolean;
   isLoadingNegotiations: boolean;
   isSubmittingAccept: boolean;
   isSubmittingPayment: boolean;
@@ -49,6 +50,7 @@ function QuoteDetailsCardInfluencer({
   canPay,
   showConfirmedState,
   showQuoteActions,
+  showDisabledQuoteActions,
   isLoadingNegotiations,
   isSubmittingAccept,
   isSubmittingPayment,
@@ -70,6 +72,13 @@ function QuoteDetailsCardInfluencer({
         </div>
       )}
 
+      {showDisabledQuoteActions && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ActionButton label="Requote" disabled />
+          <ActionButton label="Accept Quote" disabled variant="primary" />
+        </div>
+      )}
+
       {isReceived && !isLoadingNegotiations && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ActionButton label="Requote" disabled />
@@ -77,7 +86,7 @@ function QuoteDetailsCardInfluencer({
         </div>
       )}
 
-      {!showQuoteActions && canPay && !isPaid && (
+      {!showQuoteActions && !showDisabledQuoteActions && canPay && !isPaid && (
         <PayDueDialog
           campaign={campaign}
           dueAmount={dueAmount}
@@ -137,7 +146,6 @@ function InfluencerAcceptPaymentDialog({
   const t = useTranslations("brand.payment");
 
   const handleBeforePayment = async (amount: number) => {
-    // First, accept the quote
     await onSubmit(amount);
   };
 

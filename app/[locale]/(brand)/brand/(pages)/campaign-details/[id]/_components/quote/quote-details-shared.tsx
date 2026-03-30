@@ -103,7 +103,7 @@ export function ActionButton({
 
 export function InfoBadge({ label }: { label: string }) {
   return (
-    <div className="mb-3 inline-flex rounded-full border border-light-green/30 bg-white/80 px-3 py-1 text-xs text-light-green">
+    <div className="mb-3 inline-flex rounded-full border border-green-500 bg-white/80 px-3 py-1 text-xs text-light-green">
       {label}
     </div>
   );
@@ -130,7 +130,7 @@ export function SharedQuoteLayout({
 
         <div className="mt-2 overflow-x-auto rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 no-scrollbar">
           <div className="text-sm">
-            <InfoBadge label={quoteStateLabel} />
+            {/* <InfoBadge label={quoteStateLabel} /> */}
 
             <div className="flex gap-4">
               <div className="flex-1 space-y-2">

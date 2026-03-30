@@ -22,6 +22,7 @@ type QuoteDetailsCardPaidAdProps = {
   canPay: boolean;
   showConfirmedState: boolean;
   showQuoteActions: boolean;
+  showDisabledQuoteActions: boolean;
   isLoadingNegotiations: boolean;
   isSubmittingAccept: boolean;
   isSubmittingPayment: boolean;
@@ -46,6 +47,7 @@ export default function QuoteDetailsCardPaidAd({
   canPay,
   showConfirmedState,
   showQuoteActions,
+  showDisabledQuoteActions,
   isLoadingNegotiations,
   isSubmittingAccept,
   isSubmittingPayment,
@@ -67,6 +69,13 @@ export default function QuoteDetailsCardPaidAd({
         </div>
       )}
 
+      {showDisabledQuoteActions && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ActionButton label="Requote" disabled />
+          <ActionButton label="Accept Budget" disabled variant="primary" />
+        </div>
+      )}
+
       {isReceived && !isLoadingNegotiations && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ActionButton label="Requote" disabled />
@@ -74,7 +83,7 @@ export default function QuoteDetailsCardPaidAd({
         </div>
       )}
 
-      {!showQuoteActions && canPay && !isPaid && (
+      {!showQuoteActions && !showDisabledQuoteActions && canPay && !isPaid && (
         <PayDueDialog
           campaign={campaign}
           dueAmount={dueAmount}

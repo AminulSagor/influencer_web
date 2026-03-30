@@ -17,6 +17,18 @@ type QuoteDetailsCardProps = {
   onRefresh?: () => void | Promise<void>;
 };
 
+type AppNotificationPayload = {
+  data?: {
+    campaignId?: string;
+    type?: string;
+    [key: string]: string | undefined;
+  };
+  notification?: {
+    title?: string;
+    body?: string;
+  };
+};
+
 export default function QuoteDetailsCard({
   campaign,
   onRefresh,
@@ -57,16 +69,50 @@ export default function QuoteDetailsCard({
       setIsLoadingNegotiations(true);
       const data = await getCampaignNegotiations(campaign.id);
       setNegotiations(data);
-    } catch (error) {
+    } catch {
       setNegotiations([]);
     } finally {
       setIsLoadingNegotiations(false);
     }
   }, [campaign.id, isNegotiating]);
 
+  const refreshQuoteSection = React.useCallback(async () => {
+    if (onRefresh) {
+      await onRefresh();
+    } else {
+      router.refresh();
+    }
+
+    await fetchNegotiations();
+  }, [fetchNegotiations, onRefresh, router]);
+
   React.useEffect(() => {
     void fetchNegotiations();
   }, [fetchNegotiations]);
+
+  React.useEffect(() => {
+    const handleAppNotification = (event: Event) => {
+      const customEvent = event as CustomEvent<AppNotificationPayload>;
+      const payload = customEvent.detail;
+
+      const incomingCampaignId = payload?.data?.campaignId;
+      if (!incomingCampaignId || incomingCampaignId !== campaign.id) return;
+
+      void refreshQuoteSection();
+    };
+
+    window.addEventListener(
+      "app-notification",
+      handleAppNotification as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "app-notification",
+        handleAppNotification as EventListener,
+      );
+    };
+  }, [campaign.id, refreshQuoteSection]);
 
   const sortedNegotiations = React.useMemo(() => {
     return [...negotiations].sort(
@@ -180,6 +226,12 @@ export default function QuoteDetailsCard({
     !isLoadingNegotiations &&
     latestNegotiation?.sender === "admin";
 
+  const showDisabledQuoteActions =
+    isNegotiating &&
+    !!latestAdminRequest &&
+    !isLoadingNegotiations &&
+    latestNegotiation?.sender === "client";
+
   const {
     submitRequote,
     acceptQuote,
@@ -189,13 +241,7 @@ export default function QuoteDetailsCard({
     isSubmittingPayment,
   } = useQuoteActions({
     onSuccess: async () => {
-      if (onRefresh) {
-        await onRefresh();
-      } else {
-        router.refresh();
-      }
-
-      await fetchNegotiations();
+      await refreshQuoteSection();
     },
   });
 
@@ -243,6 +289,7 @@ export default function QuoteDetailsCard({
     canPay,
     showConfirmedState,
     showQuoteActions,
+    showDisabledQuoteActions,
     isLoadingNegotiations,
     isSubmittingAccept,
     isSubmittingPayment,
