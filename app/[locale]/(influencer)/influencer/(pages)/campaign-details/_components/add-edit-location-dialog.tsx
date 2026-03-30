@@ -153,22 +153,6 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
     } finally {
       setSaving(false);
     }
-  const onSubmit = (values: LocationFormValues) => {
-    
-    // Find district name
-    const district = districts.find(d => d.id === values.districtId);
-    
-    const locationData: Omit<SavedLocation, 'id' | 'isSelected'> = {
-      name: values.name,
-      districtId: values.districtId,
-      districtName: district?.district || values.districtName,
-      thana: values.thana,
-      address: values.address,
-      type: values.type,
-    };
-    
-    onSave(locationData);
-    onOpenChange(false);
   };
 
   // Handle zilla change - reset thana
