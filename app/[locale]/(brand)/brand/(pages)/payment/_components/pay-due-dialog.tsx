@@ -146,8 +146,6 @@ export default function PayDueDialog({
         locale: paymentLocale,
       };
 
-      console.log("pay due payload:", payload);
-
       const result = await createPayDueSession(payload);
 
       if (result.success && result.data?.gatewayUrl) {

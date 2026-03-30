@@ -37,7 +37,6 @@ export async function createPaymentSession(
 export async function createPayDueSession(
   payload: CreatePaymentPayload,
 ): Promise<ServiceResponse<PaymentSessionResponse>> {
-  console.log(payload);
   const response = await serviceClient.post<
     ServiceResponse<PaymentSessionResponse>
   >("/campaign/client/pay-due", payload);
