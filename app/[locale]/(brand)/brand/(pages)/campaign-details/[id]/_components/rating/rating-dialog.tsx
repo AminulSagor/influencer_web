@@ -18,6 +18,8 @@ import {
   rateInfluencer,
 } from "@/service/client/campaigns/campaign-rating";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import Loader from "@/components/spin-loader";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 type RatingDialogProps = {
   open: boolean;
@@ -82,6 +84,26 @@ export default function RatingDialog({
     setIsSubmitted(false);
   };
 
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "response" in error &&
+      typeof (error as { response?: unknown }).response === "object" &&
+      (error as { response?: { data?: { message?: string } } }).response?.data
+        ?.message
+    ) {
+      return (error as { response?: { data?: { message?: string } } }).response!
+        .data!.message!;
+    }
+
+    return "Something went wrong while submitting your ratings.";
+  };
+
   const handleSubmit = async () => {
     if (!allRated || isSubmitting) return;
 
@@ -107,6 +129,9 @@ export default function RatingDialog({
 
       setExpandedId(null);
       setIsSubmitted(true);
+      notifySuccess("Ratings submitted successfully.");
+    } catch (error) {
+      notifyError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -135,7 +160,7 @@ export default function RatingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] rounded-[24px] border-none bg-[#F8F8F8] p-0 shadow-xl sm:max-w-[560px]">
+      <DialogContent className="border-none bg-[#F8F8F8] p-0 shadow-xl">
         <div className="px-7 pb-7 pt-6">
           <DialogHeader className="mb-5">
             <DialogTitle className="text-left text-base font-semibold text-[#345C21]">
@@ -162,7 +187,14 @@ export default function RatingDialog({
             disabled={!allRated || isSubmitting}
             className="mt-8 h-[54px] w-full rounded-[16px] bg-[#5D8238] text-sm font-medium text-white hover:bg-[#4f6f2f] disabled:bg-[#9AA58B] disabled:text-white"
           >
-            {isSubmitting ? "Submitting..." : "Submit Your Ratings"}
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <Loader className="h-5 w-5 border-2" />
+                <span>Submitting...</span>
+              </div>
+            ) : (
+              "Submit Your Ratings"
+            )}
           </Button>
 
           <p className="mt-3 text-center text-sm text-[#A0A0A0]">
