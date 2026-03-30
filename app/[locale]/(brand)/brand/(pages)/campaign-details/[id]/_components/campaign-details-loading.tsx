@@ -60,7 +60,6 @@ export default function CampaignDetailsLoading() {
             <div className="rounded-[18px] bg-linear-to-r from-[#F8FAF6] via-[#EEF4E8] to-[#F8FAF6] p-5">
               <div className="flex min-h-[180px] flex-col items-center justify-center gap-3">
                 <div className="rounded-full bg-white p-3 shadow-sm">
-                  <Loader className="h-8 w-8 border-[3px]" />
                 </div>
                 <div className="h-4 w-32 animate-pulse rounded-full bg-[#DCE7D1]" />
                 <div className="h-3 w-48 animate-pulse rounded-full bg-[#E8EFE1]" />
