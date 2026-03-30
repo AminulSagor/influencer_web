@@ -28,13 +28,14 @@ type Props = {
   milestone: CampaignMilestone;
   milestoneIndex: number;
   submissionId?: string | null;
+  bonusMilestoneId?: string;
 };
-
 export default function MilestoneDetailsCard({
   campaign,
   milestone,
   milestoneIndex,
   submissionId,
+  bonusMilestoneId,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("brand.CampaignDetailsPage");
@@ -229,7 +230,7 @@ export default function MilestoneDetailsCard({
           {shouldShowBonusCard ? (
             <div className="mt-5">
               <MilestoneBonusCard
-                milestoneId={milestone.id}
+                milestoneId={bonusMilestoneId ?? milestone.id}
                 campaignType={String(campaign.campaignType ?? "")}
               />
             </div>

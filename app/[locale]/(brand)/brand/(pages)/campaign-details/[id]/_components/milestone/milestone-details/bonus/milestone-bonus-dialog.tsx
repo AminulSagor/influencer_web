@@ -10,15 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { provideMilestoneBonus } from "@/service/client/campaigns/milestone-bonus.service";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import Loader from "@/components/spin-loader";
 
 type Props = {
   open: boolean;
@@ -27,12 +21,6 @@ type Props = {
   campaignType: string;
 };
 
-const PAYMENT_METHODS = [
-  { value: "card", label: "Credit / Debit Card" },
-  { value: "bkash", label: "bKash" },
-  { value: "nogod", label: "Nagad" },
-];
-
 export default function MilestoneBonusDialog({
   open,
   onOpenChange,
@@ -40,7 +28,6 @@ export default function MilestoneBonusDialog({
   campaignType,
 }: Props) {
   const [amount, setAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const numericAmount = useMemo(() => Number(amount), [amount]);
@@ -48,7 +35,6 @@ export default function MilestoneBonusDialog({
 
   const resetForm = () => {
     setAmount("");
-    setPaymentMethod("card");
     setIsSubmitting(false);
   };
 
@@ -94,7 +80,7 @@ export default function MilestoneBonusDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="border-white/30 bg-[#5C7F3C]">
+      <DialogContent className="border-white/30 bg-[#5C7F3C] w-[400px]">
         <div>
           <DialogHeader className="space-y-0 text-left">
             <div className="flex gap-3">
@@ -126,24 +112,11 @@ export default function MilestoneBonusDialog({
               />
             </div>
 
-            <div>
+            {/* <div>
               <p className="mb-3 text-sm font-semibold text-white">
                 Payment Method
               </p>
-
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger className="h-14 w-full rounded-lg border-0 bg-white px-4 text-base font-medium text-[#35531C] focus:ring-2 focus:ring-white/40">
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_METHODS.map((method) => (
-                    <SelectItem key={method.value} value={method.value}>
-                      {method.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            </div> */}
 
             <Button
               type="button"
@@ -151,7 +124,7 @@ export default function MilestoneBonusDialog({
               disabled={isSubmitting}
               className="h-12 w-full rounded-lg bg-[#F5F5E8] text-base font-medium text-[#1F1F1F] hover:bg-[#F5F5E8]/90"
             >
-              {isSubmitting ? "Processing..." : "Pay Now"}
+              {isSubmitting ? <Loader className="h-5 w-5" /> : "Pay Now"}
             </Button>
           </div>
         </div>

@@ -344,6 +344,35 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     setExpandedMilestoneId("");
   }, []);
 
+  function getBonusMilestoneIdForSelectedInfluencer(
+    milestoneId: string,
+    influencer: CampaignAssignedInfluencer | null,
+  ) {
+    if (!influencer) return undefined;
+
+    const matchedWork = (influencer.assignedWork ?? []).find(
+      (work) => work.masterMilestoneId === milestoneId,
+    );
+
+    return matchedWork?.id;
+  }
+
+  const bonusMilestoneId = React.useMemo(() => {
+    if (
+      campaign.campaignType !== "influencer_promotion" ||
+      !expandedMilestoneId
+    ) {
+      return expandedMilestoneId;
+    }
+
+    return (
+      getBonusMilestoneIdForSelectedInfluencer(
+        expandedMilestoneId,
+        selectedInfluencer,
+      ) ?? expandedMilestoneId
+    );
+  }, [campaign.campaignType, expandedMilestoneId, selectedInfluencer]);
+
   return (
     <div className="space-y-4">
       <CampaignMilestonesOverview
@@ -362,6 +391,7 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
             expandedMilestoneIndex >= 0 ? expandedMilestoneIndex : 0
           }
           submissionId={milestoneSubmissionId}
+          bonusMilestoneId={bonusMilestoneId}
         />
       )}
       {campaign.status === "active" && (
