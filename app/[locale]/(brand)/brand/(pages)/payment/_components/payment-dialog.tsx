@@ -207,9 +207,9 @@ export default function PaymentDialog({
   const handleSubmit = async () => {
     if (!isValidAmount) return;
 
-    // if (onBeforePayment) {
-    //   await onBeforePayment(payAmount);
-    // }
+    if (onBeforePayment) {
+      await onBeforePayment(payAmount);
+    }
 
     await handlePayment();
     setDialogOpen(false);
