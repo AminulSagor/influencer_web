@@ -1,79 +1,76 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
-
+import { useEffect, useState } from "react";
 import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
-import { serviceClient } from "@/service/base/axios_client";
+import type { PaginationMeta } from "@/types/service-response";
+import { getCampaignByStatus } from "@/service/client/campaigns/campaigns-by-status";
 
-type Meta = { total: number; page: number; limit: number };
-
-type serviceResponse = {
-  success: boolean;
-  data: CampaignSummary[];
-  meta: Meta;
+const defaultMeta: PaginationMeta = {
+  total: 0,
+  page: 1,
+  limit: 0,
+  totalPages: 1,
 };
 
-export function useMyCampaignsByStatus(status: string) {
-  // Remove useToken hook - no token needed
-
+export function useMyCampaignsByStatus(
+  status: string,
+  page: number,
+  limit: number,
+) {
   const [data, setData] = useState<CampaignSummary[]>([]);
-  const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 10 });
+  const [meta, setMeta] = useState<PaginationMeta>(defaultMeta);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Simplified key - only depends on status now
-  const key = useMemo(() => `${status}`, [status]);
-
   useEffect(() => {
-    // Remove token check - cookies handle authentication
-    let cancelled = false;
+    let mounted = true;
 
     const run = async () => {
+      if (!status.trim()) {
+        setData([]);
+        setMeta(defaultMeta);
+        setError(null);
+        return;
+      }
+
       setLoading(true);
       setError(null);
-      try {
-        // Use serviceClient instead of axiosInstance (make sure it has withCredentials: true)
-        // Remove Authorization header - cookies will be sent automatically
-        const res = await serviceClient.get<serviceResponse>(
-          `/campaign/my-campaigns?status=${encodeURIComponent(status)}`
-          // No headers needed
-        );
 
-        if (cancelled) return;
+      const result = await getCampaignByStatus({
+        status,
+        page,
+        limit,
+      });
 
-        setData(res.data?.data ?? []);
-        setMeta(res.data?.meta ?? { total: 0, page: 1, limit: 10 });
-      } catch (error: unknown) {
-        if (cancelled) return;
-        if (axios.isAxiosError(error)) {
-          // Handle 401 specifically
-          if (error.response?.status === 401) {
-            setError("Session expired. Please login again.");
-            // Optionally redirect to login
-            // const locale = document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] || 'en';
-            // window.location.href = `/${locale}/login`;
-          } else {
-            setError(
-              error?.response?.data?.message ?? "Failed to load campaigns"
-            );
-          }
-        } else {
-          setError("An unexpected error occurred");
-        }
+      if (!mounted) return;
+
+      if (result.error) {
         setData([]);
-        setMeta({ total: 0, page: 1, limit: 10 });
-      } finally {
-        if (!cancelled) setLoading(false);
+        setMeta(defaultMeta);
+        setError(result.error);
+      } else {
+        const items = result.data ?? [];
+        setData(items);
+        setMeta(
+          result.meta ?? {
+            total: items.length,
+            page,
+            limit,
+            totalPages: Math.ceil(items.length / limit) || 1,
+          },
+        );
+        setError(null);
       }
+
+      setLoading(false);
     };
 
     run();
 
     return () => {
-      cancelled = true;
+      mounted = false;
     };
-  }, [key]); // Only depends on status now
+  }, [status, page, limit]);
 
   return { data, meta, loading, error };
 }

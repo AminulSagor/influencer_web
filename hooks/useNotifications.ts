@@ -9,7 +9,7 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   NotificationItem,
-} from "@/service/admin/notification-service";
+} from "@/service/notification-service";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -39,7 +39,7 @@ export function useNotifications() {
 
       // Optimistically update local state
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
 
@@ -50,7 +50,7 @@ export function useNotifications() {
         // Could revert state here on failure if needed
       }
     },
-    []
+    [],
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -96,7 +96,9 @@ export function useNotifications() {
 
           setUnreadCount((prev) => prev + 1);
           fetchNotifications();
-          window.dispatchEvent(new CustomEvent("app-notification", { detail: payload }));
+          window.dispatchEvent(
+            new CustomEvent("app-notification", { detail: payload }),
+          );
         });
 
         if (isMounted) {

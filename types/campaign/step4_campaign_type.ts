@@ -7,8 +7,11 @@ export interface Milestone {
   deliveryDays: number;
   expectedViews?: number;
   expectedReach?: number;
-  promotionGoal: string;
-  order: number;
+  expectedLikes?: number;
+  expectedComments?: number;
+  promotionGoal?: string;
+  expectedFollows?: number;
+  order?: number;
 }
 
 export interface StepFourPayload {

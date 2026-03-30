@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -9,6 +9,11 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, X, Clock3, BadgeCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type {
+  BrandProfile,
+  VerificationStatus,
+} from "@/types/client/profile/profile";
 
 type Status = "done" | "review" | "rejected" | "pending";
 type Role = "client" | "agency" | "admin" | "influencer";
@@ -19,67 +24,128 @@ type TimelineEntry = {
   sub: string;
 };
 
+function mapVerificationStatus(
+  status?: VerificationStatus | string | null,
+): Status {
+  if (status === "approved") return "done";
+  if (status === "pending") return "review";
+  if (status === "rejected") return "rejected";
+  return "pending";
+}
+
+function getStatusLabel(
+  status: Status,
+  t: ReturnType<typeof useTranslations>,
+  rejectReason?: string | null,
+) {
+  if (status === "done") return t("status.done");
+  if (status === "review") return t("status.review");
+  if (status === "rejected") {
+    return rejectReason
+      ? t("status.rejectedWithReason", { reason: rejectReason })
+      : t("status.rejected");
+  }
+  return t("status.pending");
+}
+
 export default function VerificationProgressCard({
   role,
+  profile,
+  progress,
 }: {
   role?: Role;
+  profile: BrandProfile | null;
+  progress: number;
 }) {
-  const timelineItems: TimelineEntry[] = [
-    {
-      status: "done",
-      title: "Basic Informations",
-      sub: "That's How We Are Going To Reach You",
-    },
-    {
-      status: "done",
-      title: "Social Portfolio",
-      sub: "I Added You Can Always Add More",
-    },
-    {
-      status: "review",
-      title: "NID",
-      sub: "In Review",
-    },
+  const t = useTranslations("brand.unverified.verification");
 
-    ...(role !== "influencer"
-      ? [
-        {
-          status: "rejected" as Status,
-          title: "Trade License",
-          sub: "Declined, documents details don't match with the provided information",
-        },
-        {
-          status: "pending" as Status,
-          title: "TIN",
-          sub: "Pending",
-        },
-        {
-          status: "pending" as Status,
-          title: "BIN",
-          sub: "Pending",
-        },
-      ]
-      : []),
+  const timelineItems = useMemo<TimelineEntry[]>(() => {
+    const items: TimelineEntry[] = [
+      {
+        status: "done",
+        title: t("basicInformationTitle"),
+        sub: t("basicInformationSub"),
+      },
+    ];
 
-    ...(role === "agency" || role === "influencer"
-      ? [
-        {
-          status: role === "influencer" ? ("rejected" as Status) : ("pending" as Status),
-          title: "Payment Setup",
-          sub:
-            role === "influencer"
-              ? "Declined, documents details doesn't match"
-              : "Pending",
-        },
-      ]
-      : []),
+    if (!profile) return items;
 
-    {
-      status: "pending",
-      title: "Verify Email",
-      sub: "Pending",
-    },
-  ];
+    const socialStatus: Status = profile.socialLinks?.length
+      ? profile.socialLinks.some((item) => item.status === "rejected")
+        ? "rejected"
+        : profile.socialLinks.some((item) => item.status === "pending")
+          ? "review"
+          : profile.socialLinks.every((item) => item.status === "approved")
+            ? "done"
+            : "pending"
+      : "pending";
+
+    items.push({
+      status: socialStatus,
+      title: t("socialPortfolioTitle"),
+      sub: getStatusLabel(socialStatus, t),
+    });
+
+    const nidStatus = mapVerificationStatus(profile.nidVerification?.nidStatus);
+    items.push({
+      status: nidStatus,
+      title: t("nidTitle"),
+      sub: getStatusLabel(
+        nidStatus,
+        t,
+        profile.nidVerification?.nidRejectReason,
+      ),
+    });
+
+    if (role !== "influencer") {
+      const tradeStatus = mapVerificationStatus(
+        profile.tradeLicenseVerification?.tradeLicenseStatus,
+      );
+      items.push({
+        status: tradeStatus,
+        title: t("tradeLicenseTitle"),
+        sub: getStatusLabel(
+          tradeStatus,
+          t,
+          profile.tradeLicenseVerification?.tradeLicenseRejectReason,
+        ),
+      });
+
+      const tinStatus = mapVerificationStatus(
+        profile.tinVerification?.tinStatus,
+      );
+      items.push({
+        status: tinStatus,
+        title: t("tinTitle"),
+        sub: getStatusLabel(
+          tinStatus,
+          t,
+          profile.tinVerification?.tinRejectReason,
+        ),
+      });
+
+      const binStatus = mapVerificationStatus(
+        profile.binVerification?.binStatus,
+      );
+      items.push({
+        status: binStatus,
+        title: t("binTitle"),
+        sub: getStatusLabel(
+          binStatus,
+          t,
+          profile.binVerification?.binRejectReason,
+        ),
+      });
+    }
+
+    items.push({
+      status: profile.isEmailVerified ? "done" : "pending",
+      title: t("emailTitle"),
+      sub: profile.isEmailVerified ? t("status.done") : t("status.pending"),
+    });
+
+    return items;
+  }, [profile, role, t]);
 
   return (
     <Card className="py-0 relative bg-white">
@@ -93,7 +159,7 @@ export default function VerificationProgressCard({
                     <BadgeCheck className="w-5 h-5 text-light-green stroke-[2.5]" />
                   </span>
                   <h1 className="font-semibold text-lg text-Primary">
-                    Verification Progress
+                    {t("title")}
                   </h1>
                 </div>
               </div>
@@ -101,7 +167,10 @@ export default function VerificationProgressCard({
 
             <AccordionContent className="pt-4 pb-2">
               <div className="h-3 rounded-full bg-light-green/15 overflow-hidden">
-                <div className="h-full w-[38%] bg-light-green rounded-full" />
+                <div
+                  className="h-full bg-light-green rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
 
               <div className="mt-6">
@@ -188,8 +257,9 @@ function TimelineItem({
 
         {!isLast && (
           <div
-            className={`absolute w-[2px] bottom-[-28px] h-7 ${status === "done" ? "bg-light-green" : "bg-gray-200"
-              }`}
+            className={`absolute w-[2px] bottom-[-28px] h-7 ${
+              status === "done" ? "bg-light-green" : "bg-gray-200"
+            }`}
             style={{ left: "50%", transform: "translateX(-50%)" }}
           />
         )}

@@ -49,18 +49,6 @@ const CampaignSearchBar = ({
           )}
         </div>
       </div>
-
-      {/* Sort */}
-      <div className="flex justify-end">
-        <Button
-          size="sm"
-          onClick={onSort}
-          className="bg-Secondary border-light-green border text-Primary text-xs hover:bg-Secondary/70"
-        >
-          <ArrowDown className="mr-1 h-4 w-4" />
-          {sortLabel}
-        </Button>
-      </div>
     </div>
   );
 };

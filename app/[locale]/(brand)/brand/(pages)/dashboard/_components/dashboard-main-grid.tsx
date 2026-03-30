@@ -1,19 +1,27 @@
+// app/dashboard/_components/dashboard-main-grid.tsx
+"use client";
+
 import WorkInProgressCard from "./work-in-progress-card";
 import UpcomingDeadline from "./upcoming-deadlines";
 import ActionRequiredCard from "./action-required-card";
-import { getActiveCampaigns } from "@/service/client/campaigns/active-campaigns";
+import { Campaign } from "@/types/client/campaigns/campaign";
 import {
-  getActionRequired,
-  getUpcomingDeadlines,
-} from "@/service/client/dashboard";
+  ActionRequiredItem,
+  UpcomingDeadlineItem,
+} from "@/types/client/dashboard/dashboard-types";
+import { PaginationMeta, ServiceResponse } from "@/types/service-response";
 
-export default async function DashboardMainGrid() {
-  const [campaigns, actionRequiredItems, upcomingDeadlines] = await Promise.all([
-    getActiveCampaigns(),
-    getActionRequired(),
-    getUpcomingDeadlines(1, 5),
-  ]);
+interface DashboardMainGridProps {
+  campaigns: Campaign[];
+  actionRequiredItems: ActionRequiredItem[];
+  upcomingDeadlines: ServiceResponse<UpcomingDeadlineItem[], PaginationMeta>;
+}
 
+export default function DashboardMainGrid({
+  campaigns,
+  actionRequiredItems,
+  upcomingDeadlines,
+}: DashboardMainGridProps) {
   return (
     <div className="space-y-4 px-4 pt-6">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">

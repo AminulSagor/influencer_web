@@ -8,12 +8,14 @@ import { removeToken } from "@/utils/cookies_util";
 import { useAuthStore } from "@/store/auth_store";
 import { getFcmToken } from "@/service/firebase/fcm-service";
 import { unregisterFcmDevice } from "@/service/firebase/fcm-device-service";
+import { useProfileStore } from "@/store/client-profile-store";
 
 export function useLogout() {
   const router = useRouter();
   const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const resetProfile = useProfileStore((s) => s.resetProfile);
 
   const logout = async () => {
     if (loading) return;
@@ -34,13 +36,8 @@ export function useLogout() {
 
       removeToken();
       clearAuth();
+      resetProfile();
 
-      // Redirect to login page
-      router.push(`/${locale}/login`);
-      router.refresh();
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Even if there's an error, redirect to login since token is cleared
       router.push(`/${locale}/login`);
       router.refresh();
     } finally {

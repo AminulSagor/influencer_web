@@ -2,32 +2,31 @@
 
 import { Check } from "lucide-react";
 import clsx from "clsx";
-
-const STEPS = [
-  { id: 1, title: "Let's Get Started", subtitle: "Step 1" },
-  { id: 2, title: "Your Preferences", subtitle: "Step 2" },
-  { id: 3, title: "Campaign Details", subtitle: "Step 3" },
-  { id: 4, title: "Placement & Budget", subtitle: "Step 4" },
-  { id: 5, title: "Upload Your Content", subtitle: "Step 5" },
-  { id: 6, title: "Review Your Campaign", subtitle: "Step 6" },
-];
+import { useTranslations } from "next-intl";
 
 interface StepperProps {
   currentStep: number;
 }
 
 const Stepper = ({ currentStep }: StepperProps) => {
+  const t = useTranslations("brand.CreateCampaignsPage");
+
+  const STEPS = [
+    { id: 1, title: t("letsGetStarted"), subtitle: t("step1") },
+    { id: 2, title: t("yourPreferences"), subtitle: t("step2") },
+    { id: 3, title: t("campaignDetails"), subtitle: t("step3") },
+    { id: 4, title: t("placementBudget"), subtitle: t("step4") },
+    { id: 5, title: t("uploadYourContent"), subtitle: t("step5") },
+    { id: 6, title: t("reviewYourCampaign"), subtitle: t("step6") },
+  ];
+
   const isLastStep = currentStep === STEPS.length;
-  
-  // Calculate width from first circle center to current circle center
+
   const getProgressWidth = () => {
     if (STEPS.length <= 1 || currentStep < 1) return "0%";
-    if (isLastStep) return "0%"; // Hide progress line on last step
+    if (isLastStep) return "0%";
 
-    // Each step takes 100% / (total steps - 1) of the progress bar
     const stepWidthPercentage = 100 / (STEPS.length - 1);
-
-    // Progress goes from center of first to center of current step
     const width = (currentStep - 1) * stepWidthPercentage;
 
     return `${width}%`;
@@ -38,7 +37,6 @@ const Stepper = ({ currentStep }: StepperProps) => {
   return (
     <div className="w-full overflow-x-scroll no-scrollbar overflow-y-scroll">
       <div className="relative">
-        {/* Background line - always visible */}
         <div
           className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-gray-200"
           style={{
@@ -47,7 +45,6 @@ const Stepper = ({ currentStep }: StepperProps) => {
           }}
         />
 
-        {/* Progress line - hidden on last step */}
         {!isLastStep && (
           <div
             className="absolute top-3 xs:top-4 h-px xs:h-[1.5px] sm:h-0.5 bg-light-green transition-all duration-300 ease-in-out"
@@ -58,7 +55,6 @@ const Stepper = ({ currentStep }: StepperProps) => {
           />
         )}
 
-        {/* Rest of the code remains the same... */}
         <div className="relative flex justify-between">
           {STEPS.map((step) => {
             const isCompleted = step.id < currentStep;
@@ -85,7 +81,7 @@ const Stepper = ({ currentStep }: StepperProps) => {
                       "border-light-green bg-white shadow-[0_0_0_2px_rgba(122,155,87,0.15)] xs:shadow-[0_0_0_3px_rgba(122,155,87,0.15)] sm:shadow-[0_0_0_4px_rgba(122,155,87,0.15)]":
                         isActive,
                       "border-gray-300 bg-white": isInactive,
-                    }
+                    },
                   )}
                 >
                   {isCompleted ? (
@@ -109,7 +105,7 @@ const Stepper = ({ currentStep }: StepperProps) => {
                       {
                         "text-light-green": isCompleted || isActive,
                         "text-gray-500": isInactive,
-                      }
+                      },
                     )}
                     title={step.title}
                   >
@@ -118,11 +114,11 @@ const Stepper = ({ currentStep }: StepperProps) => {
 
                   <p
                     className={clsx(
-                      "hidden xs:block text-[9px] xs:text-[10px] sm:text-xs font-medium",
+                      "block text-[9px] xs:text-[10px] sm:text-xs font-medium",
                       {
                         "text-light-green": isCompleted || isActive,
                         "text-gray-400": isInactive,
-                      }
+                      },
                     )}
                   >
                     {step.subtitle}

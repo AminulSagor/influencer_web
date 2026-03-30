@@ -1,16 +1,35 @@
-import React from "react";
-import { FaExclamationCircle } from "react-icons/fa";
+"use client";
 
-const VerificationInProgress = () => {
+import { useTranslations } from "next-intl";
+import { FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+
+interface Props {
+  hasUnderReview: boolean;
+}
+
+const VerificationInProgress = ({ hasUnderReview }: Props) => {
+  const t = useTranslations("brand.verificationChecklist");
+
   return (
-    <div className="border border-light-green p-4 rounded-lg flex items-center  gap-4 bg-Secondary">
+    <div className="flex items-center gap-4 rounded-lg border border-light-green bg-Secondary p-4">
       <div className="text-light-green">
-        <FaExclamationCircle size={22} />
+        {hasUnderReview ? (
+          <FaExclamationCircle size={22} />
+        ) : (
+          <FaCheckCircle size={22} />
+        )}
       </div>
+
       <div>
-        <h2 className="text-Primary font-semibold">Verification In Progress</h2>
-        <p className="text-light-green text-sm">
-          We’ll notify you once all items are verified
+        <h2 className="font-semibold text-Primary">
+          {hasUnderReview
+            ? t("verificationInProgress")
+            : t("verificationUpdated")}
+        </h2>
+        <p className="text-sm text-light-green">
+          {hasUnderReview
+            ? t("verificationInProgressDescription")
+            : t("verificationUpdatedDescription")}
         </p>
       </div>
     </div>
