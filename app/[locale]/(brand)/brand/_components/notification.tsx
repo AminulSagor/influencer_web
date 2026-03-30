@@ -29,10 +29,6 @@ const Notification = () => {
     markAllAsRead,
   } = useNotifications();
 
-  console.log("Notification component - unreadCount:", unreadCount);
-  console.log("Notification component - notifications:", notifications);
-  console.log("Notification component - loading:", isLoading);
-
   // Fetch notifications when popover opens
   const handleOpenChange = (open: boolean) => {
     if (open) {
