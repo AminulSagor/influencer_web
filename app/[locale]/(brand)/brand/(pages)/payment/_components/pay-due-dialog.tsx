@@ -19,7 +19,7 @@ import {
 } from "../../campaign-details/[id]/_components/quote/quote-utils";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-import { createPayDueSession } from "@/service/client/negotiation/campaign-payment.service";
+import { createPayDueSession } from "@/service/client/payment/campaign-payment.service";
 import Image from "next/image";
 
 type QuotePaidAdPayDueDialogProps = {

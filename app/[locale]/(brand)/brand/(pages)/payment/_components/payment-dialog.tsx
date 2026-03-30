@@ -20,7 +20,7 @@ import {
 } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/quote-utils";
 import Loader from "@/components/spin-loader";
 import { notifyError } from "@/utils/toast_util";
-import { createPaymentSession } from "@/service/client/negotiation/campaign-payment.service";
+import { createPaymentSession } from "@/service/client/payment/campaign-payment.service";
 import Image from "next/image";
 
 type PresetKey = "full" | "min" | "seventyFive";
