@@ -6,8 +6,8 @@ const CampaignTermsCard = () => {
     <Card>
       <CardContent>
         <div className="flex items-start">
-          <CampaignBrief />
-          <TermsAndConditions />
+          {/* <CampaignBrief />
+          <TermsAndConditions /> */}
         </div>
       </CardContent>
     </Card>

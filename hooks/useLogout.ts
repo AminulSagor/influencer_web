@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { logout as logoutService } from "@/service/auth/logout";
 import { removeToken } from "@/utils/cookies_util";
 import { useAuthStore } from "@/store/auth_store";
 import { getFcmToken } from "@/service/firebase/fcm-service";
@@ -21,6 +22,8 @@ export function useLogout() {
 
     setLoading(true);
     try {
+      // Call logout service (clears token and calls backend)
+      await logoutService();
       // Unregister FCM device (fire-and-forget)
       try {
         const fcmToken = await getFcmToken();

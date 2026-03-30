@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type UserRole = "client" | "influencer" | "agency";
+export type UserRole = "client" | "influencer" | "agency" | "admin";
 
 type AuthState = {
   token: string | null;

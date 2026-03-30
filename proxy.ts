@@ -11,10 +11,11 @@ const intlMiddleware = createMiddleware({
 });
 
 // 2) Role mapping
-const roleRoot: Record<UserRole, "brand" | "influencer" | "agency"> = {
+const roleRoot: Record<UserRole, "brand" | "influencer" | "agency" | "admin"> = {
   client: "brand",
   influencer: "influencer",
   agency: "agency",
+  admin: "admin",
 };
 
 type Locale = (typeof routing.locales)[number];
@@ -75,6 +76,7 @@ export default function middleware(req: NextRequest) {
     `/${locale}/brand`,
     `/${locale}/influencer`,
     `/${locale}/agency`,
+    `/${locale}/admin`,
   ];
   const isProtectedArea = protectedRoots.some((p) => pathname.startsWith(p));
 

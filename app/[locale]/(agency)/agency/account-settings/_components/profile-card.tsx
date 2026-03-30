@@ -1,3 +1,7 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -13,123 +17,479 @@ import { BiSolidUpArrowCircle } from "react-icons/bi";
 import { FaPhoneAlt } from "react-icons/fa";
 import { HiLocationMarker } from "react-icons/hi";
 import { MdEmail } from "react-icons/md";
+import type {
+  AgencyProfileResponse,
+  UpdateAgencyAddressPayload,
+  UpdateAgencyBasicInfoPayload,
+} from "@/types/agency/account-settings";
+import {
+  updateAgencyAddress,
+  updateAgencyBasicInfo,
+  updateAgencyEmail,
+} from "@/service/agency/account-settings";
+import { notifyError, notifySuccess } from "@/utils/toast_util";
+import { uploadFile } from "@/service/common/upload/upload-file";
 
-const ProfileCard = () => {
+type ProfileCardProps = {
+  profile: AgencyProfileResponse | null;
+  isLoading: boolean;
+  onProfileUpdated: (updatedProfile: AgencyProfileResponse) => void;
+};
+
+type ProfileFormState = {
+  agencyName: string;
+  firstName: string;
+  email: string;
+  lastName: string;
+  secondaryPhone: string;
+  website: string;
+  agencyBio: string;
+  logo: string;
+  thana: string;
+  zilla: string;
+  fullAddress: string;
+};
+
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg"];
+
+const ProfileCard = ({
+  profile,
+  isLoading,
+  onProfileUpdated,
+}: ProfileCardProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [localLogoPreview, setLocalLogoPreview] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [form, setForm] = useState<ProfileFormState>({
+    agencyName: "",
+    firstName: "",
+    email: "",
+    lastName: "",
+    secondaryPhone: "",
+    website: "",
+    agencyBio: "",
+    logo: "",
+    thana: "",
+    zilla: "",
+    fullAddress: "",
+  });
+
+  // Only sync form from profile when NOT editing to avoid overwriting user input
+  useEffect(() => {
+    if (isEditing) return;
+    setForm({
+      agencyName: profile?.agencyName ?? "",
+      firstName: profile?.firstName ?? "",
+      email: profile?.email ?? "",
+      lastName: profile?.lastName ?? "",
+      secondaryPhone: profile?.secondaryPhone ?? "",
+      website: profile?.website ?? "",
+      agencyBio: profile?.agencyBio ?? "",
+      logo: profile?.logo ?? "",
+      thana: profile?.address?.thana ?? "",
+      zilla: profile?.address?.zilla ?? "",
+      fullAddress: profile?.address?.fullAddress ?? "",
+    });
+    setSelectedLogoFile(null);
+    setLocalLogoPreview(null);
+  }, [profile, isEditing]);
+
+  const ownerName =
+    [form.firstName, form.lastName].filter(Boolean).join(" ") || "";
+
+  const locationLine = [form.thana, form.zilla].filter(Boolean).join(", ");
+
+  const displayLogo = localLogoPreview || form.logo || "";
+
+  const handleChange = (key: keyof ProfileFormState, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const validateRequiredFields = () => {
+    if (!form.agencyName.trim()) {
+      notifyError("Agency Name is required");
+      return false;
+    }
+
+    if (!form.firstName.trim()) {
+      notifyError("First Name is required");
+      return false;
+    }
+
+    if (!form.lastName.trim()) {
+      notifyError("Last Name is required");
+      return false;
+    }
+
+    if (!form.email.trim()) {
+      notifyError("Email Address is required");
+      return false;
+    }
+
+    if (!form.thana.trim()) {
+      notifyError("Thana is required");
+      return false;
+    }
+
+    if (!form.zilla.trim()) {
+      notifyError("Zilla is required");
+      return false;
+    }
+
+    if (!form.fullAddress.trim()) {
+      notifyError("Full Address is required");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleEditOrSave = async () => {
+    if (!profile) return;
+
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    if (!validateRequiredFields()) return;
+
+    try {
+      setIsSaving(true);
+
+      let finalLogo = form.logo;
+
+      if (selectedLogoFile) {
+        finalLogo = await uploadFile(selectedLogoFile);
+      }
+
+      const basicInfoPayload: UpdateAgencyBasicInfoPayload = {
+        agencyName: form.agencyName.trim(),
+        agencyBio: form.agencyBio.trim(),
+        logo: finalLogo,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        secondaryPhone: form.secondaryPhone.trim(),
+        website: form.website.trim(),
+      };
+
+      const addressPayload: UpdateAgencyAddressPayload = {
+        address: {
+          thana: form.thana.trim(),
+          zilla: form.zilla.trim(),
+          fullAddress: form.fullAddress.trim(),
+        },
+      };
+
+      // Call email update separately only if email has changed
+      const emailChanged = form.email.trim() !== (profile.email ?? "");
+      if (emailChanged) {
+        await updateAgencyEmail({ newEmail: form.email.trim() });
+      }
+
+      const updatedBasicProfile = await updateAgencyBasicInfo(basicInfoPayload);
+      const updatedProfile = await updateAgencyAddress(addressPayload);
+
+      // Spread original profile first, then override with all updated fields
+      // This ensures no fields go missing if any API response is partial
+      const mergedProfile: AgencyProfileResponse = {
+        ...profile,
+        ...updatedProfile,
+        agencyName: updatedBasicProfile.agencyName,
+        firstName: updatedBasicProfile.firstName,
+        lastName: updatedBasicProfile.lastName,
+        agencyBio: updatedBasicProfile.agencyBio,
+        logo: finalLogo, // use finalLogo directly to ensure correct URL
+        secondaryPhone: updatedBasicProfile.secondaryPhone,
+        website: updatedBasicProfile.website,
+        address: updatedProfile.address,
+        email: emailChanged ? form.email.trim() : profile.email,
+      };
+
+      // Update form.logo immediately so displayLogo shows the new image
+      // before the useEffect syncs from profile prop
+      setForm((prev) => ({ ...prev, logo: finalLogo }));
+      setSelectedLogoFile(null);
+      setLocalLogoPreview(null);
+
+      // Set isEditing false BEFORE onProfileUpdated so the useEffect
+      // syncs the form correctly when the new profile prop arrives
+      setIsEditing(false);
+      onProfileUpdated(mergedProfile);
+      notifySuccess("Profile updated successfully");
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      notifyError("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    if (!isEditing) return;
+
+    setSelectedLogoFile(null);
+    setLocalLogoPreview(null);
+    setForm((prev) => ({
+      ...prev,
+      logo: "",
+    }));
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadPhoto = () => {
+    if (!isEditing || isSaving) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(selected.type)) {
+      notifyError("Only PNG or JPEG image is allowed");
+      e.target.value = "";
+      return;
+    }
+
+    if (selected.size > MAX_IMAGE_SIZE) {
+      notifyError("Image size must be under 2MB");
+      e.target.value = "";
+      return;
+    }
+
+    setSelectedLogoFile(selected);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLocalLogoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(selected);
+  };
+
   return (
     <Card>
       <div className="px-4">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1">
-            <AccordionTrigger className="text-md p-0 hover:cursor-pointer hover:no-underline mb-4 text-Primary font-semibold">
+            <AccordionTrigger className="mb-4 p-0 text-md font-semibold text-Primary hover:cursor-pointer hover:no-underline">
               Profile
             </AccordionTrigger>
+
             <AccordionContent className="space-y-16">
-              <div className="flex justify-between">
-                <div className="flex  flex-1 justify-around">
-                  <div className="flex flex-col justify-center items-center gap-4">
-                    <div className="w-[100px] h-[100px] rounded-full bg-Secondary border border-dashed border-light-green flex items-center justify-center text-light-green">
-                      <BiSolidUpArrowCircle size={30} />
+              <div className="flex justify-between gap-6">
+                <div className="flex flex-1 justify-around gap-6">
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <div className="relative flex h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-full border border-dashed border-light-green bg-Secondary text-light-green">
+                      {displayLogo ? (
+                        <Image
+                          src={displayLogo}
+                          alt={form.agencyName || "Agency logo"}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <BiSolidUpArrowCircle size={30} />
+                      )}
                     </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      className="hidden"
+                      onChange={handleLogoFileChange}
+                      disabled={!isEditing || isSaving}
+                    />
+
                     <div className="flex flex-col gap-2">
-                      <Button size={"sm"} variant={"outline"}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        disabled={!isEditing || isSaving}
+                      >
                         Remove
                       </Button>
                       <Button
-                        size={"sm"}
+                        size="sm"
                         className="bg-light-green hover:bg-light-green/90"
+                        type="button"
+                        onClick={handleUploadPhoto}
+                        disabled={!isEditing || isSaving}
                       >
                         Upload Photo
                       </Button>
                     </div>
                   </div>
+
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl text-Primary font-semibold">
-                        Grow Big
+                      <h2 className="text-xl font-semibold text-Primary">
+                        {isLoading ? "Loading..." : form.agencyName || "-"}
                       </h2>
                       <p className="text-sm text-light-green">
-                        Owner: <b>Jahidul Islam</b>
+                        Owner: <b>{isLoading ? "Loading..." : ownerName || "-"}</b>
                       </p>
                     </div>
+
                     <div className="flex items-center gap-2">
                       <div className="text-light-green">
                         <HiLocationMarker size={30} />
                       </div>
                       <div>
-                        <p className="text-light-green font-semibold">
-                          Bangladesh
+                        <p className="font-semibold text-light-green">
+                          {isLoading ? "Loading..." : form.zilla || "-"}
                         </p>
-                        <p className="text-light-green">Swarupkathi, Dhaka</p>
+                        <p className="text-light-green">
+                          {isLoading ? "Loading..." : locationLine || "-"}
+                        </p>
                       </div>
                     </div>
+
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-light-green">
-                        <div>
-                          <MdEmail size={22} />
-                        </div>
-                        <p>0Mk0Q@example.com</p>
+                        <MdEmail size={22} />
+                        <p>{isLoading ? "Loading..." : form.email || "-"}</p>
                       </div>
+
                       <div className="flex items-center gap-2 text-light-green">
-                        <div>
-                          <FaPhoneAlt size={20} />
-                        </div>
-                        <p>+8801712345678</p>
+                        <FaPhoneAlt size={20} />
+                        <p>{isLoading ? "Loading..." : profile?.primaryPhone || "-"}</p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className=" flex-1 text-end">
+
+                <div className="flex-1 text-end">
                   <Button
-                    size={"sm"}
+                    size="sm"
                     className="bg-light-green hover:bg-light-green/90"
+                    type="button"
+                    onClick={handleEditOrSave}
+                    disabled={isSaving || isLoading || !profile}
                   >
-                    Edit Profile
+                    {isSaving ? "Saving..." : isEditing ? "Save" : "Edit Profile"}
                   </Button>
                 </div>
               </div>
+
               <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-6 px-1 space-y-4">
+                <div className="col-span-6 space-y-4 px-1">
                   <div className="space-y-2">
                     <Label className="text-light-green">Agency Name *</Label>
-                    <Input placeholder="Enter Agency Name" />
+                    <Input
+                      placeholder="Enter Agency Name"
+                      value={form.agencyName}
+                      onChange={(e) => handleChange("agencyName", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-light-green">First Name *</Label>
-                    <Input placeholder="Enter Agency Name" />
+                    <Input
+                      placeholder="Enter First Name"
+                      value={form.firstName}
+                      onChange={(e) => handleChange("firstName", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-light-green">Last Name *</Label>
-                    <Input placeholder="Enter Agency Name" />
+                    <Input
+                      placeholder="Enter Last Name"
+                      value={form.lastName}
+                      onChange={(e) => handleChange("lastName", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-light-green">Thana *</Label>
-                    <Input placeholder="Enter Agency Name" />
+                    <Input
+                      placeholder="Enter Thana"
+                      value={form.thana}
+                      onChange={(e) => handleChange("thana", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-light-green">Zilla *</Label>
-                    <Input placeholder="Enter Agency Name" />
+                    <Input
+                      placeholder="Enter Zilla"
+                      value={form.zilla}
+                      onChange={(e) => handleChange("zilla", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
                 </div>
+
                 <div className="col-span-6 space-y-4">
                   <div className="space-y-2 px-1">
                     <Label className="text-light-green">Email Address *</Label>
-                    <Input placeholder="grow_big@gmail.com" />
+                    <Input
+                      placeholder="Enter Email Address"
+                      value={form.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
+
                   <div className="space-y-2 px-1">
                     <Label className="text-light-green">Phone Number *</Label>
-                    <Input placeholder="grow_big@gmail.com" />
+                    <Input
+                      placeholder=""
+                      value={profile?.primaryPhone ?? ""}
+                      readOnly
+                      disabled
+                    />
                   </div>
 
                   <div className="space-y-2 px-1">
                     <Label className="text-light-green">
                       Secondary Phone Number (Optional)
                     </Label>
-                    <Input placeholder="grow_big@gmail.com" />
+                    <Input
+                      placeholder="Enter Secondary Phone Number"
+                      value={form.secondaryPhone}
+                      onChange={(e) =>
+                        handleChange("secondaryPhone", e.target.value)
+                      }
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
 
                   <div className="space-y-2 px-1">
                     <Label className="text-light-green">Full Address *</Label>
-                    <Textarea placeholder="Enter Full Address" />
+                    <Textarea
+                      placeholder="Enter Full Address"
+                      value={form.fullAddress}
+                      onChange={(e) => handleChange("fullAddress", e.target.value)}
+                      readOnly={!isEditing}
+                      disabled={isSaving}
+                    />
                   </div>
                 </div>
               </div>

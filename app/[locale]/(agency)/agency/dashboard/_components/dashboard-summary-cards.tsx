@@ -60,39 +60,39 @@ export default function DashboardSummaryCards() {
             title: "Active Jobs",
             value: String(summary.activeJobs),
             icon: BiSolidBriefcaseAlt,
-            link: "/",
+            link: "/agency/jobs/active-jobs",
         },
         {
             title: "New Offers",
             value: String(summary.newOffers),
             icon: FaHandHoldingHeart,
-            link: "/",
+            link: "/agency/jobs",
         },
     ];
 
     return (
-        <div className="pt-4 px-4">
+        <div className="px-4 pt-4">
             <div
                 className="
           grid
           grid-cols-1
+          gap-4
           sm:grid-cols-2
           lg:grid-cols-3
           2xl:grid-cols-4
-          gap-4
         "
             >
                 {dashboardCards.map(({ icon: Icon, link, title, value }, index) => (
                     <div
                         key={index}
                         className="
+              rounded-lg
               bg-linear-to-r
               from-[#405E2C]/90
               to-[#7A9B57]
-              rounded-lg
               p-5
-              space-y-8
               shadow-md
+              space-y-8
             "
                     >
                         <div className="flex items-center justify-between">
@@ -101,12 +101,12 @@ export default function DashboardSummaryCards() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <p className="text-white font-bold text-2xl">
+                            <p className="text-2xl font-bold text-white">
                                 {isLoading ? "..." : value}
                             </p>
 
                             {link && (
-                                <Button variant="link" className="text-white p-0">
+                                <Button variant="link" className="p-0 text-white" asChild>
                                     <Link href={link} className="flex items-center">
                                         View All <ChevronRight />
                                     </Link>
