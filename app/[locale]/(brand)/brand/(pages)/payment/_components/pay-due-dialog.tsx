@@ -38,6 +38,13 @@ type QuotePaidAdPayDueDialogProps = {
 
 type PresetKey = "full" | "half" | "seventyFive" | null;
 
+function resolvePaymentLocale(locale: string | undefined | null): LocaleCode {
+  const normalized = locale?.toLowerCase();
+
+  if (normalized === "bn") return "bn";
+  return "en";
+}
+
 function PercentButton({
   label,
   active,
@@ -90,9 +97,7 @@ export default function PayDueDialog({
 }: QuotePaidAdPayDueDialogProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
   const locale = useLocale();
-  const paymentLocale: LocaleCode = locale === "bn" ? "bn" : "en";
-
-  console.log(paymentLocale);
+  const paymentLocale = resolvePaymentLocale(locale);
 
   const [internalOpen, setInternalOpen] = React.useState(false);
   const [isPaymentLoading, setIsPaymentLoading] = React.useState(false);
@@ -135,11 +140,15 @@ export default function PayDueDialog({
     setIsPaymentLoading(true);
 
     try {
-      const result = await createPayDueSession({
+      const payload = {
         campaignId: campaign.id,
         amount: payAmount,
         locale: paymentLocale,
-      });
+      };
+
+      console.log("pay due payload:", payload);
+
+      const result = await createPayDueSession(payload);
 
       if (result.success && result.data?.gatewayUrl) {
         sessionStorage.setItem(
@@ -169,9 +178,9 @@ export default function PayDueDialog({
   const handleSubmit = async () => {
     if (!isValidAmount) return;
 
-    if (onSubmit) {
-      await onSubmit(payAmount);
-    }
+    // if (onSubmit) {
+    //   await onSubmit(payAmount);
+    // }
 
     await handlePayment();
     setDialogOpen(false);
