@@ -25,8 +25,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log("Background message received:", payload);
-
   const notificationTitle = payload.notification?.title || "BrandGuru";
   const notificationOptions = {
     body: payload.notification?.body || "You have a new notification",
