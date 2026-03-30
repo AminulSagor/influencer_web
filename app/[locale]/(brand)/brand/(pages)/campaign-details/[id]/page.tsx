@@ -1,29 +1,27 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { getDefaultCampaignTab } from "./_lib/campaign-status";
-import { getCampaignDetails } from "@/service/client/campaigns/campaign-details";
+import { useCampaignDetails } from "./_components/campaign-details-provider";
 
-type PageProps = {
-  params: Promise<{ locale: string; id: string }>;
-};
+export default function Page() {
+  const router = useRouter();
+  const params = useParams();
 
-export default async function Page({ params }: PageProps) {
-  const { locale, id } = await params;
-  const campaign = await getCampaignDetails(id);
+  const locale = params.locale as string;
+  const id = params.id as string;
 
-  if (!campaign) {
-    return (
-      <div className="rounded-xl border border-light-gray bg-white p-6">
-        <p className="text-center text-base text-black/70">
-          Campaign not found. Reload again.
-        </p>
-      </div>
+  const { campaign } = useCampaignDetails();
+
+  useEffect(() => {
+    const targetTab = getDefaultCampaignTab(
+      campaign.campaignType,
+      campaign.status,
     );
-  }
 
-  const targetTab = getDefaultCampaignTab(
-    campaign.campaignType,
-    campaign.status,
-  );
+    router.replace(`/${locale}/brand/campaign-details/${id}/${targetTab}`);
+  }, [router, locale, id, campaign]);
 
-  redirect(`/${locale}/brand/campaign-details/${id}/${targetTab}`);
+  return null;
 }

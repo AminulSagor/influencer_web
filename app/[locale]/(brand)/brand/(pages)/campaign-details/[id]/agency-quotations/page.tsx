@@ -1,31 +1,33 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { shouldShowAgencyQuotationTabs } from "../_lib/campaign-status";
-import { getCampaignDetails } from "@/service/client/campaigns/campaign-details";
-import AgencyQuotationsSection from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/agency-quotations/_components/agency-quotations-section";
+import { useCampaignDetails } from "../_components/campaign-details-provider";
+import AgencyQuotationsSection from "./_components/agency-quotations-section";
 
-type PageProps = {
-  params: Promise<{ locale: string; id: string }>;
-};
+export default function AgencyQuotationsPage() {
+  const router = useRouter();
+  const params = useParams();
 
-export default async function AgencyQuotationsPage({ params }: PageProps) {
-  const { locale, id } = await params;
-  const campaign = await getCampaignDetails(id);
+  const locale = params.locale as string;
+  const id = params.id as string;
 
-  if (!campaign) {
-    return (
-      <div className="rounded-xl border border-light-gray bg-white p-6">
-        <p className="text-sm text-black/70">Campaign not found.</p>
-      </div>
-    );
-  }
+  const { campaign } = useCampaignDetails();
 
   const canAccessAgencyQuotationPage = shouldShowAgencyQuotationTabs(
     campaign.campaignType,
     campaign.status,
   );
 
+  useEffect(() => {
+    if (!canAccessAgencyQuotationPage) {
+      router.replace(`/${locale}/brand/campaign-details/${id}/details`);
+    }
+  }, [canAccessAgencyQuotationPage, router, locale, id]);
+
   if (!canAccessAgencyQuotationPage) {
-    redirect(`/${locale}/brand/campaign-details/${id}/details`);
+    return null;
   }
 
   return <AgencyQuotationsSection campaign={campaign} />;

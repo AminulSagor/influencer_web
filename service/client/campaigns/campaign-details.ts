@@ -1,12 +1,12 @@
 import { ServiceResponse } from "@/types/service-response";
-import { serviceServer } from "@/service/base/axios_server";
+import { serviceClient } from "@/service/base/axios_client";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 
 export const getCampaignDetails = async (
   campaignId: string,
 ): Promise<ClientCampaignDetails | null> => {
   try {
-    const res = await serviceServer.get<ServiceResponse<ClientCampaignDetails>>(
+    const res = await serviceClient.get<ServiceResponse<ClientCampaignDetails>>(
       `/campaign/client/details/${campaignId}`,
     );
 
