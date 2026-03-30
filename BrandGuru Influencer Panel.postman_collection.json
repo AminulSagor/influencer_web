@@ -1,0 +1,2121 @@
+{
+  "info": {
+    "_postman_id": "0931d367-94fe-4a90-9eba-4f99e6602c0d",
+    "name": "BrandGuru Influencer Panel",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50811782",
+    "_collection_link": "https://go.postman.co/collection/50811782-0931d367-94fe-4a90-9eba-4f99e6602c0d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Influencer",
+      "item": [
+        {
+          "name": "Influencer Profile",
+          "item": [
+            {
+              "name": "Signup Onboarding",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullAddress\": \"House 10, Road 5, Banani\",\r\n  \"thana\": \"Banani\",\r\n  \"zilla\": \"Dhaka\",\r\n  \"website\": \"https://hrmasum.com\",\r\n  \"socialLinks\": [\r\n    { \"platform\": \"Instagram\", \"url\": \"https://instagram.com/hrmasum\", \"status\": \"unverified\" },\r\n    { \"platform\": \"Facebook\", \"url\": \"https://facebook.com/hrmasum\", \"status\": \"unverified\" }\r\n  ],\r\n  \"nidNumber\": \"1234567890\",\r\n  \"nidFrontImg\": \"https://influencer-mediafiles.s3.ap-south-1.amazonaws.com/brandguru/influencer/nid/nid front.png-1765695683248\",\r\n  \"nidBackImg\": \"https://influencer-mediafiles.s3.ap-south-1.amazonaws.com/brandguru/influencer/nid/nid back.png-1765695757634\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/onboarding",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "onboarding"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Signup Onboarding",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"fullAddress\": \"House 10, Road 5, Banani\",\r\n  \"thana\": \"Banani\",\r\n  \"zilla\": \"Dhaka\",\r\n  \"website\": \"https://hrmasum.com\",\r\n  \"socialLinks\": [\r\n    { \"platform\": \"Instagram\", \"url\": \"https://instagram.com/hrmasum\", \"status\": \"unverified\" },\r\n    { \"platform\": \"Facebook\", \"url\": \"https://facebook.com/hrmasum\", \"status\": \"unverified\" }\r\n  ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/onboarding",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "onboarding"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "776"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Sun, 11 Jan 2026 04:49:59 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"308-PTIkFrs5DblTbJQc3gGii4OxqJA\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "PtrpYiGdSzG-Wt-JAQeqjw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"9164a087-6d89-4e95-8df0-3feef07e3a5d\",\n    \"firstName\": \"H. R.\",\n    \"lastName\": \"Masum\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"addressName\": \"Primary\",\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        }\n    ],\n    \"niches\": null,\n    \"skills\": null,\n    \"website\": \"https://hrmasum.com\",\n    \"socialLinks\": [\n        {\n            \"platform\": \"Instagram\",\n            \"url\": \"https://instagram.com/hrmasum\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"platform\": \"Facebook\",\n            \"url\": \"https://facebook.com/hrmasum\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"nidNumber\": null,\n    \"nidFrontImg\": null,\n    \"nidBackImg\": null,\n    \"nidVerification\": null,\n    \"profileImg\": null,\n    \"isOnboardingComplete\": true,\n    \"payouts\": null,\n    \"averageRating\": \"0.0\",\n    \"totalReviews\": 0,\n    \"userId\": \"19b659aa-61cb-4cf0-be53-37306273a4ac\",\n    \"createdAt\": \"2026-01-11T04:38:59.294Z\",\n    \"updatedAt\": \"2026-01-11T04:49:59.455Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "update Niches",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"niches\": [\"Fashion\", \"Travel\", \"Lifestyle\"]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/niches",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "niches"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "update Niches",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"niches\": [\"Fashion\", \"Travel\", \"Lifestyle\"]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/niches",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "niches"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "1243"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 04 Feb 2026 11:35:47 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"4db-K4kT/c+5jldrJdJp9IsUkopK3Qg\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "281ReETsT_CjC1MMacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"isDefault\": true,\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": [\n        {\n            \"niche\": \"Fashion\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Travel\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Lifestyle\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"skills\": null,\n    \"website\": null,\n    \"socialLinks\": null,\n    \"nidNumber\": null,\n    \"nidFrontImg\": null,\n    \"nidBackImg\": null,\n    \"nidVerification\": null,\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": {\n        \"bank\": [\n            {\n                \"bankName\": \"City Bank\",\n                \"accStatus\": \"active\",\n                \"bankAccNo\": \"11223344556677\",\n                \"bankRoutingNo\": \"098765432\",\n                \"bankBranchName\": \"Gulshan Branch\",\n                \"bankAccHolderName\": \"John Doe\"\n            }\n        ],\n        \"mobileBanking\": [\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01711111111\",\n                \"accountType\": \"Bkash\",\n                \"accountHolderName\": \"John Doe\"\n            },\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01922222222\",\n                \"accountType\": \"Nagad\",\n                \"accountHolderName\": \"John Doe\"\n            }\n        ]\n    },\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-02-04T11:35:47.348Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Skills",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"skills\": [\"Modeling\", \"Video Editing\", \"Content Writing\"]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/skills",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "skills"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Update Skills",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n  \"skills\": [\"Modeling\", \"Video Editing\", \"Content Writing\"]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/skills",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "skills"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "1381"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 04 Feb 2026 11:35:55 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"565-VL1ZUOrU5WymKF1i3MwsbCOWi3Y\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "Gpb-AIddQzCT-ZvYacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"isDefault\": true,\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": [\n        {\n            \"niche\": \"Fashion\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Travel\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Lifestyle\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"skills\": [\n        {\n            \"skill\": \"Modeling\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Video Editing\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Content Writing\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"website\": null,\n    \"socialLinks\": null,\n    \"nidNumber\": null,\n    \"nidFrontImg\": null,\n    \"nidBackImg\": null,\n    \"nidVerification\": null,\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": {\n        \"bank\": [\n            {\n                \"bankName\": \"City Bank\",\n                \"accStatus\": \"active\",\n                \"bankAccNo\": \"11223344556677\",\n                \"bankRoutingNo\": \"098765432\",\n                \"bankBranchName\": \"Gulshan Branch\",\n                \"bankAccHolderName\": \"John Doe\"\n            }\n        ],\n        \"mobileBanking\": [\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01711111111\",\n                \"accountType\": \"Bkash\",\n                \"accountHolderName\": \"John Doe\"\n            },\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01922222222\",\n                \"accountType\": \"Nagad\",\n                \"accountHolderName\": \"John Doe\"\n            }\n        ]\n    },\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-02-04T11:35:55.934Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Add Payout (Bank)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"bank\": {\r\n    \"bankName\": \"Dutch Bangla Bank\",\r\n    \"bankAccHolderName\": \"H. R. Masum\",\r\n    \"bankAccNo\": \"1111211234\",\r\n    \"bankBranchName\": \"Gulshan\",\r\n    \"bankRoutingNo\": \"0987654321\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/payouts",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "payouts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Payout (Mobile)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"mobileBanking\": {\r\n    \"accountType\": \"Bkash\",\r\n    \"accountHolderName\": \"H. R. Masum\",\r\n    \"accountNo\": \"01794669675\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/payouts",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "payouts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Address",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"addresses\": {\r\n    \"addressName\": \"Studio\",\r\n    \"thana\": \"Dhanmondi\",\r\n    \"zilla\": \"Dhaka\",\r\n    \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/address",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "address"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Add Address",
+                  "originalRequest": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"addresses\": [\r\n        {\r\n            \"thana\": \"Banani\",\r\n            \"zilla\": \"Dhaka\",\r\n            \"addressName\": \"Primary\",\r\n            \"fullAddress\": \"House 10, Road 5, Banani\"\r\n        },\r\n        {\r\n            \"thana\": \"Dhanmondi\",\r\n            \"zilla\": \"Dhaka\",\r\n            \"addressName\": \"Studio\",\r\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\r\n        }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/address",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "address"
+                      ]
+                    }
+                  },
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "925"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Tue, 06 Jan 2026 15:18:40 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"39d-Wc317h+pAekm5YRPp6agDtvfN80\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "ITjn_Im6RD2Gg4yIacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"addressName\": \"Primary\",\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"fullAddress\": \"House 10, Road 5, Banani\",\n            \"isDefault\": true\n        },\n        {\n            \"addressName\": \"Studio\",\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": null,\n    \"skills\": null,\n    \"website\": null,\n    \"socialLinks\": null,\n    \"nidNumber\": null,\n    \"nidFrontImg\": null,\n    \"nidBackImg\": null,\n    \"nidVerification\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": null,\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-01-06T15:18:40.544Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Profile",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Basic Info",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"bio\": \"Professional influencer\",\n  \"profileImage\": \"https://example.com/image.jpg\"\n}"
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/basic-info",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "basic-info"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Profile Image",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/profile-image",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "profile-image"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Niche",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/niche/Fashion",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "niche",
+                    "Fashion"
+                  ],
+                  "variable": [
+                    {
+                      "key": "nicheName",
+                      "value": "Fashion"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Payout",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"bank\",\n  \"identifier\": \"accountNo\"\n}"
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/payouts",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "payouts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Payout",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"bank\": [\r\n        {\r\n            \"bankName\": \"City Bank\",\r\n            \"bankAccHolderName\": \"John Doe\",\r\n            \"bankAccNo\": \"11223344556677\",\r\n            \"bankBranchName\": \"Gulshan Branch\",\r\n            \"bankRoutingNo\": \"098765432\",\r\n            \"accStatus\": \"active\"\r\n        }\r\n    ],\r\n    \"mobileBanking\": [\r\n        {\r\n            \"accountType\": \"Bkash\",\r\n            \"accountNo\": \"01711111111\",\r\n            \"accountHolderName\": \"John Doe\",\r\n            \"accStatus\": \"active\"\r\n        },\r\n        {\r\n            \"accountType\": \"Nagad\",\r\n            \"accountNo\": \"01922222222\",\r\n            \"accountHolderName\": \"John Doe\",\r\n            \"accStatus\": \"active\"\r\n        }\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/edit/payouts",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "edit",
+                    "payouts"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Update Payout",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"bank\": [\r\n        {\r\n            \"bankName\": \"City Bank\",\r\n            \"bankAccHolderName\": \"John Doe\",\r\n            \"bankAccNo\": \"11223344556677\",\r\n            \"bankBranchName\": \"Gulshan Branch\",\r\n            \"bankRoutingNo\": \"098765432\",\r\n            \"accStatus\": \"active\"\r\n        }\r\n    ],\r\n    \"mobileBanking\": [\r\n        {\r\n            \"accountType\": \"Bkash\",\r\n            \"accountNo\": \"01711111111\",\r\n            \"accountHolderName\": \"John Doe\",\r\n            \"accStatus\": \"active\"\r\n        },\r\n        {\r\n            \"accountType\": \"Nagad\",\r\n            \"accountNo\": \"01922222222\",\r\n            \"accountHolderName\": \"John Doe\",\r\n            \"accStatus\": \"active\"\r\n        }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/edit/payouts",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "edit",
+                        "payouts"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "1119"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 04 Feb 2026 11:35:38 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"45f-nzbH/Vqa4DBXnT2fakcJAInjgIU\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "i2vVxyCuT0KTfn0hacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"isDefault\": true,\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": null,\n    \"skills\": null,\n    \"website\": null,\n    \"socialLinks\": null,\n    \"nidNumber\": null,\n    \"nidFrontImg\": null,\n    \"nidBackImg\": null,\n    \"nidVerification\": null,\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": {\n        \"bank\": [\n            {\n                \"bankName\": \"City Bank\",\n                \"bankAccHolderName\": \"John Doe\",\n                \"bankAccNo\": \"11223344556677\",\n                \"bankBranchName\": \"Gulshan Branch\",\n                \"bankRoutingNo\": \"098765432\",\n                \"accStatus\": \"active\"\n            }\n        ],\n        \"mobileBanking\": [\n            {\n                \"accountType\": \"Bkash\",\n                \"accountNo\": \"01711111111\",\n                \"accountHolderName\": \"John Doe\",\n                \"accStatus\": \"active\"\n            },\n            {\n                \"accountType\": \"Nagad\",\n                \"accountNo\": \"01922222222\",\n                \"accountHolderName\": \"John Doe\",\n                \"accStatus\": \"active\"\n            }\n        ]\n    },\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-02-04T11:35:38.290Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Nid",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"nidNumber\": \"19951234567890\",\r\n    \"nidFrontImg\": \"https://s3.amazonaws.com/bucket/nid-front.jpg\",\r\n    \"nidBackImg\": \"https://s3.amazonaws.com/bucket/nid-back.jpg\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/edit/nid",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "edit",
+                    "nid"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Update Nid",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"nidNumber\": \"19951234567890\",\r\n    \"nidFrontImg\": \"https://s3.amazonaws.com/bucket/nid-front.jpg\",\r\n    \"nidBackImg\": \"https://s3.amazonaws.com/bucket/nid-back.jpg\"\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/edit/nid",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "edit",
+                        "nid"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "1518"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 04 Feb 2026 11:36:03 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"5ee-n/idG3BLYQMeGrdcJJWxJW0Bv8c\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "7RMNKYAyToeIiyHDacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"isDefault\": true,\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": [\n        {\n            \"niche\": \"Fashion\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Travel\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Lifestyle\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"skills\": [\n        {\n            \"skill\": \"Modeling\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Video Editing\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Content Writing\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"website\": null,\n    \"socialLinks\": null,\n    \"nidNumber\": \"19951234567890\",\n    \"nidFrontImg\": \"https://s3.amazonaws.com/bucket/nid-front.jpg\",\n    \"nidBackImg\": \"https://s3.amazonaws.com/bucket/nid-back.jpg\",\n    \"nidVerification\": {\n        \"nidStatus\": \"pending\",\n        \"nidRejectReason\": \"\"\n    },\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": {\n        \"bank\": [\n            {\n                \"bankName\": \"City Bank\",\n                \"accStatus\": \"active\",\n                \"bankAccNo\": \"11223344556677\",\n                \"bankRoutingNo\": \"098765432\",\n                \"bankBranchName\": \"Gulshan Branch\",\n                \"bankAccHolderName\": \"John Doe\"\n            }\n        ],\n        \"mobileBanking\": [\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01711111111\",\n                \"accountType\": \"Bkash\",\n                \"accountHolderName\": \"John Doe\"\n            },\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01922222222\",\n                \"accountType\": \"Nagad\",\n                \"accountHolderName\": \"John Doe\"\n            }\n        ]\n    },\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-02-04T11:36:03.480Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Update Social Links",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"socialLinks\": [\r\n        {\r\n            \"platform\": \"Instagram\",\r\n            \"url\": \"https://instagram.com/johndoe_official\"\r\n        },\r\n        {\r\n            \"platform\": \"YouTube\",\r\n            \"url\": \"https://youtube.com/c/JohnDoeVlogs\"\r\n        },\r\n        {\r\n            \"platform\": \"TikTok\",\r\n            \"url\": \"https://tiktok.com/@johndoe\"\r\n        }\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/profile/edit/social-links",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "profile",
+                    "edit",
+                    "social-links"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Update Social Links",
+                  "originalRequest": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\r\n    \"socialLinks\": [\r\n        {\r\n            \"platform\": \"Instagram\",\r\n            \"url\": \"https://instagram.com/johndoe_official\"\r\n        },\r\n        {\r\n            \"platform\": \"YouTube\",\r\n            \"url\": \"https://youtube.com/c/JohnDoeVlogs\"\r\n        },\r\n        {\r\n            \"platform\": \"TikTok\",\r\n            \"url\": \"https://tiktok.com/@johndoe\"\r\n        }\r\n    ]\r\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/profile/edit/social-links",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "profile",
+                        "edit",
+                        "social-links"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "1777"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 04 Feb 2026 11:36:09 GMT"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"6f1-0tWt98ejQqYIacoQLOLZBMjAxUg\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "48z1TFE7Sj6SZ1UtacI7Nw"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"id\": \"d1446167-3829-4b68-a889-a4ac2b2d4a08\",\n    \"firstName\": \"Star\",\n    \"lastName\": \"Influencer 1\",\n    \"bio\": null,\n    \"profileImage\": null,\n    \"addresses\": [\n        {\n            \"thana\": \"Banani\",\n            \"zilla\": \"Dhaka\",\n            \"isDefault\": true,\n            \"addressName\": \"Primary\",\n            \"fullAddress\": \"House 10, Road 5, Banani\"\n        },\n        {\n            \"thana\": \"Dhanmondi\",\n            \"zilla\": \"Dhaka\",\n            \"addressName\": \"Studio\",\n            \"fullAddress\": \"Flat 4A, Road 27, Dhanmondi\"\n        }\n    ],\n    \"niches\": [\n        {\n            \"niche\": \"Fashion\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Travel\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"niche\": \"Lifestyle\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"skills\": [\n        {\n            \"skill\": \"Modeling\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Video Editing\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"skill\": \"Content Writing\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"website\": null,\n    \"socialLinks\": [\n        {\n            \"platform\": \"Instagram\",\n            \"url\": \"https://instagram.com/johndoe_official\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"platform\": \"YouTube\",\n            \"url\": \"https://youtube.com/c/JohnDoeVlogs\",\n            \"status\": \"unverified\"\n        },\n        {\n            \"platform\": \"TikTok\",\n            \"url\": \"https://tiktok.com/@johndoe\",\n            \"status\": \"unverified\"\n        }\n    ],\n    \"nidNumber\": \"19951234567890\",\n    \"nidFrontImg\": \"https://s3.amazonaws.com/bucket/nid-front.jpg\",\n    \"nidBackImg\": \"https://s3.amazonaws.com/bucket/nid-back.jpg\",\n    \"nidVerification\": {\n        \"nidStatus\": \"pending\",\n        \"nidRejectReason\": \"\"\n    },\n    \"profileImg\": null,\n    \"isOnboardingComplete\": false,\n    \"payouts\": {\n        \"bank\": [\n            {\n                \"bankName\": \"City Bank\",\n                \"accStatus\": \"active\",\n                \"bankAccNo\": \"11223344556677\",\n                \"bankRoutingNo\": \"098765432\",\n                \"bankBranchName\": \"Gulshan Branch\",\n                \"bankAccHolderName\": \"John Doe\"\n            }\n        ],\n        \"mobileBanking\": [\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01711111111\",\n                \"accountType\": \"Bkash\",\n                \"accountHolderName\": \"John Doe\"\n            },\n            {\n                \"accStatus\": \"active\",\n                \"accountNo\": \"01922222222\",\n                \"accountType\": \"Nagad\",\n                \"accountHolderName\": \"John Doe\"\n            }\n        ]\n    },\n    \"averageRating\": \"4.8\",\n    \"totalReviews\": 0,\n    \"userId\": \"04721b62-8265-4985-8138-5001b5c1b152\",\n    \"createdAt\": \"2026-01-02T10:49:08.000Z\",\n    \"updatedAt\": \"2026-02-04T11:36:09.574Z\"\n}"
+                }
+              ]
+            },
+            {
+              "name": "Request OTP (Email)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/auth/email/influencer/request-otp",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "auth",
+                    "email",
+                    "influencer",
+                    "request-otp"
+                  ]
+                },
+                "description": "Generated from cURL: curl -X POST '{{localUrl}}/auth/email/influencer/request-otp' -H 'Content-Type: application/json' -d '{}'"
+              },
+              "response": []
+            },
+            {
+              "name": "Verify OTP (Email)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"email\": \"user@example.com\", \"code\": \"1234\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/influencer/auth/email/influencer/verify",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "auth",
+                    "email",
+                    "influencer",
+                    "verify"
+                  ]
+                },
+                "description": "Generated from cURL: curl -X POST '{{localUrl}}/auth/email/influencer/verify' -H 'Content-Type: application/json' -d '{\"email\": \"user@example.com\", \"code\": \"1234\"}'"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Dashboard",
+          "item": [
+            {
+              "name": "summary",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{localUrl}}/campaign/influencer/dashboard/summary",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "campaign",
+                    "influencer",
+                    "dashboard",
+                    "summary"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "summary",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/campaign/influencer/dashboard/summary",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "campaign",
+                        "influencer",
+                        "dashboard",
+                        "summary"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "105"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"69-62DOv2nedySaoayw3ulRHS7PIfU\""
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Fri, 02 Jan 2026 18:31:31 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": {\n        \"lifetimeEarnings\": 5000,\n        \"pendingEarnings\": 30933.33,\n        \"activeJobs\": 1,\n        \"newOffers\": 0\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Filter By Date Range",
+              "protocolProfileBehavior": {
+                "strictSSL": false
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{influencer_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/campaign/influencer/dashboard/earnings-overview?range=7d",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "campaign",
+                    "influencer",
+                    "dashboard",
+                    "earnings-overview"
+                  ],
+                  "query": [
+                    {
+                      "key": "range",
+                      "value": "7d"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Filter By Date Range",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/campaign/influencer/dashboard/earnings-overview?range=7d",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "campaign",
+                        "influencer",
+                        "dashboard",
+                        "earnings-overview"
+                      ],
+                      "query": [
+                        {
+                          "key": "range",
+                          "value": "7d"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "165"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"a5-0kVY5uX8nNA4vOZSbbhUFFDuA5g\""
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Fri, 02 Jan 2026 18:31:39 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": {\n        \"totalEarnings\": 5000,\n        \"completedJobs\": 1,\n        \"currency\": \"BDT\",\n        \"timeRange\": \"7d\",\n        \"breakdown\": [\n            {\n                \"date\": \"2026-01-02\",\n                \"amount\": 5000,\n                \"paymentCount\": 1\n            }\n        ]\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Action Required",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/dashboard/actions?page=1&limit=5",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "dashboard",
+                    "actions"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Get Action Required",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/dashboard/actions?page=1&limit=5",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "dashboard",
+                        "actions"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "5"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "268"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"10c-KGdVOn/nCJHQX6zudMGGh4HCqSQ\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "DHG00zYLQMi_3crkDcO5xA"
+                    },
+                    {
+                      "key": "Accept-Ranges",
+                      "value": "bytes"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 11 Mar 2026 14:56:02 GMT"
+                    },
+                    {
+                      "key": "Via",
+                      "value": "1.1 varnish"
+                    },
+                    {
+                      "key": "X-Cache",
+                      "value": "MISS"
+                    },
+                    {
+                      "key": "X-Cache-Hits",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Timer",
+                      "value": "S1773240962.927259,VS0,VE561"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin, Accept-Encoding"
+                    },
+                    {
+                      "key": "X-Railway-CDN-Edge",
+                      "value": "fastly/cache-ccu830042-CCU"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"type\": \"PROFILE\",\n            \"title\": \"Complete your profile\",\n            \"description\": \"Your profile is incomplete. Finish onboarding to get verified.\",\n            \"link\": \"/profile/edit\",\n            \"priority\": \"HIGH\",\n            \"date\": \"2026-03-11T14:56:02.362Z\"\n        }\n    ],\n    \"meta\": {\n        \"total\": 1,\n        \"page\": 1,\n        \"limit\": 5\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Upcoming Deadlines",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/dashboard/deadlines?page=1&limit=5",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "dashboard",
+                    "deadlines"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "5"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Get Upcoming Deadlines",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/dashboard/deadlines?page=1&limit=5",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "dashboard",
+                        "deadlines"
+                      ],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1"
+                        },
+                        {
+                          "key": "limit",
+                          "value": "5"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "598"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"256-nd1MwgohS4eOgEAlLgsjKwwU69k\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "ueeAGJ3vTxauiSidoB_USg"
+                    },
+                    {
+                      "key": "Accept-Ranges",
+                      "value": "bytes"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 11 Mar 2026 14:56:22 GMT"
+                    },
+                    {
+                      "key": "Via",
+                      "value": "1.1 varnish"
+                    },
+                    {
+                      "key": "X-Cache",
+                      "value": "MISS"
+                    },
+                    {
+                      "key": "X-Cache-Hits",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Timer",
+                      "value": "S1773240982.020372,VS0,VE630"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin, Accept-Encoding"
+                    },
+                    {
+                      "key": "X-Railway-CDN-Edge",
+                      "value": "fastly/cache-ccu830042-CCU"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"campaignId\": \"4cf73377-a576-4a52-ae8b-c024a1511f7d\",\n            \"campaignName\": \"Arrong EID Fashion Shoot 2026\",\n            \"deadline\": \"2026-03-04T11:30:01.886Z\",\n            \"milestonesLeftText\": \"All Milestones left\"\n        },\n        {\n            \"campaignId\": \"736ac5b8-2587-43f2-9f1e-95be16b339d1\",\n            \"campaignName\": \"Arrong EID Fashion Shoot 2026 2.0\",\n            \"deadline\": \"2026-03-05T08:35:41.702Z\",\n            \"milestonesLeftText\": \"All Milestones left\"\n        },\n        {\n            \"campaignId\": \"3164580b-dced-458a-9133-33da34f646a2\",\n            \"campaignName\": \"Test Influencer 5\",\n            \"deadline\": \"2026-03-08T10:07:56.964Z\",\n            \"milestonesLeftText\": \"1 Milestone left\"\n        }\n    ],\n    \"meta\": {\n        \"total\": 3,\n        \"page\": 1,\n        \"limit\": 5\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Notifications",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/notifications?filter=new&page=1",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "notifications"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter",
+                      "value": "new"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "New Request",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/notifications?filter=new&page=1",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "notifications"
+                      ],
+                      "query": [
+                        {
+                          "key": "filter",
+                          "value": "new"
+                        },
+                        {
+                          "key": "page",
+                          "value": "1"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "Text",
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "591"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"24f-JEM/X0fTT7om0Llq/heMJIGKvyk\""
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Fri, 02 Jan 2026 19:25:02 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": \"5aa8ad48-9131-4dda-a04c-0ebdbec1cd4e\",\n            \"title\": \"Skill (Modeling) Rejected\",\n            \"message\": \"Your submission for Skill (Modeling) was rejected. Reason: Duplicate skill\",\n            \"isRead\": false,\n            \"type\": \"verification\",\n            \"createdAt\": \"2025-12-18T09:49:00.822Z\",\n            \"metadata\": null\n        },\n        {\n            \"id\": \"6b34aa2e-cc83-4e3c-ab39-b8f5654d36da\",\n            \"title\": \"Niche (Fashion) Approved\",\n            \"message\": \"Your Niche (Fashion) has been successfully verified and approved.\",\n            \"isRead\": false,\n            \"type\": \"verification\",\n            \"createdAt\": \"2025-12-15T05:27:07.637Z\",\n            \"metadata\": null\n        }\n    ],\n    \"meta\": {\n        \"total\": 2,\n        \"page\": 1,\n        \"limit\": 10,\n        \"filter\": \"new\"\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Work In Progress",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/dashboard/work-in-progress",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "dashboard",
+                    "work-in-progress"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Get Work In Progress",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/dashboard/work-in-progress",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "dashboard",
+                        "work-in-progress"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "851"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"353-tcRL7QkYX7Hf4B4JC3WBWy/jobs\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "7bmqT804Q6iSz_dqDcO5xA"
+                    },
+                    {
+                      "key": "Accept-Ranges",
+                      "value": "bytes"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 11 Mar 2026 14:57:28 GMT"
+                    },
+                    {
+                      "key": "Via",
+                      "value": "1.1 varnish"
+                    },
+                    {
+                      "key": "X-Cache",
+                      "value": "MISS"
+                    },
+                    {
+                      "key": "X-Cache-Hits",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Timer",
+                      "value": "S1773241048.190011,VS0,VE743"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin, Accept-Encoding"
+                    },
+                    {
+                      "key": "X-Railway-CDN-Edge",
+                      "value": "fastly/cache-ccu830042-CCU"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"jobId\": \"fb584c3b-7b02-4aa3-92b9-e0181220374f\",\n            \"campaignId\": \"3164580b-dced-458a-9133-33da34f646a2\",\n            \"campaignName\": \"Test Influencer 5\",\n            \"brandName\": \"This Company\",\n            \"status\": \"active\",\n            \"totalAmount\": 52500,\n            \"startedAt\": \"2026-03-04\",\n            \"progress\": 0,\n            \"duration\": 15\n        },\n        {\n            \"jobId\": \"e6fa698e-dc6a-4684-b4fb-9b5a837a425e\",\n            \"campaignId\": \"736ac5b8-2587-43f2-9f1e-95be16b339d1\",\n            \"campaignName\": \"Arrong EID Fashion Shoot 2026 2.0\",\n            \"brandName\": \"Xerox\",\n            \"status\": \"active\",\n            \"totalAmount\": 37730,\n            \"startedAt\": \"2026-03-03\",\n            \"progress\": 0,\n            \"duration\": 30\n        },\n        {\n            \"jobId\": \"340d91c7-3491-404b-954a-41ed9af3273e\",\n            \"campaignId\": \"4cf73377-a576-4a52-ae8b-c024a1511f7d\",\n            \"campaignName\": \"Arrong EID Fashion Shoot 2026\",\n            \"brandName\": \"Xerox\",\n            \"status\": \"active\",\n            \"totalAmount\": 37730,\n            \"startedAt\": \"2026-03-02\",\n            \"progress\": 0,\n            \"duration\": 30\n        }\n    ],\n    \"meta\": {\n        \"total\": 3,\n        \"page\": 1,\n        \"limit\": 5,\n        \"totalPages\": 1\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Get Lifetime Summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/dashboard/lifetime-summary",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "dashboard",
+                    "lifetime-summary"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Get Lifetime Summary",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{localUrl}}/influencer/dashboard/lifetime-summary",
+                      "host": [
+                        "{{localUrl}}"
+                      ],
+                      "path": [
+                        "influencer",
+                        "dashboard",
+                        "lifetime-summary"
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "428"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Credentials",
+                      "value": "true"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Etag",
+                      "value": "W/\"1ac-5q2fHgvWxs3cjdhibyJq9F8qzWQ\""
+                    },
+                    {
+                      "key": "Server",
+                      "value": "railway-edge"
+                    },
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "X-Railway-Edge",
+                      "value": "railway/asia-southeast1-eqsg3a"
+                    },
+                    {
+                      "key": "X-Railway-Request-Id",
+                      "value": "FUC68Y6QS2-qVjJ1DcO5xA"
+                    },
+                    {
+                      "key": "Accept-Ranges",
+                      "value": "bytes"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Wed, 11 Mar 2026 14:57:53 GMT"
+                    },
+                    {
+                      "key": "Via",
+                      "value": "1.1 varnish"
+                    },
+                    {
+                      "key": "X-Cache",
+                      "value": "MISS"
+                    },
+                    {
+                      "key": "X-Cache-Hits",
+                      "value": "0"
+                    },
+                    {
+                      "key": "X-Timer",
+                      "value": "S1773241073.632738,VS0,VE760"
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Origin, Accept-Encoding"
+                    },
+                    {
+                      "key": "X-Railway-CDN-Edge",
+                      "value": "fastly/cache-ccu830042-CCU"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"success\": true,\n    \"data\": {\n        \"totalEarnings\": 71834,\n        \"totalJobsCompleted\": 2,\n        \"totalJobsDeclined\": 0,\n        \"topClient\": {\n            \"name\": \"This Company\",\n            \"image\": \"https://influencer-mediafiles.s3.ap-south-1.amazonaws.com/brand-profile/scaled_1000000036.jpg-1773039823920\",\n            \"jobsCompleted\": 1,\n            \"lastCompletedJob\": {\n                \"id\": \"238621a3-632d-4988-8736-0bd8888cc320\",\n                \"name\": \"Test Influencer 7\",\n                \"completedAt\": \"2026-03-08T11:22:40.937Z\"\n            }\n        },\n        \"mostUsedPlatform\": \"instagram\"\n    }\n}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localUrl}}/influencer/earnings/transactions?page=1&limit=10",
+              "host": [
+                "{{localUrl}}"
+              ],
+              "path": [
+                "influencer",
+                "earnings",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "Fashion",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Transactions",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/earnings/transactions?page=1&limit=10",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "earnings",
+                    "transactions"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "search",
+                      "value": "Fashion",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "Access-Control-Allow-Credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "307"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"133-UQL1fV2GEO4F9BKcgbTIJPgjtCM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 02 Jan 2026 19:45:47 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"transactionId\": \"b2f33534-747b-4a60-b39d-07cb77f4b185\",\n            \"date\": \"2026-01-02T18:31:25.764Z\",\n            \"jobName\": \"Summer Fashion Shoot 2025\",\n            \"clientName\": \"H. R. Masum\",\n            \"amount\": 5000,\n            \"status\": \"Partial Paid\",\n            \"paymentMethod\": \"Platform Wallet\"\n        }\n    ],\n    \"meta\": {\n        \"total\": 1,\n        \"page\": 1,\n        \"limit\": 10,\n        \"totalPages\": 1\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Report Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{localUrl}}/influencer/report-logs",
+              "host": [
+                "{{localUrl}}"
+              ],
+              "path": [
+                "influencer",
+                "report-logs"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Get Report Logs",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{localUrl}}/influencer/report-logs",
+                  "host": [
+                    "{{localUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "report-logs"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "80"
+                },
+                {
+                  "key": "Access-Control-Allow-Credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Etag",
+                  "value": "W/\"50-l9owt0FLaIAgCbwsg5a9BGz52GE\""
+                },
+                {
+                  "key": "Server",
+                  "value": "railway-edge"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "X-Railway-Edge",
+                  "value": "railway/asia-southeast1-eqsg3a"
+                },
+                {
+                  "key": "X-Railway-Request-Id",
+                  "value": "AFxVraBZSPGtfW_c-8Y8hA"
+                },
+                {
+                  "key": "Accept-Ranges",
+                  "value": "bytes"
+                },
+                {
+                  "key": "Date",
+                  "value": "Sun, 01 Mar 2026 07:48:37 GMT"
+                },
+                {
+                  "key": "Via",
+                  "value": "1.1 varnish"
+                },
+                {
+                  "key": "X-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Cache-Hits",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Timer",
+                  "value": "S1772351317.324288,VS0,VE536"
+                },
+                {
+                  "key": "Vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "X-Railway-CDN-Edge",
+                  "value": "fastly/cache-ccu830057-CCU"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"reportId\": \"f9b1c2d3-4e5f-6a7b-8c9d-0e1f2a3b4c5d\",\n      \"date\": \"2026-03-01T10:30:00.000Z\",\n      \"campaignName\": \"Summer Splash Energy Drink\",\n      \"milestoneTitle\": \"Instagram Reel Output\",\n      \"feedback\": \"The brand logo is cut off in the first 3 seconds of the video. Please re-edit to ensure it is fully visible and resubmit.\",\n      \"actionTaken\": \"decline\",\n      \"submissionStatus\": \"declined\",\n      \"logStatus\": \"Flagged\"\n    },\n    {\n      \"reportId\": \"a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d\",\n      \"date\": \"2026-02-28T14:15:22.000Z\",\n      \"campaignName\": \"Neon Lights Tech Gadgets\",\n      \"milestoneTitle\": \"TikTok Unboxing Video\",\n      \"feedback\": \"I've uploaded the raw footage for the client to review before I add the final voiceover.\",\n      \"actionTaken\": \"comment\",\n      \"submissionStatus\": \"in_review\",\n      \"logStatus\": \"Pending\"\n    },\n    {\n      \"reportId\": \"c4d5e6f7-a8b9-0c1d-2e3f-4a5b6c7d8e9f\",\n      \"date\": \"2026-02-25T09:45:10.000Z\",\n      \"campaignName\": \"Winter Wear Collection\",\n      \"milestoneTitle\": \"Facebook Story Shoutout\",\n      \"feedback\": \"Looks fantastic! Approved for final publishing.\",\n      \"actionTaken\": \"approve\",\n      \"submissionStatus\": \"approved\",\n      \"logStatus\": \"Resolved\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 3,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{influencer_token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Demo Auths",
+          "item": [
+            {
+              "name": "Influencer Login",
+              "protocolProfileBehavior": {
+                "disabledSystemHeaders": {
+                  "user-agent": true
+                }
+              },
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "disabled": true
+                  },
+                  {
+                    "key": "User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"phone\": \"+8801600000001\",\n    \"password\": \"12345678\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/influencer/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "influencer",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
