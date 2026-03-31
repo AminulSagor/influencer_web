@@ -14,6 +14,7 @@ export default function FcmInitializer() {
       if (!token) return;
 
       const fcmToken = await getFcmToken();
+      console.log(fcmToken);
       if (!fcmToken) return;
 
       try {
@@ -27,4 +28,4 @@ export default function FcmInitializer() {
   }, [token]);
 
   return null;
-}
+}

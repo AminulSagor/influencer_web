@@ -39,6 +39,9 @@ type Props = {
   vatAmount: number;
   totalBudget: number;
   netPayableAmount: number;
+  campaignStatus?: string;
+  paidAmount?: number;
+  dueAmount?: number;
 
   campaignName?: string;
   clientName?: string;
@@ -64,6 +67,9 @@ export default function CampaignQuoteDetails({
   vatAmount,
   totalBudget,
   netPayableAmount,
+  campaignStatus,
+  paidAmount = 0,
+  dueAmount = 0,
 
   campaignName,
   clientName,
@@ -96,6 +102,9 @@ export default function CampaignQuoteDetails({
     youtube: PiYoutubeLogoFill,
     tiktok: AiFillTikTok,
   };
+  const normalizedStatus = String(campaignStatus ?? "").toLowerCase();
+  const showPaymentRows =
+    normalizedStatus === "active" || normalizedStatus === "completed";
 
   const isLocked = localQuoteState !== "none";
 
@@ -165,24 +174,36 @@ export default function CampaignQuoteDetails({
           <div className="space-y-3">
             <QuoteTextRow text="Total Campaign Cost" amount={totalBudget} />
 
-            <div className="flex items-center gap-6">
-              <p className="whitespace-nowrap">Quote Amount</p>
+            {isLocked ? (
+              <QuoteTextRow text="Quote Amount" amount={quoteAmount} />
+            ) : (
+              <div className="flex items-center gap-6">
+                <p className="whitespace-nowrap">Quote Amount</p>
 
-              <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 select-none">
-                  {currencySymbol}
-                </span>
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 select-none">
+                    {currencySymbol}
+                  </span>
 
-                <Input
-                  type="number"
-                  min={0}
-                  value={quoteAmount}
-                  onChange={(e) => setQuoteAmount(Number(e.target.value || 0))}
-                  className="pl-7 text-right font-semibold"
-                  disabled={isLocked}
-                />
+                  <Input
+                    type="number"
+                    min={0}
+                    value={quoteAmount}
+                    onChange={(e) => setQuoteAmount(Number(e.target.value || 0))}
+                    className="pl-7 text-right font-semibold"
+                    disabled={isLocked}
+                  />
+                </div>
               </div>
-            </div>
+            )}
+
+            {showPaymentRows && (
+              <>
+                <Separator />
+                <QuoteTextRow text="Paid" amount={paidAmount} />
+                <QuoteTextRow text="Due" amount={dueAmount} />
+              </>
+            )}
           </div>
 
           {localQuoteState === "none" ? (

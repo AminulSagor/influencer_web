@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 
 type CampaignMilestoneLite = {
   id: string;
+  masterMilestoneId?: string | null;
   order?: number;
   campaignId?: string;
 };
@@ -167,8 +168,8 @@ export default function InviteInfluencerBar({
     const splitAmounts = splitTotalEvenly(offeredAmount, sortedMilestones.length);
 
     return sortedMilestones.map((milestone, index) => ({
-      // this is the MASTER milestone id from getCampaignById
-      milestoneId: milestone.id,
+      // Must be MASTER milestone ID (backend rejects assignment milestone ids)
+      milestoneId: String(milestone.masterMilestoneId ?? milestone.id),
       amount: splitAmounts[index] ?? 0,
     }));
   }, [selectedInfluencer, sortedMilestones, offeredAmount]);
