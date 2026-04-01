@@ -14,8 +14,14 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
+import { JobCampaign, JobDetailMilestone } from "@/types/influencer/job_types";
 
-export default function CampaignBriefSection() {
+interface CampaignBriefSectionProps {
+  campaign: JobCampaign;
+  milestones?: JobDetailMilestone[];
+}
+
+export default function CampaignBriefSection({ campaign, milestones }: CampaignBriefSectionProps) {
   const [open, setOpen] = useState(true);
   const t = useTranslations("influencer.campaign-details");
 
@@ -65,13 +71,13 @@ export default function CampaignBriefSection() {
             <Section
               icon={Target}
               title={t("Campaign Goals")}
-              text="Promote our new summer skincare line to Gen Z and Millennial audiences. Focus on natural ingredients and sustainable packaging."
+              text={campaign.campaignGoals || "—"}
             />
 
             <Section
               icon={Package}
               title={t("Product/Service Details")}
-              text="Highlight key product benefits, ingredients, and value proposition clearly and authentically."
+              text={campaign.productServiceDetails || "—"}
             />
 
             <div>
@@ -80,14 +86,19 @@ export default function CampaignBriefSection() {
                 <h4>{t("Content Requirements")}</h4>
               </div>
               <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 ml-1">
-                <li>Minimum 2 Instagram Feed Posts</li>
-                <li>3 Stories With Swipe Up Links</li>
-                <li>1 YouTube Short (30–60 Seconds)</li>
-                <li>3 TikTok Videos Featuring Trending Sounds</li>
+                {milestones && milestones.length > 0 ? (
+                  milestones.map((m) => (
+                    <li key={m.id}>
+                      {m.contentQuantity} {m.platform ? `${m.platform} ` : ""}{m.title}
+                    </li>
+                  ))
+                ) : (
+                  <li>No specific content requirements listed.</li>
+                )}
               </ul>
             </div>
 
-            <DoDont />
+            <DoDont dos={campaign.dos} donts={campaign.donts} />
           </div>
         </div>
 
@@ -128,13 +139,13 @@ export default function CampaignBriefSection() {
               <Section
                 icon={BarChart3}
                 title={t("Reporting Requirements")}
-                text="Provide analytics screenshots 7 days post-publication including reach, engagement, and CTR."
+                text={campaign.reportingRequirements || "—"}
               />
 
               <Section
                 icon={ScrollText}
                 title={t("Usage Rights")}
-                text="Brand may reuse submitted content on official channels with proper attribution."
+                text={campaign.usageRights || "—"}
               />
             </div>
           </div>
@@ -166,35 +177,36 @@ function Section({
   );
 }
 
-function DoDont() {
+function DoDont({ dos, donts }: { dos: string; donts: string }) {
   const t = useTranslations("influencer.campaign-details");
+  const dosList = dos ? dos.split("\n").filter(Boolean) : [];
+  const dontsList = donts ? donts.split("\n").filter(Boolean) : [];
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
         <div className="flex items-center gap-2 text-light-green-700 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
-          <span>{t("Do’s")}</span>
+          <span>{t("Do's")}</span>
         </div>
         <ul className="text-sm text-light-green-700 space-y-1">
-          <li>• Show authentic usage</li>
-          <li>• Tag @StyleCo in all posts</li>
-          <li>• Use natural lighting</li>
-          <li>• Include discount codes</li>
+          {dosList.length > 0 ? dosList.map((item, i) => (
+            <li key={i}>• {item}</li>
+          )) : <li>—</li>}
         </ul>
       </div>
 
       <div className="rounded-xl border border-red-200 bg-red-50 p-4">
         <div className="flex items-center gap-2 text-red-600 font-medium mb-2">
           <XCircle className="w-4 h-4" />
-          <span>{t("Don’ts")}</span>
+          <span>{t("Don'ts")}</span>
         </div>
         <ul className="text-sm text-red-600 space-y-1">
-          <li>• Misrepresent product claims</li>
-          <li>• Use misleading filters</li>
-          <li>• Post without brand tags</li>
-          <li>• Alter messaging without approval</li>
+          {dontsList.length > 0 ? dontsList.map((item, i) => (
+            <li key={i}>• {item}</li>
+          )) : <li>—</li>}
         </ul>
       </div>
     </div>
   );
 }
+

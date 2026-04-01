@@ -1,19 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import type {
-  CampaignMilestoneservice,
-  CampaignSummary,
-} from "@/app/[locale]/(brand)/brand/types/client-types";
+import { useTranslations } from "next-intl";
+import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import ListShell from "../list-shell";
-import {
-  formatBDT,
-  formatDateLabel,
-  getAssignedUserBasedText,
-  toNumberSafe,
-} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
+import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { getPlatformIcon } from "@/utils/platforms_util";
@@ -23,14 +15,16 @@ export default function CompletedCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignSummary[];
+  campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No completed campaigns found."
+      emptyTitle={t("noCompletedCampaignsFound")}
     >
       <div className="grid md:grid-cols-2 lg:grid-cols-3 overflow-x-scroll gap-4 xl:gap-8 mt-6 items-start no-scrollbar">
         {campaigns.map((c) => (
@@ -41,20 +35,16 @@ export default function CompletedCampaignsList({
   );
 }
 
-// placeholder until backend provides rating
-function fakeRatingFromId(id: string) {
-  const n = Array.from(id).reduce((a, ch) => a + ch.charCodeAt(0), 0);
-  return 2 + (n % 4); // 2..5
-}
 
-function CompletedCard({ c }: { c: CampaignSummary }) {
-  const rating = fakeRatingFromId(c.id);
+function CompletedCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
+  const rating = Math.max(0, Math.min(5, Number(c.rating ?? 0)));
 
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
-
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
 
   return (
@@ -69,15 +59,13 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
 
         <div className="flex gap-2 items-center">
           <AvatarStack users={c.assignedTo} />
-          {isAssigned ? (
-            ""
-          ) : (
+          {!isAssigned && (
             <p className="text-xs text-dark-gray">{assignText}</p>
           )}
         </div>
 
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -95,14 +83,14 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
         </div>
 
         <div className="rounded-xl border bg-muted/30 px-4 py-4 space-y-1">
-          <p className="text-Primary">Offered</p>
+          <p className="text-Primary">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
             ৳ {c.totalBudget}
           </p>
         </div>
 
         <div className="flex items-center justify-between text-orange text-sm">
-          <p>Completed On</p>
+          <p>{t("completedOn")}</p>
           <p>{formatDeadline(c.deadline)}</p>
         </div>
 
@@ -113,7 +101,7 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
               className={
                 i < rating
                   ? "text-yellow-400 text-6xl"
-                  : " text-6xl text-muted-foreground"
+                  : "text-6xl text-muted-foreground"
               }
             >
               ★
@@ -123,7 +111,7 @@ function CompletedCard({ c }: { c: CampaignSummary }) {
 
         <SecondaryButton className="w-full text-Primary px-2 py-2">
           <Link href={`/brand/campaign-details/${c.id}`}>
-            View Campaign Details
+            {t("viewCampaignDetails")}
           </Link>
         </SecondaryButton>
       </CardContent>

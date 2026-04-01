@@ -2,8 +2,11 @@
 
 import { Music, AlertCircle } from "lucide-react";
 import { FaInstagram, FaYoutube } from "react-icons/fa6";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function InfoCard({status} : {status : boolean}) {
+  const { logout, loading: logoutLoading } = useLogout();
+
   return (
     <div className="rounded-2xl bg-linear-to-r from-Primary to-light-green text-white flex sm:items-center sm:justify-center p-4">
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between xl:px-4 w-full xl:max-w-xl px-3 md:px-4 overflow-y-scroll no-scrollbar">
@@ -58,8 +61,12 @@ export default function InfoCard({status} : {status : boolean}) {
           </div>
 
           {/* Logout */}
-          <button className="px-6 py-1.5 rounded-lg bg-[#F1F6DE] text-[#2D5016] text-sm font-medium hover:opacity-90 gap-2 sm:max-w-44">
-            Log Out
+          <button 
+            onClick={logout}
+            disabled={logoutLoading}
+            className="px-6 py-1.5 rounded-lg bg-[#F1F6DE] text-[#2D5016] text-sm font-medium hover:opacity-90 gap-2 sm:max-w-44 disabled:opacity-50"
+          >
+            {logoutLoading ? "Logging out..." : "Log Out"}
           </button>
         </div>
       </div>

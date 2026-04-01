@@ -1,41 +1,107 @@
-import EarningOverviewCard from "./_components/earning-overview-card";
+"use client";
 
-import { BiSolidBriefcaseAlt } from "react-icons/bi";
-import { FaHandHoldingHeart } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
 import { GoGoal } from "react-icons/go";
 import { IoIosHourglass } from "react-icons/io";
-import { ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { ca } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { FaExclamation } from "react-icons/fa";
+
+import EarningOverviewCard from "./_components/earning-overview-card";
 import EarningCard from "./_components/earning-card";
-import { Card } from "@/components/ui/card";
 import RecentTransactionsCard from "./_components/recent-transactions-card";
 
-const dashboardCards = [
-  {
-    title: "Lifetime Earning",
-    value: "৳ 3,000,000",
-    icon: GoGoal,
+import { getEarningSummary } from "@/service/agency/earning-summary";
+import type { EarningSummaryData } from "@/types/agency/earning-summary";
+
+const defaultSummary: EarningSummaryData = {
+  lifetimeEarnings: 0,
+  pendingEarnings: {
+    amount: 0,
+    campaignCount: 0,
   },
-  {
-    title: "Pending Earning",
-    value: "৳ 120,000",
-    icon: IoIosHourglass,
-    link: "/",
-    campaign: 2,
-    linkTitle: "View Pending Campaings",
+  recentEarning: {
+    amount: 0,
+    date: "",
   },
-  {
-    title: "Recent Earning",
-    value: "৳ 30,000",
-    icon: FaExclamation,
-    date: "Dec 12, 2025",
-  },
-];
+};
+
+const formatCurrency = (amount: number) => {
+  return `৳ ${amount.toLocaleString("en-BD")}`;
+};
+
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const page = () => {
+  const [summary, setSummary] = useState<EarningSummaryData>(defaultSummary);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSummary = async () => {
+      try {
+        const response = await getEarningSummary();
+
+        if (!isMounted) return;
+
+        if (response.success) {
+          setSummary(response.data);
+        } else {
+          setSummary(defaultSummary);
+        }
+      } catch (error) {
+        console.error("Failed to load earning sidecards:", error);
+
+        if (!isMounted) return;
+
+        setSummary(defaultSummary);
+      }
+    };
+
+    loadSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const dashboardCards = useMemo(
+    () => [
+      {
+        title: "Lifetime Earnings",
+        value: formatCurrency(summary.lifetimeEarnings),
+        icon: GoGoal,
+      },
+      {
+        title: "Pending Earnings",
+        value: formatCurrency(summary.pendingEarnings.amount),
+        icon: IoIosHourglass,
+        link: "/agency/jobs/pending",
+        campaign: summary.pendingEarnings.campaignCount,
+        linkTitle: "View Pending Campaigns",
+      },
+      {
+        title: "Recent Earning",
+        value: formatCurrency(summary.recentEarning.amount),
+        icon: FaExclamation,
+        date: formatDate(summary.recentEarning.date),
+      },
+    ],
+    [summary]
+  );
+
   return (
     <div className="p-4">
       <div className="space-y-4">
@@ -43,6 +109,7 @@ const page = () => {
           <div className="col-span-8">
             <EarningOverviewCard />
           </div>
+
           <div className="col-span-4">
             <div className="space-y-2">
               {dashboardCards.map(
@@ -51,9 +118,9 @@ const page = () => {
                   index
                 ) => (
                   <EarningCard
+                    key={index}
                     Icon={Icon}
                     link={link}
-                    key={index}
                     title={title}
                     value={value}
                     campaign={campaign}
@@ -65,6 +132,7 @@ const page = () => {
             </div>
           </div>
         </div>
+
         <div>
           <RecentTransactionsCard />
         </div>

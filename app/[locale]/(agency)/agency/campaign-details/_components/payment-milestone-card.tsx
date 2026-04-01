@@ -15,6 +15,7 @@ import Image from "next/image";
 import {
   IN_REVIEW,
   PAID,
+  PARTIAL_PAID,
   PaymanetMilestoneDataType,
   TODO,
 } from "../[id]/consts";
@@ -23,7 +24,6 @@ interface PaymentMilestoneProps {
   paid?: number;
   total?: number;
   paymentMilestoneData: PaymanetMilestoneDataType[];
-
   selectedMilestone: PaymanetMilestoneDataType | null;
   onSelectMilestone: (m: PaymanetMilestoneDataType) => void;
 }
@@ -36,10 +36,10 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   selectedMilestone,
 }) => {
   const progress = total ? Math.min((paid / total) * 100, 100) : 0;
+
   return (
     <Card>
-      <CardHeader className="flex  gap-4">
-        {/* Title */}
+      <CardHeader className="flex gap-4">
         <CardTitle className="flex flex-1 items-center gap-2 text-Primary text-base font-semibold">
           <div>
             <Image
@@ -52,8 +52,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
           Campaign Milestones
         </CardTitle>
 
-        {/* Progress section */}
-        <div className=" flex-1 space-y-2">
+        <div className="flex-1 space-y-2">
           <div className="flex justify-between items-center">
             <p className="text-sm font-semibold">Progress</p>
             <p className="text-sm font-semibold text-Primary">
@@ -61,7 +60,6 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
             </p>
           </div>
 
-          {/* Progress bar */}
           <div className="h-2 w-full bg-light-green/30 rounded-full overflow-hidden">
             <div
               className="h-full bg-light-green rounded-full transition-all duration-300"
@@ -70,23 +68,27 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 -ml-4 pr-24 ">
             {paymentMilestoneData.map((item) => (
-              <CarouselItem key={item.id} className="basis-full md:basis-[34%]">
+              <CarouselItem
+                key={item.milestoneId}
+                className="basis-full md:basis-[34%]"
+              >
                 <div
                   onClick={() => onSelectMilestone(item)}
                   className={cn(
                     "border p-4 rounded-md space-y-2 cursor-pointer transition",
-                    selectedMilestone?.id === item.id &&
-                      "ring-2 ring-offset-0 ring-light-green",
+                    selectedMilestone?.milestoneId === item.milestoneId &&
+                    "ring-2 ring-offset-0 ring-light-green",
                     item.status === TODO &&
-                      "border-gray-200 bg-linear-to-r from-white to-light-gray",
-                    item.status === PAID &&
-                      "border-light-green bg-linear-to-r from-Secondary to-white",
+                    "border-gray-200 bg-linear-to-r from-white to-light-gray",
+                    (item.status === PAID || item.status === PARTIAL_PAID) &&
+                    "border-light-green bg-linear-to-r from-Secondary to-white",
                     item.status === IN_REVIEW &&
-                      "border-orange-400 bg-linear-to-r from-orange/20 to-white"
+                    "border-orange-400 bg-linear-to-r from-orange/20 to-white"
                   )}
                 >
                   <div className="flex justify-between">
@@ -110,19 +112,20 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                         {item.title}
                       </h2>
                     </div>
-                    {item.status && (
-                      <div>
-                        <Badge
-                          className={cn(
-                            item.status === TODO && "bg-dark-gray",
-                            item.status === IN_REVIEW && "bg-orange",
-                            item.status === PAID && "bg-light-green"
-                          )}
-                        >
-                          {item.status} <ChevronRight />
-                        </Badge>
-                      </div>
-                    )}
+
+                    <div>
+                      <Badge
+                        className={cn(
+                          item.status === TODO && "bg-dark-gray",
+                          item.status === IN_REVIEW && "bg-orange",
+                          (item.status === PAID ||
+                            item.status === PARTIAL_PAID) &&
+                          "bg-light-green"
+                        )}
+                      >
+                        {item.status} <ChevronRight />
+                      </Badge>
+                    </div>
                   </div>
 
                   <p className="text-gray-500 text-sm">

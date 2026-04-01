@@ -124,7 +124,7 @@ const UpcomingDeadline = ({ initialResponse }: Props) => {
 
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 pt-5">
-                {Array.from({ length: totalPages }).map((_, index) => {
+                {Array.from({ length: totalPages }, (_, index) => {
                   const page = index + 1;
                   const isActive = page === currentPage;
 

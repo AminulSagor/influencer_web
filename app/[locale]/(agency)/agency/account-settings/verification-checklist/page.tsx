@@ -1,4 +1,3 @@
-import BasicInfoCard from "../_components/basic-info-card";
 import InfoCard from "./_components/info-card";
 import ProfileCompletionPercentCard from "./_components/profile-completion-percent-card";
 import VerificationInProgress from "./_components/verification-in-progress";
@@ -10,7 +9,7 @@ export interface VerificationStepType {
   status: string;
 }
 
-const verificationStep = [
+const verificationStep: VerificationStepType[] = [
   {
     id: 1,
     title: "Social Profile Verification",
@@ -52,12 +51,22 @@ const verificationStep = [
     status: "Unverified",
   },
 ];
+
 const page = () => {
   const verfiedStatus = false;
+
+  const completedSteps = verificationStep.filter(
+    (item) => item.status === "Verified",
+  ).length;
+
+  const completionPercentage =
+    verificationStep.length === 0
+      ? 0
+      : Math.round((completedSteps / verificationStep.length) * 100);
+
   return (
-    <div className="p-4 space-y-4">
-      {/* row 1 */}
-      <div className="grid grid-cols-12 gap-4 items-center">
+    <div className="space-y-4 p-4">
+      <div className="grid grid-cols-12 items-center gap-4">
         {!verfiedStatus ? (
           <>
             <div className="col-span-8">
@@ -73,11 +82,11 @@ const page = () => {
           </div>
         )}
       </div>
-      {/* row 2 */}
+
       <div>
-        <ProfileCompletionPercentCard />
+        <ProfileCompletionPercentCard percentage={completionPercentage} />
       </div>
-      {/* dynamic row */}
+
       <div className="space-y-2">
         {verificationStep.map((item) => (
           <VerificationStatusCard key={item.id} item={item} />

@@ -2,17 +2,17 @@ import CollapseCard from "@/app/[locale]/(brand)/brand/_components/collapse-card
 import {
   BarChart3,
   CheckCircle2,
-  ClipboardList,
   FileText,
   Package,
   ScrollText,
   Target,
   XCircle,
 } from "lucide-react";
-import type { Campaignservice } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import { useTranslations } from "next-intl";
 
 type Props = {
-  campaign: Campaignservice;
+  campaign: ClientCampaignDetails;
 };
 
 const toBullets = (text?: string | null) => {
@@ -25,64 +25,58 @@ const toBullets = (text?: string | null) => {
 };
 
 export default function TermsAndConditionCard({ campaign }: Props) {
+  const t = useTranslations("brand.CampaignDetailsPage");
   const dos = toBullets(campaign.dos);
   const donts = toBullets(campaign.donts);
 
   return (
-    <CollapseCard title="Brief and Terms & condition">
-      <div className="flex flex-col lg:flex-row justify-between gap-12">
-        {/* LEFT */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-4 md:pt-0">
-            <FileText className="w-5 h-5" />
-            <span className="text-base">Campaign Brief</span>
+    <CollapseCard title={t("termsAndConditionCard.title")}>
+      <div className="flex flex-col justify-between gap-8 lg:flex-row lg:gap-12">
+        <div className="space-y-4">
+          <div className="mb-4 flex items-center gap-2 pt-4 font-semibold text-Primary md:pt-0">
+            <FileText className="h-5 w-5" />
+            <span className="text-base">
+              {t("termsAndConditionCard.campaignBrief")}
+            </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <Section
               icon={Target}
-              title="Campaign Goals"
+              title={t("termsAndConditionCard.campaignGoals")}
               text={campaign.campaignGoals || "—"}
             />
 
             <Section
               icon={Package}
-              title="Product/Service Details"
+              title={t("termsAndConditionCard.productServiceDetails")}
               text={campaign.productServiceDetails || "—"}
             />
-
-            <div>
-              <div className="flex items-center gap-2 text-Primary font-medium mb-1">
-                <ClipboardList className="w-4 h-4" />
-                <h4>Terms & Conditions</h4>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {campaign.termsConditions || "—"}
-              </p>
-            </div>
 
             <DoDont dos={dos} donts={donts} />
           </div>
         </div>
 
-        <div className="h-auto w-0.5 bg-dark-gray items-start" />
+        <div className="hidden w-px bg-dark-gray lg:block" />
 
-        {/* RIGHT */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-Primary font-semibold">
-            <ScrollText className="w-5 h-5" />
-            <span className="text-base">Terms & Conditions</span>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 font-semibold text-Primary">
+            <ScrollText className="h-5 w-5" />
+            <span className="text-base">
+              {t("termsAndConditionCard.termsAndConditions")}
+            </span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <Section
               icon={BarChart3}
-              title="Reporting Requirements"
+              title={t("termsAndConditionCard.reportingRequirements")}
               text={campaign.reportingRequirements || "—"}
             />
+
             <Section
               icon={ScrollText}
-              title="Usage Rights"
+              title={t("termsAndConditionCard.usageRights")}
               text={campaign.usageRights || "—"}
             />
           </div>
@@ -103,26 +97,28 @@ function Section({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 text-Primary font-medium mb-1">
-        <Icon className="w-4 h-4 shrink-0" />
-        <h4 className="text-sm md:text-base">{title}</h4>
+      <div className="mb-1 flex items-center gap-2 font-medium text-Primary">
+        <Icon className="h-4 w-4 shrink-0" />
+        <h4 className="text-sm">{title}</h4>
       </div>
-      <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
+      <p className="text-sm leading-relaxed text-gray-600">{text}</p>
     </div>
   );
 }
 
 function DoDont({ dos, donts }: { dos: string[]; donts: string[] }) {
+  const t = useTranslations("brand.CampaignDetailsPage");
+
   return (
-    <div className="space-y-3 mt-4">
-      <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
-        <div className="flex items-center gap-2 text-light-green-700 font-medium mb-2">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>Do’s</span>
+    <div className="mt-4 space-y-3">
+      <div className="rounded-xl border border-light-green-200 bg-[#BBF7D0] p-4">
+        <div className="mb-2 flex items-center gap-2 font-medium text-light-green-700">
+          <CheckCircle2 className="h-4 w-4" />
+          <span className="text-sm">{t("termsAndConditionCard.dos")}</span>
         </div>
 
         {dos.length ? (
-          <ul className="text-sm text-light-green-700 space-y-1">
+          <ul className="space-y-1 text-sm text-[#15803D]">
             {dos.map((x, i) => (
               <li key={i}>• {x}</li>
             ))}
@@ -132,14 +128,14 @@ function DoDont({ dos, donts }: { dos: string[]; donts: string[] }) {
         )}
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-        <div className="flex items-center gap-2 text-red-600 font-medium mb-2">
-          <XCircle className="w-4 h-4" />
-          <span>Don’ts</span>
+      <div className="rounded-xl border border-red-300 bg-red-50 p-4">
+        <div className="mb-2 flex items-center gap-2 font-medium text-red-600">
+          <XCircle className="h-4 w-4" />
+          <span className="text-sm">{t("termsAndConditionCard.donts")}</span>
         </div>
 
         {donts.length ? (
-          <ul className="text-sm text-red-600 space-y-1">
+          <ul className="space-y-1 text-sm text-red-600">
             {donts.map((x, i) => (
               <li key={i}>• {x}</li>
             ))}

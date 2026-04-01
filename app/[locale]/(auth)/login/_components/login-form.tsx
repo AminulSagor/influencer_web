@@ -69,11 +69,11 @@ const onSubmit = async (data: LoginFormValues) => {
     };
 
     const basePath = pathMap[payload.role || ""] || (payload.role || "");
-    const nextPath = payload.isVerified
-      ? `/${locale}/${basePath}/dashboard`
-      : `/${locale}/${basePath}/unverified`;
+    // const nextPath = payload.isVerified
+    //   ? `/${locale}/${basePath}/dashboard`
+    //   : `/${locale}/brand/unverified`;
 
-    await router.push(nextPath);
+    // await router.push(nextPath);
     router.refresh();
   } catch (error: any) {
     const status = error?.response?.status;

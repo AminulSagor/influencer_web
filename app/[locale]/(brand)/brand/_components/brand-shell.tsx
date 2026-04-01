@@ -3,18 +3,8 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { GenericAppSidebar } from "@/components/generic-sidebar";
 import TopBar from "@/app/[locale]/(brand)/brand/_components/top-bar";
-import {
-  LayoutDashboard,
-  BriefcaseBusiness,
-  BarChart3,
-  Compass,
-  FileText,
-  LifeBuoy,
-  Settings,
-  ShieldOff,
-} from "lucide-react";
-import type { SidebarItem } from "@/types/app_sidebar-type";
 import { useLocale } from "next-intl";
+import { getBrandSidebarItems } from "@/constant/navigation";
 
 export default function BrandShell({
   children,
@@ -23,37 +13,8 @@ export default function BrandShell({
   children: React.ReactNode;
   isVerified: boolean;
 }) {
-  const verifiedSidebarItems: SidebarItem[] = [
-    { title: "Dashboard", url: "/brand/dashboard", icon: LayoutDashboard },
-    { title: "Campaigns", url: "/brand/campaigns", icon: BriefcaseBusiness },
-    { title: "Analytics", url: "/brand/analytics", icon: BarChart3 },
-    { title: "Explore", url: "/brand/explore", icon: Compass },
-    { title: "Reports", url: "/brand/reports", icon: FileText },
-    { title: "Support Center", url: "/brand/support-center", icon: LifeBuoy },
-    {
-      title: "Account Settings",
-      url: "/brand/account-settings",
-      icon: Settings,
-    },
-  ];
-
-  const unVerifiedSidebarItems: SidebarItem[] = [
-    { title: "Unverified", url: "/brand/unverified", icon: ShieldOff },
-    {
-      title: "Account Settings",
-      url: "/brand/account-settings",
-      icon: Settings,
-    },
-  ];
-
   const locale = useLocale();
-
-  const items = (
-    isVerified ? verifiedSidebarItems : unVerifiedSidebarItems
-  ).map((i) => ({
-    ...i,
-    url: `/${locale}${i.url}`,
-  }));
+  const items = getBrandSidebarItems(isVerified, locale);
 
   return (
     <SidebarProvider>

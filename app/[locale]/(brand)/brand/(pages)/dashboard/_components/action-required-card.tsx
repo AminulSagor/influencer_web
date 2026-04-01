@@ -14,7 +14,7 @@ type Props = {
 const ITEMS_PER_PAGE = 2;
 
 const ActionRequiredCard = ({ data = [] }: Props) => {
-  const t = useTranslations("influencer.dashboard.actionRequired");
+  const t = useTranslations("brand.dashboard.actionRequired");
   const [page, setPage] = useState(0);
 
   if (data.length === 0) {

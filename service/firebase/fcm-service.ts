@@ -19,9 +19,16 @@ export async function getFcmToken() {
 
     const messaging = getMessaging(app);
 
-    // Register service worker manually
-    await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    
+    // Check if service worker already registered
+    let swRegistration = await navigator.serviceWorker.getRegistration(
+      "/firebase-messaging-sw.js",
+    );
+    if (!swRegistration) {
+      swRegistration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+      );
+    }
+
     // Specifically wait for the service worker to become active and ready
     const readySwRegistration = await navigator.serviceWorker.ready;
 
@@ -31,8 +38,13 @@ export async function getFcmToken() {
     });
     return token;
   } catch (e: any) {
-    if (e?.code === 'messaging/unsupported-browser' || (typeof navigator !== 'undefined' && 'brave' in navigator)) {
-      console.warn("FCM: Push messaging is blocked. If you are on Brave, enable 'Use Google Services for Push Messaging' in brave://settings/privacy");
+    if (
+      e?.code === "messaging/unsupported-browser" ||
+      (typeof navigator !== "undefined" && "brave" in navigator)
+    ) {
+      console.warn(
+        "FCM: Push messaging is blocked. If you are on Brave, enable 'Use Google Services for Push Messaging' in brave://settings/privacy",
+      );
     } else {
       console.error("Error getting FCM token:", e);
     }

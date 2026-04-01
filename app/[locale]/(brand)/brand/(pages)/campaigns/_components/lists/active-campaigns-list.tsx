@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaClock } from "react-icons/fa";
@@ -11,23 +11,27 @@ import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_compone
 import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import { buildDueLabelFromDeadline, formatDeadline } from "@/utils/date_util";
 import { getPlatformIcon } from "@/utils/platforms_util";
+import { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
+import { formatBudget } from "@/utils/fomat_budget_utils";
 
 export default function ActiveCampaignsList({
   campaigns,
   loading,
 }: {
-  campaigns: CampaignSummary[];
+  campaigns: CampaignOverView[];
   loading?: boolean;
 }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   return (
     <ListShell
       loading={loading}
       empty={!loading && campaigns.length === 0}
-      emptyTitle="No active campaigns found."
+      emptyTitle={t("noActiveCampaignsFound")}
     >
-      <div className="grid gap-4 mt-6 items-start grid-cols-[repeat(auto-fit,minmax(300px,1fr))] xl:grid-cols-[repeat(auto-fit,minmax(340px,1fr))]">
+      <div className="grid gap-4 xl:gap-8 mt-6 md:grid-cols-2 lg:grid-cols-3">
         {campaigns.map((c) => (
-          <div key={c.id} className="w-full max-w-[420px] justify-self-start">
+          <div key={c.id} className="w-full justify-self-start">
             <ActiveCard c={c} />
           </div>
         ))}
@@ -36,21 +40,19 @@ export default function ActiveCampaignsList({
   );
 }
 
-//active card
-function ActiveCard({ c }: { c: CampaignSummary }) {
+function ActiveCard({ c }: { c: CampaignOverView }) {
+  const t = useTranslations("brand.CampaignsPage");
+
   const campaignType =
-    c.campaignType === "paid_ad" ? "Paid Ad" : "Influencer Promotion";
+    c.campaignType === "paid_ad" ? t("paidAd") : t("influencerPromotion");
 
   const isAssigned = (c.assignedTo?.length ?? 0) > 0;
-
   const assignText = getAssignedUserBasedText(isAssigned, c.campaignType);
-
   const dueLabel = buildDueLabelFromDeadline(c.deadline);
 
   return (
     <Card>
       <CardContent className="space-y-4">
-        {/* Title */}
         <div className="space-y-1">
           <h3 className="text-Primary font-semibold leading-tight">
             {c.campaignName}
@@ -59,15 +61,14 @@ function ActiveCard({ c }: { c: CampaignSummary }) {
         </div>
 
         <div className="flex gap-2 items-center">
-          <AvatarStack users={c.assignedTo}/>
+          <AvatarStack users={c.assignedTo} />
           {!isAssigned && (
             <p className="text-xs text-dark-gray">{assignText}</p>
           )}
         </div>
 
-        {/* Platforms */}
         <div className="flex items-center gap-4">
-          <p className="text-muted-foreground text-sm">Platforms</p>
+          <p className="text-muted-foreground text-sm">{t("platforms")}</p>
           <div className="flex items-center gap-2">
             {c.platforms.length ? (
               c.platforms.map((p) => (
@@ -84,20 +85,18 @@ function ActiveCard({ c }: { c: CampaignSummary }) {
           </div>
         </div>
 
-        {/* Offered */}
         <div className="rounded-xl border border-light-green/25 bg-light-green/10 px-4 py-4 space-y-1">
-          <p className="text-Primary text-lg">Offered</p>
+          <p className="text-Primary text-lg">{t("offered")}</p>
           <p className="text-light-green text-3xl font-semibold">
-            {c.totalBudget > 0 ? c.totalBudget : "None"}
+            {formatBudget(c.totalBudget)}
           </p>
         </div>
 
-        {/* Deadline + Due */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-2 text-sm text-orange">
               <FaClock className="text-orange" />
-              Deadline
+              {t("deadline")}
             </p>
             <p className="text-orange text-sm">{formatDeadline(c.deadline)}</p>
           </div>
@@ -107,13 +106,11 @@ function ActiveCard({ c }: { c: CampaignSummary }) {
           </div>
         </div>
 
-        {/* Progress */}
         <PercentageBar value={c.progress} />
 
-        {/* CTA */}
         <Button asChild variant="outline" className="w-full rounded-xl">
           <Link href={`/brand/campaign-details/${c.id}`}>
-            View Campaign Details
+            {t("viewCampaignDetails")}
           </Link>
         </Button>
       </CardContent>

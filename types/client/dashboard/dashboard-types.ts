@@ -5,6 +5,10 @@ export type ActiveJobsResponse = {
   jobs: unknown[];
 };
 
+export type QuotingJobsResponse = {
+  jobs: unknown[];
+};
+
 export type LifetimeSummaryData = {
   totalCompleted: number;
   totalDeclined: number;

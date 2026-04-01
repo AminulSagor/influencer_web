@@ -1,102 +1,82 @@
-'use client'
+"use client";
+
+import React, { useMemo } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import RecentTransactionsCard, {
   Transaction,
-} from "@/app/[locale]/(brand)/brand/(pages)/analytics/recent-transection-card";
-import { Card, CardContent } from "@/components/ui/card";
-import { Droplet, UserRound } from "lucide-react";
-import React, { useState} from "react";
+} from "@/app/[locale]/(brand)/brand/(pages)/analytics/_components/recent-transection-card";
+import AnalyticsHighlightCards from "@/app/[locale]/(brand)/brand/(pages)/analytics/_components/analytics-highlight-cards";
+import {
+  formatCurrencyBDT,
+  formatDateTimeLabel,
+} from "@/app/[locale]/(brand)/brand/(pages)/analytics/_utils/analytics-formatters";
+import { useClientAnalytics } from "@/hooks/use-client-analytics";
 
 const AnalyticsPage = () => {
-  const [search, setSearch] = React.useState("");
-  const [sort, setSort] = React.useState<"lowToHigh" | "highToLow">(
-    "lowToHigh"
-  );
-  const items: Transaction[] = [
-    {
-      id: "1",
-      title: `Payment For "Summer Sale"`,
-      timeLabel: "Today, 2:30 PM",
-      amountLabel: "৳20,000",
-      onViewDetails: () => console.log("view 1"),
-    },
-    {
-      id: "2",
-      title: `Payment For "Summer Sale"`,
-      timeLabel: "Today, 2:30 PM",
-      amountLabel: "৳20,000",
-      onViewDetails: () => console.log("view 2"),
-    },
-    {
-      id: "3",
-      title: `Payment For "Summer Sale"`,
-      timeLabel: "Today, 2:30 PM",
-      amountLabel: "৳20,000",
-      onViewDetails: () => console.log("view 3"),
-    },
-    {
-      id: "4",
-      title: `Payment For "Summer Sale"`,
-      timeLabel: "Today, 2:30 PM",
-      amountLabel: "৳20,000",
-      onViewDetails: () => console.log("view 4"),
-    },
-  ];
+  const t = useTranslations("brand.analytics");
+  const locale = useLocale();
+  const router = useRouter();
+
+  const {
+    data,
+    meta,
+    loading,
+    error,
+    search,
+    sortOrder,
+    page,
+    canGoNext,
+    canGoPrev,
+    setSearch,
+    setSortOrder,
+    goNext,
+    goPrev,
+  } = useClientAnalytics();
+
+  const items: Transaction[] = useMemo(() => {
+    return (
+      data?.transactions.data.map((item) => ({
+        id: item.transactionId,
+        title: t("paymentForCampaign", { campaignName: item.campaignName }),
+        timeLabel: formatDateTimeLabel(item.date, locale),
+        amountLabel: formatCurrencyBDT(item.amount),
+        onViewDetails: () => {
+          router.push(`/${locale}/brand/campaign-details/${item.campaignId}`);
+        },
+      })) ?? []
+    );
+  }, [data?.transactions.data, locale, router, t]);
+
   return (
     <div className="space-y-4">
-      {/* top */}
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* top campaign */}
-        <Card className="border-none bg-linear-to-r from-Primary/90 to-light-green text-white w-full">
-          <CardContent>
-            <div className="flex justify-between">
-              <div>
-                <h3>Top Campaign</h3>
-                <h1 className="text-white font-semibold text-xl lg:text-3xl">
-                  Summer Sale
-                </h1>
-              </div>
-              <span>
-                <Droplet size={32} />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+      <AnalyticsHighlightCards highlights={data?.highlights} />
 
-        {/* top influencer */}
-        <Card className="border-none bg-linear-to-r from-Primary/90 to-light-green text-white w-full">
-          <CardContent>
-            <div className="flex justify-between">
-              <div>
-                <h3>Top Influencer</h3>
-                <h1 className="text-white font-semibold text-xl lg:text-3xl">
-                  Hania Amir
-                </h1>
-                <p className="text-xs">12 Jobs Completed</p>
-              </div>
-              <span>
-                <UserRound size={32} />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      ) : null}
 
-      {/* bottom */}
-      <div className="">
-        <RecentTransactionsCard
-          totalResults={20}
-          pageSize={4}
-          pageCount={5}
-          page={1}
-          items={items}
-          searchValue={search}
-          onSearchChange={setSearch}
-          sort={sort}
-          onSortChange={setSort}
-          onNextPage={() => console.log("next")}
-          className="w-full"
-        />
-      </div>
+      <RecentTransactionsCard
+        totalResults={meta.total ?? 0}
+        pageSize={meta.limit ?? 10}
+        pageCount={meta.totalPages ?? 1}
+        page={page}
+        items={items}
+        searchValue={search}
+        onSearchChange={setSearch}
+        sort={sortOrder === "high_to_low" ? "highToLow" : "lowToHigh"}
+        onSortChange={(value) =>
+          setSortOrder(value === "highToLow" ? "high_to_low" : "low_to_high")
+        }
+        onNextPage={goNext}
+        onPrevPage={goPrev}
+        canGoNext={canGoNext}
+        canGoPrev={canGoPrev}
+        isLoading={loading}
+        className="w-full"
+      />
     </div>
   );
 };

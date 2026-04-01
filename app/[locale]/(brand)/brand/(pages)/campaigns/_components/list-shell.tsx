@@ -15,7 +15,7 @@ export default function ListShell({
 }) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-3 gap-4 xl:gap-8 mt-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <Card key={i} className="rounded-2xl border border-border/70 bg-white shadow-sm">
             <CardContent className="p-5 space-y-4">

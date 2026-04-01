@@ -28,146 +28,136 @@ import {
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { SavedLocation } from "./delivery-location";
-
-/* ---------------- Schema ---------------- */
-const locationSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  districtId: z.string().min(1, { message: "Please select a district" }),
-  districtName: z.string().min(1, { message: "District name is required" }),
-  thana: z.string().min(1, { message: "Please select a thana" }),
-  address: z.string().min(10, { message: "Address must be at least 10 characters" }),
-  type: z.enum(["House", "Office"], { message: "Please select a type" }),
-});
-
-type LocationFormValues = z.infer<typeof locationSchema>;
+import { BD_LOCATIONS } from "@/location-data/bd-location";
+import { addAddress, updateAddress } from "@/service/influencer/address/address";
+import { addressSchema, AddressFormData } from "@/schemas/influencer/address-validation";
 
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editingLocation?: SavedLocation | null;
-  onSave: (locationData: Omit<SavedLocation, 'id' | 'isSelected'>) => void;
+  onSuccess: () => void;
 };
 
-// Sample data as fallback
-const sampleDistricts = [
-  { id: "1", district: "Dhaka" },
-  { id: "2", district: "Chittagong" },
-  { id: "3", district: "Rajshahi" },
-  { id: "4", district: "Khulna" },
-  { id: "5", district: "Sylhet" },
-];
-
-const sampleThanas: Record<string, string[]> = {
-  "1": ["Gulshan", "Banani", "Mirpur", "Uttara", "Dhanmondi"],
-  "2": ["Chandgaon", "Kotwali", "Double Mooring", "Pahartali"],
-  "3": ["Boalia", "Motihar", "Shah Makhdum"],
-  "4": ["Khulna Sadar", "Sonadanga", "Khalishpur"],
-  "5": ["Sylhet Sadar", "Osmani Nagar", "Shah Paran"],
-};
-
-const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: Props) => {
+const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess }: Props) => {
   const t = useTranslations("influencer.campaign-details");
 
-  const form = useForm<LocationFormValues>({
-    resolver: zodResolver(locationSchema),
+  const form = useForm<AddressFormData>({
+    resolver: zodResolver(addressSchema),
     defaultValues: {
-      name: "",
-      districtId: "",
-      districtName: "",
+      addressName: "",
+      zilla: "",
       thana: "",
-      address: "",
-      type: "House",
+      fullAddress: "",
     },
   });
 
-  const [districts, setDistricts] = useState(sampleDistricts);
   const [thanas, setThanas] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [settingDefault, setSettingDefault] = useState(false);
 
-  const districtId = form.watch("districtId");
+  const selectedZilla = form.watch("zilla");
 
   /* ---------------- Initialize form based on editingLocation ---------------- */
   useEffect(() => {
     if (!open) return;
 
     if (editingLocation) {
-      // Editing mode - prefill with existing data
       form.reset({
-        name: editingLocation.name,
-        districtId: editingLocation.districtId,
-        districtName: editingLocation.districtName,
+        addressName: editingLocation.addressName,
+        zilla: editingLocation.zilla,
         thana: editingLocation.thana,
-        address: editingLocation.address,
-        type: editingLocation.type,
+        fullAddress: editingLocation.fullAddress,
       });
-      // Load thanas for the selected district
-      setTimeout(() => {
-        setThanas(sampleThanas[editingLocation.districtId] || []);
-      }, 0);
+      // Load thanas for the editing location's zilla
+      const location = BD_LOCATIONS.find((loc) => loc.zila === editingLocation.zilla);
+      setThanas(location?.thanas || []);
     } else {
-      // Adding mode - reset form
       form.reset({
-        name: "",
-        districtId: "",
-        districtName: "",
+        addressName: "",
+        zilla: "",
         thana: "",
-        address: "",
-        type: "House",
+        fullAddress: "",
       });
       setThanas([]);
     }
   }, [open, editingLocation, form]);
 
-  /* ---------------- Load Thanas when district changes ---------------- */
+  /* ---------------- Load Thanas when zilla changes ---------------- */
   useEffect(() => {
-    if (!open || !districtId) {
+    if (!open || !selectedZilla) {
       setThanas([]);
       return;
     }
 
-    setLoading(true);
-    
-    // Simulate service delay
-    const timer = setTimeout(() => {
-      const districtThanas = sampleThanas[districtId] || [];
-      setThanas(districtThanas);
-      setLoading(false);
-      
-      // Update district name when district changes
-      const selectedDistrict = districts.find(d => d.id === districtId);
-      if (selectedDistrict) {
-        form.setValue("districtName", selectedDistrict.district);
-      }
-    }, 300);
+    const location = BD_LOCATIONS.find((loc) => loc.zila === selectedZilla);
+    setThanas(location?.thanas || []);
+  }, [selectedZilla, open]);
 
-    return () => clearTimeout(timer);
-  }, [districtId, open, form, districts]);
-
-  /* ---------------- Submit ---------------- */
-  const onSubmit = (values: LocationFormValues) => {
-    
-    // Find district name
-    const district = districts.find(d => d.id === values.districtId);
-    
-    const locationData: Omit<SavedLocation, 'id' | 'isSelected'> = {
-      name: values.name,
-      districtId: values.districtId,
-      districtName: district?.district || values.districtName,
-      thana: values.thana,
-      address: values.address,
-      type: values.type,
-    };
-    
-    onSave(locationData);
-    onOpenChange(false);
+  /* ---------------- Set Default ---------------- */
+  const handleSetDefault = async () => {
+    if (!editingLocation) return;
+    try {
+      setSettingDefault(true);
+      await updateAddress(editingLocation.addressName, {
+        addressName: editingLocation.addressName,
+        fullAddress: editingLocation.fullAddress,
+        thana: editingLocation.thana,
+        zilla: editingLocation.zilla,
+        isDefault: true,
+      });
+      toast.success("Address set as default!");
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to set default"
+      );
+    } finally {
+      setSettingDefault(false);
+    }
   };
 
-  // Handle district change
-  const handleDistrictChange = (value: string) => {
-    form.setValue("districtId", value);
+  /* ---------------- Submit ---------------- */
+  const onSubmit = async (values: AddressFormData) => {
+    try {
+      setSaving(true);
+      if (editingLocation) {
+        await updateAddress(editingLocation.addressName, {
+          addressName: values.addressName,
+          thana: values.thana,
+          zilla: values.zilla,
+          fullAddress: values.fullAddress,
+        });
+        toast.success("Address updated!");
+      } else {
+        await addAddress({
+          addresses: [{
+            addressName: values.addressName,
+            thana: values.thana,
+            zilla: values.zilla,
+            fullAddress: values.fullAddress,
+          }],
+        });
+        toast.success("Address added!");
+      }
+      onOpenChange(false);
+      onSuccess();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save address"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Handle zilla change - reset thana
+  const handleZillaChange = (value: string) => {
+    form.setValue("zilla", value);
     form.setValue("thana", "");
   };
 
@@ -179,9 +169,23 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
         </VisuallyHidden>
 
         {/* Header */}
-        <div className="px-4 py-3 border flex items-center gap-2 text-Primary font-semibold">
-          <MapPin size={18} />
-          {t("Address")}
+        <div className="px-4 py-3 border flex items-center justify-between">
+          <div className="flex items-center gap-2 text-Primary font-semibold">
+            <MapPin size={18} />
+            {t("Address")}
+          </div>
+          {editingLocation && !editingLocation.isDefault && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={settingDefault}
+              onClick={handleSetDefault}
+              className="border-light-green text-light-green hover:bg-Secondary text-xs"
+            >
+              {settingDefault ? "Setting..." : t("Set Default")}
+            </Button>
+          )}
         </div>
 
         <Form {...form}>
@@ -192,7 +196,7 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
             {/* Name */}
             <FormField
               control={form.control}
-              name="name"
+              name="addressName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("Give a name")}</FormLabel>
@@ -208,42 +212,16 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
               )}
             />
 
-            {/* Type */}
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type *</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="House">House</SelectItem>
-                      <SelectItem value="Office">Office</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Zilla */}
             <FormField
               control={form.control}
-              name="districtId"
+              name="zilla"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Zilla *</FormLabel>
                   <Select
                     value={field.value}
-                    onValueChange={handleDistrictChange}
+                    onValueChange={handleZillaChange}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -251,9 +229,9 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {districts.map((d) => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.district}
+                      {BD_LOCATIONS.map((loc) => (
+                        <SelectItem key={loc.zila} value={loc.zila}>
+                          {loc.zila}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -273,24 +251,22 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
                   <Select
                     value={field.value}
                     onValueChange={field.onChange}
-                    disabled={!districtId || loading}
+                    disabled={!selectedZilla}
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
-                        <SelectValue 
+                        <SelectValue
                           placeholder={
-                            !districtId 
-                              ? "Select Zilla first" 
-                              : loading 
-                              ? "Loading..." 
+                            !selectedZilla
+                              ? "Select Zilla first"
                               : "Select Thana"
-                          } 
+                          }
                         />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {thanas.map((thana, index) => (
-                        <SelectItem key={`${thana}-${index}`} value={thana}>
+                      {thanas.map((thana) => (
+                        <SelectItem key={thana} value={thana}>
                           {thana}
                         </SelectItem>
                       ))}
@@ -301,10 +277,10 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
               )}
             />
 
-            {/* Address */}
+            {/* Full Address */}
             <FormField
               control={form.control}
-              name="address"
+              name="fullAddress"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("Full Address *")}</FormLabel>
@@ -321,11 +297,16 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSave }: 
               )}
             />
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
+              disabled={saving}
               className="w-full bg-light-green text-white hover:bg-light-green/90"
             >
-              {editingLocation ? t("Update") : t("Save")}
+              {saving
+                ? "Saving..."
+                : editingLocation
+                ? t("Update")
+                : t("Save")}
             </Button>
           </form>
         </Form>

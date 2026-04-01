@@ -14,17 +14,12 @@ import {
 } from "@/components/ui/chart";
 import { useTranslations } from "next-intl";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis, Dot } from "recharts";
+import { useEffect, useState, useCallback } from "react";
+import { getEarningsOverview } from "@/service/influencer/dashboard/earnings_overview";
+import { EarningsBreakdownItem, EarningsOverviewRange } from "@/types/influencer/dashboard/earnings_overview";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
-const chartData = [
-  { date: "7/11", earning: 20 },
-  { date: "8/11", earning: 50 },
-  { date: "9/11", earning: 10 },
-  { date: "10/11", earning: 8 },
-  { date: "12/11", earning: 50 },
-  { date: "13/11", earning: 80 },
-];
-
-export const description = "A line chart";
 const chartConfig = {
   earning: {
     label: "Earning",
@@ -34,6 +29,65 @@ const chartConfig = {
 
 const EarningOverviewCard = () => {
   const t = useTranslations("influencer.dashboard.earningOverviewCard");
+  const [chartData, setChartData] = useState<{ date: string; earning: number }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getEarningsOverview("7d");
+      const mapped = data.breakdown.map((item: EarningsBreakdownItem) => ({
+        date: new Date(item.date).toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
+        earning: item.amount,
+      }));
+      setChartData(mapped);
+    } catch (err) {
+      setError("Failed to load earnings overview.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-[#2D5016]">{t("title")}</CardTitle></CardHeader>
+        <CardContent className="space-y-3 py-6">
+          <div className="flex items-end gap-4 px-4">
+            <Skeleton className="h-24 w-8" />
+            <Skeleton className="h-32 w-8" />
+            <Skeleton className="h-16 w-8" />
+            <Skeleton className="h-28 w-8" />
+            <Skeleton className="h-20 w-8" />
+            <Skeleton className="h-36 w-8" />
+            <Skeleton className="h-12 w-8" />
+          </div>
+          <Skeleton className="h-4 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader><CardTitle className="text-[#2D5016]">{t("title")}</CardTitle></CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-10 space-y-2">
+          <p className="text-sm text-red-500">{error}</p>
+          <Button variant="outline" size="sm" onClick={fetchData}>
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
