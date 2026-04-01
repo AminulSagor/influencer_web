@@ -47,6 +47,7 @@ const NotifyUser = ({
         title,
         message,
       });
+      console.log(res);
 
       toast.success(res.message || `${title} reminder sent successfully.`);
       onSent?.();

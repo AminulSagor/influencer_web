@@ -265,6 +265,20 @@ export default function Page() {
     [campaign?.status]
   );
 
+  const cardStatus = useMemo(
+    () => {
+      const payment = normalize(campaign?.paymentStatus);
+
+      // If payment is fully done, surface it as "Paid" on the header card.
+      if (payment === "full" || payment === "paid") {
+        return "Paid" as const;
+      }
+
+      return mapStatusToUI(campaign?.status);
+    },
+    [campaign?.paymentStatus, campaign?.status]
+  );
+
   const { isPaidAd } = useMemo(() => getCampaignTypeFlags(campaign), [campaign]);
 
   const baseFinancials = useMemo(() => computeFinancials(campaign), [campaign]);
@@ -278,6 +292,14 @@ export default function Page() {
   const clientBudget = negotiationFinancials.clientBudget;
   const vatAmount = negotiationFinancials.vatAmount;
   const netPayableAmount = negotiationFinancials.netPayableAmount;
+  const paidAmount = useMemo(
+    () => toNum(campaign?.paidAmount),
+    [campaign?.paidAmount]
+  );
+  const dueAmount = useMemo(
+    () => toNum(campaign?.dueAmount),
+    [campaign?.dueAmount]
+  );
   const platformFeePercent = negotiationFinancials.platformFeePercent;
   const platformFeeAmount = negotiationFinancials.platformFeeAmount;
   const availableForInfluencers = negotiationFinancials.availableForInfluencers;
@@ -375,7 +397,7 @@ export default function Page() {
             platform={platform}
             title={campaign?.campaignName}
             description={campaign?.campaignType}
-            status={mapStatusToUI(campaign?.status)}
+            status={cardStatus}
             niche={campaign?.campaignNiche}
             clientAvatar={campaign?.client?.profileImg ?? "/avatar-fallback.png"}
             clientName={campaign?.client?.brandName ?? ""}
@@ -397,6 +419,9 @@ export default function Page() {
             vatAmount={vatAmount}
             totalBudget={totalBudget}
             netPayableAmount={netPayableAmount}
+            campaignStatus={campaign?.status}
+            paidAmount={paidAmount}
+            dueAmount={dueAmount}
             campaignName={campaign?.campaignName}
             clientName={campaign?.client?.brandName}
           />
@@ -468,7 +493,15 @@ export default function Page() {
       />
 
       <ContentAssetCard assets={campaign?.assets ?? []} />
-      <InfluencerRatingCard campaignStatus={campaignStatus} />
+      <InfluencerRatingCard
+        campaignId={campaignId}
+        campaignType={campaign?.campaignType}
+        campaignStatus={campaignStatus}
+        agencyIsRated={Boolean(campaign?.isRated)}
+        agencyRating={toNum(campaign?.rating)}
+        agencyName={selectedAgencyForPayment?.name ?? "Agency"}
+        agencyAvatarUrl={selectedAgencyForPayment?.image ?? undefined}
+      />
     </div>
   );
 }

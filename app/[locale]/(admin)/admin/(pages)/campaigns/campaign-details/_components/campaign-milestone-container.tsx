@@ -118,7 +118,8 @@ export default function CampaignMilestoneContainer({
     !isPaidAd && campaignStatus === "pending-invitations";
 
   const canInviteInfluencer =
-    !isPaidAd && campaignStatus === "pending-invitations";
+    !isPaidAd &&
+    (campaignStatus === "pending-invitations" || campaignStatus === "active");
   const canInviteAgency =
     isPaidAd && campaignStatus === "pending-invitations";
 

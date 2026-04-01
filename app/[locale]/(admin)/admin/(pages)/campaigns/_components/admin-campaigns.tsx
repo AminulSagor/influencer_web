@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getAllCampaigns
 } from "@/service/admin/campaign/get-campaign";
+import { updateCampaignStatus } from "@/service/admin/campaign/update-campaign-status";
 
 import CampaignsHeader from "./campaigns-header";
 import CampaignsToolbar from "./campaigns-toolbar";
@@ -109,6 +110,7 @@ function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
 
 export default function AdminCampaigns() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialTab = (searchParams.get("tab") as CampaignTabKey) || "all";
 
   const [campaigns, setCampaigns] = useState<CampaignUI[]>([]);
@@ -194,12 +196,35 @@ export default function AdminCampaigns() {
     setPage(1);
   }, [tab, campaignType]);
 
-  const handleStatusChange = (id: string, status: CampaignStatus) => {
+  const handleStatusChange = async (id: string, status: CampaignStatus) => {
+    const currentCampaign = campaigns.find((c) => c.id === id);
+    const currentStatus = currentCampaign?.status;
+
+    // Only hit backend if the dropdown value actually changed.
+    if (!currentStatus || currentStatus === status) return;
+
+    // Optimistic UI update.
     setCampaigns((prev) =>
       prev.map((campaign) =>
         campaign.id === id ? { ...campaign, status } : campaign
       )
     );
+
+    try {
+      await updateCampaignStatus(id, status);
+      toast.success("Campaign status updated");
+      // Refresh to respect current tab/filter (status change may move the campaign).
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to update campaign status", err);
+      // Rollback on failure.
+      setCampaigns((prev) =>
+        prev.map((campaign) =>
+          campaign.id === id ? { ...campaign, status: currentStatus } : campaign
+        )
+      );
+      toast.error("Failed to update campaign status");
+    }
   };
 
   const showingFrom = useMemo(() => {
