@@ -19,52 +19,51 @@ import type {
     UpdateServiceFeePayload,
 } from "@/types/agency/account-settings";
 
-export const getAgencyProfile =
-    async (): Promise<AgencyProfileResponse> => {
-        const response = await serviceClient.get<AgencyProfileResponse>(
-            "/agency/profile"
-        );
+export const getAgencyProfile = async (): Promise<AgencyProfileResponse> => {
+    const response = await serviceClient.get<AgencyProfileResponse>(
+        "/agency/profile"
+    );
 
-        return response.data;
-    };
+    return response.data;
+};
 
-export const getAgencyDollarRate =
-    async (): Promise<DollarRateResponse> => {
-        const response = await serviceClient.get<DollarRateResponse>(
-            "/agency/profile/dollar-rate"
-        );
+export const getAgencyDollarRate = async (): Promise<DollarRateResponse> => {
+    const response = await serviceClient.get<DollarRateResponse>(
+        "/agency/profile/dollar-rate"
+    );
 
-        return response.data;
-    };
+    return response.data;
+};
 
-export const getAgencyServiceFee =
-    async (): Promise<ServiceFeeResponse> => {
-        const response = await serviceClient.get<ServiceFeeResponse>(
-            "/agency/profile/service-fee"
-        );
+export const getAgencyServiceFee = async (): Promise<ServiceFeeResponse> => {
+    const response = await serviceClient.get<ServiceFeeResponse>(
+        "/agency/profile/service-fee"
+    );
 
-        return response.data;
-    };
+    return response.data;
+};
 
-export const updateAgencyDollarRate =
-    async (payload: UpdateDollarRatePayload) => {
-        const response = await serviceClient.patch(
-            "/agency/profile/dollar-rate",
-            payload
-        );
+export const updateAgencyDollarRate = async (
+    payload: UpdateDollarRatePayload
+) => {
+    const response = await serviceClient.patch(
+        "/agency/profile/dollar-rate",
+        payload
+    );
 
-        return response.data;
-    };
+    return response.data;
+};
 
-export const updateAgencyServiceFee =
-    async (payload: UpdateServiceFeePayload) => {
-        const response = await serviceClient.patch(
-            "/agency/profile/service-fee",
-            payload
-        );
+export const updateAgencyServiceFee = async (
+    payload: UpdateServiceFeePayload
+) => {
+    const response = await serviceClient.patch(
+        "/agency/profile/service-fee",
+        payload
+    );
 
-        return response.data;
-    };
+    return response.data;
+};
 
 export const createAgencyPayout = async (
     payload: CreateAgencyPayoutPayload

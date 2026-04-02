@@ -1,4 +1,6 @@
 "use client";
+
+import { useLogout } from "@/hooks/useLogout";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -6,6 +8,7 @@ import {
   BarChart3,
   LifeBuoy,
   Settings,
+  LogOut,
 } from "lucide-react";
 
 import {
@@ -13,7 +16,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,12 +34,12 @@ const items = [
   {
     title: "Jobs",
     url: "/agency/jobs",
-    icon: BriefcaseBusiness, // or "Briefcase"
+    icon: BriefcaseBusiness,
   },
   {
     title: "Earnings",
     url: "/agency/earnings",
-    icon: Wallet, // or "DollarSign"
+    icon: Wallet,
   },
   {
     title: "Reports",
@@ -58,18 +60,21 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { logout, loading: logoutLoading } = useLogout();
+
   return (
     <Sidebar>
       <SidebarContent className="bg-white">
         <SidebarHeader>
           <h2 className="text-lg font-semibold text-[#2D5016]">BrandGuru</h2>
         </SidebarHeader>
+
         <SidebarGroup>
-          {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
                 const isActive = pathname.includes(item.url);
+
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
@@ -87,6 +92,19 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(
+                    "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white cursor-pointer",
+                    logoutLoading && "opacity-50 pointer-events-none"
+                  )}
+                  onClick={logout}
+                >
+                  <LogOut />
+                  <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

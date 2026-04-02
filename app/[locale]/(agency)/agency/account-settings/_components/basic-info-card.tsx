@@ -49,6 +49,11 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
 
   const socialLinks = profile?.socialLinks ?? [];
 
+  const logoSrc =
+    profile?.logo && profile?.updatedAt
+      ? `${profile.logo}${profile.logo.includes("?") ? "&" : "?"}v=${encodeURIComponent(profile.updatedAt)}`
+      : (profile?.logo ?? "");
+
   return (
     <div className="overflow-hidden rounded-xl border bg-linear-to-r from-Primary to-light-green p-4">
       <div className="flex min-h-[260px] gap-6 overflow-hidden">
@@ -56,10 +61,11 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
           <div className="relative h-[100px] w-[100px] overflow-hidden rounded-full bg-off-white">
             {profile?.logo ? (
               <Image
-                src={profile.logo}
+                src={logoSrc}
                 alt={profile.agencyName || "Agency logo"}
                 fill
                 className="object-cover"
+                unoptimized
               />
             ) : null}
           </div>

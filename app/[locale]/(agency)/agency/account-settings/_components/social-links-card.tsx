@@ -37,11 +37,21 @@ type SocialLinksCardProps = {
 };
 
 type EditableSocialLink = {
+  id: string;
   platform: string;
   url: string;
   status?: "approved" | "rejected" | "pending";
   isEditing?: boolean;
+  isNew?: boolean;
+  originalPlatform?: string;
+  originalUrl?: string;
 };
+
+const createLocalId = () =>
+  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const normalizeUrl = (url: string) =>
+  url.trim().toLowerCase().replace(/\/+$/, "");
 
 const getPlatformIcon = (platform: string) => {
   const normalized = platform.trim().toLowerCase();
@@ -51,8 +61,9 @@ const getPlatformIcon = (platform: string) => {
   if (normalized === "tiktok") return <TbBrandTiktok size={28} />;
   if (normalized === "facebook") return <FaFacebookF size={24} />;
   if (normalized === "linkedin") return <FaLinkedinIn size={24} />;
-  if (normalized === "x" || normalized === "twitter")
+  if (normalized === "x" || normalized === "twitter") {
     return <TbBrandX size={24} />;
+  }
   if (normalized === "pinterest") return <FaPinterestP size={24} />;
 
   return <FaLink size={24} />;
@@ -68,11 +79,15 @@ const SocialLinksCard = ({
 
   useEffect(() => {
     setSocialLinks(
-      (profile?.socialLinks ?? []).map((item) => ({
+      (profile?.socialLinks ?? []).map((item, index) => ({
+        id: `${item.platform}-${item.url}-${index}`,
         platform: item.platform,
         url: item.url,
         status: item.status,
         isEditing: false,
+        isNew: false,
+        originalPlatform: item.platform,
+        originalUrl: item.url,
       }))
     );
   }, [profile]);
@@ -81,10 +96,14 @@ const SocialLinksCard = ({
     setSocialLinks((prev) => [
       ...prev,
       {
+        id: createLocalId(),
         platform: "",
         url: "",
         status: "pending",
         isEditing: true,
+        isNew: true,
+        originalPlatform: "",
+        originalUrl: "",
       },
     ]);
   };
@@ -109,10 +128,96 @@ const SocialLinksCard = ({
     );
   };
 
-  const handleRemoveRow = (index: number) => {
-    setSocialLinks((prev) =>
-      prev.filter((_, currentIndex) => currentIndex !== index)
+  const buildMergedProfile = (
+    baseProfile: AgencyProfileResponse,
+    updatedProfile: AgencyProfileResponse,
+    finalSocialLinks: EditableSocialLink[]
+  ): AgencyProfileResponse => {
+    return {
+      ...baseProfile,
+      ...updatedProfile,
+      socialLinks: finalSocialLinks.map((item) => {
+        const existingSocial = baseProfile.socialLinks?.find(
+          (socialItem) =>
+            socialItem.platform.toLowerCase() === item.platform.toLowerCase() &&
+            normalizeUrl(socialItem.url) === normalizeUrl(item.url)
+        );
+
+        return {
+          platform: item.platform.trim(),
+          url: item.url.trim(),
+          status: existingSocial?.status ?? "pending",
+        };
+      }),
+    };
+  };
+
+  const syncLocalSocialLinks = (mergedProfile: AgencyProfileResponse) => {
+    setSocialLinks(
+      (mergedProfile.socialLinks ?? []).map((item, index) => ({
+        id: `${item.platform}-${item.url}-${index}`,
+        platform: item.platform,
+        url: item.url,
+        status: item.status,
+        isEditing: false,
+        isNew: false,
+        originalPlatform: item.platform,
+        originalUrl: item.url,
+      }))
     );
+  };
+
+  const handleRemoveRow = async (index: number) => {
+    if (!profile) return;
+
+    const row = socialLinks[index];
+
+    if (row.isNew) {
+      setSocialLinks((prev) =>
+        prev.filter((_, currentIndex) => currentIndex !== index)
+      );
+      return;
+    }
+
+    const nextSocialLinks = socialLinks.filter(
+      (_, currentIndex) => currentIndex !== index
+    );
+
+    const payload: UpdateAgencySocialLinksPayload = {
+      socialLinks: nextSocialLinks
+        .filter((item) => item.platform.trim() && item.url.trim())
+        .map((item) => ({
+          platform: item.platform.trim(),
+          url: item.url.trim(),
+        })),
+    };
+
+    try {
+      setIsSaving(true);
+
+      const updatedProfile = await updateAgencySocialLinks(payload);
+
+      const mergedProfile: AgencyProfileResponse = {
+        ...profile,
+        ...updatedProfile,
+        socialLinks: nextSocialLinks
+          .filter((item) => item.platform.trim() && item.url.trim())
+          .map((item) => ({
+            platform: item.platform.trim(),
+            url: item.url.trim(),
+            status: item.status ?? "pending",
+          })),
+      };
+
+      setSocialLinks(nextSocialLinks);
+      onProfileUpdated(mergedProfile);
+      notifySuccess("Social link removed successfully");
+    } catch (error) {
+      console.error("Failed to remove social link:", error);
+      notifyError("Failed to remove social link");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveRow = async (index: number) => {
@@ -130,20 +235,59 @@ const SocialLinksCard = ({
       return;
     }
 
-    const finalSocialLinks = socialLinks.map((item, currentIndex) =>
-      currentIndex === index
-        ? {
-          ...item,
-          platform: item.platform.trim(),
-          url: item.url.trim(),
-        }
-        : item
+    const currentNormalizedUrl = normalizeUrl(currentRow.url);
+
+    const isDuplicate = socialLinks.some((item, i) => {
+      if (i === index) return false;
+      return normalizeUrl(item.url) === currentNormalizedUrl;
+    });
+
+    if (isDuplicate) {
+      notifyError("This social link already exists");
+      return;
+    }
+
+    const savedCurrentRow: EditableSocialLink = {
+      ...currentRow,
+      platform: currentRow.platform.trim(),
+      url: currentRow.url.trim(),
+      isEditing: false,
+      isNew: false,
+      originalPlatform: currentRow.platform.trim(),
+      originalUrl: currentRow.url.trim(),
+    };
+
+    const persistedRows: EditableSocialLink[] = (profile.socialLinks ?? []).map(
+      (item, rowIndex) => ({
+        id: `${item.platform}-${item.url}-${rowIndex}`,
+        platform: item.platform,
+        url: item.url,
+        status: item.status,
+        isEditing: false,
+        isNew: false,
+        originalPlatform: item.platform,
+        originalUrl: item.url,
+      })
     );
+
+    let finalSocialLinks: EditableSocialLink[];
+
+    if (currentRow.isNew) {
+      finalSocialLinks = [...persistedRows, savedCurrentRow];
+    } else {
+      finalSocialLinks = persistedRows.map((item) => {
+        const isMatchedRow =
+          item.originalPlatform === currentRow.originalPlatform &&
+          item.originalUrl === currentRow.originalUrl;
+
+        return isMatchedRow ? savedCurrentRow : item;
+      });
+    }
 
     const payload: UpdateAgencySocialLinksPayload = {
       socialLinks: finalSocialLinks.map((item) => ({
-        platform: item.platform,
-        url: item.url,
+        platform: item.platform.trim(),
+        url: item.url.trim(),
       })),
     };
 
@@ -152,16 +296,15 @@ const SocialLinksCard = ({
 
       const updatedProfile = await updateAgencySocialLinks(payload);
 
-      onProfileUpdated(updatedProfile);
-      setSocialLinks(
-        (updatedProfile.socialLinks ?? []).map((item) => ({
-          platform: item.platform,
-          url: item.url,
-          status: item.status,
-          isEditing: false,
-        }))
+      const mergedProfile = buildMergedProfile(
+        profile,
+        updatedProfile,
+        finalSocialLinks
       );
-      notifySuccess("Social links updated successfully");
+
+      syncLocalSocialLinks(mergedProfile);
+      onProfileUpdated(mergedProfile);
+      notifySuccess("Social link updated successfully");
     } catch (error) {
       console.error("Failed to update social links:", error);
       notifyError("Failed to update social links");
@@ -185,7 +328,7 @@ const SocialLinksCard = ({
                   <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : socialLinks.length ? (
                   socialLinks.map((item, index) => (
-                    <div key={index} className="flex items-start gap-4">
+                    <div key={item.id} className="flex items-start gap-4">
                       <div className="pt-2">{getPlatformIcon(item.platform)}</div>
 
                       {item.isEditing ? (
@@ -208,7 +351,7 @@ const SocialLinksCard = ({
                           />
                         </div>
                       ) : (
-                        <div className="min-w-0 flex-1 rounded-2xl border px-4 py-2 break-words whitespace-normal overflow-hidden">
+                        <div className="min-w-0 flex-1 overflow-hidden break-words whitespace-normal rounded-2xl border px-4 py-2">
                           {item.url}
                         </div>
                       )}
@@ -231,7 +374,7 @@ const SocialLinksCard = ({
 
                             <button
                               type="button"
-                              onClick={() => handleRemoveRow(index)}
+                              onClick={() => void handleRemoveRow(index)}
                               disabled={isSaving}
                               className="cursor-pointer text-light-green"
                             >

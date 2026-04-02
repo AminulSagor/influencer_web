@@ -14,6 +14,7 @@ type TinCertificateUploadProps = {
   value?: string;
   disabled?: boolean;
   onChange: (file: File | null) => void;
+  onRemove: () => void;
 };
 
 const isPdfUrl = (url?: string) => {
@@ -25,6 +26,7 @@ const TinCertificateUpload = ({
   value,
   disabled = false,
   onChange,
+  onRemove,
 }: TinCertificateUploadProps) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(value ?? null);
@@ -66,10 +68,11 @@ const TinCertificateUpload = ({
   const removeFile = () => {
     setFile(null);
     setPreview(null);
-    onChange(null);
+    onRemove();
   };
 
-  const showPdfCard = file?.type === "application/pdf" || (!file && isPdfUrl(value));
+  const showPdfCard =
+    file?.type === "application/pdf" || (!file && isPdfUrl(value));
 
   return (
     <div className="space-y-2">

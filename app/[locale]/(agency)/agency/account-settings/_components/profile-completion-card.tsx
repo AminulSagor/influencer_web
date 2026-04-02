@@ -75,8 +75,16 @@ const ProfileCompletionCard = ({
         website: profile.website ?? "",
       };
 
-      const updatedProfile = await updateAgencyBasicInfo(payload);
+      await updateAgencyBasicInfo(payload);
+
+      // ✅ FIX: manually update profile instead of using API response
+      const updatedProfile: AgencyProfileResponse = {
+        ...profile,
+        agencyBio: bio,
+      };
+
       onProfileUpdated(updatedProfile);
+
       setIsEditingBio(false);
       notifySuccess("Bio updated successfully");
     } catch (error) {

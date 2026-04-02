@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Image from "next/image";
 import { FaClock } from "react-icons/fa6";
@@ -14,25 +16,83 @@ import {
 } from "../[id]/consts";
 import { cn } from "@/lib/utils";
 import SubmissionHistory from "./submission-history";
+import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
 }
 
 const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
+  const [showNewSubmissionForm, setShowNewSubmissionForm] = useState(false);
+  const [localSubmissions, setLocalSubmissions] = useState<
+    AgencyMilestoneSubmissionItem[]
+  >([]);
+
+  const hasInitializedFromServer = useRef(false);
+
   const payout = milestone?.payout ?? 0;
   const isPartial = milestone?.status === PARTIAL_PAID;
   const partialPaidAmount = isPartial ? payout / 2 : 0;
   const progress = payout > 0 ? (partialPaidAmount / payout) * 100 : 0;
 
+  const resolvedMilestoneId =
+    (
+      milestone as
+      | (PaymanetMilestoneDataType & {
+        milestoneId?: string;
+        submissions?: AgencyMilestoneSubmissionItem[];
+      })
+      | null
+    )?.milestoneId ?? "";
+
+  const submissionsFromMilestone =
+    (
+      milestone as
+      | (PaymanetMilestoneDataType & {
+        submissions?: AgencyMilestoneSubmissionItem[];
+      })
+      | null
+    )?.submissions ?? [];
+
+  useEffect(() => {
+    if (!hasInitializedFromServer.current) {
+      setLocalSubmissions(submissionsFromMilestone);
+      hasInitializedFromServer.current = true;
+      return;
+    }
+
+    if (
+      submissionsFromMilestone.length > 0 &&
+      submissionsFromMilestone.length >= localSubmissions.length
+    ) {
+      setLocalSubmissions(submissionsFromMilestone);
+    }
+  }, [submissionsFromMilestone, localSubmissions.length]);
+
+  const displaySubmissions = useMemo(() => localSubmissions, [localSubmissions]);
+
+  const canShowHistory =
+    milestone?.status === PAID ||
+    milestone?.status === IN_REVIEW ||
+    milestone?.status === PARTIAL_PAID ||
+    displaySubmissions.length > 0;
+
+  const canAddAnotherSubmission =
+    canShowHistory && Boolean(resolvedMilestoneId);
+
+  const handleSubmitted = (submission: AgencyMilestoneSubmissionItem) => {
+    setLocalSubmissions((prev) => [submission, ...prev]);
+    setShowNewSubmissionForm(false);
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between">
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex flex-1 items-center gap-4">
             <div>
               <Image
-                src={"/icons/milestone.svg"}
+                src="/icons/milestone.svg"
                 height={24}
                 width={24}
                 alt="svg"
@@ -40,27 +100,25 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
             </div>
             <div>
               <p className="text-Primary">Milestone {milestone?.id}</p>
-              <h2 className="text-Primary text-xl font-semibold">
+              <h2 className="text-xl font-semibold text-Primary">
                 {milestone?.title}
               </h2>
             </div>
           </div>
 
-          <div className="flex gap-6 items-center flex-1">
+          <div className="flex flex-1 items-center gap-6">
             <p className="text-sm font-semibold text-Primary">
               Partial Payment <br /> Progress
             </p>
             <div className="flex-1 space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">৳{partialPaidAmount}</p>
-                <p className="text-sm font-semibold text-Primary">
-                  ৳{payout}
-                </p>
+                <p className="text-sm font-semibold text-Primary">৳{payout}</p>
               </div>
 
-              <div className="h-2 w-full bg-light-green/30 rounded-full overflow-hidden">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-light-green/30">
                 <div
-                  className="h-full bg-light-green rounded-full transition-all duration-300"
+                  className="h-full rounded-full bg-light-green transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -70,13 +128,13 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
       </CardHeader>
 
       <CardContent className="space-y-2">
-        <div className="border border-light-green rounded-lg p-4 bg-linear-to-r bg-Secondary to-white">
+        <div className="rounded-lg border border-light-green bg-linear-to-r bg-Secondary p-4 to-white">
           <div className="flex justify-between">
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-Primary">
                 Content Requirement
               </h2>
-              <ul className="list-disc text-Primary ml-5 text-sm">
+              <ul className="ml-5 list-disc text-sm text-Primary">
                 {milestone?.contentRequirement.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -86,7 +144,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                 <h2 className="text-xl font-medium text-Primary">
                   Promotion Goal
                 </h2>
-                <p className="text-Primary text-sm">
+                <p className="text-sm text-Primary">
                   {milestone?.promotionalGoal}
                 </p>
               </div>
@@ -113,7 +171,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
 
             <div
               className={cn(
-                "border p-2 w-[200px] bg-linear-to-r rounded-lg flex flex-col items-center justify-center gap-2",
+                "flex w-[200px] flex-col items-center justify-center gap-2 rounded-lg border bg-linear-to-r p-2",
                 milestone?.status === TODO &&
                 "from-off-white to-white border-gray-300",
                 milestone?.status === IN_REVIEW &&
@@ -144,7 +202,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                   milestone?.status === PARTIAL_PAID && "bg-light-green"
                 )}
               >
-                {milestone?.status}
+                {displaySubmissions.length > 0 ? IN_REVIEW : milestone?.status}
               </Badge>
 
               <div
@@ -166,11 +224,34 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           </div>
         </div>
 
-        {milestone?.status === TODO && <SubmissionForm />}
+        {!canShowHistory && resolvedMilestoneId && (
+          <SubmissionForm
+            milestoneId={resolvedMilestoneId}
+            onSubmitted={handleSubmitted}
+          />
+        )}
 
-        {(milestone?.status === PAID ||
-          milestone?.status === IN_REVIEW ||
-          milestone?.status === PARTIAL_PAID) && <SubmissionHistory />}
+        {canShowHistory && <SubmissionHistory submissions={displaySubmissions} />}
+
+        {canAddAnotherSubmission && !showNewSubmissionForm && (
+          <Button
+            type="button"
+            onClick={() => setShowNewSubmissionForm(true)}
+            variant="outline"
+            className="mt-4 h-auto w-full rounded-lg border border-dashed border-light-green py-6 text-base font-semibold text-light-green hover:bg-light-green hover:text-white"
+          >
+            + Add Another Submission
+          </Button>
+        )}
+
+        {canAddAnotherSubmission && showNewSubmissionForm && (
+          <div className="mt-4">
+            <SubmissionForm
+              milestoneId={resolvedMilestoneId}
+              onSubmitted={handleSubmitted}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
