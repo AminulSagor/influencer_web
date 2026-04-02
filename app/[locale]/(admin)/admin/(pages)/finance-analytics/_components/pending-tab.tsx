@@ -31,6 +31,8 @@ import {
   exportPendingClearance,
 } from "@/service/admin/finance/export-pending-clearance";
 
+import BonusClearance from "./bonus-clearance";
+
 import type {
   AmountSortType,
   BrandPendingPaymentItem,
@@ -39,14 +41,16 @@ import type {
   PendingClearanceResponse,
   PendingPaymentType,
 } from "@/types/admin/finance/finance_pending_completed_type";
+import type { PendingBonusesResponse } from "@/types/admin/finance/finance_bonus_clearance_type";
 
-type PendingTabKey = "agency" | "influencer" | "brand";
+type PendingTabKey = "agency" | "influencer" | "brand" | "bonus";
 
 type Props = {
   tabsData: {
     agency: PendingClearanceResponse;
     influencer: PendingClearanceResponse;
     brand: BrandPendingPaymentResponse;
+    bonus: PendingBonusesResponse;
   };
 };
 
@@ -89,7 +93,7 @@ const formatPaymentType = (value?: string) => {
   return map[value.toLowerCase()] || value;
 };
 
-const getTabApiValue = (tab: Exclude<PendingTabKey, "brand">) => {
+const getTabApiValue = (tab: Exclude<PendingTabKey, "brand" | "bonus">) => {
   if (tab === "agency") return "agencypayout";
   return "influencerpayout";
 };
@@ -188,10 +192,13 @@ const PendingTab = ({ tabsData }: Props) => {
   const currentRes = tabsData[activeTab];
   const currentData = currentRes?.data ?? [];
   const currentMeta = currentRes?.meta;
+  const bonusTotalPending = (currentRes as PendingBonusesResponse | undefined)
+    ?.summary?.totalPendingBonus;
 
   const filteredData = useMemo(() => currentData, [currentData]);
 
   const currentRowIds = useMemo(() => {
+    if (activeTab === "bonus") return [];
     if (activeTab === "brand") {
       return (filteredData as BrandPendingPaymentItem[]).map(
         (item) => item.campaignId
@@ -260,6 +267,11 @@ const PendingTab = ({ tabsData }: Props) => {
 
   const handleExport = async () => {
     try {
+      if (activeTab === "bonus") {
+        toast.error("Export is not available for bonus clearance.");
+        return;
+      }
+
       setIsExporting(true);
 
       const now = new Date().toISOString().slice(0, 10);
@@ -306,14 +318,15 @@ const PendingTab = ({ tabsData }: Props) => {
     agency: "Agency Payout",
     influencer: "Influencer Payouts",
     brand: "Brand Payments",
+    bonus: "Bonus Clearance",
   };
 
   return (
     <TabsContent value="pending" className="mt-4">
       <Card className="overflow-hidden rounded-[18px] border border-[#d6d6d6] shadow-none">
-        <CardHeader className="flex flex-row items-start justify-between border-b px-8 py-5">
+        <CardHeader className="flex flex-col items-start gap-3 border-b px-4 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-8">
           <div>
-            <CardTitle className="text-[28px] font-semibold text-Primary">
+            <CardTitle className="text-[24px] font-semibold text-Primary sm:text-[28px]">
               Pending Payment Approval
             </CardTitle>
             <CardDescription className="mt-1 text-sm text-[#9b9b9b]">
@@ -321,8 +334,8 @@ const PendingTab = ({ tabsData }: Props) => {
             </CardDescription>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full bg-white">
-            {(["agency", "influencer", "brand"] as PendingTabKey[]).map(
+          <div className="flex flex-wrap items-center gap-2 rounded-full bg-white px-3 py-2 sm:px-0 sm:py-0 sm:gap-2">
+            {(["agency", "influencer", "brand", "bonus"] as PendingTabKey[]).map(
               (tab) => {
                 const active = activeTab === tab;
 
@@ -334,11 +347,13 @@ const PendingTab = ({ tabsData }: Props) => {
                       setPendingParams({
                         pendingTab: tab,
                         pendingPaymentType:
-                          tab === "brand" ? undefined : paymentType || undefined,
+                          tab === "brand" || tab === "bonus"
+                            ? undefined
+                            : paymentType || undefined,
                       })
                     }
                     className={[
-                      "rounded-full px-5 py-2 text-xs font-medium transition",
+                      "whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium transition sm:px-5",
                       active
                         ? "bg-light-green text-white shadow-sm"
                         : "bg-transparent text-[#2b2b2b] hover:bg-[#f3f6ea]",
@@ -363,119 +378,132 @@ const PendingTab = ({ tabsData }: Props) => {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
-            <div className="flex items-center gap-3">
-              <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
-                {selectedIds.length} Selected
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
+            {activeTab !== "bonus" ? (
+              <div className="flex items-center gap-3">
+                <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
+                  {selectedIds.length} Selected
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="h-9 rounded-[8px] bg-light-green px-5 text-xs font-medium text-white hover:bg-light-green"
+                >
+                  {isExporting ? "Exporting..." : "Export"}
+                </Button>
               </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
+                  {bonusTotalPending ?? 0} Pending
+                </div>
+              </div>
+            )}
 
-              <Button
-                type="button"
-                onClick={handleExport}
-                disabled={isExporting}
-                className="h-9 rounded-[8px] bg-light-green px-5 text-xs font-medium text-white hover:bg-light-green"
-              >
-                {isExporting ? "Exporting..." : "Export"}
-              </Button>
-            </div>
+            {activeTab !== "bonus" && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+                {activeTab !== "brand" && (
+                  <Select
+                    value={paymentType || "all"}
+                    onValueChange={(value) =>
+                      setPendingParams({
+                        pendingPaymentType:
+                          value === "all" ? undefined : value,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-full sm:w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                      <SelectValue placeholder="Payment Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Payment Types</SelectItem>
+                      <SelectItem value="partialpayment">
+                        Partial Payment
+                      </SelectItem>
+                      <SelectItem value="milestonepayment">
+                        Milestone Payment
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
 
-            <div className="flex items-center gap-2">
-              {activeTab !== "brand" && (
                 <Select
-                  value={paymentType || "all"}
+                  value={amountSort || "all"}
                   onValueChange={(value) =>
                     setPendingParams({
-                      pendingPaymentType:
+                      pendingAmountSort:
                         value === "all" ? undefined : value,
                     })
                   }
                 >
-                  <SelectTrigger className="h-9 w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
-                    <SelectValue placeholder="Payment Type" />
+                  <SelectTrigger className="h-9 w-full sm:w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                    <SelectValue placeholder="Amount" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Payment Types</SelectItem>
-                    <SelectItem value="partialpayment">
-                      Partial Payment
-                    </SelectItem>
-                    <SelectItem value="milestonepayment">
-                      Milestone Payment
-                    </SelectItem>
+                    <SelectItem value="all">Amount</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
                 </Select>
-              )}
 
-              <Select
-                value={amountSort || "all"}
-                onValueChange={(value) =>
-                  setPendingParams({
-                    pendingAmountSort:
-                      value === "all" ? undefined : value,
-                  })
-                }
-              >
-                <SelectTrigger className="h-9 w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
-                  <SelectValue placeholder="Amount" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Amount</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={dateRange}
-                onValueChange={(value) =>
-                  setPendingParams({
-                    pendingDateRange: value === "all" ? undefined : value,
-                    pendingDateFrom:
-                      value === "last30"
-                        ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-                        : value === "thisMonth"
-                        ? new Date(
-                            new Date().getFullYear(),
-                            new Date().getMonth(),
-                            1
-                          ).toISOString()
-                        : undefined,
-                    pendingDateTo:
-                      value === "all" ? undefined : new Date().toISOString(),
-                  })
-                }
-              >
-                <SelectTrigger className="h-9 w-[155px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
-                  <SelectValue placeholder="Date Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="last30">Last 30 Days</SelectItem>
-                  <SelectItem value="thisMonth">This Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <Select
+                  value={dateRange}
+                  onValueChange={(value) =>
+                    setPendingParams({
+                      pendingDateRange: value === "all" ? undefined : value,
+                      pendingDateFrom:
+                        value === "last30"
+                          ? new Date(
+                              Date.now() - 30 * 24 * 60 * 60 * 1000
+                            ).toISOString()
+                          : value === "thisMonth"
+                          ? new Date(
+                              new Date().getFullYear(),
+                              new Date().getMonth(),
+                              1
+                            ).toISOString()
+                          : undefined,
+                      pendingDateTo:
+                        value === "all" ? undefined : new Date().toISOString(),
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-9 w-full sm:w-[155px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                    <SelectValue placeholder="Date Range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="last30">Last 30 Days</SelectItem>
+                    <SelectItem value="thisMonth">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           {(activeTab === "agency" || activeTab === "influencer") && (
-            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
-              <div className="grid grid-cols-[52px_1.7fr_1.1fr_1.8fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={
-                      allSelected ? true : someSelected ? "indeterminate" : false
-                    }
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all rows"
-                  />
+            <div className="overflow-x-auto rounded-[12px] border border-[#d9d9d9]">
+              <div className="min-w-[900px]">
+                <div className="grid grid-cols-[52px_1.7fr_1.1fr_1.8fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={
+                        allSelected ? true : someSelected ? "indeterminate" : false
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all rows"
+                    />
+                  </div>
+                  <div>Payee Info</div>
+                  <div>Payment Type</div>
+                  <div>Campaign</div>
+                  <div>Amount</div>
+                  <div className="text-right pr-3">Action</div>
                 </div>
-                <div>Payee Info</div>
-                <div>Payment Type</div>
-                <div>Campaign</div>
-                <div>Amount</div>
-                <div className="text-right pr-3">Action</div>
-              </div>
 
-              <div className="divide-y divide-[#e5e5e5]">
+                <div className="divide-y divide-[#e5e5e5]">
                 {(filteredData as PendingClearanceItem[]).map((item) => {
                   const selected = selectedIds.includes(item.id);
 
@@ -550,31 +578,33 @@ const PendingTab = ({ tabsData }: Props) => {
                     No pending {activeTab} payments found.
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === "brand" && (
-            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
-              <div className="grid grid-cols-[52px_1.5fr_0.9fr_1.6fr_0.9fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={
-                      allSelected ? true : someSelected ? "indeterminate" : false
-                    }
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all rows"
-                  />
+            <div className="overflow-x-auto rounded-[12px] border border-[#d9d9d9]">
+              <div className="min-w-[900px]">
+                <div className="grid grid-cols-[52px_1.5fr_0.9fr_1.6fr_0.9fr_0.9fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={
+                        allSelected ? true : someSelected ? "indeterminate" : false
+                      }
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all rows"
+                    />
+                  </div>
+                  <div>Brand Name</div>
+                  <div>Last Paid</div>
+                  <div>Campaign</div>
+                  <div>Paid</div>
+                  <div>Due Amount</div>
+                  <div className="text-right pr-3">Action</div>
                 </div>
-                <div>Brand Name</div>
-                <div>Last Paid</div>
-                <div>Campaign</div>
-                <div>Paid</div>
-                <div>Due Amount</div>
-                <div className="text-right pr-3">Action</div>
-              </div>
 
-              <div className="divide-y divide-[#e5e5e5]">
+                <div className="divide-y divide-[#e5e5e5]">
                 {(filteredData as BrandPendingPaymentItem[]).map((item) => {
                   const rowKey = `${item.clientId}-${item.campaignId}`;
                   const isLoading = notifyingKey === rowKey;
@@ -660,8 +690,13 @@ const PendingTab = ({ tabsData }: Props) => {
                     No pending brand payments found.
                   </div>
                 )}
+                </div>
               </div>
             </div>
+          )}
+
+          {activeTab === "bonus" && (
+            <BonusClearance data={tabsData.bonus} searchText={search} />
           )}
 
           <div className="flex justify-end text-sm text-muted-foreground">

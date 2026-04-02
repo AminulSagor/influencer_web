@@ -14,6 +14,11 @@ import type {
   CompletedPaymentType,
   PendingPaymentType,
 } from "@/types/admin/finance/finance_pending_completed_type";
+import { getPendingBonuses } from "@/service/admin/finance/get-pending-bonuses";
+import { getPartiallyCompleted } from "@/service/admin/finance/get-partially-completed";
+import type {
+  PartiallyCompletedResponse,
+} from "@/types/admin/finance/finance_partially_completed_type";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -87,6 +92,10 @@ const page = async ({ searchParams }: PageProps) => {
     completedAgency,
     completedInfluencer,
     completedBrand,
+    pendingBonuses,
+    partiallyCompletedAgency,
+    partiallyCompletedInfluencer,
+    partiallyCompletedBrand,
   ] = await Promise.all([
     getFinanceAnalytics(),
 
@@ -153,6 +162,25 @@ const page = async ({ searchParams }: PageProps) => {
       dateFrom: completedDates.dateFrom,
       dateTo: completedDates.dateTo,
     }),
+    getPendingBonuses({
+      page: 1,
+      limit: 10,
+    }),
+    getPartiallyCompleted({
+      page: 1,
+      limit: 10,
+      tab: "agencypayout",
+    }),
+    getPartiallyCompleted({
+      page: 1,
+      limit: 10,
+      tab: "influencerpayout",
+    }),
+    getPartiallyCompleted({
+      page: 1,
+      limit: 10,
+      tab: "brandpayment",
+    }),
   ]);
 
   return (
@@ -173,11 +201,17 @@ const page = async ({ searchParams }: PageProps) => {
               agency: pendingAgency,
               influencer: pendingInfluencer,
               brand: pendingBrand,
+              bonus: pendingBonuses,
             }}
             completedTabs={{
               agency: completedAgency,
               influencer: completedInfluencer,
               brand: completedBrand,
+            }}
+            partiallyCompletedTabs={{
+              agency: partiallyCompletedAgency as PartiallyCompletedResponse,
+              influencer: partiallyCompletedInfluencer as PartiallyCompletedResponse,
+              brand: partiallyCompletedBrand as PartiallyCompletedResponse,
             }}
           />
         </div>

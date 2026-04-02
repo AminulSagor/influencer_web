@@ -260,9 +260,9 @@ const CompletedTab = ({ tabsData }: Props) => {
   return (
     <TabsContent value="completed" className="mt-4">
       <Card className="overflow-hidden rounded-[18px] border border-[#d6d6d6] shadow-none">
-        <CardHeader className="flex flex-row items-start justify-between border-b px-6 py-4">
+        <CardHeader className="flex flex-col items-start gap-3 border-b px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-6">
           <div>
-            <CardTitle className="text-[28px] font-semibold text-Primary">
+            <CardTitle className="text-[24px] font-semibold text-Primary sm:text-[28px]">
               Payment Completed
             </CardTitle>
             <CardDescription className="mt-1 text-sm text-[#9b9b9b]">
@@ -270,7 +270,7 @@ const CompletedTab = ({ tabsData }: Props) => {
             </CardDescription>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full bg-white">
+          <div className="flex flex-wrap items-center gap-2 rounded-full bg-white px-3 py-2 sm:px-0 sm:py-0 sm:gap-2">
             {(["agency", "influencer", "brand"] as FinanceTableTab[]).map(
               (tab) => {
                 const active = activeTab === tab;
@@ -285,7 +285,7 @@ const CompletedTab = ({ tabsData }: Props) => {
                       })
                     }
                     className={[
-                      "rounded-full px-5 py-2 text-xs font-medium transition",
+                      "whitespace-nowrap rounded-full px-3 py-2 text-xs font-medium transition sm:px-5",
                       active
                         ? "bg-light-green text-white shadow-sm"
                         : "bg-transparent text-[#2b2b2b] hover:bg-[#f3f6ea]",
@@ -310,7 +310,7 @@ const CompletedTab = ({ tabsData }: Props) => {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between rounded-[10px] border border-[#9eb56a] bg-[#eef2d9] px-3 py-2">
             <div className="flex items-center gap-3">
               <div className="rounded-[8px] bg-light-green px-4 py-2 text-xs font-medium text-white">
                 {selectedIds.length} Selected
@@ -326,7 +326,7 @@ const CompletedTab = ({ tabsData }: Props) => {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
               <Select
                 value={paymentType || "all"}
                 onValueChange={(value) =>
@@ -335,7 +335,7 @@ const CompletedTab = ({ tabsData }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="h-9 w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                <SelectTrigger className="h-9 w-full sm:w-[150px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
                   <SelectValue placeholder="Payment Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -356,7 +356,7 @@ const CompletedTab = ({ tabsData }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="h-9 w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                <SelectTrigger className="h-9 w-full sm:w-[110px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
                   <SelectValue placeholder="Amount" />
                 </SelectTrigger>
                 <SelectContent>
@@ -388,7 +388,7 @@ const CompletedTab = ({ tabsData }: Props) => {
                   })
                 }
               >
-                <SelectTrigger className="h-9 w-[135px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
+                <SelectTrigger className="h-9 w-full sm:w-[135px] rounded-[8px] border-[#cfcfcf] bg-white text-xs">
                   <SelectValue placeholder="Date Range" />
                 </SelectTrigger>
                 <SelectContent>
@@ -401,24 +401,25 @@ const CompletedTab = ({ tabsData }: Props) => {
           </div>
 
           {(activeTab === "agency" || activeTab === "influencer") && (
-            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
-              <div className="grid grid-cols-[52px_1.6fr_1.8fr_1fr_1fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={
-                      allSelected ? true : someSelected ? "indeterminate" : false
-                    }
-                    onCheckedChange={toggleSelectAll}
-                  />
+            <div className="overflow-x-auto rounded-[12px] border border-[#d9d9d9]">
+              <div className="min-w-[900px]">
+                <div className="grid grid-cols-[52px_1.6fr_1.8fr_1fr_1fr_1fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={
+                        allSelected ? true : someSelected ? "indeterminate" : false
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </div>
+                  <div>Payee Info</div>
+                  <div>Campaign</div>
+                  <div>Agreed Amount</div>
+                  <div>Total Paid</div>
+                  <div className="text-right pr-3">Status</div>
                 </div>
-                <div>Payee Info</div>
-                <div>Campaign</div>
-                <div>Agreed Amount</div>
-                <div>Total Paid</div>
-                <div className="text-right pr-3">Status</div>
-              </div>
 
-              <div className="divide-y divide-[#e5e5e5]">
+                <div className="divide-y divide-[#e5e5e5]">
                 {filteredData.map((item) => {
                   const selected = selectedIds.includes(item.id);
                   const status = getStatusLabel(item);
@@ -498,30 +499,32 @@ const CompletedTab = ({ tabsData }: Props) => {
                     No completed {activeTab} payments found.
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === "brand" && (
-            <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9]">
-              <div className="grid grid-cols-[52px_1.4fr_1.7fr_1fr_1fr_1fr_0.9fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={
-                      allSelected ? true : someSelected ? "indeterminate" : false
-                    }
-                    onCheckedChange={toggleSelectAll}
-                  />
+            <div className="overflow-x-auto rounded-[12px] border border-[#d9d9d9]">
+              <div className="min-w-[900px]">
+                <div className="grid grid-cols-[52px_1.4fr_1.7fr_1fr_1fr_1fr_0.9fr] items-center bg-light-green px-2 py-3 text-sm font-medium text-white">
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      checked={
+                        allSelected ? true : someSelected ? "indeterminate" : false
+                      }
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </div>
+                  <div>Payee Info</div>
+                  <div>Campaign</div>
+                  <div>Campaign Budget</div>
+                  <div>Paid By Brand</div>
+                  <div>Talent Fee</div>
+                  <div className="text-right pr-3">Profit</div>
                 </div>
-                <div>Payee Info</div>
-                <div>Campaign</div>
-                <div>Campaign Budget</div>
-                <div>Paid By Brand</div>
-                <div>Talent Fee</div>
-                <div className="text-right pr-3">Profit</div>
-              </div>
 
-              <div className="divide-y divide-[#e5e5e5]">
+                <div className="divide-y divide-[#e5e5e5]">
                 {filteredData.map((item) => {
                   const selected = selectedIds.includes(item.id);
 
@@ -597,6 +600,7 @@ const CompletedTab = ({ tabsData }: Props) => {
                     No completed brand payments found.
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )}

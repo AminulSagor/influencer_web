@@ -112,8 +112,8 @@ export default function CampaignQuoteDetails({
     localQuoteState === "confirmed"
       ? "Quotation Confirmed"
       : localQuoteState === "sent"
-        ? "Quotation Sent"
-        : "Send Quote";
+      ? "Quotation Sent"
+      : "Send Quote";
 
   const handleSendQuoteClick = async () => {
     try {
@@ -153,7 +153,7 @@ export default function CampaignQuoteDetails({
         )}
       >
         <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <CardTitle className="text-Primary text-lg">{title}</CardTitle>
             <p className="text-gray-400 text-sm">Revised: {revisedCount} Times</p>
           </div>
@@ -163,7 +163,7 @@ export default function CampaignQuoteDetails({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2">
           <div className="space-y-2">
             <QuoteTextRow text="Base Campaign Budget" amount={clientBudget} />
             <QuoteTextRow text="Vat/Tax" vat={vatPercent} amount={vatAmount} />
@@ -177,7 +177,7 @@ export default function CampaignQuoteDetails({
             {isLocked ? (
               <QuoteTextRow text="Quote Amount" amount={quoteAmount} />
             ) : (
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
                 <p className="whitespace-nowrap">Quote Amount</p>
 
                 <div className="relative flex-1">
@@ -255,7 +255,7 @@ export default function CampaignQuoteDetails({
             </div>
 
             <div className="mt-6 rounded-xl bg-linear-to-r from-Primary to-light-green p-4 text-left">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center">
                   <div className="w-6 aspect-square relative">
                     <Image src={"/icons/online-ads-icon.svg"} fill alt="icon" />

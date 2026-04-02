@@ -2,7 +2,7 @@
 
 import { useLogout } from "@/hooks/useLogout";
 
-import { BriefcaseBusiness, LayoutDashboard, Settings } from "lucide-react";
+import { BriefcaseBusiness, LayoutDashboard, Settings, XCircle } from "lucide-react";
 
 import {
   Sidebar,
@@ -60,6 +60,11 @@ const items = [
     title: "Finance & Analytics",
     url: "/admin/finance-analytics",
     icon: GrAnalytics,
+  },
+  {
+    title: "Cancellation Requests",
+    url: "/admin/cancellation-requests",
+    icon: XCircle,
   },
   {
     title: "Reports",
