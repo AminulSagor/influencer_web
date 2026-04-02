@@ -73,13 +73,16 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
+const isApprovedStatus = (status?: string) => {
+  const normalized = status?.trim().toLowerCase();
+  return normalized === "approved" || normalized === "verified";
+};
+
 const VerificationMethodCard = ({
   profile,
   isLoading,
   onProfileUpdated,
 }: VerificationMethodCardProps) => {
-  const isVerified = !!profile?.isVerified;
-
   const [nidNumber, setNidNumber] = useState("");
   const [tradeLicenseNumber, setTradeLicenseNumber] = useState("");
   const [tinNumber, setTinNumber] = useState("");
@@ -90,8 +93,32 @@ const VerificationMethodCard = ({
   const [tradeLicenseFile, setTradeLicenseFile] = useState<File | null>(null);
   const [tinFile, setTinFile] = useState<File | null>(null);
 
+  const [isNidFrontRemoved, setIsNidFrontRemoved] = useState(false);
+  const [isNidBackRemoved, setIsNidBackRemoved] = useState(false);
+  const [isTradeLicenseRemoved, setIsTradeLicenseRemoved] = useState(false);
+  const [isTinRemoved, setIsTinRemoved] = useState(false);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  const hasAllVerificationFields =
+    !!nidNumber.trim() &&
+    !!tradeLicenseNumber.trim() &&
+    !!tinNumber.trim() &&
+    !!binNumber.trim() &&
+    !!(nidFrontFile || (!isNidFrontRemoved && profile?.nidFrontImg)) &&
+    !!(nidBackFile || (!isNidBackRemoved && profile?.nidBackImg)) &&
+    !!(tradeLicenseFile ||
+      (!isTradeLicenseRemoved && profile?.tradeLicenseImage)) &&
+    !!(tinFile || (!isTinRemoved && profile?.tinImage));
+
+  const isVerificationCompleted =
+    hasAllVerificationFields &&
+    isApprovedStatus(profile?.nidVerification?.nidStatus) &&
+    isApprovedStatus(profile?.tradeLicenseVerification?.tradeLicenseStatus) &&
+    isApprovedStatus(profile?.tinVerification?.tinStatus) &&
+    isApprovedStatus(profile?.binVerification?.binStatus) &&
+    !!profile?.isEmailVerified;
 
   useEffect(() => {
     setNidNumber(profile?.nidNumber ?? "");
@@ -108,6 +135,18 @@ const VerificationMethodCard = ({
   useEffect(() => {
     setBinNumber(profile?.binNumber ?? "");
   }, [profile?.binNumber]);
+
+  useEffect(() => {
+    setIsNidFrontRemoved(false);
+    setIsNidBackRemoved(false);
+    setIsTradeLicenseRemoved(false);
+    setIsTinRemoved(false);
+  }, [
+    profile?.nidFrontImg,
+    profile?.nidBackImg,
+    profile?.tradeLicenseImage,
+    profile?.tinImage,
+  ]);
 
   const initialValues = useMemo(
     () => ({
@@ -128,6 +167,10 @@ const VerificationMethodCard = ({
     setNidBackFile(null);
     setTradeLicenseFile(null);
     setTinFile(null);
+    setIsNidFrontRemoved(false);
+    setIsNidBackRemoved(false);
+    setIsTradeLicenseRemoved(false);
+    setIsTinRemoved(false);
   };
 
   const handleSaveAll = async () => {
@@ -136,14 +179,19 @@ const VerificationMethodCard = ({
     const isNidChanged =
       nidNumber.trim() !== initialValues.nidNumber ||
       !!nidFrontFile ||
-      !!nidBackFile;
+      !!nidBackFile ||
+      isNidFrontRemoved ||
+      isNidBackRemoved;
 
     const isTradeLicenseChanged =
       tradeLicenseNumber.trim() !== initialValues.tradeLicenseNumber ||
-      !!tradeLicenseFile;
+      !!tradeLicenseFile ||
+      isTradeLicenseRemoved;
 
     const isTinChanged =
-      tinNumber.trim() !== initialValues.tinNumber || !!tinFile;
+      tinNumber.trim() !== initialValues.tinNumber ||
+      !!tinFile ||
+      isTinRemoved;
 
     const isBinChanged = binNumber.trim() !== initialValues.binNumber;
 
@@ -178,8 +226,12 @@ const VerificationMethodCard = ({
       if (isNidChanged) {
         const nidPayload: UpdateAgencyNidPayload = {
           nidNumber: nidNumber.trim(),
-          nidFrontImg: uploadedNidFrontUrl ?? initialValues.nidFrontImg,
-          nidBackImg: uploadedNidBackUrl ?? initialValues.nidBackImg,
+          nidFrontImg: isNidFrontRemoved
+            ? ""
+            : uploadedNidFrontUrl ?? initialValues.nidFrontImg,
+          nidBackImg: isNidBackRemoved
+            ? ""
+            : uploadedNidBackUrl ?? initialValues.nidBackImg,
         };
 
         latestProfile = await updateAgencyNid(nidPayload);
@@ -188,8 +240,9 @@ const VerificationMethodCard = ({
       if (isTradeLicenseChanged) {
         const tradeLicensePayload: UpdateAgencyTradeLicensePayload = {
           tradeLicenseNumber: tradeLicenseNumber.trim(),
-          tradeLicenseImage:
-            uploadedTradeLicenseUrl ?? initialValues.tradeLicenseImage,
+          tradeLicenseImage: isTradeLicenseRemoved
+            ? ""
+            : uploadedTradeLicenseUrl ?? initialValues.tradeLicenseImage,
         };
 
         latestProfile = await updateAgencyTradeLicense(tradeLicensePayload);
@@ -198,7 +251,9 @@ const VerificationMethodCard = ({
       if (isTinChanged) {
         const tinPayload: UpdateAgencyTinPayload = {
           tinNumber: tinNumber.trim(),
-          tinImage: uploadedTinUrl ?? initialValues.tinImage,
+          tinImage: isTinRemoved
+            ? ""
+            : uploadedTinUrl ?? initialValues.tinImage,
         };
 
         latestProfile = await updateAgencyTin(tinPayload);
@@ -212,7 +267,11 @@ const VerificationMethodCard = ({
         latestProfile = await updateAgencyBin(binPayload);
       }
 
-      onProfileUpdated(latestProfile);
+      onProfileUpdated({
+        ...profile,
+        ...latestProfile,
+      });
+
       resetLocalFiles();
       setIsEditing(false);
       notifySuccess("Verification info updated successfully");
@@ -307,17 +366,26 @@ const VerificationMethodCard = ({
 
             <AccordionContent>
               <div className="space-y-4 px-1">
-                {isVerified ? (
+                {isVerificationCompleted ? (
                   <div className="rounded-md border border-light-green-200 bg-light-green-100 p-2">
                     <p className="font-medium text-light-green-600">
                       Verification Completed
+                    </p>
+                  </div>
+                ) : hasAllVerificationFields ? (
+                  <div className="rounded-md border border-orange/20 bg-orange/10 p-2">
+                    <p className="flex items-center gap-2 font-medium text-orange">
+                      <IoCloseCircle size={18} />
+                      Verification in progress. Your submitted documents are under
+                      review.
                     </p>
                   </div>
                 ) : (
                   <div className="rounded-md border border-rose-200 bg-rose-100 p-2">
                     <p className="flex items-center gap-2 font-medium text-rose-600">
                       <IoCloseCircle size={18} />
-                      Verification Required. Please provide documents
+                      Verification required. Please provide all required documents
+                      and information.
                     </p>
                   </div>
                 )}
@@ -337,15 +405,29 @@ const VerificationMethodCard = ({
                     </div>
 
                     <NIDUploadFront
-                      value={profile?.nidFrontImg}
+                      value={isNidFrontRemoved ? "" : profile?.nidFrontImg}
                       disabled={isFieldDisabled}
-                      onChange={setNidFrontFile}
+                      onChange={(file) => {
+                        setIsNidFrontRemoved(false);
+                        setNidFrontFile(file);
+                      }}
+                      onRemove={() => {
+                        setIsNidFrontRemoved(true);
+                        setNidFrontFile(null);
+                      }}
                     />
 
                     <NIDUploadBack
-                      value={profile?.nidBackImg}
+                      value={isNidBackRemoved ? "" : profile?.nidBackImg}
                       disabled={isFieldDisabled}
-                      onChange={setNidBackFile}
+                      onChange={(file) => {
+                        setIsNidBackRemoved(false);
+                        setNidBackFile(file);
+                      }}
+                      onRemove={() => {
+                        setIsNidBackRemoved(true);
+                        setNidBackFile(null);
+                      }}
                     />
                   </div>
 
@@ -365,9 +447,18 @@ const VerificationMethodCard = ({
                     </div>
 
                     <TradeLicenseUpload
-                      value={profile?.tradeLicenseImage}
+                      value={
+                        isTradeLicenseRemoved ? "" : profile?.tradeLicenseImage
+                      }
                       disabled={isFieldDisabled}
-                      onChange={setTradeLicenseFile}
+                      onChange={(file) => {
+                        setIsTradeLicenseRemoved(false);
+                        setTradeLicenseFile(file);
+                      }}
+                      onRemove={() => {
+                        setIsTradeLicenseRemoved(true);
+                        setTradeLicenseFile(null);
+                      }}
                     />
                   </div>
 
@@ -384,9 +475,16 @@ const VerificationMethodCard = ({
                     </div>
 
                     <TinCertificateUpload
-                      value={profile?.tinImage}
+                      value={isTinRemoved ? "" : profile?.tinImage}
                       disabled={isFieldDisabled}
-                      onChange={setTinFile}
+                      onChange={(file) => {
+                        setIsTinRemoved(false);
+                        setTinFile(file);
+                      }}
+                      onRemove={() => {
+                        setIsTinRemoved(true);
+                        setTinFile(null);
+                      }}
                     />
 
                     <div className="space-y-2">

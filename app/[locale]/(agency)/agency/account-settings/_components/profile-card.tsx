@@ -62,6 +62,7 @@ const ProfileCard = ({
   const [isSaving, setIsSaving] = useState(false);
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   const [localLogoPreview, setLocalLogoPreview] = useState<string | null>(null);
+  const [isLogoRemoved, setIsLogoRemoved] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -79,9 +80,9 @@ const ProfileCard = ({
     fullAddress: "",
   });
 
-  // Only sync form from profile when NOT editing to avoid overwriting user input
   useEffect(() => {
     if (isEditing) return;
+
     setForm({
       agencyName: profile?.agencyName ?? "",
       firstName: profile?.firstName ?? "",
@@ -95,8 +96,10 @@ const ProfileCard = ({
       zilla: profile?.address?.zilla ?? "",
       fullAddress: profile?.address?.fullAddress ?? "",
     });
+
     setSelectedLogoFile(null);
     setLocalLogoPreview(null);
+    setIsLogoRemoved(false);
   }, [profile, isEditing]);
 
   const ownerName =
@@ -104,7 +107,13 @@ const ProfileCard = ({
 
   const locationLine = [form.thana, form.zilla].filter(Boolean).join(", ");
 
-  const displayLogo = localLogoPreview || form.logo || "";
+  const hasLogo = !isLogoRemoved && !!(localLogoPreview || form.logo);
+  const displayLogo = hasLogo ? localLogoPreview || form.logo || "" : "";
+
+  const displayLogoSrc =
+    !displayLogo || localLogoPreview
+      ? displayLogo
+      : `${displayLogo}${displayLogo.includes("?") ? "&" : "?"}v=${encodeURIComponent(profile?.updatedAt ?? "")}`;
 
   const handleChange = (key: keyof ProfileFormState, value: string) => {
     setForm((prev) => ({
@@ -167,7 +176,9 @@ const ProfileCard = ({
 
       let finalLogo = form.logo;
 
-      if (selectedLogoFile) {
+      if (isLogoRemoved) {
+        finalLogo = "";
+      } else if (selectedLogoFile) {
         finalLogo = await uploadFile(selectedLogoFile);
       }
 
@@ -189,39 +200,40 @@ const ProfileCard = ({
         },
       };
 
-      // Call email update separately only if email has changed
       const emailChanged = form.email.trim() !== (profile.email ?? "");
+
       if (emailChanged) {
         await updateAgencyEmail({ newEmail: form.email.trim() });
       }
 
-      const updatedBasicProfile = await updateAgencyBasicInfo(basicInfoPayload);
-      const updatedProfile = await updateAgencyAddress(addressPayload);
+      await updateAgencyBasicInfo(basicInfoPayload);
+      await updateAgencyAddress(addressPayload);
 
-      // Spread original profile first, then override with all updated fields
-      // This ensures no fields go missing if any API response is partial
       const mergedProfile: AgencyProfileResponse = {
         ...profile,
-        ...updatedProfile,
-        agencyName: updatedBasicProfile.agencyName,
-        firstName: updatedBasicProfile.firstName,
-        lastName: updatedBasicProfile.lastName,
-        agencyBio: updatedBasicProfile.agencyBio,
-        logo: finalLogo, // use finalLogo directly to ensure correct URL
-        secondaryPhone: updatedBasicProfile.secondaryPhone,
-        website: updatedBasicProfile.website,
-        address: updatedProfile.address,
+        agencyName: form.agencyName.trim(),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        secondaryPhone: form.secondaryPhone.trim(),
+        website: form.website.trim(),
+        agencyBio: form.agencyBio.trim(),
+        logo: finalLogo,
         email: emailChanged ? form.email.trim() : profile.email,
+        address: {
+          ...profile.address,
+          thana: form.thana.trim(),
+          zilla: form.zilla.trim(),
+          fullAddress: form.fullAddress.trim(),
+        },
       };
 
-      // Update form.logo immediately so displayLogo shows the new image
-      // before the useEffect syncs from profile prop
-      setForm((prev) => ({ ...prev, logo: finalLogo }));
+      setForm((prev) => ({
+        ...prev,
+        logo: finalLogo,
+      }));
       setSelectedLogoFile(null);
       setLocalLogoPreview(null);
-
-      // Set isEditing false BEFORE onProfileUpdated so the useEffect
-      // syncs the form correctly when the new profile prop arrives
+      setIsLogoRemoved(false);
       setIsEditing(false);
       onProfileUpdated(mergedProfile);
       notifySuccess("Profile updated successfully");
@@ -236,8 +248,10 @@ const ProfileCard = ({
   const handleRemoveLogo = () => {
     if (!isEditing) return;
 
+    setIsLogoRemoved(true);
     setSelectedLogoFile(null);
     setLocalLogoPreview(null);
+
     setForm((prev) => ({
       ...prev,
       logo: "",
@@ -269,6 +283,7 @@ const ProfileCard = ({
       return;
     }
 
+    setIsLogoRemoved(false);
     setSelectedLogoFile(selected);
 
     const reader = new FileReader();
@@ -291,13 +306,17 @@ const ProfileCard = ({
               <div className="flex justify-between gap-6">
                 <div className="flex flex-1 justify-around gap-6">
                   <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="relative flex h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-full border border-dashed border-light-green bg-Secondary text-light-green">
-                      {displayLogo ? (
+                    <div
+                      key={hasLogo ? displayLogoSrc : "no-logo"}
+                      className="relative flex h-[100px] w-[100px] items-center justify-center overflow-hidden rounded-full border border-dashed border-light-green bg-Secondary text-light-green"
+                    >
+                      {hasLogo ? (
                         <Image
-                          src={displayLogo}
+                          src={displayLogoSrc}
                           alt={form.agencyName || "Agency logo"}
                           fill
                           className="object-cover"
+                          unoptimized
                         />
                       ) : (
                         <BiSolidUpArrowCircle size={30} />

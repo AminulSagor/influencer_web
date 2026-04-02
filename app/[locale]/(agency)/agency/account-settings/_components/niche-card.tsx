@@ -35,8 +35,10 @@ const NicheCard = ({
   const [niches, setNiches] = useState<string[]>([]);
 
   useEffect(() => {
-    setNiches(profile?.niches?.map((item) => item.niche) ?? []);
-  }, [profile]);
+    if (!isEditing) {
+      setNiches(profile?.niches?.map((item) => item.niche) ?? []);
+    }
+  }, [profile, isEditing]);
 
   const normalizeNiche = (value: string) => value.trim();
 
@@ -109,10 +111,27 @@ const NicheCard = ({
         niches: finalNiches,
       });
 
-      setNiches(updatedProfile?.niches?.map((item) => item.niche) ?? []);
+      const mergedProfile: AgencyProfileResponse = {
+        ...profile,
+        ...updatedProfile,
+        niches: finalNiches.map((item) => {
+          const existingNiche = profile.niches?.find(
+            (nicheItem) => nicheItem.niche.toLowerCase() === item.toLowerCase()
+          );
+
+          return {
+            niche: item,
+            status: existingNiche?.status ?? "pending",
+            rejectReason: existingNiche?.rejectReason,
+          };
+        }),
+      };
+
+      setNiches(finalNiches);
       setNewNiche("");
-      onProfileUpdated(updatedProfile);
+      onProfileUpdated(mergedProfile);
       setIsEditing(false);
+
       notifySuccess("Niches updated successfully");
     } catch (error) {
       console.error("Failed to update niches:", error);

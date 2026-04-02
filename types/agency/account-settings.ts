@@ -11,6 +11,7 @@ export type AgencySocialLinkItem = {
 };
 
 export type AgencyBankPayoutItem = {
+    id: string;
     bankName: string;
     accStatus: "approved" | "rejected" | "pending";
     bankAccNo: string;
@@ -21,6 +22,7 @@ export type AgencyBankPayoutItem = {
 };
 
 export type AgencyMobileBankingPayoutItem = {
+    id: string;
     accStatus: "approved" | "rejected" | "pending";
     accountNo: string;
     accountType: string;
@@ -123,7 +125,7 @@ export type CreateAgencyPayoutPayload = {
 
 export type DeleteAgencyPayoutPayload = {
     type: "bank" | "mobile";
-    identifier: string;
+    id: string;
 };
 
 export type DeleteAgencyPayoutResponse = {

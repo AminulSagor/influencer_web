@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import {
   Accordion,
   AccordionContent,
@@ -10,35 +9,21 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ImCross } from "react-icons/im";
-import { TiTick } from "react-icons/ti";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 import {
   createAgencyPayout,
   deleteAgencyPayout,
-  getAgencyProfile,
 } from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import BankPayoutItem from "./bank-payout-item";
+import MobilePayoutItem from "./mobile-payout-item";
+import BankPayoutForm from "./bank-payout-form";
+import MobilePayoutForm from "./mobile-payout-form";
 
 type PayoutSettingsCardProps = {
   profile: AgencyProfileResponse | null;
   isLoading: boolean;
   onProfileUpdated: (updatedProfile: AgencyProfileResponse) => void;
-};
-
-const maskAccountNumber = (value: string) => {
-  if (!value) return "-";
-  const lastFour = value.slice(-4);
-  return `*****-***${lastFour}`;
 };
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -115,6 +100,8 @@ const PayoutSettingsCard = ({
   };
 
   const handleCreatePayout = async () => {
+    if (!profile) return;
+
     if (payoutMethod === "bank") {
       if (
         !bankName.trim() ||
@@ -130,7 +117,7 @@ const PayoutSettingsCard = ({
       try {
         setIsCreating(true);
 
-        await createAgencyPayout({
+        const updatedProfile = await createAgencyPayout({
           bank: {
             bankName: bankName.trim(),
             bankAccHolderName: bankAccHolderName.trim(),
@@ -140,9 +127,20 @@ const PayoutSettingsCard = ({
           },
         });
 
-        const refreshedProfile = await getAgencyProfile();
-        onProfileUpdated(refreshedProfile);
+        const mergedProfile: AgencyProfileResponse = {
+          ...profile,
+          ...updatedProfile,
+          payouts: {
+            ...profile.payouts,
+            ...updatedProfile.payouts,
+            bank: updatedProfile.payouts?.bank ?? profile.payouts.bank,
+            mobileBanking:
+              updatedProfile.payouts?.mobileBanking ??
+              profile.payouts.mobileBanking,
+          },
+        };
 
+        onProfileUpdated(mergedProfile);
         resetCreateForm();
         notifySuccess("Payout method added successfully");
       } catch (error) {
@@ -172,7 +170,7 @@ const PayoutSettingsCard = ({
       try {
         setIsCreating(true);
 
-        await createAgencyPayout({
+        const updatedProfile = await createAgencyPayout({
           mobileBanking: {
             accountNo: mobileAccountNo.trim(),
             accountHolderName: mobileAccountHolderName.trim(),
@@ -180,9 +178,20 @@ const PayoutSettingsCard = ({
           },
         });
 
-        const refreshedProfile = await getAgencyProfile();
-        onProfileUpdated(refreshedProfile);
+        const mergedProfile: AgencyProfileResponse = {
+          ...profile,
+          ...updatedProfile,
+          payouts: {
+            ...profile.payouts,
+            ...updatedProfile.payouts,
+            bank: updatedProfile.payouts?.bank ?? profile.payouts.bank,
+            mobileBanking:
+              updatedProfile.payouts?.mobileBanking ??
+              profile.payouts.mobileBanking,
+          },
+        };
 
+        onProfileUpdated(mergedProfile);
         resetCreateForm();
         notifySuccess("Payout method added successfully");
       } catch (error) {
@@ -198,21 +207,33 @@ const PayoutSettingsCard = ({
     notifyError("Please select a payout method");
   };
 
-  const handleDeletePayout = async (
-    type: "bank" | "mobile",
-    identifier: string
-  ) => {
+  const handleDeletePayout = async (type: "bank" | "mobile", id: string) => {
+    if (!profile) return;
+
     try {
-      setDeletingKey(`${type}-${identifier}`);
+      setDeletingKey(`${type}-${id}`);
 
       const response = await deleteAgencyPayout({
         type,
-        identifier,
+        id,
       });
 
-      const refreshedProfile = await getAgencyProfile();
-      onProfileUpdated(refreshedProfile);
+      const updatedProfile: AgencyProfileResponse = {
+        ...profile,
+        payouts: {
+          ...profile.payouts,
+          bank:
+            type === "bank"
+              ? profile.payouts.bank.filter((item) => item.id !== id)
+              : profile.payouts.bank,
+          mobileBanking:
+            type === "mobile"
+              ? profile.payouts.mobileBanking.filter((item) => item.id !== id)
+              : profile.payouts.mobileBanking,
+        },
+      };
 
+      onProfileUpdated(updatedProfile);
       notifySuccess(response.message || "Payout deleted successfully.");
     } catch (error) {
       console.error("Failed to delete payout method:", error);
@@ -220,16 +241,6 @@ const PayoutSettingsCard = ({
     } finally {
       setDeletingKey(null);
     }
-  };
-
-  const getMobileIcon = (accountType: string) => {
-    const normalized = accountType.trim().toLowerCase();
-
-    if (normalized === "bkash") return "/icons/bkash-icon.svg";
-    if (normalized === "nagad") return "/icons/bkash-icon.svg";
-    if (normalized === "rocket") return "/icons/bkash-icon.svg";
-
-    return "/icons/bkash-icon.svg";
   };
 
   return (
@@ -247,131 +258,25 @@ const PayoutSettingsCard = ({
                   <div className="text-sm text-muted-foreground">Loading...</div>
                 ) : (
                   <>
-                    {bankAccounts.map((item, index) => {
-                      const isRejected = item.accStatus === "rejected";
-                      const isPending = item.accStatus === "pending";
-                      const currentDeleteKey = `bank-${item.bankAccNo}`;
-                      const isCurrentDeleting = deletingKey === currentDeleteKey;
+                    {bankAccounts.map((item, index) => (
+                      <BankPayoutItem
+                        key={`bank-${item.id}`}
+                        item={item}
+                        index={index}
+                        isDeleting={deletingKey === `bank-${item.id}`}
+                        onRemove={() => void handleDeletePayout("bank", item.id)}
+                      />
+                    ))}
 
-                      return (
-                        <div
-                          key={`bank-${index}`}
-                          className={`rounded-lg border p-2 ${isRejected || isPending
-                              ? "border-orange bg-linear-to-r from-white to-orange/20"
-                              : "border-light-green bg-linear-to-r from-white to-Secondary"
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="relative h-10 w-10">
-                                <Image
-                                  fill
-                                  src={
-                                    isRejected || isPending
-                                      ? "/icons/bank-icon-2.svg"
-                                      : "/icons/bank-icon.svg"
-                                  }
-                                  alt="bank icon"
-                                />
-                              </div>
-
-                              <div>
-                                <h2
-                                  className={`text-lg font-medium ${isRejected || isPending
-                                      ? "text-orange"
-                                      : "text-Primary"
-                                    }`}
-                                >
-                                  Bank Account No {index + 1}
-                                </h2>
-                                <p className="text-xs font-light text-gray-400">
-                                  {item.bankName}
-                                </p>
-                                <p
-                                  className={`text-sm ${isRejected || isPending
-                                      ? "text-orange"
-                                      : "text-Primary"
-                                    }`}
-                                >
-                                  Account Number: {maskAccountNumber(item.bankAccNo)}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div>
-                              {isRejected || isPending ? (
-                                <Button
-                                  className="cursor-pointer bg-orange hover:bg-orange/90"
-                                  type="button"
-                                >
-                                  {isPending ? "In Review" : "Rejected"}
-                                </Button>
-                              ) : (
-                                <Button
-                                  className="cursor-pointer bg-light-green hover:bg-light-green/90"
-                                  type="button"
-                                  onClick={() =>
-                                    void handleDeletePayout("bank", item.bankAccNo)
-                                  }
-                                  disabled={isCurrentDeleting}
-                                >
-                                  {isCurrentDeleting ? "Removing..." : "Remove"}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {mobileBankingAccounts.map((item, index) => {
-                      const currentDeleteKey = `mobile-${item.accountNo}`;
-                      const isCurrentDeleting = deletingKey === currentDeleteKey;
-
-                      return (
-                        <div
-                          key={`mobile-${index}`}
-                          className="rounded-lg border border-light-green bg-linear-to-r from-white to-Secondary p-2"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className="relative h-10 w-10">
-                                <Image
-                                  fill
-                                  src={getMobileIcon(item.accountType)}
-                                  alt="mobile banking icon"
-                                />
-                              </div>
-
-                              <div>
-                                <h2 className="text-lg font-medium text-Primary">
-                                  Mobile Banking No {index + 1}
-                                </h2>
-                                <p className="text-xs font-light text-gray-400">
-                                  {item.accountType}
-                                </p>
-                                <p className="text-sm text-Primary">
-                                  {item.accountHolderName}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div>
-                              <Button
-                                className="cursor-pointer bg-light-green hover:bg-light-green/90"
-                                type="button"
-                                onClick={() =>
-                                  void handleDeletePayout("mobile", item.accountNo)
-                                }
-                                disabled={isCurrentDeleting}
-                              >
-                                {isCurrentDeleting ? "Removing..." : "Remove"}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {mobileBankingAccounts.map((item, index) => (
+                      <MobilePayoutItem
+                        key={`mobile-${item.id}`}
+                        item={item}
+                        index={index}
+                        isDeleting={deletingKey === `mobile-${item.id}`}
+                        onRemove={() => void handleDeletePayout("mobile", item.id)}
+                      />
+                    ))}
 
                     {!bankAccounts.length && !mobileBankingAccounts.length ? (
                       <p className="text-sm text-muted-foreground">
@@ -383,197 +288,51 @@ const PayoutSettingsCard = ({
               </div>
 
               {showCreateForm ? (
-                <div>
-                  <div className="space-y-4 rounded-lg border p-4">
-                    <div className="flex items-start gap-3 sm:items-center sm:justify-between">
-                      <div className="relative h-10 w-10 shrink-0">
-                        {payoutMethod === "bkash" ||
-                          payoutMethod === "nagad" ||
-                          payoutMethod === "rocket" ? (
-                          <Image
-                            fill
-                            src="/icons/bkash-icon.svg"
-                            alt="mobile banking icon"
-                          />
-                        ) : (
-                          <Image fill src="/icons/bank-icon.svg" alt="bank icon" />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <Select
-                          value={payoutMethod}
-                          onValueChange={(value) => {
-                            setPayoutMethod(value);
-
-                            if (value === "bkash") {
-                              setMobileAccountType("Bkash");
-                            } else if (value === "nagad") {
-                              setMobileAccountType("Nagad");
-                            } else if (value === "rocket") {
-                              setMobileAccountType("Rocket");
-                            } else {
-                              setMobileAccountType("");
-                            }
-                          }}
-                          disabled={isCreating}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select payout method" />
-                          </SelectTrigger>
-
-                          <SelectContent>
-                            <SelectItem value="bank">Bank</SelectItem>
-                            <SelectItem value="bkash">bKash</SelectItem>
-                            <SelectItem value="nagad">Nagad</SelectItem>
-                            <SelectItem value="rocket">Rocket</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-2 self-center sm:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => void handleCreatePayout()}
-                          disabled={isCreating}
-                          className="cursor-pointer text-light-green"
-                        >
-                          <TiTick size={26} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={resetCreateForm}
-                          disabled={isCreating}
-                          className="cursor-pointer text-light-green"
-                        >
-                          <ImCross size={14} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {payoutMethod === "bank" && (
-                      <>
-                        <div className="space-y-1">
-                          <Label>Bank Name</Label>
-                          <Input
-                            placeholder="Enter Bank Name"
-                            value={bankName}
-                            onChange={(e) => setBankName(e.target.value)}
-                            disabled={isCreating}
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label>Bank Account Holder Name</Label>
-                          <Input
-                            placeholder="Enter Account Holder Name"
-                            value={bankAccHolderName}
-                            onChange={(e) => setBankAccHolderName(e.target.value)}
-                            disabled={isCreating}
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label>Bank Account No</Label>
-                          <Input
-                            placeholder="Enter Bank Account No."
-                            value={bankAccNo}
-                            onChange={(e) => setBankAccNo(e.target.value)}
-                            disabled={isCreating}
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label>Bank Branch Name</Label>
-                          <Input
-                            placeholder="Enter Branch Name"
-                            value={bankBranchName}
-                            onChange={(e) => setBankBranchName(e.target.value)}
-                            disabled={isCreating}
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <Label>Routing Number</Label>
-                          <Input
-                            placeholder="Enter Routing Number"
-                            value={bankRoutingNo}
-                            onChange={(e) => setBankRoutingNo(e.target.value)}
-                            disabled={isCreating}
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {(payoutMethod === "bkash" ||
-                      payoutMethod === "nagad" ||
-                      payoutMethod === "rocket") && (
-                        <>
-                          <div className="space-y-1">
-                            <Label>
-                              {payoutMethod === "bkash"
-                                ? "bKash No"
-                                : payoutMethod === "nagad"
-                                  ? "Nagad No"
-                                  : "Rocket No"}
-                            </Label>
-                            <Input
-                              placeholder={`Enter ${payoutMethod === "bkash"
-                                  ? "bKash"
-                                  : payoutMethod === "nagad"
-                                    ? "Nagad"
-                                    : "Rocket"
-                                } Number`}
-                              value={mobileAccountNo}
-                              onChange={(e) => setMobileAccountNo(e.target.value)}
-                              disabled={isCreating}
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label>
-                              {payoutMethod === "bkash"
-                                ? "bKash Holder Name"
-                                : payoutMethod === "nagad"
-                                  ? "Nagad Holder Name"
-                                  : "Rocket Holder Name"}
-                            </Label>
-                            <Input
-                              placeholder="Enter Holder Name"
-                              value={mobileAccountHolderName}
-                              onChange={(e) =>
-                                setMobileAccountHolderName(e.target.value)
-                              }
-                              disabled={isCreating}
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label>
-                              {payoutMethod === "bkash"
-                                ? "bKash Account Type"
-                                : payoutMethod === "nagad"
-                                  ? "Nagad Account Type"
-                                  : "Rocket Account Type"}
-                            </Label>
-                            <Input
-                              placeholder="Enter Account Type"
-                              value={mobileAccountType}
-                              onChange={(e) => setMobileAccountType(e.target.value)}
-                              disabled={isCreating}
-                            />
-                          </div>
-                        </>
-                      )}
-                  </div>
-                </div>
+                payoutMethod === "bank" ? (
+                  <BankPayoutForm
+                    payoutMethod={payoutMethod}
+                    setPayoutMethod={setPayoutMethod}
+                    bankName={bankName}
+                    setBankName={setBankName}
+                    bankAccHolderName={bankAccHolderName}
+                    setBankAccHolderName={setBankAccHolderName}
+                    bankAccNo={bankAccNo}
+                    setBankAccNo={setBankAccNo}
+                    bankBranchName={bankBranchName}
+                    setBankBranchName={setBankBranchName}
+                    bankRoutingNo={bankRoutingNo}
+                    setBankRoutingNo={setBankRoutingNo}
+                    mobileAccountType={mobileAccountType}
+                    setMobileAccountType={setMobileAccountType}
+                    isCreating={isCreating}
+                    onSave={() => void handleCreatePayout()}
+                    onCancel={resetCreateForm}
+                  />
+                ) : (
+                  <MobilePayoutForm
+                    payoutMethod={payoutMethod}
+                    setPayoutMethod={setPayoutMethod}
+                    mobileAccountNo={mobileAccountNo}
+                    setMobileAccountNo={setMobileAccountNo}
+                    mobileAccountHolderName={mobileAccountHolderName}
+                    setMobileAccountHolderName={setMobileAccountHolderName}
+                    mobileAccountType={mobileAccountType}
+                    setMobileAccountType={setMobileAccountType}
+                    isCreating={isCreating}
+                    onSave={() => void handleCreatePayout()}
+                    onCancel={resetCreateForm}
+                  />
+                )
               ) : null}
 
               <div>
                 <Button
                   className="w-full cursor-pointer border border-dashed border-light-green bg-transparent text-Primary hover:bg-light-green hover:text-white"
                   type="button"
-                  onClick={() => setShowCreateForm(true)}
+                  onClick={() => {
+                    setShowCreateForm(true);
+                    setPayoutMethod(undefined);
+                  }}
                   disabled={isCreating}
                 >
                   + Add another Payout Method

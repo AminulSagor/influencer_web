@@ -34,8 +34,14 @@ const page = () => {
     fetchAgencyProfile();
   }, []);
 
-  const handleProfileUpdated = (updatedProfile: AgencyProfileResponse) => {
-    setProfile(updatedProfile);
+  const handleProfileUpdated = (updatedProfile: Partial<AgencyProfileResponse>) => {
+    setProfile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        ...updatedProfile,
+      };
+    });
   };
 
   return (

@@ -14,6 +14,7 @@ type NIDUploadFrontProps = {
   value?: string;
   disabled?: boolean;
   onChange: (file: File | null) => void;
+  onRemove: () => void;
 };
 
 const isPdfUrl = (url?: string) => {
@@ -25,6 +26,7 @@ const NIDUploadFront = ({
   value,
   disabled = false,
   onChange,
+  onRemove,
 }: NIDUploadFrontProps) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [preview, setPreview] = React.useState<string | null>(value ?? null);
@@ -66,10 +68,11 @@ const NIDUploadFront = ({
   const removeFile = () => {
     setFile(null);
     setPreview(null);
-    onChange(null);
+    onRemove();
   };
 
-  const showPdfCard = file?.type === "application/pdf" || (!file && isPdfUrl(value));
+  const showPdfCard =
+    file?.type === "application/pdf" || (!file && isPdfUrl(value));
 
   return (
     <div className="space-y-2">
@@ -79,8 +82,8 @@ const NIDUploadFront = ({
         <label
           htmlFor="nid-front-upload"
           className={`flex h-44 w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 transition ${disabled
-              ? "cursor-not-allowed opacity-70"
-              : "cursor-pointer hover:bg-gray-100"
+            ? "cursor-not-allowed opacity-70"
+            : "cursor-pointer hover:bg-gray-100"
             }`}
         >
           {preview && !showPdfCard ? (
