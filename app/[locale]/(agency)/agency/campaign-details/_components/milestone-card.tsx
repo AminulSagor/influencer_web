@@ -11,15 +11,50 @@ import {
   IN_REVIEW,
   PAID,
   PaymanetMilestoneDataType,
-  TODO,
   PARTIAL_PAID,
+  TODO,
 } from "../[id]/consts";
 import { cn } from "@/lib/utils";
 import SubmissionHistory from "./submission-history";
-import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
+import { milestoneSubmissionService } from "@/service/agency/campaign/milestone-submission.service";
+import type {
+  AgencyMilestoneSubmissionItem,
+  GetMilestoneSubmissionsResponse,
+  MilestoneSubmissionApiItem,
+} from "@/types/agency/campaign/milestone-submission.types";
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
+}
+
+function mapApiSubmissionToHistoryItem(
+  submission: MilestoneSubmissionApiItem,
+  fallbackMilestoneId: string
+): AgencyMilestoneSubmissionItem {
+  return {
+    id: submission.id,
+    submissionDescription: submission.description,
+    submissionAttachments: submission.attachments ?? [],
+    submissionLiveLinks: submission.liveLinks ?? [],
+    requestedAmount: String(submission.requestedAmount),
+    submittedByRole: "agency",
+    rejectionReason: submission.rejectionReason,
+    isClientApproved: submission.isClientApproved,
+    achievedReach: submission.metrics?.reach ?? null,
+    achievedViews: submission.metrics?.views ?? null,
+    achievedLikes: submission.metrics?.likes ?? null,
+    achievedComments: submission.metrics?.comments ?? null,
+    achievedFollows: submission.metrics?.follows ?? null,
+    paidAmount: String(submission.paidAmount ?? 0),
+    paymentStatus: submission.paymentStatus,
+    adminFeedback: submission.adminFeedback,
+    status: submission.status,
+    assignmentId: submission.assignmentId,
+    milestoneId: fallbackMilestoneId,
+    assignedMilestoneId: submission.assignedMilestoneId,
+    createdAt: submission.submittedAt,
+    updatedAt: submission.submittedAt,
+  };
 }
 
 const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
@@ -27,6 +62,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
   const [localSubmissions, setLocalSubmissions] = useState<
     AgencyMilestoneSubmissionItem[]
   >([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   const hasInitializedFromServer = useRef(false);
 
@@ -69,20 +105,64 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
     }
   }, [submissionsFromMilestone, localSubmissions.length]);
 
+  useEffect(() => {
+    const fetchSubmissions = async () => {
+      if (!resolvedMilestoneId) return;
+
+      try {
+        setIsLoadingSubmissions(true);
+
+        const response: GetMilestoneSubmissionsResponse =
+          await milestoneSubmissionService.getMilestoneSubmissions(
+            resolvedMilestoneId
+          );
+
+        const mappedSubmissions = (response.data?.submissions ?? [])
+          .map((item) => mapApiSubmissionToHistoryItem(item, resolvedMilestoneId))
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+
+        setLocalSubmissions(mappedSubmissions);
+      } catch (error) {
+        console.error("Failed to load milestone submissions:", error);
+      } finally {
+        setIsLoadingSubmissions(false);
+      }
+    };
+
+    void fetchSubmissions();
+  }, [resolvedMilestoneId]);
+
   const displaySubmissions = useMemo(() => localSubmissions, [localSubmissions]);
 
-  const canShowHistory =
-    milestone?.status === PAID ||
-    milestone?.status === IN_REVIEW ||
-    milestone?.status === PARTIAL_PAID ||
-    displaySubmissions.length > 0;
+  const hasSubmissions = displaySubmissions.length > 0;
+  const canShowHistory = hasSubmissions;
+  const canAddAnotherSubmission = Boolean(resolvedMilestoneId);
 
-  const canAddAnotherSubmission =
-    canShowHistory && Boolean(resolvedMilestoneId);
-
-  const handleSubmitted = (submission: AgencyMilestoneSubmissionItem) => {
+  const handleSubmitted = async (submission: AgencyMilestoneSubmissionItem) => {
     setLocalSubmissions((prev) => [submission, ...prev]);
     setShowNewSubmissionForm(false);
+
+    try {
+      const response = await milestoneSubmissionService.getMilestoneSubmissions(
+        resolvedMilestoneId
+      );
+
+      const mappedSubmissions = (response.data?.submissions ?? [])
+        .map((item) => mapApiSubmissionToHistoryItem(item, resolvedMilestoneId))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+      if (mappedSubmissions.length > 0) {
+        setLocalSubmissions(mappedSubmissions);
+      }
+    } catch (error) {
+      console.error("Failed to refresh submissions after submit:", error);
+    }
   };
 
   return (
@@ -202,7 +282,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                   milestone?.status === PARTIAL_PAID && "bg-light-green"
                 )}
               >
-                {displaySubmissions.length > 0 ? IN_REVIEW : milestone?.status}
+                {hasSubmissions ? IN_REVIEW : milestone?.status}
               </Badge>
 
               <div
@@ -224,7 +304,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           </div>
         </div>
 
-        {!canShowHistory && resolvedMilestoneId && (
+        {!hasSubmissions && resolvedMilestoneId && !showNewSubmissionForm && (
           <SubmissionForm
             milestoneId={resolvedMilestoneId}
             onSubmitted={handleSubmitted}
@@ -233,12 +313,13 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
 
         {canShowHistory && <SubmissionHistory submissions={displaySubmissions} />}
 
-        {canAddAnotherSubmission && !showNewSubmissionForm && (
+        {hasSubmissions && canAddAnotherSubmission && !showNewSubmissionForm && (
           <Button
             type="button"
             onClick={() => setShowNewSubmissionForm(true)}
             variant="outline"
             className="mt-4 h-auto w-full rounded-lg border border-dashed border-light-green py-6 text-base font-semibold text-light-green hover:bg-light-green hover:text-white"
+            disabled={isLoadingSubmissions}
           >
             + Add Another Submission
           </Button>

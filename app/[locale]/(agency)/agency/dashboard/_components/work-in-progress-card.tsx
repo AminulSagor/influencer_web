@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { RiUser3Fill } from "react-icons/ri";
 import { FaClock } from "react-icons/fa6";
@@ -103,6 +104,8 @@ const defaultResponse: WorkInProgressResponse = {
 const WorkInProgressCard = () => {
   const [response, setResponse] = useState<WorkInProgressResponse>(defaultResponse);
   const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
 
   useEffect(() => {
     const fetchWorkInProgress = async () => {
@@ -192,7 +195,7 @@ const WorkInProgressCard = () => {
 
                 <Button variant="link" size="sm">
                   <Link
-                    href={`/agency/campaign-details/${data.campaignId}`}
+                    href={`/${locale}/agency/campaign-details/${data.campaignId}`}
                     className="flex items-center text-xs"
                   >
                     View <ChevronRight />
@@ -209,7 +212,7 @@ const WorkInProgressCard = () => {
           asChild
           className="w-full md:w-[50%] bg-[#F5F5DC]/60 text-[#2D5016] border-[#2D5016] border hover:bg-[#F5F5DC] hover:text-[#2D5016] hover:border-[#2D5016] cursor-pointer"
         >
-          <Link href="/agency/jobs/active-jobs" className="flex items-center gap-2">
+          <Link href={`/${locale}/agency/jobs/active-jobs`} className="flex items-center gap-2">
             View All Jobs
             <FaArrowRightLong />
           </Link>

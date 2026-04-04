@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import BasicInfoCard from "./_components/basic-info-card";
 import NicheCard from "./_components/niche-card";
 import ProfileCompletionCard from "./_components/profile-completion-card";
@@ -16,6 +17,8 @@ import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 const page = () => {
   const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
 
   useEffect(() => {
     const fetchAgencyProfile = async () => {
@@ -51,7 +54,7 @@ const page = () => {
           <BasicInfoCard profile={profile} isLoading={isLoading} />
         </div>
         <div className="col-span-12 md:col-span-6">
-          <Link href={"/agency/account-settings/verification-checklist"}>
+          <Link href={`/${locale}/agency/account-settings/verification-checklist`}>
             <div>
               <ProfileCompletionCard
                 profile={profile}

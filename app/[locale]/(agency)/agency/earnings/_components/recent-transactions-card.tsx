@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
 import { FaArrowDownLong } from "react-icons/fa6";
 import { FiSearch } from "react-icons/fi";
@@ -80,6 +81,8 @@ const RecentTransactionsCard = () => {
   const [transactions, setTransactions] = useState<RecentTransactionItem[]>([]);
   const [meta, setMeta] = useState<RecentTransactionsMeta>(defaultMeta);
   const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
 
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
@@ -251,7 +254,7 @@ const RecentTransactionsCard = () => {
                         className="px-0 text-light-green"
                       >
                         <Link
-                          href={`/agency/campaign-details/${transaction.campaignId}`}
+                          href={`/${locale}/agency/campaign-details/${transaction.campaignId}`}
                         >
                           View Campaign Details <ChevronRight />
                         </Link>

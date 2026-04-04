@@ -58,7 +58,7 @@ const CampaignDetailsCard = ({
             asChild
             className="has-[>svg]:px-0 text-dark-gray font-medium"
           >
-            <Link href="/agency/jobs">
+            <Link href={`/${locale}/agency/jobs`}>
               <BiSolidLeftArrow />
               Back to Campaigns
             </Link>
@@ -129,7 +129,7 @@ const CampaignDetailsCard = ({
                   You accept the&nbsp;
                   <span className="text-light-green font-medium">
                     <Link
-                      href="/agency/user-license-agreement"
+                      href={`/${locale}/agency/user-license-agreement`}
                       className="hover:underline"
                     >
                       user license agreement
@@ -139,7 +139,7 @@ const CampaignDetailsCard = ({
                   &&nbsp;
                   <span className="text-light-green font-medium">
                     <Link
-                      href="/agency/terms-and-conditions"
+                      href={`/${locale}/agency/terms-and-conditions`}
                       className="hover:underline"
                     >
                       Terms and condition

@@ -94,13 +94,15 @@ const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
             <Accordion
               type="single"
               collapsible
-              defaultValue={index === submissions.length - 1 ? `submission-${submission.id}` : undefined}
+              defaultValue={
+                index === 0 ? `submission-${submission.id}` : undefined
+              }
             >
               <AccordionItem value={`submission-${submission.id}`}>
                 <AccordionTrigger className="cursor-pointer hover:no-underline">
                   <div className="flex w-full items-center justify-between pr-4">
                     <div className="flex items-center gap-4">
-                      <p className="text-xl">Submission {index + 1}</p>
+                      <p className="text-xl">Submission {submissions.length - index}</p>
                       <Badge className={getStatusClassName(submission.status)}>
                         {formatSubmissionStatus(submission.status)}
                       </Badge>

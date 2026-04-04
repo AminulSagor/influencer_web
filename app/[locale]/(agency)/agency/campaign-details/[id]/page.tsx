@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import { AiFillTikTok } from "react-icons/ai";
 import MilestoneClient from "./milestone-client";
+import NotificationRefresh from "./notification-refresh";
 import { getAgencyCampaignDetails } from "@/service/agency/job-details";
 import type { AgencyCampaignMilestone } from "@/types/agency/job-details";
 import {
@@ -86,10 +87,10 @@ const page = async ({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
   searchParams: Promise<{ from?: string }>;
 }) => {
-  const { id } = await params;
+  const { id, locale } = await params;
   const { from } = await searchParams;
 
   const cookieStore = await cookies();
@@ -111,6 +112,7 @@ const page = async ({
 
   return (
     <div className="p-4 space-y-4">
+      <NotificationRefresh />
       <div className="grid-cols-12 grid gap-4">
         <div className="col-span-12 sm:col-span-6">
           {isAccepted ? (
@@ -121,7 +123,7 @@ const page = async ({
                   asChild
                   className="has-[>svg]:px-0 text-dark-gray font-medium"
                 >
-                  <Link href="/agency/jobs">
+                  <Link href={`/${locale}/agency/jobs`}>
                     <BiSolidLeftArrow />
                     Back to Campaigns
                   </Link>

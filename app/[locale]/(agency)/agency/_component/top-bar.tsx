@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Popover,
@@ -39,21 +38,6 @@ const TopBar = () => {
     markAllAsRead,
   } = useNotifications();
 
-  // 🔥 Force reload notification UI when new notification comes
-  const [notificationKey, setNotificationKey] = useState(0);
-
-  useEffect(() => {
-    const handleNotification = () => {
-      setNotificationKey((prev) => prev + 1);
-    };
-
-    window.addEventListener("app-notification", handleNotification);
-
-    return () => {
-      window.removeEventListener("app-notification", handleNotification);
-    };
-  }, []);
-
   const handleOpenChange = (open: boolean) => {
     if (open) {
       fetchNotifications();
@@ -68,7 +52,7 @@ const TopBar = () => {
 
       <div className="flex gap-6 items-center">
         {/* Notification Bell */}
-        <div key={notificationKey}>
+        <div>
           <Popover onOpenChange={handleOpenChange}>
             <PopoverTrigger asChild>
               <button
@@ -135,8 +119,8 @@ const TopBar = () => {
                               if (isUnread) markAsRead(n.id, false);
                             }}
                             className={`flex gap-3 rounded-lg p-2.5 transition ${isUnread
-                                ? "border-l-[3px] border-l-light-green bg-muted/30 hover:bg-muted/60 cursor-pointer"
-                                : "bg-transparent opacity-70 border-l-[3px] border-l-transparent hover:bg-muted/10 cursor-default"
+                              ? "border-l-[3px] border-l-light-green bg-muted/30 hover:bg-muted/60 cursor-pointer"
+                              : "bg-transparent opacity-70 border-l-[3px] border-l-transparent hover:bg-muted/10 cursor-default"
                               }`}
                           >
                             <div

@@ -14,10 +14,7 @@ export default function FcmInitializer() {
       if (!token) return;
 
       const fcmToken = await getFcmToken();
-<<<<<<< HEAD
-      console.log("FCM Token:", fcmToken);
-=======
->>>>>>> suchana
+
       if (!fcmToken) return;
 
       try {

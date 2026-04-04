@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 import {
   IN_REVIEW,
@@ -26,6 +29,9 @@ interface PaymentMilestoneProps {
   paymentMilestoneData: PaymanetMilestoneDataType[];
   selectedMilestone: PaymanetMilestoneDataType | null;
   onSelectMilestone: (m: PaymanetMilestoneDataType) => void;
+
+  // 👉 ADD THIS (optional handler)
+  onAddMilestone?: () => void;
 }
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
@@ -34,25 +40,33 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paymentMilestoneData,
   onSelectMilestone,
   selectedMilestone,
+  onAddMilestone,
 }) => {
   const progress = total ? Math.min((paid / total) * 100, 100) : 0;
 
   return (
     <Card>
-      <CardHeader className="flex gap-4">
+      <CardHeader className="flex gap-4 items-center">
+        {/* LEFT */}
         <CardTitle className="flex flex-1 items-center gap-2 text-Primary text-base font-semibold">
-          <div>
-            <Image
-              src={"/icons/milestone.svg"}
-              height={24}
-              width={24}
-              alt="svg"
-            />
-          </div>
+          <Image src={"/icons/milestone.svg"} height={24} width={24} alt="svg" />
           Campaign Milestones
         </CardTitle>
 
-        <div className="flex-1 space-y-2">
+        {/* RIGHT BUTTON ✅ */}
+        <div>
+          <Button
+            onClick={onAddMilestone}
+            className="bg-light-green text-white hover:bg-light-green/90"
+          >
+            + Add Milestone
+          </Button>
+        </div>
+      </CardHeader>
+
+      {/* PROGRESS */}
+      <div className="px-6 pb-2">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
             <p className="text-sm font-semibold">Progress</p>
             <p className="text-sm font-semibold text-Primary">
@@ -67,11 +81,11 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
             />
           </div>
         </div>
-      </CardHeader>
+      </div>
 
       <CardContent>
         <Carousel className="overflow-visible">
-          <CarouselContent className="p-2 -ml-4 pr-24 ">
+          <CarouselContent className="p-2 -ml-4 pr-24">
             {paymentMilestoneData.map((item) => (
               <CarouselItem
                 key={item.milestoneId}
@@ -82,10 +96,11 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                   className={cn(
                     "border p-4 rounded-md space-y-2 cursor-pointer transition",
                     selectedMilestone?.milestoneId === item.milestoneId &&
-                    "ring-2 ring-offset-0 ring-light-green",
+                    "ring-2 ring-light-green",
                     item.status === TODO &&
                     "border-gray-200 bg-linear-to-r from-white to-light-gray",
-                    (item.status === PAID || item.status === PARTIAL_PAID) &&
+                    (item.status === PAID ||
+                      item.status === PARTIAL_PAID) &&
                     "border-light-green bg-linear-to-r from-Secondary to-white",
                     item.status === IN_REVIEW &&
                     "border-orange-400 bg-linear-to-r from-orange/20 to-white"
@@ -95,27 +110,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                     <div className="flex items-center gap-2">
                       <div
                         className={cn(
-                          "w-6 h-6 rounded-full bg-light-green flex items-center justify-center text-white",
-                          item.status === TODO && "bg-dark-gray",
-                          item.status === IN_REVIEW && "bg-orange"
-                        )}
-                      >
-                        {item.id}
-                      </div>
-                      <h2
-                        className={cn(
-                          "text-base font-medium text-Primary",
-                          item.status === TODO && "text-dark-gray",
-                          item.status === IN_REVIEW && "text-orange"
-                        )}
-                      >
-                        {item.title}
-                      </h2>
-                    </div>
-
-                    <div>
-                      <Badge
-                        className={cn(
+                          "w-6 h-6 rounded-full flex items-center justify-center text-white",
                           item.status === TODO && "bg-dark-gray",
                           item.status === IN_REVIEW && "bg-orange",
                           (item.status === PAID ||
@@ -123,27 +118,33 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                           "bg-light-green"
                         )}
                       >
-                        {item.status} <ChevronRight />
-                      </Badge>
+                        {item.id}
+                      </div>
+
+                      <h2 className="text-base font-medium text-Primary">
+                        {item.title}
+                      </h2>
                     </div>
+
+                    <Badge
+                      className={cn(
+                        item.status === TODO && "bg-dark-gray",
+                        item.status === IN_REVIEW && "bg-orange",
+                        (item.status === PAID ||
+                          item.status === PARTIAL_PAID) &&
+                        "bg-light-green"
+                      )}
+                    >
+                      {item.status === TODO ? "To Do" : item.status}
+                      <ChevronRight />
+                    </Badge>
                   </div>
 
                   <p className="text-gray-500 text-sm">
-                    {item.contentRequirement.map((i, index) => (
-                      <span key={i}>
-                        {i}
-                        {index !== item.contentRequirement.length - 1 && " + "}
-                      </span>
-                    ))}
+                    {item.contentRequirement.join(" + ")}
                   </p>
 
-                  <div
-                    className={cn(
-                      "flex items-center justify-between text-light-green",
-                      item.status === TODO && "text-gray-600",
-                      item.status === IN_REVIEW && "text-orange"
-                    )}
-                  >
+                  <div className="flex justify-between text-light-green">
                     <p className="text-xl font-semibold">৳ {item.payout}</p>
                     <p className="text-sm">DAY {item.day}</p>
                   </div>
@@ -151,8 +152,9 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
               </CarouselItem>
             ))}
           </CarouselContent>
+
           <CarouselPrevious />
-          <CarouselNext variant={"ghost"} />
+          <CarouselNext variant="ghost" />
         </Carousel>
       </CardContent>
     </Card>

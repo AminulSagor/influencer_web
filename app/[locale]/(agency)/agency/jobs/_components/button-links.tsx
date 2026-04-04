@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +15,8 @@ const links = [
 ];
 
 export default function ButtonLinks() {
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
   const pathname = usePathname();
   const normalizedPath = pathname.replace(/^\/(en|bn)/, "");
 
@@ -26,7 +28,7 @@ export default function ButtonLinks() {
         const isActive = isRootJobs
           ? normalizedPath === "/agency/jobs"
           : normalizedPath === link.href ||
-            normalizedPath.startsWith(link.href + "/");
+          normalizedPath.startsWith(link.href + "/");
 
         return (
           <Button
@@ -35,10 +37,10 @@ export default function ButtonLinks() {
             asChild
             className={cn(
               isActive &&
-                "bg-light-green shadow-md text-white hover:no-underline rounded-full px-6"
+              "bg-light-green shadow-md text-white hover:no-underline rounded-full px-6"
             )}
           >
-            <Link href={link.href}>{link.label}</Link>
+            <Link href={`/${locale}${link.href}`}>{link.label}</Link>
           </Button>
         );
       })}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,8 @@ const formatDeadlineParts = (dateString: string) => {
 const UpcomingDeadline = () => {
   const [deadlines, setDeadlines] = useState<UpcomingDeadlineItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
 
   useEffect(() => {
     const fetchDeadlines = async () => {
@@ -109,7 +112,7 @@ const UpcomingDeadline = () => {
 
                     <Button variant="link" size="sm" className="p-0">
                       <Link
-                        href={`/agency/campaign-details/${item.campaignId}`}
+                        href={`/${locale}/agency/campaign-details/${item.campaignId}`}
                         className="flex items-center text-xs"
                       >
                         View <ChevronRight />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ const formatCurrency = (amount: number) => {
 const NewJobOffers = () => {
   const [offers, setOffers] = useState<NewJobOfferItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const params = useParams<{ locale: string }>();
+  const locale = params?.locale || "en";
 
   useEffect(() => {
     const fetchOffers = async () => {
@@ -51,7 +54,7 @@ const NewJobOffers = () => {
 
         <div>
           <Button variant="link" size="sm" className="p-0 text-[#2d5016]">
-            <Link href="/agency/jobs" className="flex items-center text-xs">
+            <Link href={`/${locale}/agency/jobs`} className="flex items-center text-xs">
               View All
               <ChevronRight />
             </Link>
@@ -79,7 +82,7 @@ const NewJobOffers = () => {
 
                 <Button variant="link" size="sm" className="p-0 text-[#2d5016]">
                   <Link
-                    href={`/agency/campaign-details/${item.id}`}
+                    href={`/${locale}/agency/campaign-details/${item.id}`}
                     className="flex items-center text-xs"
                   >
                     View <ChevronRight />

@@ -73,3 +73,44 @@ export interface SubmitAgencyMilestoneResponse {
     statusCode?: number;
     error?: string;
 }
+
+export interface MilestoneSubmissionMetricsResponse {
+    reach: number | null;
+    views: number | null;
+    likes: number | null;
+    comments: number | null;
+    follows?: number | null;
+}
+
+export interface MilestoneSubmissionApiItem {
+    id: string;
+    influencerId: string;
+    influencerName: string;
+    influencerImage: string | null;
+    assignmentId: string | null;
+    assignedMilestoneId: string | null;
+    description: string | null;
+    attachments: string[];
+    liveLinks: string[];
+    requestedAmount: number;
+    paidAmount: number;
+    status: string;
+    paymentStatus: string;
+    isClientApproved: boolean;
+    metrics: MilestoneSubmissionMetricsResponse | null;
+    submittedAt: string;
+    adminFeedback: string | null;
+    rejectionReason: string | null;
+}
+
+export interface GetMilestoneSubmissionsResponse {
+    success: boolean;
+    data: {
+        queriedId: string;
+        queryType: string;
+        milestoneTitle: string;
+        campaignName: string;
+        totalSubmissions: number;
+        submissions: MilestoneSubmissionApiItem[];
+    };
+}
