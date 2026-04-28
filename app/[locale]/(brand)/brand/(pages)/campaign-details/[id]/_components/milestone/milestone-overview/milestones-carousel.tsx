@@ -9,7 +9,6 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { CampaignMilestone } from "@/types/client/campaigns/campaign-details";
-import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   milestones: CampaignMilestone[];
@@ -27,9 +26,9 @@ const getStatusLabel = (status?: string) => {
 
   if (value === "completed_plus_plus") return "Completed++";
   if (value === "completed") return "Completed";
+  if (value === "approved" || value === "accepted") return "Completed";
   if (value === "in_review" || value === "in_progress") return "In Review";
   if (value === "declined") return "Declined";
-  if (value === "accepted") return "Accepted";
   if (value === "pending") return "Pending";
 
   if (!value) return "Pending";
@@ -103,15 +102,38 @@ const getStatusClasses = (status?: string) => {
   };
 };
 
+const getBackendResolvedStatus = (milestone: CampaignMilestone) => {
+  const normalizedStatus = normalizeStatus(milestone.status);
+  const completedStatuses = [
+    "accepted",
+    "approved",
+    "completed",
+    "completed_plus_plus",
+  ];
+
+  if (
+    milestone.isMetrixOverflowed &&
+    completedStatuses.includes(normalizedStatus)
+  ) {
+    return "completed_plus_plus";
+  }
+
+  if (normalizedStatus === "completed_plus_plus") {
+    return "completed";
+  }
+
+  if (normalizedStatus === "accepted" || normalizedStatus === "approved") {
+    return "completed";
+  }
+
+  return normalizedStatus;
+};
+
 export default function MilestonesCarousel({
   milestones,
   expandedMilestoneId,
   onSelectMilestone,
 }: Props) {
-  const getResolvedMilestoneStatus = useMilestoneStatusStore(
-    (state) => state.getResolvedMilestoneStatus,
-  );
-
   if (!milestones.length) {
     return (
       <div className="flex min-h-[120px] items-center justify-center rounded-2xl border border-dashed border-black/10 bg-black/[0.02] text-sm text-black/50">
@@ -130,10 +152,7 @@ export default function MilestonesCarousel({
     >
       <CarouselContent className="-ml-3">
         {milestones.map((milestone, idx) => {
-          const resolvedStatus = getResolvedMilestoneStatus(
-            milestone.id,
-            milestone.status,
-          );
+          const resolvedStatus = getBackendResolvedStatus(milestone);
           const isActive = milestone.id === expandedMilestoneId;
           const statusClasses = getStatusClasses(resolvedStatus);
 

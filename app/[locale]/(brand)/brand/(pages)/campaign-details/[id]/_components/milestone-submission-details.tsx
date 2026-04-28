@@ -12,7 +12,7 @@ import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-butt
 import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 
 import type { Milestone } from "./milestone-details-panel";
-import { compact } from "./milestone-ui-helpers";
+import { formatCompactNumber } from "./milestone/milestone-ui-helpers";
 
 const metricIconMap: Record<string, LucideIcon> = {
   reach: Eye,
@@ -223,10 +223,10 @@ export default function MilestoneSubmissionDetails({
                           {/* left current (green) + right target (orange) */}
                           <div className="flex items-center justify-between">
                             <p className="text-lg font-semibold text-light-green">
-                              {compact(cur)}
+                              {formatCompactNumber(cur)}
                             </p>
                             <p className="text-lg font-semibold text-orange-500">
-                              {compact(tar)}
+                              {formatCompactNumber(tar)}
                             </p>
                           </div>
 

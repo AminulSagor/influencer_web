@@ -7,8 +7,8 @@ export const getMilestoneStatusLabel = (status?: string) => {
   const value = normalizeMilestoneStatus(status);
 
   if (value === "completed") return "Completed";
-  if (value === "accepted") return "Completed++";
-  if (value === "completed_plus_plus") return "Completed++"; // ← Add this
+  if (value === "accepted" || value === "approved") return "Completed";
+  if (value === "completed_plus_plus") return "Completed++";
   if (value === "in_review" || value === "in_progress") return "In Review";
   if (value === "declined") return "Declined";
   if (value === "pending") return "Pending";
@@ -25,7 +25,6 @@ export const getMilestoneStatusLabel = (status?: string) => {
 export const getMilestoneStatusClasses = (status?: string) => {
   const value = normalizeMilestoneStatus(status);
 
-  // Add completed_plus_plus with special styling (maybe a darker green or with a star icon)
   if (value === "completed_plus_plus") {
     return {
       wrapper: "border-[#7F9B54] bg-[#E8F0DB]", // Darker green border, lighter green bg
@@ -35,7 +34,7 @@ export const getMilestoneStatusClasses = (status?: string) => {
     };
   }
 
-  if (value === "completed" || value === "accepted") {
+  if (value === "completed" || value === "accepted" || value === "approved") {
     return {
       wrapper: "border-[#A8C381] bg-[#F9FBEF]",
       badge: "bg-[#7EA255] text-white",

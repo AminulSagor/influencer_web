@@ -14,6 +14,8 @@ import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   campaign: ClientCampaignDetails;
+  selectedInfluencerId?: string;
+  onSelectInfluencer?: (influencerId: string) => void;
 };
 
 type DerivedAssignedWork = {
@@ -32,6 +34,7 @@ type DerivedAssignedWork = {
   order?: number;
   amount?: number;
   status?: string;
+  isMetrixOverflowed?: boolean;
   submissions?: Array<{ id?: string }>;
 };
 
@@ -66,9 +69,21 @@ function deriveMilestonesFromSelectedInfluencer(
     .map((work, index) => {
       const normalizedStatus = String(work.status ?? "").toLowerCase();
 
+      const isMetrixOverflowed = Boolean(work.isMetrixOverflowed);
       let milestoneStatus: CampaignMilestone["status"] = "pending";
 
-      if (["completed", "approved"].includes(normalizedStatus)) {
+      if (
+        isMetrixOverflowed &&
+        ["completed", "approved", "accepted", "completed_plus_plus"].includes(
+          normalizedStatus,
+        )
+      ) {
+        milestoneStatus = "completed_plus_plus";
+      } else if (
+        ["completed", "approved", "accepted", "completed_plus_plus"].includes(
+          normalizedStatus,
+        )
+      ) {
         milestoneStatus = "completed";
       } else if (
         ["in_review", "active", "in_progress"].includes(normalizedStatus)
@@ -87,6 +102,7 @@ function deriveMilestonesFromSelectedInfluencer(
         status: milestoneStatus,
         createdAt: campaign.createdAt,
         updatedAt: campaign.updatedAt,
+        isMetrixOverflowed,
         expectedReach: work.expectedReach ?? null,
         expectedViews: work.expectedViews ?? null,
         expectedLikes: work.expectedLikes ?? null,
@@ -177,7 +193,11 @@ function shouldShowMilestoneDetails(
   return allowedStatuses.includes(normalizedMilestoneStatus);
 }
 
-export default function CampaignMilestonesSection({ campaign }: Props) {
+export default function CampaignMilestonesSection({
+  campaign,
+  selectedInfluencerId,
+  onSelectInfluencer,
+}: Props) {
   const assignedInfluencers = React.useMemo(
     () => campaign.assignedInfluencers ?? [],
     [campaign.assignedInfluencers],
@@ -201,34 +221,60 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     influencerIds,
   });
 
-  const [selectedInfluencerId, setSelectedInfluencerId] = React.useState("");
+  const isSelectionControlled = selectedInfluencerId !== undefined;
+  const [internalSelectedInfluencerId, setInternalSelectedInfluencerId] =
+    React.useState("");
+
+  const currentSelectedInfluencerId = isSelectionControlled
+    ? selectedInfluencerId ?? ""
+    : internalSelectedInfluencerId;
+
+  const updateSelectedInfluencerId = React.useCallback(
+    (influencerId: string) => {
+      if (isSelectionControlled) {
+        onSelectInfluencer?.(influencerId);
+        return;
+      }
+
+      setInternalSelectedInfluencerId(influencerId);
+    },
+    [isSelectionControlled, onSelectInfluencer],
+  );
 
   React.useEffect(() => {
     if (!showInfluencerFlow) {
-      setSelectedInfluencerId("");
+      if (!isSelectionControlled) {
+        setInternalSelectedInfluencerId("");
+      }
       return;
     }
 
     const hasCurrentSelection = assignedInfluencers.some(
-      (influencer) => influencer.influencerId === selectedInfluencerId,
+      (influencer) => influencer.influencerId === currentSelectedInfluencerId,
     );
 
     if (!hasCurrentSelection) {
-      setSelectedInfluencerId(assignedInfluencers[0]?.influencerId ?? "");
+      updateSelectedInfluencerId(assignedInfluencers[0]?.influencerId ?? "");
     }
-  }, [showInfluencerFlow, assignedInfluencers, selectedInfluencerId]);
+  }, [
+    showInfluencerFlow,
+    assignedInfluencers,
+    currentSelectedInfluencerId,
+    isSelectionControlled,
+    updateSelectedInfluencerId,
+  ]);
 
   const selectedInfluencer = React.useMemo(() => {
     if (!showInfluencerFlow) return null;
 
     return (
       assignedInfluencers.find(
-        (influencer) => influencer.influencerId === selectedInfluencerId,
+        (influencer) => influencer.influencerId === currentSelectedInfluencerId,
       ) ??
       assignedInfluencers[0] ??
       null
     );
-  }, [showInfluencerFlow, assignedInfluencers, selectedInfluencerId]);
+  }, [showInfluencerFlow, assignedInfluencers, currentSelectedInfluencerId]);
 
   const milestones = React.useMemo(() => {
     const topLevelMilestones = campaign.milestones ?? [];
@@ -339,10 +385,13 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
     );
   }, [campaign.status, expandedMilestone, getResolvedMilestoneStatus]);
 
-  const handleSelectInfluencer = React.useCallback((influencerId: string) => {
-    setSelectedInfluencerId(influencerId);
-    setExpandedMilestoneId("");
-  }, []);
+  const handleSelectInfluencer = React.useCallback(
+    (influencerId: string) => {
+      updateSelectedInfluencerId(influencerId);
+      setExpandedMilestoneId("");
+    },
+    [updateSelectedInfluencerId],
+  );
 
   function getBonusMilestoneIdForSelectedInfluencer(
     milestoneId: string,
@@ -379,7 +428,7 @@ export default function CampaignMilestonesSection({ campaign }: Props) {
         campaign={normalizedCampaign}
         expandedMilestoneId={expandedMilestoneId}
         onSelectMilestone={setExpandedMilestoneId}
-        selectedInfluencerId={selectedInfluencerId}
+        selectedInfluencerId={currentSelectedInfluencerId}
         onSelectInfluencer={handleSelectInfluencer}
       />
 

@@ -2,6 +2,7 @@ export type SubmissionStatus =
   | "pending"
   | "in_review"
   | "approved"
+  | "completed_plus_plus"
   | "declined"
   | "completed";
 
@@ -22,6 +23,7 @@ export type SubmissionSummary = {
   achievedLikes: number | null;
   achievedComments: number | null;
   achievedFollows: number | null;
+  isMetrixOverflowed?: boolean;
   rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -78,6 +80,7 @@ export type CampaignAssignedWorkSubmission = {
   achievedViews: number | null;
   achievedLikes: number | null;
   achievedComments: number | null;
+  achievedFollows: number | null;
   paidAmount: string;
   paymentStatus: string;
   adminFeedback: string | null;
@@ -96,8 +99,18 @@ export type CampaignAssignedWork = {
   platform: string | null;
   contentQuantity: string | null;
   deliveryDays: number | null;
+  expectedReach?: number | null;
+  expectedViews?: number | null;
+  expectedLikes?: number | null;
+  expectedComments?: number | null;
+  expectedFollows?: number | null;
+  promotionGoal?: string | null;
+  order?: number | null;
   amount: number;
+  bonusAmount?: number | string;
+  bonusStatus?: string | null;
   status: string;
+  isMetrixOverflowed?: boolean;
   submissions: CampaignAssignedWorkSubmission[];
 };
 

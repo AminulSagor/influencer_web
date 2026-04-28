@@ -3,6 +3,7 @@ import InformationCard from "@/app/[locale]/(brand)/brand/(pages)/account-settin
 import ProfileCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/profile-card";
 import ProfileUpdateCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/profile-update-card";
 import VerificationMethodsCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/verification-methods-card";
+import BrandDeleteAccountSection from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/brand-delete-account-section";
 
 const AccountSettingsPage = () => {
   return (
@@ -20,6 +21,8 @@ const AccountSettingsPage = () => {
 
       {/* verification */}
       <VerificationMethodsCard/>
+
+      <BrandDeleteAccountSection />
     </div>
   );
 };

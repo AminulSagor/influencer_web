@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -16,12 +15,7 @@ import {
 } from "./_lib/budgeting-status";
 
 import { useMyCampaignsByStatus } from "@/app/[locale]/(brand)/brand/hooks/useMyCampaignsByStatus";
-import {
-  filterBySearch,
-  sortCampaigns,
-  type CampaignSortValue,
-} from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
-
+import type { CampaignSortValue } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
 import CampaignTabs from "./_components/campaign-tabs";
 import CampaignToolbar from "./_components/campaign-toolbar";
 import CampaignListSection from "./_components/campaign-list-section";
@@ -54,7 +48,7 @@ const VALID_BUDGETING_FILTERS: BudgetingFilter[] = [
   "quotation_received",
 ];
 
-const VALID_SORTS: CampaignSortValue[] = ["budget_asc", "budget_desc"];
+const VALID_SORTS: CampaignSortValue[] = ["ASC", "DESC"];
 
 function parseTab(value: string | null): CampaignTabKey {
   if (value && VALID_TABS.includes(value as CampaignTabKey)) {
@@ -77,7 +71,7 @@ function parseSort(value: string | null): CampaignSortValue {
     return value as CampaignSortValue;
   }
 
-  return "budget_desc";
+  return "DESC";
 }
 
 function parsePage(value: string | null): number {
@@ -100,26 +94,54 @@ export default function CampaignsPage() {
 
   const activeTab = parseTab(searchParams.get("tab"));
   const budgetingFilter = parseBudgetingFilter(searchParams.get("subTab"));
-  const searchQuery = searchParams.get("q") ?? "";
+  const searchQuery = searchParams.get("search") ?? searchParams.get("q") ?? "";
   const currentPage = parsePage(searchParams.get("page"));
   const sortBy = parseSort(searchParams.get("sort"));
+  const searchParamsString = searchParams.toString();
+
+  const [searchInput, setSearchInput] = useState(searchQuery);
 
   const setStep = useCampaignStore((s) => s.setStep);
 
-  const updateQueryParams = (updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const updateQueryParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParamsString);
 
-    Object.entries(updates).forEach(([key, value]) => {
-      if (!value) {
-        params.delete(key);
-      } else {
-        params.set(key, value);
-      }
-    });
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!value) {
+          params.delete(key);
+        } else {
+          params.set(key, value);
+        }
+      });
 
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
-  };
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    },
+    [pathname, router, searchParamsString],
+  );
+
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (searchInput === searchQuery) return;
+
+    const timer = window.setTimeout(() => {
+      const nextSearch = searchInput.trim();
+
+      updateQueryParams({
+        search: nextSearch || null,
+        q: null,
+        page: "1",
+      });
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [searchInput, searchQuery, updateQueryParams]);
 
   const status =
     activeTab === "budgeting_quoting"
@@ -130,36 +152,29 @@ export default function CampaignsPage() {
     status,
     currentPage,
     PER_PAGE,
-  );
-
-  const filteredCampaigns = useMemo(
-    () => filterBySearch(data, searchQuery),
-    [data, searchQuery],
-  );
-
-  const sortedCampaigns = useMemo(
-    () => sortCampaigns(filteredCampaigns, sortBy),
-    [filteredCampaigns, sortBy],
+    searchQuery,
+    sortBy,
   );
 
   const total = meta.total ?? 0;
   const totalPages = meta.totalPages ?? 1;
   const safePage = Math.min(Math.max(currentPage, 1), Math.max(totalPages, 1));
 
-  const currentItemsCount = sortedCampaigns.length;
+  const currentItemsCount = data.length;
   const start = total === 0 ? 0 : (safePage - 1) * PER_PAGE + 1;
   const end = total === 0 ? 0 : start + currentItemsCount - 1;
 
   const resultText =
     total === 0 ? t("showingZeroResults") : t("showingResults", { end, total });
 
-  const sortLabel = sortBy === "budget_desc" ? t("highToLow") : t("lowToHigh");
+  const sortLabel = sortBy === "DESC" ? t("highToLow") : t("lowToHigh");
 
   const handleTabChange = (nextTab: CampaignTabKey) => {
     if (nextTab === "budgeting_quoting") {
       updateQueryParams({
         tab: nextTab,
         subTab: activeTab === "budgeting_quoting" ? budgetingFilter : "all",
+        search: null,
         q: null,
         page: "1",
       });
@@ -170,6 +185,7 @@ export default function CampaignsPage() {
     updateQueryParams({
       tab: nextTab,
       subTab: null,
+      search: null,
       q: null,
       page: "1",
     });
@@ -183,15 +199,8 @@ export default function CampaignsPage() {
     });
   };
 
-  const handleSearch = (value: string) => {
-    updateQueryParams({
-      q: value.trim() ? value : null,
-      page: "1",
-    });
-  };
-
   const handleSortToggle = () => {
-    const nextSort = sortBy === "budget_desc" ? "budget_asc" : "budget_desc";
+    const nextSort = sortBy === "DESC" ? "ASC" : "DESC";
 
     updateQueryParams({
       sort: nextSort,
@@ -265,7 +274,8 @@ export default function CampaignsPage() {
           title={t(TAB_TITLE[activeTab])}
           resultText={resultText}
           sortLabel={sortLabel}
-          onSearch={handleSearch}
+          searchValue={searchInput}
+          onSearch={setSearchInput}
           onSort={handleSortToggle}
         />
 
@@ -277,7 +287,7 @@ export default function CampaignsPage() {
 
         <CampaignListSection
           tab={activeTab}
-          campaigns={sortedCampaigns}
+          campaigns={data}
           loading={loading}
           budgetingFilter={budgetingFilter}
           onBudgetingFilterChange={handleBudgetingFilterChange}

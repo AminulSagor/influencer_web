@@ -11,6 +11,7 @@ import SocialLinksCard from "./_components/social-links-card";
 import ProfileCard from "./_components/profile-card";
 import PayoutSettingsCard from "./_components/payout-settings-card";
 import VerificationMethodCard from "./_components/verification-method-card";
+import DeleteAccountDangerZone from "@/components/account-settings/delete-account-danger-zone";
 import { getAgencyProfile } from "@/service/agency/account-settings";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
@@ -36,6 +37,10 @@ const page = () => {
 
     fetchAgencyProfile();
   }, []);
+
+  const deleteAccountFullName =
+    profile?.agencyName?.trim() ||
+    `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim();
 
   const handleProfileUpdated = (updatedProfile: Partial<AgencyProfileResponse>) => {
     setProfile((prev) => {
@@ -110,6 +115,11 @@ const page = () => {
           onProfileUpdated={handleProfileUpdated}
         />
       </div>
+
+      <DeleteAccountDangerZone
+        fullName={deleteAccountFullName}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

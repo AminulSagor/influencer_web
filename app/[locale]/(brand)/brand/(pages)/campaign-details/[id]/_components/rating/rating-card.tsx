@@ -13,12 +13,16 @@ type RatingCardProps = {
   campaign: ClientCampaignDetails;
   title?: string;
   buttonText?: string;
+  compact?: boolean;
+  className?: string;
 };
 
 export default function RatingCard({
   campaign,
   title,
   buttonText,
+  compact = false,
+  className = "",
 }: RatingCardProps) {
   const [open, setOpen] = React.useState(false);
   const t = useTranslations("brand.CampaignDetailsPage");
@@ -39,20 +43,33 @@ export default function RatingCard({
 
   return (
     <>
-      <Card>
-        <CardContent>
+      <Card className={`${compact ? "" : "h-full"} ${className}`}>
+        <CardContent
+          className={`flex flex-col ${
+            compact ? "min-h-[128px] p-4" : "h-full p-6"
+          }`}
+        >
           <h3 className="text-base font-semibold text-Primary">
             {title ?? t("ratingCard.title")}
           </h3>
 
-          <div className="mt-8 flex flex-col items-center justify-center">
-            <RatingSummaryStars active={summaryActive} />
+          <div
+            className={`flex flex-col items-center justify-center ${
+              compact ? "mt-3" : "mt-8 flex-1"
+            }`}
+          >
+            <RatingSummaryStars
+              active={summaryActive}
+              size={compact ? "h-7 w-7 md:h-8 md:w-8" : undefined}
+            />
 
             <Button
               type="button"
               disabled={!canRate}
               onClick={() => setOpen(true)}
-              className="mt-10 h-10 w-full max-w-[520px] rounded-[12px] bg-[#81A35A] text-sm font-medium text-white hover:bg-[#73944e] disabled:bg-[#B7B7B7] disabled:text-white"
+              className={`${
+                compact ? "mt-3" : "mt-10"
+              } h-9 w-full max-w-[520px] rounded-[12px] bg-[#81A35A] text-sm font-medium text-white hover:bg-[#73944e] disabled:bg-[#B7B7B7] disabled:text-white`}
             >
               {buttonText ?? t("ratingCard.buttonText")}
             </Button>

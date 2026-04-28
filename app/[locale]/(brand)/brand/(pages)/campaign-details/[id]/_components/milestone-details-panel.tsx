@@ -3,11 +3,11 @@
 import React from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { statusStyle } from "./milestone-ui-helpers";
 
 import MilestoneTopRow from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-top-row";
 import MilestoneSubmissionDetails from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-submission-details";
 import { campaignMocksData } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/campaign-milestones";
+import { statusStyle } from "../helpers/milestone-ui-helpers";
 
 type CampaignDetails = (typeof campaignMocksData)[number];
 type InfluencerCampaign = CampaignDetails["influencerCampaigns"][number];

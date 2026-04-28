@@ -135,7 +135,7 @@ export default function CampaignSummaryCard({
               agencyLogo={agencyLogo}
             />
 
-            <div className="flex w-full flex-col items-start gap-2 lg:w-auto lg:flex-row">
+            <div className="flex w-full flex-col items-stretch gap-2 lg:w-auto lg:flex-row lg:items-stretch">
               {isCompleted ? (
                 <CampaignSummaryStatusCard
                   deadlineDate={deadlineDate}

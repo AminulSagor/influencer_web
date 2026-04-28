@@ -1,30 +1,41 @@
 import axios from "axios";
 import { serviceClient } from "@/service/base/axios_client";
-import type { CampaignSummary } from "@/app/[locale]/(brand)/brand/types/client-types";
 import type {
   PaginationMeta,
   ServiceResponse,
   ServiceResult,
 } from "@/types/service-response";
+import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
+import type { CampaignSortValue } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
 
 type GetCampaignByStatusParams = {
   status: string;
   page?: number;
   limit?: number;
+  search?: string;
+  sort?: CampaignSortValue;
 };
 
 export const getCampaignByStatus = async ({
   status,
   page = 1,
   limit = 10,
+  search,
+  sort,
 }: GetCampaignByStatusParams): Promise<
-  ServiceResult<CampaignSummary[], PaginationMeta>
+  ServiceResult<CampaignOverView[], PaginationMeta>
 > => {
   try {
     const { data } = await serviceClient.get<
-      ServiceResponse<CampaignSummary[], PaginationMeta>
+      ServiceResponse<CampaignOverView[], PaginationMeta>
     >("/campaign/my-campaigns", {
-      params: { status, page, limit },
+      params: {
+        status,
+        page,
+        limit,
+        ...(search?.trim() ? { search: search.trim() } : {}),
+        ...(sort ? { sort } : {}),
+      },
     });
 
     const items = data.data ?? [];

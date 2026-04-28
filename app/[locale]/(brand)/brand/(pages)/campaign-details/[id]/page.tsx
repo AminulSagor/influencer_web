@@ -1,27 +1,14 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getDefaultCampaignTab } from "./_lib/campaign-status";
-import { useCampaignDetails } from "./_components/campaign-details-provider";
+type PageProps = {
+  params: Promise<{
+    locale: string;
+    id: string;
+  }>;
+};
 
-export default function Page() {
-  const router = useRouter();
-  const params = useParams();
+export default async function Page({ params }: PageProps) {
+  const { locale, id } = await params;
 
-  const locale = params.locale as string;
-  const id = params.id as string;
-
-  const { campaign } = useCampaignDetails();
-
-  useEffect(() => {
-    const targetTab = getDefaultCampaignTab(
-      campaign.campaignType,
-      campaign.status,
-    );
-
-    router.replace(`/${locale}/brand/campaign-details/${id}/${targetTab}`);
-  }, [router, locale, id, campaign]);
-
-  return null;
+  redirect(`/${locale}/brand/campaign-details/${id}/details`);
 }

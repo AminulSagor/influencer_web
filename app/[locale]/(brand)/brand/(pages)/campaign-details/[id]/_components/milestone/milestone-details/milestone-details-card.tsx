@@ -19,7 +19,6 @@ import InfluencerPromotionMilestoneContent from "./influencer-promotion-mileston
 import PaidAdMilestoneContent from "./paid-ad-milestone-content";
 import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/bonus/milestone-bonus-card";
 import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-report-actions";
-import { shouldShowBonus } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-ui.helpers";
 import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
 
@@ -30,6 +29,36 @@ type Props = {
   submissionId?: string | null;
   bonusMilestoneId?: string;
 };
+
+function getBackendResolvedMilestoneStatus(milestone: CampaignMilestone) {
+  const normalizedStatus = String(milestone.status ?? "")
+    .trim()
+    .toLowerCase();
+  const completedStatuses = [
+    "accepted",
+    "approved",
+    "completed",
+    "completed_plus_plus",
+  ];
+
+  if (
+    milestone.isMetrixOverflowed &&
+    completedStatuses.includes(normalizedStatus)
+  ) {
+    return "completed_plus_plus";
+  }
+
+  if (normalizedStatus === "completed_plus_plus") {
+    return "completed";
+  }
+
+  if (normalizedStatus === "accepted" || normalizedStatus === "approved") {
+    return "completed";
+  }
+
+  return normalizedStatus;
+}
+
 export default function MilestoneDetailsCard({
   campaign,
   milestone,
@@ -55,30 +84,12 @@ export default function MilestoneDetailsCard({
   const safeTitle =
     milestone.contentTitle?.trim() || `${t("milestone")} ${milestoneIndex + 1}`;
 
-  const getResolvedMilestoneStatus = useMilestoneStatusStore(
-    (state) => state.getResolvedMilestoneStatus,
-  );
-  const getMilestonePerformance = useMilestoneStatusStore(
-    (state) => state.getMilestonePerformance,
-  );
   const removeMilestoneOverride = useMilestoneStatusStore(
     (state) => state.removeMilestoneOverride,
   );
 
-  const resolvedMilestoneStatus = getResolvedMilestoneStatus(
-    milestone.id,
-    milestone.status,
-  );
-
-  const { averagePerformance, hasTargetMetrics } = getMilestonePerformance(
-    milestone.id,
-  );
-
-  const shouldShowBonusCard = shouldShowBonus(
-    averagePerformance,
-    resolvedMilestoneStatus,
-    hasTargetMetrics,
-  );
+  const resolvedMilestoneStatus = getBackendResolvedMilestoneStatus(milestone);
+  const shouldShowBonusCard = Boolean(milestone.isMetrixOverflowed);
 
   React.useEffect(() => {
     setSelectedSubmissionIds([]);

@@ -90,8 +90,10 @@ export default function CampaignMilestonesOverview({
 
   const completedCount = useMemo(
     () =>
-      milestones.filter((m) => normalizeStatus(m.status) === "completed")
-        .length,
+      milestones.filter((m) => {
+        const status = normalizeStatus(m.status);
+        return status === "completed" || status === "completed_plus_plus";
+      }).length,
     [milestones],
   );
 

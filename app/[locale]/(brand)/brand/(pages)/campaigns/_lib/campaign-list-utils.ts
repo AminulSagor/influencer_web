@@ -1,6 +1,6 @@
 import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 
-export type CampaignSortValue = "budget_asc" | "budget_desc";
+export type CampaignSortValue = "ASC" | "DESC";
 
 export function filterBySearch(
   campaigns: CampaignOverView[],
@@ -38,7 +38,7 @@ export function sortCampaigns(
 ): CampaignOverView[] {
   const list = [...campaigns];
 
-  if (sortBy === "budget_asc") {
+  if (sortBy === "ASC") {
     return list.sort((a, b) => a.totalBudget - b.totalBudget);
   }
 

@@ -9,7 +9,6 @@ import {
   getMilestoneStatusLabel,
 } from "../milestone-ui-helpers";
 import MilestoneReportActions from "./milestone-report-actions";
-import { useMilestoneStatusStore } from "@/store/use-milestone-status-store"; // Add this import
 
 type ActionButtonsProps = {
   milestone: CampaignMilestone;
@@ -79,6 +78,33 @@ function getEffectiveStatus(milestone: CampaignMilestone) {
 
 function getStatusDate(milestone: CampaignMilestone) {
   return formatMilestoneDate(milestone.updatedAt ?? milestone.createdAt);
+}
+
+function getBackendResolvedMilestoneStatus(milestone: CampaignMilestone) {
+  const normalizedStatus = normalizeStatus(milestone.status);
+  const completedStatuses = [
+    "accepted",
+    "approved",
+    "completed",
+    "completed_plus_plus",
+  ];
+
+  if (
+    milestone.isMetrixOverflowed &&
+    completedStatuses.includes(normalizedStatus)
+  ) {
+    return "completed_plus_plus";
+  }
+
+  if (normalizedStatus === "completed_plus_plus") {
+    return "completed";
+  }
+
+  if (normalizedStatus === "accepted" || normalizedStatus === "approved") {
+    return "completed";
+  }
+
+  return normalizedStatus;
 }
 
 function splitRequirements(contentQuantity?: string | null, fallback?: string) {
@@ -228,27 +254,15 @@ export function MilestoneActions({ milestone }: ActionButtonsProps) {
   return (
     <MilestoneReportActions
       milestoneId={milestone.id}
-      milestoneStatus={milestone.status}
+      milestoneStatus={getBackendResolvedMilestoneStatus(milestone)}
     />
   );
 }
 
-// FIXED: Updated MilestoneStatusCard to use store
 export function MilestoneStatusCard({ milestone }: StatusCardProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
 
-  // Get resolved status from store
-  const getResolvedMilestoneStatus = useMilestoneStatusStore(
-    (state) => state.getResolvedMilestoneStatus,
-  );
-
-  // Use the store to get the resolved status (handles completed_plus_plus)
-  const resolvedStatus = getResolvedMilestoneStatus(
-    milestone.id,
-    milestone.status,
-  );
-
-  const effectiveStatus = normalizeStatus(resolvedStatus);
+  const effectiveStatus = getBackendResolvedMilestoneStatus(milestone);
   const statusClasses = getMilestoneStatusClasses(effectiveStatus);
   const label = getMilestoneStatusLabel(effectiveStatus) || t("pending");
   const statusDate = getStatusDate(milestone);

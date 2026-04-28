@@ -1,25 +1,22 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ArrowDown, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 type CampaignSearchBarProps = {
   title: string;
   placeholder?: string;
   resultText?: string;
-  sortLabel?: string;
+  value?: string;
 
   onSearch?: (value: string) => void;
-  onSort?: () => void;
 };
 
 const CampaignSearchBar = ({
   title,
   placeholder = "Search Campaign, Name, Client Name",
   resultText,
-  sortLabel = "Low To High",
+  value = "",
   onSearch,
-  onSort,
 }: CampaignSearchBarProps) => {
   return (
     <div className="flex justify-between">
@@ -37,6 +34,7 @@ const CampaignSearchBar = ({
             />
             <Input
               placeholder={placeholder}
+              value={value}
               className="pl-10 w-full lg:w-94 focus-visible:border-Primary focus-visible:ring-Primary/50 focus-visible:ring-2"
               onChange={(e) => onSearch?.(e.target.value)}
             />

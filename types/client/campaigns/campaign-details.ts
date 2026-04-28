@@ -33,6 +33,7 @@ export type CampaignMilestoneStatus =
   | "accepted"
   | "approved"
   | "completed"
+  | "completed_plus_plus"
   | "declined"
   | "in_progress"
   | string;
@@ -57,6 +58,7 @@ export type CampaignMilestone = {
   campaignId: string;
   createdAt: string;
   updatedAt: string;
+  isMetrixOverflowed?: boolean;
 };
 
 export type CampaignPaymentInfo = {

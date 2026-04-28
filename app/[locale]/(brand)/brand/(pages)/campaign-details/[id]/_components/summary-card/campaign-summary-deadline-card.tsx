@@ -30,7 +30,7 @@ export default function CampaignSummaryDeadlineCard({
   return (
     <>
       {dueAmount > 0 && campaignStatus !== "negotiating" && (
-        <div className="order-2 flex h-full min-w-[170px] flex-col items-center justify-center gap-2 rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green p-4 lg:order-1">
+        <div className="order-2 flex min-h-[128px] min-w-[170px] flex-col items-center justify-center gap-2 rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green p-4 lg:order-1 lg:min-h-[136px]">
           <Image
             src="/client-panel/money.png"
             alt={t("campaignSummaryDeadlineCard.moneyImgAlt")}
@@ -46,9 +46,9 @@ export default function CampaignSummaryDeadlineCard({
         </div>
       )}
 
-      <div className="order-1">
-        <div className="flex flex-col gap-3 lg:justify-end">
-          <div className="w-full rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green px-5 py-5 backdrop-blur-sm sm:min-w-60 lg:w-[370px]">
+      <div className="order-1 flex flex-col">
+        <div className="flex flex-1 flex-col gap-3 lg:justify-end">
+          <div className="flex min-h-[128px] w-full flex-col justify-center rounded-xl border border-white/70 bg-linear-to-l from-Primary to-light-green px-5 py-5 backdrop-blur-sm sm:min-w-60 lg:min-h-[136px] lg:w-[370px]">
             <div className="text-center text-sm font-medium text-white">
               {t("campaignSummaryDeadlineCard.deadline")}
             </div>

@@ -33,12 +33,12 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
-      <body className={`${poppins.className} antialiased`}>
+    <html lang={locale} suppressHydrationWarning>
+      <body className={`${poppins.className} antialiased`} suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <AuthInit>
-            <FcmInitializer/>
-          {children}
+            <FcmInitializer />
+            {children}
           </AuthInit>
           <Toaster position="top-center" reverseOrder={false} />
         </NextIntlClientProvider>

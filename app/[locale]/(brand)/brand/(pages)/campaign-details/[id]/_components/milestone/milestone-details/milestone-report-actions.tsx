@@ -4,7 +4,6 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import ReportAdminDialog from "./report-admin-dialog";
 import SubmittedReportsDialog from "./submissions/submitted-reports-dialog";
-import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 
 type Props = {
   milestoneId?: string | null;
@@ -25,15 +24,7 @@ export default function MilestoneReportActions({
   const [reportsOpen, setReportsOpen] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
 
-  const getResolvedMilestoneStatus = useMilestoneStatusStore(
-    (state) => state.getResolvedMilestoneStatus,
-  );
-
-  const resolvedStatus = milestoneId
-    ? getResolvedMilestoneStatus(milestoneId, milestoneStatus)
-    : String(milestoneStatus ?? "");
-
-  const status = normalizeStatus(resolvedStatus);
+  const status = normalizeStatus(milestoneStatus);
 
   const isPending = status === "pending";
   const isCompleted =

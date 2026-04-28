@@ -10,6 +10,7 @@ type Props = {
   title: string;
   resultText: string;
   sortLabel: string;
+  searchValue: string;
   onSearch: (value: string) => void;
   onSort: () => void;
 };
@@ -18,6 +19,7 @@ export default function CampaignToolbar({
   title,
   resultText,
   sortLabel,
+  searchValue,
   onSearch,
   onSort,
 }: Props) {
@@ -29,6 +31,7 @@ export default function CampaignToolbar({
         title={title}
         resultText={resultText}
         placeholder={t("searchCampaign")}
+        value={searchValue}
         onSearch={onSearch}
       />
 

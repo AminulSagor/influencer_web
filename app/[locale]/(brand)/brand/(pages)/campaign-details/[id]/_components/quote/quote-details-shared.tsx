@@ -124,8 +124,8 @@ export function SharedQuoteLayout({
   actionSection,
 }: SharedQuoteLayoutProps) {
   return (
-    <Card>
-      <CardContent>
+    <Card className="h-full">
+      <CardContent className="h-full">
         <h2 className="text-base font-semibold text-Primary">{title}</h2>
 
         <div className="mt-2 overflow-x-auto rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-4 no-scrollbar">

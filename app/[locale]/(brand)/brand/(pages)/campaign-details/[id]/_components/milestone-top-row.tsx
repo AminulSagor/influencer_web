@@ -12,12 +12,13 @@ import {
 import { Flag } from "lucide-react";
 
 import {
-  compact,
+  // compact,
   formatDate,
   normalizeKey,
   targetIconMap,
 } from "./milestone-ui-helpers";
 import { Milestone } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone-details-panel";
+import { formatCompactNumber } from "./milestone/milestone-ui-helpers";
 
 /** ✅ Dummy submitted report type */
 type SubmittedReport = {
@@ -126,7 +127,7 @@ export default function MilestoneTopRow({
                 </div>
 
                 <p className="text-xl font-semibold text-Primary">
-                  {compact(t.target)}
+                  {formatCompactNumber(t.target)}
                 </p>
               </div>
             );

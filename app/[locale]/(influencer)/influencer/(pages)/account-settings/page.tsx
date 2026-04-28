@@ -13,6 +13,7 @@ import ProfileEditCard from "@/app/[locale]/(influencer)/influencer/(pages)/acco
 import YourLocationsCard from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/your-locations-card";
 import PayoutSettingsCard from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/payout-settings-card";
 import VerificationMethodsCard from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/_components/verification-methods-card";
+import DeleteAccountDangerZone from "@/components/account-settings/delete-account-danger-zone";
 
 export default function AccountSettingsPage() {
   const [profileData, setProfileData] = useState<InfluencerProfileData | null>(null);
@@ -34,6 +35,10 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  const deleteAccountFullName = `${profileData?.firstName ?? ""} ${
+    profileData?.lastName ?? ""
+  }`.trim();
 
   return (
     <div>
@@ -66,6 +71,13 @@ export default function AccountSettingsPage() {
       </div>
       <div className="mt-6">
         <VerificationMethodsCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
+      </div>
+
+      <div className="mt-6">
+        <DeleteAccountDangerZone
+          fullName={deleteAccountFullName}
+          isLoading={loading}
+        />
       </div>
     </div>
   );
