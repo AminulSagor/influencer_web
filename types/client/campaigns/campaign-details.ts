@@ -86,8 +86,11 @@ export type CampaignStatus =
   | "cancelled"
   | "declined"
   | "pending_influencer"
+  | "pending"
+  | "todo"
   | "budget_quoting"
   | "budget_building"
+  | string;
 
 export type CampaignPaymentStatus = "pending" | "partial" | "paid" | string;
 

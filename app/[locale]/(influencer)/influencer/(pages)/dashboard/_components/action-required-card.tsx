@@ -35,6 +35,14 @@ const priorityConfig = {
   },
 };
 
+const getActionHref = (locale: string, action: ActionRequiredItem) => {
+  if (action.type === "SUBMISSION") {
+    return `/${locale}/influencer/jobs`;
+  }
+
+  return `/${locale}/influencer/account-settings`;
+};
+
 const ActionRequiredCard = () => {
   const t = useTranslations("influencer.dashboard.actionRequired");
   const locale = useLocale();
@@ -94,7 +102,7 @@ const ActionRequiredCard = () => {
             const config = priorityConfig[action.priority] || priorityConfig.MEDIUM;
             return (
               <div
-                key={index}
+                key={`${action.type}-${action.date}-${index}`}
                 className={`${config.bg} px-2 py-4 rounded-md border ${config.border} shadow-sm`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -113,7 +121,7 @@ const ActionRequiredCard = () => {
                     </div>
                   </div>
                   <Button size="sm" className={config.btnClass} asChild>
-                    <Link href={`/${locale}/influencer/account-settings`}>{t("card1Button")}</Link>
+                    <Link href={getActionHref(locale, action)}>{t("card1Button")}</Link>
                   </Button>
                 </div>
               </div>

@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import PrimaryButton from "@/app/[locale]/(brand)/brand/_components/primary-button";
-import { ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
 import { useTranslations } from "next-intl";
+import PageFooterPagination from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/page-footer-pagination";
+import { ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
 
 type Props = {
   currentPage: number;
@@ -24,46 +24,32 @@ export default function ExplorePagination({
   const searchParams = useSearchParams();
 
   const goToPage = (page: number) => {
+    const safeTotalPages = Math.max(totalPages, 1);
+    const normalizedPage = Math.min(Math.max(Math.floor(page), 1), safeTotalPages);
     const params = new URLSearchParams(searchParams.toString());
+
     params.set("type", activeType);
-    params.set("page", String(page));
+    params.set("page", String(normalizedPage));
     params.set("limit", String(limit));
+
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const isPreviousDisabled = currentPage <= 1;
-  const isNextDisabled = currentPage >= totalPages;
-
   return (
-    <div className="mt-16 flex justify-end text-sm text-dark-gray">
-      <div className="flex items-center gap-4 md:gap-9">
-        <div className="flex items-center gap-2">
-          <span>{t("pagination.page")}</span>
-          <span className="flex h-8 w-12 items-center justify-center rounded-lg border border-light-green bg-Secondary/70">
-            {currentPage}
-          </span>
-          <span>{t("pagination.of")}</span>
-          <span>{totalPages}</span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <PrimaryButton
-            className="px-5"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={isPreviousDisabled}
-          >
-            {t("pagination.previous")}
-          </PrimaryButton>
-
-          <PrimaryButton
-            className="px-5"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={isNextDisabled}
-          >
-            {t("pagination.next")}
-          </PrimaryButton>
-        </div>
-      </div>
+    <div className="mt-16">
+      <PageFooterPagination
+        page={currentPage}
+        totalPages={totalPages}
+        onNext={() => goToPage(currentPage + 1)}
+        onPrev={() => goToPage(currentPage - 1)}
+        onPageChange={goToPage}
+        labels={{
+          page: t("pagination.page"),
+          of: t("pagination.of"),
+          prev: t("pagination.previous"),
+          next: t("pagination.next"),
+        }}
+      />
     </div>
   );
 }

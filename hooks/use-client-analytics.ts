@@ -2,160 +2,143 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getClientAnalytics } from "@/service/client/analytics/get-client-analytics";
-import {
+import type {
   AnalyticsSortOrder,
   ClientAnalyticsData,
 } from "@/types/client/analytics/analytics";
-import { PaginationMeta } from "@/types/service-response";
-import { useDebounce } from "@/hooks/use-debounce";
+import type { PaginationMeta } from "@/types/service-response";
 
 const DEFAULT_LIMIT = 10;
+const SEARCH_DEBOUNCE_MS = 500;
 
-const defaultMeta: PaginationMeta = {
-  total: 0,
+const DEFAULT_META: PaginationMeta = {
   page: 1,
   limit: DEFAULT_LIMIT,
+  total: 0,
   totalPages: 1,
 };
 
 export function useClientAnalytics() {
   const [data, setData] = useState<ClientAnalyticsData | null>(null);
-  const [meta, setMeta] = useState<PaginationMeta>(defaultMeta);
+  const [meta, setMeta] = useState<PaginationMeta>(DEFAULT_META);
   const [loading, setLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [search, setSearchState] = useState("");
-  const [page, setPage] = useState(1);
-  const [sortOrder, setSortOrderState] =
+  const [search, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortOrder, setSortOrderInput] =
     useState<AnalyticsSortOrder>("high_to_low");
+  const [page, setPage] = useState(1);
+  const limit = DEFAULT_LIMIT;
 
-  const debouncedSearch = useDebounce(search, 500);
-
-  const fetchAnalytics = useCallback(async () => {
-    const result = await getClientAnalytics({
-      page,
-      limit: DEFAULT_LIMIT,
-      search: debouncedSearch,
-      sortOrder,
-    });
-
-    if (result.error) {
-      setError(result.error);
-      setData(null);
-      setMeta(defaultMeta);
-      setLoading(false);
-      setIsFetching(false);
-      return;
-    }
-
-    setData(result.data);
-    setMeta(result.meta ?? defaultMeta);
-    setError(null);
-    setLoading(false);
-    setIsFetching(false);
-  }, [page, debouncedSearch, sortOrder]);
+  const totalPages = Math.max(meta.totalPages ?? 1, 1);
 
   useEffect(() => {
-    let active = true;
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, SEARCH_DEBOUNCE_MS);
 
-    const run = async () => {
-      const result = await getClientAnalytics({
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [search]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadAnalytics = async () => {
+      setLoading(true);
+      setError(null);
+
+      const response = await getClientAnalytics({
         page,
-        limit: DEFAULT_LIMIT,
+        limit,
         search: debouncedSearch,
         sortOrder,
       });
 
-      if (!active) return;
+      if (!isActive) return;
 
-      if (result.error) {
-        setError(result.error);
-        setData(null);
-        setMeta(defaultMeta);
-        setLoading(false);
-        setIsFetching(false);
-        return;
+      if (response.error) {
+        setError(response.error);
       }
 
-      setData(result.data);
-      setMeta(result.meta ?? defaultMeta);
-      setError(null);
+      setData(response.data);
+      setMeta(response.meta ?? DEFAULT_META);
       setLoading(false);
-      setIsFetching(false);
     };
 
-    run();
+    loadAnalytics();
 
     return () => {
-      active = false;
+      isActive = false;
     };
-  }, [page, debouncedSearch, sortOrder]);
+  }, [debouncedSearch, limit, page, sortOrder]);
 
   const setSearch = useCallback((value: string) => {
-    setIsFetching(true);
-    setSearchState(value);
+    setSearchInput(value);
     setPage(1);
   }, []);
 
   const setSortOrder = useCallback((value: AnalyticsSortOrder) => {
-    setIsFetching(true);
-    setSortOrderState(value);
+    setSortOrderInput(value);
     setPage(1);
   }, []);
 
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      const normalizedPage = Math.min(
+        Math.max(Math.floor(nextPage), 1),
+        totalPages,
+      );
+
+      setPage(normalizedPage);
+    },
+    [totalPages],
+  );
+
   const goNext = useCallback(() => {
-    setPage((prev) => {
-      const totalPages = meta.totalPages ?? 1;
-      if (prev < totalPages) {
-        setIsFetching(true);
-        return prev + 1;
-      }
-      return prev;
-    });
-  }, [meta.totalPages]);
+    setPage((currentPage) => Math.min(currentPage + 1, totalPages));
+  }, [totalPages]);
 
   const goPrev = useCallback(() => {
-    setPage((prev) => {
-      if (prev > 1) {
-        setIsFetching(true);
-        return prev - 1;
-      }
-      return prev;
-    });
+    setPage((currentPage) => Math.max(currentPage - 1, 1));
   }, []);
 
-  const refetch = useCallback(async () => {
-    setIsFetching(true);
-    await fetchAnalytics();
-  }, [fetchAnalytics]);
-
+  const canGoNext = page < totalPages;
   const canGoPrev = page > 1;
-  const canGoNext = page < (meta.totalPages ?? 1);
 
-  const actions = useMemo(
+  return useMemo(
     () => ({
+      data,
+      meta,
+      loading,
+      error,
+      search,
+      sortOrder,
+      page,
+      canGoNext,
+      canGoPrev,
       setSearch,
       setSortOrder,
       goNext,
       goPrev,
-      setPage,
-      refetch,
+      goToPage,
     }),
-    [setSearch, setSortOrder, goNext, goPrev, refetch],
+    [
+      canGoNext,
+      canGoPrev,
+      data,
+      error,
+      goNext,
+      goPrev,
+      goToPage,
+      loading,
+      meta,
+      page,
+      search,
+      setSearch,
+      setSortOrder,
+      sortOrder,
+    ],
   );
-
-  return {
-    data,
-    meta,
-    loading,
-    isFetching,
-    error,
-    search,
-    page,
-    sortOrder,
-    canGoPrev,
-    canGoNext,
-    ...actions,
-  };
 }

@@ -122,7 +122,7 @@ export default function CampaignSummaryCard({
     <Card className="overflow-hidden border-0 bg-linear-to-r from-Primary to-light-green p-0 shadow-none">
       <CardContent className="p-0">
         <div className="px-4 py-4 text-white sm:px-6 sm:py-5">
-          <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:justify-between lg:gap-6">
+          <div className="flex flex-col items-stretch gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
             <CampaignSummaryHeader
               label={label}
               title={title}
@@ -135,7 +135,7 @@ export default function CampaignSummaryCard({
               agencyLogo={agencyLogo}
             />
 
-            <div className="flex w-full flex-col items-stretch gap-2 lg:w-auto lg:flex-row lg:items-stretch">
+            <div className="flex w-full flex-col items-stretch gap-2 lg:w-auto lg:flex-row lg:items-start">
               {isCompleted ? (
                 <CampaignSummaryStatusCard
                   deadlineDate={deadlineDate}

@@ -1,3 +1,4 @@
+import type { UIEvent } from "react";
 import { Agency } from "@/types/campaign/step2_campaign_type";
 import AgencyHorizontalCard from "./agency-horizontal-card";
 import AgencyVerticalCard from "./agency-vertical-card";
@@ -12,6 +13,8 @@ type AgencyListSectionProps = {
   isLoading?: boolean;
 };
 
+const SCROLL_END_OFFSET = 40;
+
 const AgencyListSection = ({
   title,
   agencies,
@@ -21,16 +24,18 @@ const AgencyListSection = ({
   hasMore = false,
   isLoading = false,
 }: AgencyListSectionProps) => {
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    if (variant !== "vertical" || !onReachEnd) return;
+  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
+    if (!onReachEnd || !hasMore || isLoading) return;
 
     const element = event.currentTarget;
+    const reachedEnd =
+      variant === "horizontal"
+        ? element.scrollLeft + element.clientWidth >=
+          element.scrollWidth - SCROLL_END_OFFSET
+        : element.scrollTop + element.clientHeight >=
+          element.scrollHeight - SCROLL_END_OFFSET;
 
-    if (
-      element.scrollTop + element.clientHeight >= element.scrollHeight - 20 &&
-      hasMore &&
-      !isLoading
-    ) {
+    if (reachedEnd) {
       onReachEnd();
     }
   };
@@ -40,7 +45,10 @@ const AgencyListSection = ({
       <h1 className="font-semibold text-Primary">{title}</h1>
 
       {variant === "horizontal" ? (
-        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+        <div
+          className="mt-3 flex gap-3 overflow-x-auto pb-2"
+          onScroll={handleScroll}
+        >
           {agencies.map((agency) => (
             <AgencyHorizontalCard
               key={agency.id}
@@ -48,6 +56,12 @@ const AgencyListSection = ({
               onClick={() => onSelect(agency)}
             />
           ))}
+
+          {isLoading && (
+            <div className="flex min-w-32 shrink-0 items-center justify-center rounded-2xl border text-sm text-gray-500">
+              Loading...
+            </div>
+          )}
         </div>
       ) : (
         <div

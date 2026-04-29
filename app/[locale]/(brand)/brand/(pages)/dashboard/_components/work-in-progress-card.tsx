@@ -43,7 +43,7 @@ const WorkInProgressCard = ({ data = [] }: Props) => {
 
   if (!campaigns.length) {
     return (
-      <Card className="rounded-[24px] border border-[#D9D9D9] shadow-none">
+      <Card className="h-full w-full rounded-[24px] border border-[#D9D9D9] shadow-none">
         <CardHeader>
           <CardTitle className="text-[24px] font-semibold text-[#2D5016]">
             {t("title")}
@@ -58,7 +58,7 @@ const WorkInProgressCard = ({ data = [] }: Props) => {
   }
 
   return (
-    <Card>
+    <Card className="h-full w-full">
       <CardHeader>
         <CardTitle className="text-base font-semibold text-[#2D5016]">
           {t("title")}

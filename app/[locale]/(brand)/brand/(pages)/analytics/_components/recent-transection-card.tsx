@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -11,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Search, ArrowDown } from "lucide-react";
+import { Search, ArrowDown, ChevronRight } from "lucide-react";
 import clsx from "clsx";
 import { useTranslations } from "next-intl";
+import PageFooterPagination from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/page-footer-pagination";
 
 export type Transaction = {
   id: string;
@@ -37,6 +37,7 @@ type RecentTransactionsCardProps = {
   onSortChange: (v: "lowToHigh" | "highToLow") => void;
   onNextPage?: () => void;
   onPrevPage?: () => void;
+  onPageChange?: (page: number) => void;
   canGoNext?: boolean;
   canGoPrev?: boolean;
   isLoading?: boolean;
@@ -47,7 +48,6 @@ export default function RecentTransactionsCard({
   title,
   subtitle,
   totalResults,
-  pageSize = 10,
   pageCount,
   page,
   items,
@@ -57,6 +57,7 @@ export default function RecentTransactionsCard({
   onSortChange,
   onNextPage,
   onPrevPage,
+  onPageChange,
   canGoNext = false,
   canGoPrev = false,
   isLoading = false,
@@ -161,37 +162,20 @@ export default function RecentTransactionsCard({
             )}
           </div>
 
-          <div className="mt-7 flex flex-wrap items-center justify-end gap-3">
-            <span className="text-xs text-muted-foreground">{t("page")}</span>
-
-            <span className="flex h-7 min-w-[34px] items-center justify-center rounded-full border border-light-green/30 bg-light-green/10 px-3 text-xs text-primary">
-              {page}
-            </span>
-
-            <span className="text-xs text-muted-foreground">
-              {t("of")} {pageCount}
-            </span>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onPrevPage}
-              disabled={!canGoPrev}
-              className="h-8 rounded-full px-4 text-xs"
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              {t("prev")}
-            </Button>
-
-            <Button
-              type="button"
-              onClick={onNextPage}
-              disabled={!canGoNext}
-              className="h-8 rounded-full bg-light-green px-4 text-xs text-white hover:bg-light-green/90"
-            >
-              {t("next")}
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+          <div className="mt-7">
+            <PageFooterPagination
+              page={page}
+              totalPages={pageCount}
+              onNext={onNextPage ?? (() => undefined)}
+              onPrev={onPrevPage ?? (() => undefined)}
+              onPageChange={onPageChange ?? (() => undefined)}
+              labels={{
+                page: t("page"),
+                of: t("of"),
+                prev: t("prev"),
+                next: t("next"),
+              }}
+            />
           </div>
         </div>
       </CardContent>

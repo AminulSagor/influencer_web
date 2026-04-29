@@ -36,13 +36,16 @@ export default function CampaignDetailsContent({
     [campaign.assignedInfluencers],
   );
 
-  const showShippingAddress =
+  const hasAssignedInfluencers =
     isInfluencerPromotion && assignedInfluencers.length > 0;
+
+  const showShippingAddress =
+    hasAssignedInfluencers && campaign.needSampleProduct === true;
 
   const [selectedInfluencerId, setSelectedInfluencerId] = React.useState("");
 
   React.useEffect(() => {
-    if (!showShippingAddress) {
+    if (!hasAssignedInfluencers) {
       setSelectedInfluencerId("");
       return;
     }
@@ -54,7 +57,7 @@ export default function CampaignDetailsContent({
     if (!hasCurrentInfluencer) {
       setSelectedInfluencerId(assignedInfluencers[0]?.influencerId ?? "");
     }
-  }, [showShippingAddress, assignedInfluencers, selectedInfluencerId]);
+  }, [hasAssignedInfluencers, assignedInfluencers, selectedInfluencerId]);
 
   return (
     <div className="space-y-4">

@@ -58,16 +58,16 @@ const UpcomingDeadline = ({ initialResponse }: Props) => {
   };
 
   return (
-    <Card>
+    <Card className="flex flex-1 flex-col">
       <CardHeader className="pb-4">
         <CardTitle className="text-[18px] font-semibold text-[#2D5B16]">
           {t("title")}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="flex flex-1 flex-col pt-0">
         {response.data.length === 0 ? (
-          <div className="flex min-h-[180px] items-center justify-center rounded-xl bg-[#F6F6F6] px-4 py-6 text-center">
+          <div className="flex min-h-[180px] flex-1 items-center justify-center rounded-xl bg-[#F6F6F6] px-4 py-6 text-center">
             <p className="text-sm text-[#A3A3A3]">{t("emptyMessage")}</p>
           </div>
         ) : (

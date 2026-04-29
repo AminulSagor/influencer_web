@@ -41,7 +41,7 @@ const BrandAssetsCard = ({ campaign }: Props) => {
         <div className="space-y-3">
           {brandAssets.length > 0 ? (
             brandAssets.map((asset, index) => {
-              const name = asset.fileName || "Unnamed file";
+              const name = asset.description?.trim() || asset.fileName || "Unnamed file";
               const mime = asset.mimeType || asset.assetType || "";
               const ext = name.split(".").pop()?.toUpperCase();
 

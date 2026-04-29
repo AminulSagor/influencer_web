@@ -377,13 +377,19 @@ export default function CampaignMilestonesSection({
   const showMilestoneDetails = React.useMemo(() => {
     if (!expandedMilestone) return false;
 
+    const hasApiMilestones = (campaign.milestones ?? []).length > 0;
+
+    if (hasApiMilestones) {
+      return true;
+    }
+
     return shouldShowMilestoneDetails(
       campaign.status,
       expandedMilestone.status,
       getResolvedMilestoneStatus,
       expandedMilestone.id,
     );
-  }, [campaign.status, expandedMilestone, getResolvedMilestoneStatus]);
+  }, [campaign.milestones, campaign.status, expandedMilestone, getResolvedMilestoneStatus]);
 
   const handleSelectInfluencer = React.useCallback(
     (influencerId: string) => {

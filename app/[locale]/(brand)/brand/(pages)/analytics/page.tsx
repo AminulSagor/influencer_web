@@ -32,6 +32,7 @@ const AnalyticsPage = () => {
     setSortOrder,
     goNext,
     goPrev,
+    goToPage,
   } = useClientAnalytics();
 
   const items: Transaction[] = useMemo(() => {
@@ -72,6 +73,7 @@ const AnalyticsPage = () => {
         }
         onNextPage={goNext}
         onPrevPage={goPrev}
+        onPageChange={goToPage}
         canGoNext={canGoNext}
         canGoPrev={canGoPrev}
         isLoading={loading}

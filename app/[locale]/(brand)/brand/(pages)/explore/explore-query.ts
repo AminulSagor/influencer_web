@@ -4,6 +4,7 @@ export type ExploreSearchParams = {
   type?: string;
   page?: string;
   limit?: string;
+  search?: string;
 };
 
 export type ExplorePagination = {

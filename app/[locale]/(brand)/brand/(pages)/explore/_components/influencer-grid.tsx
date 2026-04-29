@@ -10,7 +10,7 @@ type Props = {
 };
 
 function getPlatformIcon(platform: string): JSX.Element | null {
-  const iconSize = 18;
+  const iconSize = 16;
   const normalized = platform.toLowerCase();
 
   const platformIcons: Record<string, JSX.Element> = {
@@ -28,18 +28,21 @@ function isRemoteImage(url: string) {
 
 export default function InfluencerGrid({ influencers }: Props) {
   return (
-    <div className="mt-8 grid grid-cols-2 items-start gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="mt-5 grid grid-cols-2 items-stretch gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {influencers.map((influencer) => {
         const avatarSrc = influencer.avatar?.trim() || "";
         const niches = influencer.niches ?? [];
         const platforms = influencer.platforms ?? [];
+        const visiblePlatforms = platforms
+          .map((platform, index) => ({ platform, index, icon: getPlatformIcon(platform) }))
+          .filter((item) => item.icon);
 
         return (
           <div
             key={influencer.id}
-            className="relative flex flex-col items-center rounded-md bg-linear-to-b from-Primary/90 to-light-green p-3 text-white/90"
+            className="relative flex h-full min-h-[230px] flex-col items-center rounded-md bg-linear-to-b from-Primary/90 to-light-green p-3 text-white/90"
           >
-            <div className="relative h-18 w-18 overflow-hidden rounded-full bg-white shadow-md">
+            <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-full bg-white shadow-md">
               {avatarSrc ? (
                 isRemoteImage(avatarSrc) ? (
                   <img
@@ -64,29 +67,32 @@ export default function InfluencerGrid({ influencers }: Props) {
               )}
             </div>
 
-            <h2 className="mt-2 text-center text-lg font-semibold">
+            <h2 className="mt-2 line-clamp-2 min-h-[46px] text-center text-lg font-semibold leading-6">
               {influencer.name}
             </h2>
 
-            <div className="mt-3 flex gap-1.5">
-              {platforms.map((platform, index) => {
-                const icon = getPlatformIcon(platform);
-                if (!icon) return null;
+            {visiblePlatforms.length > 0 ? (
+              <div className="mt-1 flex min-h-[18px] gap-1.5">
+                {visiblePlatforms.map(({ platform, index, icon }) => (
+                  <div key={`${platform}-${index}`}>{icon}</div>
+                ))}
+              </div>
+            ) : null}
 
-                return <div key={`${platform}-${index}`}>{icon}</div>;
-              })}
+            <div className="mt-1 flex min-h-[30px] flex-wrap items-start justify-center text-center text-xs leading-4">
+              {niches.length > 0 ? (
+                niches.map((niche, index) => (
+                  <span key={`${niche}-${index}`}>
+                    {niche}
+                    {index < niches.length - 1 ? ", " : ""}
+                  </span>
+                ))
+              ) : (
+                <span>No niche added</span>
+              )}
             </div>
 
-            <div className="mt-0.5 flex flex-wrap justify-center text-center text-xs">
-              {niches.map((niche, index) => (
-                <span key={`${niche}-${index}`}>
-                  {niche}
-                  {index < niches.length - 1 ? ", " : ""}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-4">
+            <div className="mt-3">
               <RatingStars rating={influencer.rating} />
             </div>
           </div>

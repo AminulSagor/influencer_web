@@ -12,11 +12,21 @@ import { useTranslations } from "next-intl";
 
 type Props = {
   campaign: Campaignservice | null;
+  onClose?: () => void;
 };
 
-const PlacementConfirmCard = ({ campaign }: Props) => {
+const PlacementConfirmCard = ({ campaign, onClose }: Props) => {
   const t = useTranslations("brand.CreateCampaignsPage");
   const toggleOpen = useCampaignStore((s) => s.toggleOpen);
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    toggleOpen();
+  };
 
   const formatBudget = (amount: string | number | null | undefined) => {
     const n = Number(amount ?? 0);
@@ -44,7 +54,7 @@ const PlacementConfirmCard = ({ campaign }: Props) => {
         type="button"
         aria-label={t("close")}
         className="text-Primary/70 hover:bg-light-green/30 hover:text-Primary absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full transition"
-        onClick={toggleOpen}
+        onClick={handleClose}
       >
         <X className="h-5 w-5" />
       </button>

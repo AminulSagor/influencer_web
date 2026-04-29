@@ -81,7 +81,7 @@ function parsePage(value: string | null): number {
     return 1;
   }
 
-  return parsed;
+  return Math.floor(parsed);
 }
 
 //==============component=======================//
@@ -100,6 +100,7 @@ export default function CampaignsPage() {
   const searchParamsString = searchParams.toString();
 
   const [searchInput, setSearchInput] = useState(searchQuery);
+  const [campaignReloadKey, setCampaignReloadKey] = useState(0);
 
   const setStep = useCampaignStore((s) => s.setStep);
 
@@ -154,6 +155,7 @@ export default function CampaignsPage() {
     PER_PAGE,
     searchQuery,
     sortBy,
+    campaignReloadKey,
   );
 
   const total = meta.total ?? 0;
@@ -224,6 +226,23 @@ export default function CampaignsPage() {
     }
   };
 
+  const handlePageChange = (nextPage: number) => {
+    const normalizedPage = Math.min(
+      Math.max(Math.floor(nextPage), 1),
+      Math.max(totalPages, 1),
+    );
+
+    if (normalizedPage === safePage) return;
+
+    updateQueryParams({
+      page: String(normalizedPage),
+    });
+  };
+
+  const handleCampaignDeleted = () => {
+    setCampaignReloadKey((value) => value + 1);
+  };
+
   //tabs
   const localizedTabItems = CAMPAIGN_TAB_ITEMS.map((item) => ({
     ...item,
@@ -291,6 +310,7 @@ export default function CampaignsPage() {
           loading={loading}
           budgetingFilter={budgetingFilter}
           onBudgetingFilterChange={handleBudgetingFilterChange}
+          onCampaignDeleted={handleCampaignDeleted}
         />
 
         <div className="mt-10">
@@ -299,6 +319,7 @@ export default function CampaignsPage() {
             totalPages={totalPages}
             onNext={handleNextPage}
             onPrev={handlePrevPage}
+            onPageChange={handlePageChange}
           />
         </div>
       </CardContent>

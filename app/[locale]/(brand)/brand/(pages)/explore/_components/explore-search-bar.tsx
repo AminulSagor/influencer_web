@@ -6,7 +6,7 @@ import { Search } from "lucide-react";
 type Props = {
   placeholder: string;
   showingText: string;
-  value: string;
+  value?: string;
   onChange: (value: string) => void;
 };
 
@@ -21,7 +21,7 @@ export default function ExploreSearchBar({
       <div className="relative w-[360px] max-w-full">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           className="h-10 rounded-lg pl-9 placeholder:text-sm"

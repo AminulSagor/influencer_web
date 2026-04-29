@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ExploreSearchBar from "./explore-search-bar";
 import ExplorePagination from "./explore-pagination";
 import AgencyGrid from "./agency-grid";
 import { Agency, ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
+
+const SEARCH_DEBOUNCE_MS = 500;
 
 type Props = {
   agencies: Agency[];
@@ -13,6 +16,7 @@ type Props = {
   totalPages: number;
   limit: number;
   activeType: ExploreType;
+  searchValue?: string;
 };
 
 export default function AgencyExploreSection({
@@ -22,40 +26,52 @@ export default function AgencyExploreSection({
   totalPages,
   limit,
   activeType,
+  searchValue,
 }: Props) {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(searchValue ?? "");
 
-  const filteredAgencies = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+  useEffect(() => {
+    setSearch(searchValue ?? "");
+  }, [searchValue]);
 
-    if (!keyword) return agencies;
+  useEffect(() => {
+    if (search === (searchValue ?? "")) return;
 
-    return agencies.filter((item) => {
-      const agencyName = item.agencyName?.toLowerCase() ?? "";
-      const fullName = item.fullName?.toLowerCase() ?? "";
-      const email = item.user?.email?.toLowerCase() ?? "";
-      const niches =
-        item.niches?.map((n) => n.niche).join(" ").toLowerCase() ?? "";
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const nextSearch = search.trim();
 
-      return (
-        agencyName.includes(keyword) ||
-        fullName.includes(keyword) ||
-        email.includes(keyword) ||
-        niches.includes(keyword)
-      );
-    });
-  }, [agencies, search]);
+      params.set("type", activeType);
+      params.set("page", "1");
+      params.set("limit", String(limit));
+
+      if (nextSearch) {
+        params.set("search", nextSearch);
+      } else {
+        params.delete("search");
+      }
+
+      router.push(`${pathname}?${params.toString()}`);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeType, limit, pathname, router, search, searchParams, searchValue]);
 
   return (
     <>
       <ExploreSearchBar
-        placeholder="Search By Brand Name"
-        showingText={`Showing ${filteredAgencies.length} of ${total} Results`}
+        placeholder="Search By Agency Name"
+        showingText={`Showing ${agencies.length} of ${total} Results`}
         value={search}
         onChange={setSearch}
       />
 
-      <AgencyGrid agencies={filteredAgencies} />
+      <AgencyGrid agencies={agencies} />
 
       <ExplorePagination
         currentPage={currentPage}

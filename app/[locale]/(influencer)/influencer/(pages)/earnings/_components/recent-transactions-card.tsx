@@ -108,7 +108,7 @@ export default function RecentTransactionsCard() {
             <p className="text-sm text-gray-400">No transactions found</p>
           </div>
         ) : (
-          transactions.map((item) => {
+          transactions.map((item, index) => {
             const isIncome = item.status !== "Withdrawal";
             const formattedDate = new Date(item.date).toLocaleDateString("en-US", {
               month: "short",
@@ -118,7 +118,7 @@ export default function RecentTransactionsCard() {
 
             return (
               <div
-                key={item.transactionId}
+                key={`${item.transactionId ?? item.jobId ?? "transaction"}-${item.date ?? "date"}-${index}`}
                 className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-5 rounded-xl border
                   ${
                     isIncome

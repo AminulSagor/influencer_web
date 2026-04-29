@@ -17,9 +17,14 @@ const ActionRequiredCard = ({ data = [] }: Props) => {
   const t = useTranslations("brand.dashboard.actionRequired");
   const [page, setPage] = useState(0);
 
+  const getActionHref = (type: string) =>
+    type.trim().toLowerCase() === "campaign_fix"
+      ? "/brand/campaigns"
+      : "/brand/account-settings";
+
   if (data.length === 0) {
     return (
-      <Card>
+      <Card className="shrink-0">
         <CardHeader>
           <CardTitle className="text-[#2d5016]">{t("title")}</CardTitle>
         </CardHeader>
@@ -41,7 +46,7 @@ const ActionRequiredCard = ({ data = [] }: Props) => {
   const currentItems = pages[page] || [];
 
   return (
-    <Card>
+    <Card className="shrink-0">
       <CardHeader>
         <CardTitle className="text-[#2d5016]">{t("title")}</CardTitle>
       </CardHeader>
@@ -62,7 +67,7 @@ const ActionRequiredCard = ({ data = [] }: Props) => {
             </div>
 
             <Link
-              href="#"
+              href={getActionHref(issue.type)}
               className="bg-[#F09A30] rounded-md px-6 py-1.5 text-white text-sm"
             >
               Fix

@@ -20,9 +20,10 @@ export default async function ExplorePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const type = resolveType(params.type);
   const { page, limit } = resolvePagination(params.page, params.limit);
+  const search = params.search?.trim() ?? "";
 
   if (type === "ad-agencies") {
-    const response = await getAgencies(page, limit);
+    const response = await getAgencies(page, limit, search);
     const agencies = response.data ?? [];
     const meta = response.meta;
 
@@ -53,13 +54,14 @@ export default async function ExplorePage({ searchParams }: PageProps) {
             totalPages={totalPages}
             limit={limit}
             activeType={type}
+            searchValue={search}
           />
         </CardContent>
       </Card>
     );
   }
 
-  const response = await getInfluencers(page, limit);
+  const response = await getInfluencers(page, limit, search);
   const influencers = response.data ?? [];
   const meta = response.meta;
 
@@ -90,6 +92,7 @@ export default async function ExplorePage({ searchParams }: PageProps) {
           totalPages={totalPages}
           limit={limit}
           activeType={type}
+          searchValue={search}
         />
       </CardContent>
     </Card>
@@ -108,10 +111,13 @@ function resolvePagination(
   const parsedLimit = Number(limit);
 
   return {
-    page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+    page:
+      Number.isFinite(parsedPage) && parsedPage > 0
+        ? Math.floor(parsedPage)
+        : 1,
     limit:
       Number.isFinite(parsedLimit) && parsedLimit > 0
-        ? parsedLimit
+        ? Math.floor(parsedLimit)
         : DEFAULT_LIMIT,
   };
 }

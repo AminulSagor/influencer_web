@@ -43,7 +43,7 @@ const PendingJobList = ({ search, sort }: PendingJobListProps) => {
     try {
       setLoading(true);
       const res = await InfluencerJobService.getJobs({
-        status: "pending",
+        status: "pending_payment",
         search,
         sort,
         page,

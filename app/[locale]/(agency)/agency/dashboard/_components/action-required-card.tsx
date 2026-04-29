@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 import { IoMdCloseCircle } from "react-icons/io";
 import { FaExclamationTriangle } from "react-icons/fa";
@@ -73,6 +75,7 @@ const getActionUI = (type: string) => {
 };
 
 const ActionRequiredCard = () => {
+  const locale = useLocale();
   const [actions, setActions] = useState<ActionRequiredItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -129,8 +132,16 @@ const ActionRequiredCard = () => {
                   </div>
 
                   <div>
-                    <Button size="sm" className={ui.buttonClass}>
-                      {ui.buttonText}
+                    <Button size="sm" className={ui.buttonClass} asChild>
+                      <Link
+                        href={
+                          item.type === "SUBMISSION"
+                            ? `/${locale}/agency/jobs`
+                            : item.link || `/${locale}/agency/account-settings`
+                        }
+                      >
+                        {ui.buttonText}
+                      </Link>
                     </Button>
                   </div>
                 </div>

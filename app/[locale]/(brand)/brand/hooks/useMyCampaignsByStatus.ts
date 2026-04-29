@@ -19,6 +19,7 @@ export function useMyCampaignsByStatus(
   limit: number,
   search?: string,
   sort?: CampaignSortValue,
+  refreshKey = 0,
 ) {
   const [data, setData] = useState<CampaignOverView[]>([]);
   const [meta, setMeta] = useState<PaginationMeta>(defaultMeta);
@@ -75,7 +76,7 @@ export function useMyCampaignsByStatus(
     return () => {
       mounted = false;
     };
-  }, [status, page, limit, search, sort]);
+  }, [status, page, limit, search, sort, refreshKey]);
 
   return { data, meta, loading, error };
 }

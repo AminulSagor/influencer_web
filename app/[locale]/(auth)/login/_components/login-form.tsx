@@ -63,17 +63,23 @@ const onSubmit = async (data: LoginFormValues) => {
 
     const pathMap: Record<string, string> = {
       client: "brand",
+      brand: "brand",
       admin: "admin",
       agency: "agency",
       influencer: "influencer",
     };
 
-    const basePath = pathMap[payload.role || ""] || (payload.role || "");
-    // const nextPath = payload.isVerified
-    //   ? `/${locale}/${basePath}/dashboard`
-    //   : `/${locale}/brand/unverified`;
+    const basePath = pathMap[payload.role || ""];
 
-    // await router.push(nextPath);
+    if (!basePath) {
+      throw new Error("Invalid user role");
+    }
+
+    const nextPath = payload.isVerified
+      ? `/${locale}/${basePath}/dashboard`
+      : `/${locale}/${basePath}/unverified`;
+
+    router.replace(nextPath);
     router.refresh();
   } catch (error: any) {
     const status = error?.response?.status;

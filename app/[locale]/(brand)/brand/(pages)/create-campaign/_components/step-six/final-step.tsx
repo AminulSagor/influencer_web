@@ -18,12 +18,20 @@ import { getCampaignById } from "@/service/campaign/getById";
 import { placeCampaign } from "@/service/campaign/place-campaign";
 import { Campaignservice } from "@/types/client/campaigns/create-campaign-types";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 
 const FinalStep = () => {
   const t = useTranslations("brand.CreateCampaignsPage");
+  const router = useRouter();
 
-  const { open, toggleOpen, decreaseStep, campaignId, campaignType } =
-    useCampaignStore();
+  const {
+    open,
+    toggleOpen,
+    decreaseStep,
+    campaignId,
+    campaignType,
+    resetCampaignStore,
+  } = useCampaignStore();
 
   const [placementLoading, setPlacementLoading] = useState(false);
   const [campaign, setCampaign] = useState<Campaignservice | null>(null);
@@ -51,6 +59,15 @@ const FinalStep = () => {
     fetchCampaign();
   }, [campaignId, t]);
 
+  const closePlacementModal = () => {
+    if (open) {
+      toggleOpen();
+    }
+
+    resetCampaignStore();
+    router.push("/brand/campaigns");
+  };
+
   const handlePlacement = async () => {
     if (!campaignId || isPlaced) return;
 
@@ -60,7 +77,10 @@ const FinalStep = () => {
 
       if (res.success) {
         setIsPlaced(true);
-        toggleOpen();
+
+        if (!open) {
+          toggleOpen();
+        }
       } else {
         notifyError(res.message || t("placementFailed"));
       }
@@ -76,8 +96,8 @@ const FinalStep = () => {
   return (
     <div className="space-y-4">
       {open && (
-        <div className="absolute top-28 right-1/2 z-50 translate-x-1/2">
-          <PlacementConfirmCard campaign={campaign} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+          <PlacementConfirmCard campaign={campaign} onClose={closePlacementModal} />
         </div>
       )}
 

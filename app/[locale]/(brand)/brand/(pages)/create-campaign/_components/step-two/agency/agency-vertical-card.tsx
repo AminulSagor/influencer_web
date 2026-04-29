@@ -23,7 +23,7 @@ const AgencyVerticalCard = ({ agency, onClick }: AgencyVerticalCardProps) => {
           <p className="text-lg font-semibold leading-tight text-white">
             {agency.name}
           </p>
-          <p className="text-sm text-white/80">{agency.subtitle}</p>
+          <p className="text-sm text-white/80 text-start">{agency.subtitle}</p>
         </div>
       </CardContent>
     </Card>

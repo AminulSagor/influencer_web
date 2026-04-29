@@ -31,7 +31,7 @@ export default function TermsAndConditionCard({ campaign }: Props) {
 
   return (
     <CollapseCard title={t("termsAndConditionCard.title")}>
-      <div className="flex flex-col justify-between gap-8 lg:flex-row lg:gap-12">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] lg:gap-8 xl:gap-10">
         <div className="space-y-4">
           <div className="mb-4 flex items-center gap-2 pt-4 font-semibold text-Primary md:pt-0">
             <FileText className="h-5 w-5" />
@@ -57,9 +57,9 @@ export default function TermsAndConditionCard({ campaign }: Props) {
           </div>
         </div>
 
-        <div className="hidden w-px bg-dark-gray lg:block" />
+        <div className="hidden h-full w-px bg-dark-gray lg:block" />
 
-        <div className="space-y-4">
+        <div className="w-full max-w-[420px] space-y-4 justify-self-start">
           <div className="flex items-center gap-2 font-semibold text-Primary">
             <ScrollText className="h-5 w-5" />
             <span className="text-base">

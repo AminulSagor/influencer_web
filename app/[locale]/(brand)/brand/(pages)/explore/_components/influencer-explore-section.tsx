@@ -1,10 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ExploreSearchBar from "./explore-search-bar";
 import ExplorePagination from "./explore-pagination";
 import InfluencerGrid from "./influencer-grid";
 import { Influencer, ExploreType } from "@/app/[locale]/(brand)/brand/(pages)/explore/explore-query";
+
+const SEARCH_DEBOUNCE_MS = 500;
 
 type Props = {
   influencers: Influencer[];
@@ -13,6 +16,7 @@ type Props = {
   totalPages: number;
   limit: number;
   activeType: ExploreType;
+  searchValue?: string;
 };
 
 export default function InfluencerExploreSection({
@@ -22,37 +26,52 @@ export default function InfluencerExploreSection({
   totalPages,
   limit,
   activeType,
+  searchValue,
 }: Props) {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(searchValue ?? "");
 
-  const filteredInfluencers = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+  useEffect(() => {
+    setSearch(searchValue ?? "");
+  }, [searchValue]);
 
-    if (!keyword) return influencers;
+  useEffect(() => {
+    if (search === (searchValue ?? "")) return;
 
-    return influencers.filter((item) => {
-      const name = item.name?.toLowerCase() ?? "";
-      const niches = item.niches?.join(" ").toLowerCase() ?? "";
-      const platforms = item.platforms?.join(" ").toLowerCase() ?? "";
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const nextSearch = search.trim();
 
-      return (
-        name.includes(keyword) ||
-        niches.includes(keyword) ||
-        platforms.includes(keyword)
-      );
-    });
-  }, [influencers, search]);
+      params.set("type", activeType);
+      params.set("page", "1");
+      params.set("limit", String(limit));
+
+      if (nextSearch) {
+        params.set("search", nextSearch);
+      } else {
+        params.delete("search");
+      }
+
+      router.push(`${pathname}?${params.toString()}`);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeType, limit, pathname, router, search, searchParams, searchValue]);
 
   return (
     <>
       <ExploreSearchBar
         placeholder="Search By Influencer Name"
-        showingText={`Showing ${filteredInfluencers.length} of ${total} Results`}
+        showingText={`Showing ${influencers.length} of ${total} Results`}
         value={search}
         onChange={setSearch}
       />
 
-      <InfluencerGrid influencers={filteredInfluencers} />
+      <InfluencerGrid influencers={influencers} />
 
       <ExplorePagination
         currentPage={currentPage}

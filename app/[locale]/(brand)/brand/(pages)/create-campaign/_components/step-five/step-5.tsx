@@ -21,11 +21,21 @@ import Loader from "@/components/spin-loader";
 import { Input } from "@/components/ui/input";
 import { notifyError } from "@/utils/toast_util";
 import { submitCampaignStepFive } from "@/service/campaign/update-step-5";
+import BrandAssetLinkDialog from "@/app/[locale]/(brand)/brand/_components/brand-asset-link-dialog";
+import { getSignedUrl } from "@/service/client/upload/get-signed-url";
+import { uploadFileToS3 } from "@/service/client/upload/upload-file-to-s3";
 import {
   AssetCategory,
   LocalAsset,
 } from "@/types/client/campaigns/create-campaign-types";
 import { useTranslations } from "next-intl";
+
+type BrandLinkAsset = {
+  id: string;
+  category: "brand";
+  assetName: string;
+  pageLink: string;
+};
 
 const StepFive = () => {
   const t = useTranslations("brand.CreateCampaignsPage");
@@ -34,16 +44,16 @@ const StepFive = () => {
 
   const [enabled, setEnabled] = useState<boolean>(false);
   const [contentAssets, setContentAssets] = useState<LocalAsset[]>([]);
-  const [brandAssets, setBrandAssets] = useState<LocalAsset[]>([]);
+  const [brandAssets, setBrandAssets] = useState<BrandLinkAsset[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [brandAssetDialogOpen, setBrandAssetDialogOpen] = useState(false);
 
   const contentFileInputRef = useRef<HTMLInputElement>(null);
-  const brandFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = (type: AssetCategory) => {
     if (type === "content") contentFileInputRef.current?.click();
-    else brandFileInputRef.current?.click();
+    else setBrandAssetDialogOpen(true);
   };
 
   const makeId = () =>
@@ -64,12 +74,13 @@ const StepFive = () => {
     event: React.ChangeEvent<HTMLInputElement>,
     type: AssetCategory,
   ) => {
+    if (type !== "content") return;
+
     const files = event.target.files;
     if (!files) return;
 
     const fileList = Array.from(files);
-    if (type === "content") clearError("contentAssets");
-    if (type === "brand") clearError("brandAssets");
+    clearError("contentAssets");
 
     const mapped: LocalAsset[] = fileList.map((file) => ({
       id: makeId(),
@@ -78,10 +89,29 @@ const StepFive = () => {
       description: "",
     }));
 
-    if (type === "content") setContentAssets((prev) => [...prev, ...mapped]);
-    else setBrandAssets((prev) => [...prev, ...mapped]);
+    setContentAssets((prev) => [...prev, ...mapped]);
 
     event.target.value = "";
+  };
+
+  const handleAddBrandAsset = ({
+    assetName,
+    pageLink,
+  }: {
+    assetName: string;
+    pageLink: string;
+  }) => {
+    clearError("brandAssets");
+    setBrandAssets((prev) => [
+      ...prev,
+      {
+        id: makeId(),
+        category: "brand",
+        assetName,
+        pageLink,
+      },
+    ]);
+    setBrandAssetDialogOpen(false);
   };
 
   const handleRemove = (id: string, type: AssetCategory) => {
@@ -95,15 +125,11 @@ const StepFive = () => {
     type: AssetCategory,
     description: string,
   ) => {
-    if (type === "content") {
-      setContentAssets((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, description } : a)),
-      );
-    } else {
-      setBrandAssets((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, description } : a)),
-      );
-    }
+    if (type !== "content") return;
+
+    setContentAssets((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, description } : a)),
+    );
   };
 
   const getFileIcon = (fileType: string) => {
@@ -135,14 +161,28 @@ const StepFive = () => {
   const uploadFileToServer = async (
     file: File,
   ): Promise<{ fileUrl: string }> => {
-    return { fileUrl: URL.createObjectURL(file) };
+    const signedUrlResult = await getSignedUrl({
+      fileName: file.name,
+      fileType: file.type || "application/octet-stream",
+      module: "brandguru/client/campaign-assets",
+    });
+
+    if (typeof signedUrlResult === "string") {
+      throw new Error(signedUrlResult);
+    }
+
+    const uploadResult = await uploadFileToS3(signedUrlResult.signedUrl, file);
+
+    if (uploadResult !== true) {
+      throw new Error(uploadResult);
+    }
+
+    return { fileUrl: signedUrlResult.publicUrl };
   };
 
   const buildAssetsPayload = async () => {
-    const all = [...contentAssets, ...brandAssets];
-
-    const uploads = await Promise.all(
-      all.map(async (asset) => {
+    const contentUploads = await Promise.all(
+      contentAssets.map(async (asset) => {
         const { fileUrl } = await uploadFileToServer(asset.file);
         return {
           fileName: asset.file.name,
@@ -156,7 +196,16 @@ const StepFive = () => {
       }),
     );
 
-    return uploads;
+    const brandUploads = brandAssets.map((asset) => ({
+      fileName: asset.assetName,
+      fileUrl: asset.pageLink,
+      assetType: "brand_asset",
+      category: asset.category,
+      mimeType: "text/plain",
+      description: asset.assetName,
+    }));
+
+    return [...contentUploads, ...brandUploads];
   };
 
   const handleNextStep = async () => {
@@ -186,7 +235,12 @@ const StepFive = () => {
           t("somethingWentWrongPleaseTryAgain");
         notifyError(message);
       } else {
-        notifyError(t("somethingWentWrongPleaseTryAgain"));
+        const message =
+          err instanceof Error
+            ? err.message
+            : (err as { message?: string })?.message ||
+              t("somethingWentWrongPleaseTryAgain");
+        notifyError(message);
       }
     } finally {
       setLoading(false);
@@ -343,69 +397,40 @@ const StepFive = () => {
                 <CardContent className="space-y-4">
                   {brandAssets.length > 0 ? (
                     <div className="space-y-3">
-                      {brandAssets.map((asset) => {
-                        const ext = asset.file.name
-                          .split(".")
-                          .pop()
-                          ?.toUpperCase();
+                      {brandAssets.map((asset) => (
+                        <div key={asset.id} className="space-y-2">
+                          <div className="flex justify-between bg-lienear-to-r from-white to-light-green/30 items-center rounded-xl py-3 px-4 text-sm border-light-green border">
+                            <div className="flex min-w-0 gap-3 items-center">
+                              <span className="text-light-green">
+                                <FileText size={20} />
+                              </span>
 
-                        return (
-                          <div key={asset.id} className="space-y-2">
-                            <div className="flex justify-between bg-lienear-to-r from-white to-light-green/30 items-center rounded-xl py-3 px-4 text-sm border-light-green border">
-                              <div className="flex gap-3 items-center">
-                                <span className="text-light-green">
-                                  {getFileIcon(asset.file.type)}
-                                </span>
-
-                                <div className="text-sm">
-                                  <p className="text-light-green">
-                                    {asset.file.name}
-                                  </p>
-                                  <p className="text-xs text-light-green">
-                                    {ext} - {getFileSize(asset.file.size)}
-                                  </p>
-                                </div>
+                              <div className="min-w-0 text-sm">
+                                <p className="truncate text-light-green">
+                                  {asset.assetName}
+                                </p>
+                                <p className="truncate text-xs text-light-green">
+                                  {asset.pageLink}
+                                </p>
                               </div>
-
-                              <button
-                                onClick={() => handleRemove(asset.id, "brand")}
-                                className="text-light-green hover:text-red-500 cursor-pointer"
-                                type="button"
-                              >
-                                <X size={18} />
-                              </button>
                             </div>
 
-                            <Input
-                              value={asset.description}
-                              onChange={(e) =>
-                                updateDescription(
-                                  asset.id,
-                                  "brand",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder={t("descriptionOptional")}
-                              className="w-full focus-visible:ring-1"
-                            />
+                            <button
+                              onClick={() => handleRemove(asset.id, "brand")}
+                              className="text-light-green hover:text-red-500 cursor-pointer"
+                              type="button"
+                            >
+                              <X size={18} />
+                            </button>
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-light-green text-center font-semibold py-4">
                       {t("uploadYourBrandAssetsHere")}
                     </p>
                   )}
-
-                  <input
-                    type="file"
-                    ref={brandFileInputRef}
-                    hidden
-                    multiple
-                    onChange={(e) => handleFileSelect(e, "brand")}
-                    accept="image/*,video/*,.pdf,.doc,.docx"
-                  />
 
                   <DottedButton onClick={() => handleUploadClick("brand")}>
                     {brandAssets.length === 0
@@ -473,6 +498,12 @@ const StepFive = () => {
           </div>
         </div>
       </div>
+
+      <BrandAssetLinkDialog
+        open={brandAssetDialogOpen}
+        onClose={() => setBrandAssetDialogOpen(false)}
+        onSubmit={handleAddBrandAsset}
+      />
     </div>
   );
 };

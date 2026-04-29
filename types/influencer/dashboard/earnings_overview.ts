@@ -12,4 +12,4 @@ export interface EarningsOverview {
     breakdown: EarningsBreakdownItem[];
 }
 
-export type EarningsOverviewRange = "7d" | "30d" | "90d" | "1y";
+export type EarningsOverviewRange = "7d" | "15d" | "30d";

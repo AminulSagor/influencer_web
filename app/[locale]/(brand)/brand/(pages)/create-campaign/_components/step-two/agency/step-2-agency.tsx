@@ -20,8 +20,10 @@ const StepTwoAgency = () => {
     selectedAgencies,
     recommendedAgencies,
     otherAgencies,
-    hasMore,
-    loadingAgencies,
+    recommendedHasMore,
+    otherHasMore,
+    loadingRecommendedAgencies,
+    loadingOtherAgencies,
     errors,
     setCampaignNiche,
     setAgencyInput,
@@ -30,7 +32,8 @@ const StepTwoAgency = () => {
     searchAgencies,
     addAgency,
     removeAgency,
-    loadMoreAgencies,
+    loadMoreRecommendedAgencies,
+    loadMoreOtherAgencies,
     onNext,
     onPrevious,
   } = useStepTwoAgency();
@@ -64,21 +67,26 @@ const StepTwoAgency = () => {
           onRemove={removeAgency}
         />
 
-        <AgencyListSection
-          title={t("recommendedAdAgencies")}
-          agencies={recommendedAgencies}
-          variant="horizontal"
-          onSelect={addAgency}
-        />
+        {(loadingRecommendedAgencies || recommendedAgencies.length > 0) && (
+          <AgencyListSection
+            title={t("recommendedAdAgencies")}
+            agencies={recommendedAgencies}
+            variant="horizontal"
+            onSelect={addAgency}
+            onReachEnd={loadMoreRecommendedAgencies}
+            hasMore={recommendedHasMore}
+            isLoading={loadingRecommendedAgencies}
+          />
+        )}
 
         <AgencyListSection
           title={t("otherAdAgencies")}
           agencies={otherAgencies}
           variant="vertical"
           onSelect={addAgency}
-          onReachEnd={loadMoreAgencies}
-          hasMore={hasMore}
-          isLoading={loadingAgencies}
+          onReachEnd={loadMoreOtherAgencies}
+          hasMore={otherHasMore}
+          isLoading={loadingOtherAgencies}
         />
 
         <StepTwoAgencyActions onPrevious={onPrevious} onNext={onNext} />

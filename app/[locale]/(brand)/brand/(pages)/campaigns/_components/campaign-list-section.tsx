@@ -16,6 +16,7 @@ type Props = {
   loading: boolean;
   budgetingFilter: BudgetingFilter;
   onBudgetingFilterChange: (filter: BudgetingFilter) => void;
+  onCampaignDeleted?: () => void;
 };
 
 export default function CampaignListSection({
@@ -24,6 +25,7 @@ export default function CampaignListSection({
   loading,
   budgetingFilter,
   onBudgetingFilterChange,
+  onCampaignDeleted,
 }: Props) {
   switch (tab) {
     case "active":
@@ -43,7 +45,13 @@ export default function CampaignListSection({
       return <CompletedCampaignsList campaigns={campaigns} loading={loading} />;
 
     case "draft":
-      return <DraftCampaignsList campaigns={campaigns} loading={loading} />;
+      return (
+        <DraftCampaignsList
+          campaigns={campaigns}
+          loading={loading}
+          onCampaignDeleted={onCampaignDeleted}
+        />
+      );
 
     case "cancelled":
       return <CancelledCampaignsList campaigns={campaigns} loading={loading} />;

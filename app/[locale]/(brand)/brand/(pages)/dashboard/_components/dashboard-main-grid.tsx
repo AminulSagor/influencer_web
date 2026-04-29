@@ -24,12 +24,12 @@ export default function DashboardMainGrid({
 }: DashboardMainGridProps) {
   return (
     <div className="space-y-4 px-4 pt-6">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
-        <div className="space-y-4 lg:col-span-4">
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-6">
+        <div className="flex lg:col-span-4">
           <WorkInProgressCard data={campaigns} />
         </div>
 
-        <div className="space-y-4 lg:col-span-2">
+        <div className="flex flex-col gap-4 lg:col-span-2 lg:h-full">
           <ActionRequiredCard data={actionRequiredItems} />
           <UpcomingDeadline initialResponse={upcomingDeadlines} />
         </div>

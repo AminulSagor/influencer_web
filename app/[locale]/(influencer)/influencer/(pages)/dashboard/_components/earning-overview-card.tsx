@@ -1,4 +1,16 @@
 "use client";
+
+import { useEffect, useMemo, useState } from "react";
+import type { TooltipProps } from "recharts";
+import {
+  CartesianGrid,
+  Dot,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "recharts";
+
 import {
   Card,
   CardContent,
@@ -10,15 +22,21 @@ import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useTranslations } from "next-intl";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, Dot } from "recharts";
-import { useEffect, useState, useCallback } from "react";
 import { getEarningsOverview } from "@/service/influencer/dashboard/earnings_overview";
-import { EarningsBreakdownItem, EarningsOverviewRange } from "@/types/influencer/dashboard/earnings_overview";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import type {
+  EarningsBreakdownItem,
+  EarningsOverview,
+  EarningsOverviewRange,
+} from "@/types/influencer/dashboard/earnings_overview";
+
+type ChartPoint = {
+  date: string;
+  fullDate: string;
+  earning: number;
+  rawAmount: number;
+  paymentCount: number;
+};
 
 const chartConfig = {
   earning: {
@@ -27,121 +45,230 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const EarningOverviewCard = () => {
-  const t = useTranslations("influencer.dashboard.earningOverviewCard");
-  const [chartData, setChartData] = useState<{ date: string; earning: number }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const defaultOverview: EarningsOverview = {
+  totalEarnings: 0,
+  completedJobs: 0,
+  currency: "BDT",
+  timeRange: "7d",
+  breakdown: [],
+};
 
-  const fetchData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await getEarningsOverview("7d");
-      const mapped = data.breakdown.map((item: EarningsBreakdownItem) => ({
-        date: new Date(item.date).toLocaleDateString("en-US", { month: "numeric", day: "numeric" }),
-        earning: item.amount,
-      }));
-      setChartData(mapped);
-    } catch (err) {
-      setError("Failed to load earnings overview.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+const rangeOptions: { label: string; value: EarningsOverviewRange }[] = [
+  { label: "7 Days", value: "7d" },
+  { label: "15 Days", value: "15d" },
+  { label: "30 Days", value: "30d" },
+];
+
+const parseDateOnly = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const formatAxisDate = (date: Date) => {
+  return `${date.getDate()}/${date.getMonth() + 1}`;
+};
+
+const formatCurrency = (amount: number, currency: string) => {
+  if (currency === "BDT") {
+    return `৳ ${amount.toLocaleString("en-BD")}`;
+  }
+
+  return `${currency} ${amount.toLocaleString("en-US")}`;
+};
+
+const formatThousands = (amount: number) => {
+  return Number((amount / 1000).toFixed(1));
+};
+
+const getRangeDays = (range: EarningsOverviewRange) => {
+  if (range === "15d") return 15;
+  if (range === "30d") return 30;
+  return 7;
+};
+
+const getLatestBreakdownDate = (breakdown: EarningsBreakdownItem[]) => {
+  if (breakdown.length === 0) {
+    return new Date();
+  }
+
+  return breakdown.reduce((latest, item) => {
+    const current = parseDateOnly(item.date);
+    return current > latest ? current : latest;
+  }, parseDateOnly(breakdown[0].date));
+};
+
+const buildChartData = (
+  breakdown: EarningsBreakdownItem[],
+  range: EarningsOverviewRange
+): ChartPoint[] => {
+  const totalDays = getRangeDays(range);
+  const endDate = getLatestBreakdownDate(breakdown);
+
+  const amountMap = new Map(
+    breakdown.map((item) => [
+      item.date,
+      { amount: item.amount, paymentCount: item.paymentCount },
+    ])
+  );
+
+  const points: ChartPoint[] = [];
+
+  for (let index = totalDays - 1; index >= 0; index -= 1) {
+    const currentDate = new Date(endDate);
+    currentDate.setDate(endDate.getDate() - index);
+
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    const key = `${year}-${month}-${day}`;
+
+    const matched = amountMap.get(key);
+    const rawAmount = matched?.amount ?? 0;
+    const paymentCount = matched?.paymentCount ?? 0;
+
+    points.push({
+      date: formatAxisDate(currentDate),
+      fullDate: key,
+      earning: formatThousands(rawAmount),
+      rawAmount,
+      paymentCount,
+    });
+  }
+
+  return points;
+};
+
+function EarningTooltip({
+  active,
+  payload,
+  currency,
+}: TooltipProps<number, string> & { currency: string }) {
+  if (!active || !payload || payload.length === 0) {
+    return null;
+  }
+
+  const point = payload[0]?.payload as ChartPoint | undefined;
+
+  if (!point) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-md border bg-white px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 text-xs text-[#2D5016]">
+        <span className="h-2 w-2 rounded-sm bg-[#2D5016]" />
+        <span>Earning</span>
+        <span className="font-semibold">
+          {formatCurrency(point.rawAmount, currency)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+const EarningOverviewCard = () => {
+  const [range, setRange] = useState<EarningsOverviewRange>("7d");
+  const [overview, setOverview] = useState<EarningsOverview>(defaultOverview);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const fetchEarningOverview = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getEarningsOverview(range);
+        setOverview(data);
+      } catch (error) {
+        console.error("Failed to load earning overview:", error);
+        setOverview(defaultOverview);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader><CardTitle className="text-[#2D5016]">{t("title")}</CardTitle></CardHeader>
-        <CardContent className="space-y-3 py-6">
-          <div className="flex items-end gap-4 px-4">
-            <Skeleton className="h-24 w-8" />
-            <Skeleton className="h-32 w-8" />
-            <Skeleton className="h-16 w-8" />
-            <Skeleton className="h-28 w-8" />
-            <Skeleton className="h-20 w-8" />
-            <Skeleton className="h-36 w-8" />
-            <Skeleton className="h-12 w-8" />
-          </div>
-          <Skeleton className="h-4 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
+    fetchEarningOverview();
+  }, [range]);
 
-  if (error) {
-    return (
-      <Card>
-        <CardHeader><CardTitle className="text-[#2D5016]">{t("title")}</CardTitle></CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-10 space-y-2">
-          <p className="text-sm text-red-500">{error}</p>
-          <Button variant="outline" size="sm" onClick={fetchData}>
-            Retry
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  const chartData = useMemo(() => {
+    return buildChartData(overview.breakdown, range);
+  }, [overview.breakdown, range]);
 
   return (
     <Card>
       <CardHeader>
-        <div>
-          <CardTitle className="text-[#2D5016]">{t("title")}</CardTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-[#2D5016]">Earning Overview</CardTitle>
+
+          <select
+            value={range}
+            onChange={(event) => setRange(event.target.value as EarningsOverviewRange)}
+            className="h-8 rounded-full border border-[#D9D9D9] bg-white px-3 text-xs text-[#2D5016] outline-none"
+          >
+            {rangeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
       </CardHeader>
+
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <LineChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              right: 20,
-              top: 20,
-            }}
-          >
-            {/* Custom Cartesian Grid */}
-            <CartesianGrid
-              stroke="#dedede" // Light gray grid lines
-              strokeDasharray="6 6" // Dashed grid lines
-              vertical={true} // Disable vertical lines
-              horizontal={true} // Enable horizontal grid lines
-            />
-            <XAxis
-              dataKey="date"
-              stroke="#2D5016" // Change the axis line color
-              tick={{ fill: "#2D5016" }} // Change the color of the tick labels (data)
-              tickLine={false} // Optional: To remove the tick lines (vertical lines from the axis)
-              axisLine={{ stroke: "#2D5016" }} // Optional: If you want to customize the axis line itself
-            />
-            <YAxis
-              dataKey="earning"
-              stroke="#2D5016" // Change the axis line color
-              tick={{ fill: "#2D5016" }} // Change the color of the tick labels (data)
-              tickLine={false} // Optional: To remove the tick lines (horizontal lines from the axis)
-              axisLine={{ stroke: "#2D5016" }} // Optional: If you want to customize the axis line itself
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Line
-              dataKey="earning"
-              type="natural"
-              stroke="#2D5016"
-              strokeWidth={2}
-              dot={<Dot fill="#2D5016" r={5} />}
-            />
-          </LineChart>
-        </ChartContainer>
+        {isLoading ? (
+          <div className="flex h-[340px] items-center justify-center text-sm text-muted-foreground">
+            Loading...
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig} className="h-[340px] w-full">
+            <LineChart
+              accessibilityLayer
+              data={chartData}
+              margin={{
+                right: 20,
+                top: 20,
+              }}
+            >
+              <CartesianGrid
+                stroke="#dedede"
+                strokeDasharray="6 6"
+                vertical
+                horizontal
+              />
+
+              <XAxis
+                dataKey="date"
+                stroke="#2D5016"
+                tick={{ fill: "#2D5016" }}
+                tickLine={false}
+                axisLine={{ stroke: "#2D5016" }}
+              />
+
+              <YAxis
+                stroke="#2D5016"
+                tick={{ fill: "#2D5016" }}
+                tickLine={false}
+                axisLine={{ stroke: "#2D5016" }}
+              />
+
+              <ChartTooltip
+                cursor={false}
+                content={<EarningTooltip currency={overview.currency} />}
+              />
+
+              <Line
+                dataKey="earning"
+                type="natural"
+                stroke="#2D5016"
+                strokeWidth={2}
+                dot={<Dot fill="#2D5016" r={5} />}
+                activeDot={{ r: 6, fill: "#2D5016" }}
+              />
+            </LineChart>
+          </ChartContainer>
+        )}
       </CardContent>
-      <CardFooter className="justify-center text-[#2D5016] text-sm font-medium ">
-        {t("footer")}
+
+      <CardFooter className="justify-center text-[#2D5016] text-sm font-medium">
+        Earning in Thousands
       </CardFooter>
     </Card>
   );

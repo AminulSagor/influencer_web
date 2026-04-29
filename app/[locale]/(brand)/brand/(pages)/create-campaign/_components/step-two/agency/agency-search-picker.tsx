@@ -1,8 +1,7 @@
-export type Agency = {
-  id: string;
-  name: string;
-  subtitle: string;
-};
+"use client";
+
+import { useEffect } from "react";
+import type { Agency } from "@/types/campaign/step2_campaign_type";
 
 type AgencySearchPickerProps = {
   value: string;
@@ -14,6 +13,8 @@ type AgencySearchPickerProps = {
   error?: string;
 };
 
+const SEARCH_DEBOUNCE_MS = 500;
+
 const AgencySearchPicker = ({
   value,
   setValue,
@@ -23,20 +24,26 @@ const AgencySearchPicker = ({
   onSelect,
   error,
 }: AgencySearchPickerProps) => {
+  useEffect(() => {
+    const query = value.trim();
+
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      onSearch(query);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [onSearch, setSuggestions, value]);
+
   return (
     <div className="relative space-y-2">
       <input
         value={value}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          setValue(nextValue);
-
-          if (nextValue.trim()) {
-            onSearch(nextValue);
-          } else {
-            setSuggestions([]);
-          }
-        }}
+        onChange={(e) => setValue(e.target.value)}
         placeholder="Search agency..."
         className={`h-12 w-full rounded border px-3 focus-visible:ring-1 ${
           error ? "border-red-500" : ""

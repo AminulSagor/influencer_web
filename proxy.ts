@@ -11,13 +11,15 @@ const intlMiddleware = createMiddleware({
 });
 
 // 2) Role mapping
-const roleRoot: Record<UserRole, "brand" | "influencer" | "agency" | "admin"> = {
+type RouteRole = UserRole | "brand";
+
+const roleRoot: Record<RouteRole, "brand" | "influencer" | "agency" | "admin"> = {
   client: "brand",
+  brand: "brand",
   influencer: "influencer",
   agency: "agency",
   admin: "admin",
 };
-
 type Locale = (typeof routing.locales)[number];
 const isLocale = (v: string): v is Locale =>
   (routing.locales as readonly string[]).includes(v);
@@ -34,7 +36,7 @@ function isExpired(exp?: number) {
 }
 
 // 3) Combined middleware
-export default function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   /**
@@ -68,7 +70,7 @@ export default function middleware(req: NextRequest) {
 
   const isAuthed = Boolean(token && payload && !isExpired(payload.exp));
   const isVerified = Boolean(payload?.isVerified);
-  const role = payload?.role;
+  const role = payload?.role as RouteRole | undefined;
 
   const LOGIN = `/${locale}/login`;
 
@@ -145,6 +147,8 @@ export default function middleware(req: NextRequest) {
 
   return intlRes;
 }
+
+export default proxy;
 
 export const config = {
   matcher: [
