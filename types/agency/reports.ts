@@ -1,11 +1,11 @@
-export type ReportStatus = "Flagged" | "Pending" | "Resolved";
+export type ReportStatus = "flagged" | "pending" | "resolved";
 
 export type ReportItem = {
     reportId: string;
     campaignName: string;
     milestoneTitle: string;
     submissionDescription: string;
-    status: ReportStatus;
+    status: ReportStatus | string;
     submissionStatus: string;
     priority: string;
     issueSummary: string;

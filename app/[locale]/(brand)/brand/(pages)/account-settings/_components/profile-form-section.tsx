@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
+import ZillaThanaFields from "@/components/location/zilla-thana-fields";
 import ProfileField from "./profile-field";
 import { ProfileFormState } from "./profile-update-card";
 
@@ -94,27 +95,28 @@ const ProfileFormSection = ({
           />
         </ProfileField>
 
-        <ProfileField label={t("fields.thana")} required error={errors.thana}>
-          <Input
-            value={form.thana}
-            onChange={(e) => onChange("thana", e.target.value)}
+        <div className="md:col-span-1">
+          <ZillaThanaFields
+            zilla={form.zilla}
+            thana={form.thana}
             disabled={isDisabled}
-            placeholder={t("placeholders.thana")}
-            className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
+            zillaLabel={`${t("fields.zilla")} *`}
+            thanaLabel={`${t("fields.thana")} *`}
+            zillaPlaceholder={t("placeholders.zilla")}
+            thanaPlaceholder={t("placeholders.thana")}
+            onZillaChange={(value) => onChange("zilla", value)}
+            onThanaChange={(value) => onChange("thana", value)}
           />
-        </ProfileField>
+          {errors.zilla && (
+            <p className="mt-1 text-xs text-destructive">{errors.zilla}</p>
+          )}
+          {errors.thana && (
+            <p className="mt-1 text-xs text-destructive">{errors.thana}</p>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
-        <ProfileField label={t("fields.zilla")} required error={errors.zilla}>
-          <Input
-            value={form.zilla}
-            onChange={(e) => onChange("zilla", e.target.value)}
-            disabled={isDisabled}
-            placeholder={t("placeholders.zilla")}
-            className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-          />
-        </ProfileField>
 
         <ProfileField label={t("fields.nidNumber")}>
           <Input

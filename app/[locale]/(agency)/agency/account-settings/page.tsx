@@ -54,13 +54,13 @@ const page = () => {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-6">
+      <div className="grid grid-cols-12 items-stretch gap-4">
+        <div className="col-span-12 md:col-span-6 h-full">
           <BasicInfoCard profile={profile} isLoading={isLoading} />
         </div>
-        <div className="col-span-12 md:col-span-6">
-          <Link href={`/${locale}/agency/account-settings/verification-checklist`}>
-            <div>
+        <div className="col-span-12 md:col-span-6 h-full">
+          <Link href={`/${locale}/agency/account-settings/verification-checklist`} className="block h-full">
+            <div className="h-full">
               <ProfileCompletionCard
                 profile={profile}
                 isLoading={isLoading}
@@ -71,18 +71,18 @@ const page = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-4">
+      <div className="grid grid-cols-12 items-stretch gap-4">
+        <div className="col-span-12 md:col-span-4 h-full">
           <ServiceFeeCard isLoading={isLoading} />
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-4 h-full">
           <NicheCard
             profile={profile}
             isLoading={isLoading}
             onProfileUpdated={handleProfileUpdated}
           />
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-4 h-full">
           <SocialLinksCard
             profile={profile}
             isLoading={isLoading}
@@ -91,7 +91,7 @@ const page = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 items-stretch gap-4">
         <div className="col-span-12 md:col-span-8">
           <ProfileCard
             profile={profile}
@@ -99,7 +99,7 @@ const page = () => {
             onProfileUpdated={handleProfileUpdated}
           />
         </div>
-        <div className="col-span-12 md:col-span-4">
+        <div className="col-span-12 md:col-span-4 h-full">
           <PayoutSettingsCard
             profile={profile}
             isLoading={isLoading}

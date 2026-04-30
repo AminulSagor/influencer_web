@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 
 import {
   IN_REVIEW,
@@ -29,9 +28,6 @@ interface PaymentMilestoneProps {
   paymentMilestoneData: PaymanetMilestoneDataType[];
   selectedMilestone: PaymanetMilestoneDataType | null;
   onSelectMilestone: (m: PaymanetMilestoneDataType) => void;
-
-  // 👉 ADD THIS (optional handler)
-  onAddMilestone?: () => void;
 }
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
@@ -40,7 +36,6 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paymentMilestoneData,
   onSelectMilestone,
   selectedMilestone,
-  onAddMilestone,
 }) => {
   const progress = total ? Math.min((paid / total) * 100, 100) : 0;
 
@@ -52,16 +47,6 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
           <Image src={"/icons/milestone.svg"} height={24} width={24} alt="svg" />
           Campaign Milestones
         </CardTitle>
-
-        {/* RIGHT BUTTON ✅ */}
-        <div>
-          <Button
-            onClick={onAddMilestone}
-            className="bg-light-green text-white hover:bg-light-green/90"
-          >
-            + Add Milestone
-          </Button>
-        </div>
       </CardHeader>
 
       {/* PROGRESS */}

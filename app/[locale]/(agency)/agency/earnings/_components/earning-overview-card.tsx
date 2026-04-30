@@ -23,6 +23,13 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getEarningOverview } from "@/service/agency/earning-overview";
 import type {
   EarningBreakdownItem,
@@ -37,6 +44,13 @@ type ChartPoint = {
   rawAmount: number;
   paymentCount: number;
 };
+
+const rangeOptions: { label: string; value: EarningRange }[] = [
+  { label: "7 Days", value: "7d" },
+  { label: "15 Days", value: "15d" },
+  { label: "30 Days", value: "30d" },
+  { label: "90 Days", value: "90d" },
+];
 
 const chartConfig = {
   earning: {
@@ -77,6 +91,7 @@ const formatThousands = (amount: number) => {
 const getRangeDays = (range: EarningRange) => {
   if (range === "15d") return 15;
   if (range === "30d") return 30;
+  if (range === "90d") return 90;
   return 7;
 };
 
@@ -161,7 +176,7 @@ function EarningTooltip({
 }
 
 const EarningOverviewCard = () => {
-  const [range] = useState<EarningRange>("7d");
+  const [range, setRange] = useState<EarningRange>("7d");
   const [overview, setOverview] = useState<EarningOverviewData>(defaultOverview);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -174,11 +189,11 @@ const EarningOverviewCard = () => {
         if (response.success) {
           setOverview(response.data);
         } else {
-          setOverview(defaultOverview);
+          setOverview({ ...defaultOverview, timeRange: range });
         }
       } catch (error) {
         console.error("Failed to load earning overview:", error);
-        setOverview(defaultOverview);
+        setOverview({ ...defaultOverview, timeRange: range });
       } finally {
         setIsLoading(false);
       }
@@ -197,9 +212,21 @@ const EarningOverviewCard = () => {
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-[#2D5016]">Earning Overview</CardTitle>
 
-          <div className="h-8 rounded-full border border-[#D9D9D9] bg-white px-3 text-xs text-[#2D5016] flex items-center">
-            7 Days
-          </div>
+          <Select
+            value={range}
+            onValueChange={(value) => setRange(value as EarningRange)}
+          >
+            <SelectTrigger className="h-8 w-[120px] rounded-full border-[#D9D9D9] bg-white px-3 text-xs text-[#2D5016]">
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              {rangeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
 
@@ -258,8 +285,21 @@ const EarningOverviewCard = () => {
         )}
       </CardContent>
 
-      <CardFooter className="justify-center text-[#2D5016] text-sm font-medium">
-        Earning in Thousands
+      <CardFooter>
+        <div className="flex flex-wrap gap-6">
+          <div>
+            <p className="text-sm text-muted-foreground">Total Earnings</p>
+            <p className="text-lg font-semibold text-[#2D5016]">
+              {formatCurrency(overview.totalEarnings, overview.currency)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Completed Jobs</p>
+            <p className="text-lg font-semibold text-[#2D5016]">
+              {overview.completedJobs}
+            </p>
+          </div>
+        </div>
       </CardFooter>
     </Card>
   );

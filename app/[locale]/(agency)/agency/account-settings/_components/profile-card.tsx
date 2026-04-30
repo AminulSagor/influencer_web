@@ -29,6 +29,7 @@ import {
 } from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 import { uploadFile } from "@/service/common/upload/upload-file";
+import ZillaThanaFields from "@/components/location/zilla-thana-fields";
 
 type ProfileCardProps = {
   profile: AgencyProfileResponse | null;
@@ -440,27 +441,13 @@ const ProfileCard = ({
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-light-green">Thana *</Label>
-                    <Input
-                      placeholder="Enter Thana"
-                      value={form.thana}
-                      onChange={(e) => handleChange("thana", e.target.value)}
-                      readOnly={!isEditing}
-                      disabled={isSaving}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-light-green">Zilla *</Label>
-                    <Input
-                      placeholder="Enter Zilla"
-                      value={form.zilla}
-                      onChange={(e) => handleChange("zilla", e.target.value)}
-                      readOnly={!isEditing}
-                      disabled={isSaving}
-                    />
-                  </div>
+                  <ZillaThanaFields
+                    zilla={form.zilla}
+                    thana={form.thana}
+                    disabled={!isEditing || isSaving}
+                    onZillaChange={(value) => handleChange("zilla", value)}
+                    onThanaChange={(value) => handleChange("thana", value)}
+                  />
                 </div>
 
                 <div className="col-span-6 space-y-4">

@@ -24,7 +24,9 @@ const Notification = () => {
     notifications,
     loading: isLoading,
     unreadCount,
-    fetchNotifications, // ← Add this
+    loadingMore,
+    handleNotificationsScroll,
+    fetchNotifications,
     markAsRead,
     markAllAsRead,
   } = useNotifications();
@@ -208,7 +210,7 @@ const Notification = () => {
           </div>
         </div>
 
-        <div className="max-h-[520px] overflow-y-auto">
+        <div className="max-h-[520px] overflow-y-auto" onScroll={handleNotificationsScroll}>
           {isLoading ? (
             <div className="px-6 py-8 text-center text-sm text-muted-foreground">
               Loading notifications...
@@ -249,6 +251,11 @@ const Notification = () => {
                 </div>
               )}
             </>
+          )}
+          {loadingMore && (
+            <div className="px-6 py-3 text-center text-sm text-muted-foreground">
+              Loading more notifications...
+            </div>
           )}
         </div>
       </PopoverContent>

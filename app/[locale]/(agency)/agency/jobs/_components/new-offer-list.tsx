@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { JSX, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import { AiFillTikTok } from "react-icons/ai";
 import { BsFillCalendarDateFill } from "react-icons/bs";
 import { FaFacebookF, FaStar } from "react-icons/fa";
@@ -129,6 +129,27 @@ const NewOfferList = ({
 
   const isNewOfferTab = tab === "new_offer";
   const isQuotedTab = tab === "quoted";
+  const [pageInput, setPageInput] = useState(String(page));
+
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
+
+  const handlePageInputChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setPageInput(numericValue);
+
+    if (!numericValue) return;
+
+    const nextPage = Math.min(
+      Math.max(Number(numericValue), 1),
+      Math.max(totalPages, 1)
+    );
+
+    setPageInput(String(nextPage));
+    onPageChange(nextPage);
+  };
+
   const isActiveTab = tab === "active";
   const isCompletedTab = tab === "completed";
   const isDeclinedTab = tab === "declined";
@@ -480,9 +501,13 @@ const NewOfferList = ({
       {/* Pagination */}
       <div className="flex items-center justify-end gap-3">
         <span className="text-sm text-muted-foreground">Page</span>
-        <span className="flex h-8 min-w-8 items-center justify-center rounded-full border border-light-green bg-Secondary px-3 text-sm text-Primary">
-          {page}
-        </span>
+        <input
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={pageInput}
+          onChange={(event) => handlePageInputChange(event.target.value)}
+          className="flex h-8 w-14 rounded-full border border-light-green bg-Secondary px-2 text-center text-sm text-Primary outline-none"
+        />
         <span className="text-sm text-muted-foreground">Of {totalPages}</span>
         <Button
           type="button"

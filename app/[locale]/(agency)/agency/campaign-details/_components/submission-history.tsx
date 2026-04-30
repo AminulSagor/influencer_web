@@ -11,10 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { FaGlobe, FaRegImages, FaUserEdit } from "react-icons/fa";
 import { BarChart3 } from "lucide-react";
-import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
+import type {
+  AgencyMilestoneSubmissionItem,
+  MilestoneTargetTitle,
+} from "@/types/agency/campaign/milestone-submission.types";
 
 interface SubmissionHistoryProps {
   submissions: AgencyMilestoneSubmissionItem[];
+  targetTitle?: MilestoneTargetTitle | null;
 }
 
 function formatSubmissionStatus(status: string) {
@@ -40,7 +44,30 @@ function getStatusClassName(status: string) {
   return "bg-orange";
 }
 
-function getAchievedMetric(submission: AgencyMilestoneSubmissionItem) {
+function getTargetMetricValue(
+  submission: AgencyMilestoneSubmissionItem,
+  targetTitle?: MilestoneTargetTitle | null
+) {
+  if (!targetTitle) return null;
+
+  if (targetTitle === "Reach") return submission.achievedReach ?? 0;
+  if (targetTitle === "Views") return submission.achievedViews ?? 0;
+  if (targetTitle === "Likes") return submission.achievedLikes ?? 0;
+  if (targetTitle === "Comments") return submission.achievedComments ?? 0;
+  return submission.achievedFollows ?? 0;
+}
+
+function getAchievedMetric(
+  submission: AgencyMilestoneSubmissionItem,
+  targetTitle?: MilestoneTargetTitle | null
+) {
+  if (targetTitle) {
+    return {
+      label: targetTitle,
+      value: getTargetMetricValue(submission, targetTitle),
+    };
+  }
+
   if (submission.achievedReach != null) {
     return {
       label: "Reach",
@@ -79,13 +106,13 @@ function getAchievedMetric(submission: AgencyMilestoneSubmissionItem) {
   return null;
 }
 
-const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
+const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps) => {
   if (!submissions?.length) return null;
 
   return (
     <div className="mt-8 space-y-4">
       {submissions.map((submission, index) => {
-        const metric = getAchievedMetric(submission);
+        const metric = getAchievedMetric(submission, targetTitle);
         const attachments = submission.submissionAttachments ?? [];
         const liveLinks = submission.submissionLiveLinks ?? [];
 

@@ -1,12 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,8 +52,6 @@ const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
   const [dollarRate, setDollarRate] = useState<string>("");
   const [serviceFee, setServiceFee] = useState<string>("");
 
-  const [savedDollarRate, setSavedDollarRate] = useState<string>("");
-  const [savedServiceFee, setSavedServiceFee] = useState<string>("");
 
   const [isDollarRateLoading, setIsDollarRateLoading] = useState(true);
   const [isServiceFeeLoading, setIsServiceFeeLoading] = useState(true);
@@ -76,11 +68,9 @@ const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
           value === null || value === undefined || value === 0 ? "" : String(value);
 
         setDollarRate(formattedValue);
-        setSavedDollarRate(formattedValue);
       } catch (error) {
         console.error("Failed to load dollar rate:", error);
         setDollarRate("");
-        setSavedDollarRate("");
       } finally {
         setIsDollarRateLoading(false);
       }
@@ -97,11 +87,9 @@ const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
         const value = response?.serviceFee?.trim?.() ?? "";
 
         setServiceFee(value);
-        setSavedServiceFee(value);
       } catch (error) {
         console.error("Failed to load service fee:", error);
         setServiceFee("");
-        setSavedServiceFee("");
       } finally {
         setIsServiceFeeLoading(false);
       }
@@ -141,10 +129,8 @@ const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
         refreshedServiceFee?.serviceFee?.trim?.() ?? "";
 
       setDollarRate(refreshedDollarRateValue);
-      setSavedDollarRate(refreshedDollarRateValue);
 
       setServiceFee(refreshedServiceFeeValue);
-      setSavedServiceFee(refreshedServiceFeeValue);
 
       setIsEditing(false);
     } catch (error) {
@@ -156,69 +142,59 @@ const ServiceFeeCard = ({ isLoading }: ServiceFeeCardProps) => {
   };
 
   return (
-    <Card>
-      <div className="px-4">
-        <Accordion type="single" collapsible defaultValue="item-1">
-          <AccordionItem value="item-1">
-            <AccordionTrigger className="mb-4 p-0 text-md font-semibold text-Primary hover:cursor-pointer hover:no-underline">
-              Service Fee & Dollar Rate
-            </AccordionTrigger>
+    <Card className="h-full">
+      <div className="flex h-full min-h-[230px] flex-col px-4 py-4">
+        <div className="mb-4 flex min-h-6 items-center justify-between gap-2 text-md font-semibold text-Primary">
+          <p>Service Fee & Dollar Rate</p>
+        </div>
 
-            <AccordionContent>
-              <div className="space-y-4">
-                <div className="space-y-1 px-1">
-                  <p className="text-light-green">
-                    Enter you Rate for each campaign spend
-                  </p>
+        <div className="flex-1 space-y-4">
+          <div className="space-y-1 px-1">
+            <p className="text-light-green">
+              Enter you Rate for each campaign spend
+            </p>
 
-                  <Input
-                    placeholder="eg: 10%"
-                    className="text-center"
-                    value={
-                      isLoading || isServiceFeeLoading
-                        ? "Loading..."
-                        : serviceFee
-                    }
-                    onChange={(e) => setServiceFee(e.target.value)}
-                    readOnly={!isEditing}
-                    disabled={isLoading || isServiceFeeLoading || isSaving}
-                  />
-                </div>
+            <Input
+              placeholder="eg: 10%"
+              className="text-center"
+              value={
+                isLoading || isServiceFeeLoading
+                  ? "Loading..."
+                  : serviceFee
+              }
+              onChange={(e) => setServiceFee(e.target.value)}
+              readOnly={!isEditing}
+              disabled={isLoading || isServiceFeeLoading || isSaving}
+            />
+          </div>
 
-                <div className="space-y-1 px-1">
-                  <p className="text-light-green">Enter Default Dollar Rate</p>
+          <div className="space-y-1 px-1">
+            <p className="text-light-green">Enter Default Dollar Rate</p>
 
-                  <Input
-                    placeholder="eg: 122 BDT"
-                    className="text-center"
-                    value={
-                      isDollarRateLoading ? "Loading..." : dollarRate
-                    }
-                    onChange={(e) => setDollarRate(e.target.value)}
-                    readOnly={!isEditing}
-                    disabled={isDollarRateLoading || isSaving}
-                  />
-                </div>
+            <Input
+              placeholder="eg: 122 BDT"
+              className="text-center"
+              value={isDollarRateLoading ? "Loading..." : dollarRate}
+              onChange={(e) => setDollarRate(e.target.value)}
+              readOnly={!isEditing}
+              disabled={isDollarRateLoading || isSaving}
+            />
+          </div>
+        </div>
 
-                <div>
-                  <Button
-                    className="w-full cursor-pointer bg-light-green"
-                    type="button"
-                    onClick={() => void handleEditOrSave()}
-                    disabled={
-                      isLoading ||
-                      isServiceFeeLoading ||
-                      isDollarRateLoading ||
-                      isSaving
-                    }
-                  >
-                    {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <Button
+          className="mt-auto w-full cursor-pointer bg-light-green"
+          type="button"
+          onClick={() => void handleEditOrSave()}
+          disabled={
+            isLoading ||
+            isServiceFeeLoading ||
+            isDollarRateLoading ||
+            isSaving
+          }
+        >
+          {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
+        </Button>
       </div>
     </Card>
   );

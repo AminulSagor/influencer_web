@@ -30,3 +30,16 @@ export const updateAddress = async (
   );
   return response.data;
 };
+
+/**
+ * Delete an existing address
+ * DELETE /influencer/profile/address/:addressName
+ */
+export const deleteAddress = async (
+  addressName: string
+): Promise<AddressResponse> => {
+  const response = await serviceClient.delete(
+    `/influencer/profile/address/${encodeURIComponent(addressName)}`
+  );
+  return response.data;
+};

@@ -85,6 +85,7 @@ const RecentTransactionsCard = () => {
   const locale = params?.locale || "en";
 
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<TransactionSortOrder>("ASC");
@@ -141,6 +142,25 @@ const RecentTransactionsCard = () => {
       isMounted = false;
     };
   }, [page, debouncedSearch, sort]);
+
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
+
+  const handlePageInputChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setPageInput(numericValue);
+
+    if (!numericValue) return;
+
+    const nextPage = Math.min(
+      Math.max(Number(numericValue), 1),
+      Math.max(meta.totalPages, 1)
+    );
+
+    setPageInput(String(nextPage));
+    setPage(nextPage);
+  };
 
   const isPreviousDisabled = page <= 1 || isLoading;
   const isNextDisabled = page >= meta.totalPages || isLoading;
@@ -270,9 +290,14 @@ const RecentTransactionsCard = () => {
         <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-2 text-gray-500">
             <span>Page</span>
-            <div className="flex h-9 min-w-10 items-center justify-center rounded-2xl border border-light-green bg-Secondary px-3 text-Primary">
-              {meta.page}
-            </div>
+            <Input
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={pageInput}
+              onChange={(event) => handlePageInputChange(event.target.value)}
+              disabled={isLoading}
+              className="h-9 w-16 rounded-2xl border-light-green bg-Secondary px-3 text-center text-Primary"
+            />
             <span>Of {meta.totalPages}</span>
           </div>
 

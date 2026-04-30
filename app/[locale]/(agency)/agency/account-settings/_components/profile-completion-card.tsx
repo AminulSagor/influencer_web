@@ -96,7 +96,7 @@ const ProfileCompletionCard = ({
   };
 
   return (
-    <Card className="cursor-pointer">
+    <Card className="h-full cursor-pointer">
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-Primary">
           <FaCheckCircle /> Profile Completion

@@ -63,8 +63,11 @@ export interface SubmitAgencyMilestonePayload {
     liveLinks: string[];
     proofAttachments: string[];
     requestPaymentAmount: number;
-    targetTitle: MilestoneTargetTitle;
-    targetAmount: number;
+    achievedReach?: number;
+    achievedViews?: number;
+    achievedLikes?: number;
+    achievedComments?: number;
+    achievedFollows?: number;
 }
 
 export interface SubmitAgencyMilestoneResponse {

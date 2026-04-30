@@ -18,20 +18,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SavedLocation } from "./delivery-location";
-import { BD_LOCATIONS } from "@/location-data/bd-location";
+import ZillaThanaFields from "@/components/location/zilla-thana-fields";
 import { addAddress, updateAddress } from "@/service/influencer/address/address";
 import { addressSchema, AddressFormData } from "@/schemas/influencer/address-validation";
 
@@ -55,11 +48,11 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
     },
   });
 
-  const [thanas, setThanas] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [settingDefault, setSettingDefault] = useState(false);
 
   const selectedZilla = form.watch("zilla");
+  const selectedThana = form.watch("thana");
 
   /* ---------------- Initialize form based on editingLocation ---------------- */
   useEffect(() => {
@@ -72,9 +65,6 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
         thana: editingLocation.thana,
         fullAddress: editingLocation.fullAddress,
       });
-      // Load thanas for the editing location's zilla
-      const location = BD_LOCATIONS.find((loc) => loc.zila === editingLocation.zilla);
-      setThanas(location?.thanas || []);
     } else {
       form.reset({
         addressName: "",
@@ -82,20 +72,9 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
         thana: "",
         fullAddress: "",
       });
-      setThanas([]);
     }
   }, [open, editingLocation, form]);
 
-  /* ---------------- Load Thanas when zilla changes ---------------- */
-  useEffect(() => {
-    if (!open || !selectedZilla) {
-      setThanas([]);
-      return;
-    }
-
-    const location = BD_LOCATIONS.find((loc) => loc.zila === selectedZilla);
-    setThanas(location?.thanas || []);
-  }, [selectedZilla, open]);
 
   /* ---------------- Set Default ---------------- */
   const handleSetDefault = async () => {
@@ -157,8 +136,8 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
 
   // Handle zilla change - reset thana
   const handleZillaChange = (value: string) => {
-    form.setValue("zilla", value);
-    form.setValue("thana", "");
+    form.setValue("zilla", value, { shouldValidate: true });
+    form.setValue("thana", "", { shouldValidate: true });
   };
 
   return (
@@ -212,70 +191,24 @@ const AddEditLocationDialog = ({ open, onOpenChange, editingLocation, onSuccess 
               )}
             />
 
-            {/* Zilla */}
-            <FormField
-              control={form.control}
-              name="zilla"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Zilla *</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={handleZillaChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Zilla" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {BD_LOCATIONS.map((loc) => (
-                        <SelectItem key={loc.zila} value={loc.zila}>
-                          {loc.zila}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-4">
+              <ZillaThanaFields
+                zilla={selectedZilla || ""}
+                thana={selectedThana || ""}
+                onZillaChange={handleZillaChange}
+                onThanaChange={(value) => form.setValue("thana", value, { shouldValidate: true })}
+              />
+              {form.formState.errors.zilla?.message && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.zilla.message}
+                </p>
               )}
-            />
-
-            {/* Thana */}
-            <FormField
-              control={form.control}
-              name="thana"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Thana *</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={!selectedZilla}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue
-                          placeholder={
-                            !selectedZilla
-                              ? "Select Zilla first"
-                              : "Select Thana"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {thanas.map((thana) => (
-                        <SelectItem key={thana} value={thana}>
-                          {thana}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+              {form.formState.errors.thana?.message && (
+                <p className="text-sm font-medium text-destructive">
+                  {form.formState.errors.thana.message}
+                </p>
               )}
-            />
+            </div>
 
             {/* Full Address */}
             <FormField

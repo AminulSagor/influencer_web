@@ -7,17 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { BD_LOCATIONS } from "@/location-data/bd-location";
+import ZillaThanaFields from "@/components/location/zilla-thana-fields";
 import { addAddress, updateAddress } from "@/service/influencer/address/address";
 import { notifySuccess, notifyError } from "@/utils/toast_util";
 import { addressSchema } from "@/schemas/influencer/address-validation";
@@ -37,8 +30,6 @@ export default function AddAddressModal({ open, onOpenChange, onSuccess, editing
   const [fullAddress, setFullAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedLocation = BD_LOCATIONS.find((loc) => loc.zila === zilla);
-  const availableThanas = selectedLocation?.thanas || [];
 
   useEffect(() => {
     if (open && editingAddress) {
@@ -129,41 +120,14 @@ export default function AddAddressModal({ open, onOpenChange, onSuccess, editing
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-[#2D5016]">
-              Zilla *
-            </label>
-            <Select value={zilla} onValueChange={handleZillaChange} disabled={isSubmitting}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select Zilla" />
-              </SelectTrigger>
-              <SelectContent>
-                {BD_LOCATIONS.map((location) => (
-                  <SelectItem key={location.zila} value={location.zila}>
-                    {location.zila}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-[#2D5016]">
-              Thana *
-            </label>
-            <Select value={thana} onValueChange={setThana} disabled={!zilla || isSubmitting}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={zilla ? "Select Thana" : "Select Zilla first"} />
-              </SelectTrigger>
-              <SelectContent>
-                {availableThanas.map((thanaName) => (
-                  <SelectItem key={thanaName} value={thanaName}>
-                    {thanaName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <ZillaThanaFields
+            zilla={zilla}
+            thana={thana}
+            disabled={isSubmitting}
+            fieldClassName="space-y-1"
+            onZillaChange={handleZillaChange}
+            onThanaChange={setThana}
+          />
 
           <div>
             <label className="text-sm font-medium text-[#2D5016]">

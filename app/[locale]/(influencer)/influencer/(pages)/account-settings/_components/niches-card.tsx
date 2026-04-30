@@ -1,31 +1,43 @@
 "use client";
 
 import CollapseCard from "@/app/[locale]/(influencer)/influencer/_component/collapse-card";
-import { Check, SquarePen, X } from "lucide-react";
+import { CheckCircle2, Clock3, Search, SquarePen, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateInfluencerNiches, getInfluencerProfile } from "@/service/influencer/profile/profile";
+import {
+  getInfluencerNicheOptions,
+  getInfluencerProfile,
+  updateInfluencerNiches,
+} from "@/service/influencer/profile/profile";
 import { toast } from "sonner";
 import { Niche } from "@/types/influencer/account_setting/profile_type";
 import { nichesUpdateSchema } from "@/schemas/influencer/niches-validation";
 
+type SelectableItem = {
+  id: string;
+  name: string;
+};
+
 export default function NichesCard() {
   const t = useTranslations("influencer.account-setting");
   const [niches, setNiches] = useState<Niche[]>([]);
+  const [nicheOptions, setNicheOptions] = useState<SelectableItem[]>([]);
+  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [newNiche, setNewNiche] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingNiche, setDeletingNiche] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -34,9 +46,7 @@ export default function NichesCard() {
   const fetchProfile = async () => {
     try {
       const profile = await getInfluencerProfile();
-      if (profile.niches && profile.niches.length > 0) {
-        setNiches(profile.niches);
-      }
+      setNiches(profile.niches ?? []);
     } catch (error) {
       console.error("Failed to fetch profile:", error);
     } finally {
@@ -44,64 +54,105 @@ export default function NichesCard() {
     }
   };
 
-  const handleAddNiche = async () => {
-    if (!newNiche.trim()) {
-      toast.error("Please enter a niche name");
-      return;
+  const fetchNicheOptions = async () => {
+    try {
+      setIsOptionsLoading(true);
+      const options = await getInfluencerNicheOptions();
+      setNicheOptions(options);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to load niches");
+    } finally {
+      setIsOptionsLoading(false);
     }
+  };
 
-    if (niches.some((n) => n.niche === newNiche.trim())) {
-      toast.error("This niche already exists");
-      return;
-    }
+  const handleOpenDialog = () => {
+    setSelectedNiches(niches.map((item) => item.niche));
+    setSearchQuery("");
+    setOpen(true);
+    fetchNicheOptions();
+  };
 
-    const updatedNiches = [...niches, { niche: newNiche.trim(), status: "unverified" as const }];
-    const nicheStrings = updatedNiches.map(n => n.niche);
+  const mergedNicheOptions = useMemo(() => {
+    const optionMap = new Map<string, SelectableItem>();
 
-    const parsed = nichesUpdateSchema.safeParse({ niches: nicheStrings });
+    nicheOptions.forEach((item) => {
+      optionMap.set(item.name.toLowerCase(), item);
+    });
+
+    niches.forEach((item) => {
+      if (!optionMap.has(item.niche.toLowerCase())) {
+        optionMap.set(item.niche.toLowerCase(), {
+          id: item.niche,
+          name: item.niche,
+        });
+      }
+    });
+
+    return Array.from(optionMap.values());
+  }, [nicheOptions, niches]);
+
+  const filteredNicheOptions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) return mergedNicheOptions;
+
+    return mergedNicheOptions.filter((item) =>
+      item.name.toLowerCase().includes(query),
+    );
+  }, [mergedNicheOptions, searchQuery]);
+
+  const toggleNiche = (nicheName: string) => {
+    setSelectedNiches((current) =>
+      current.includes(nicheName)
+        ? current.filter((item) => item !== nicheName)
+        : [...current, nicheName],
+    );
+  };
+
+  const handleSaveNiches = async () => {
+    const parsed = nichesUpdateSchema.safeParse({ niches: selectedNiches });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message || "Invalid niches");
       return;
     }
 
     const previousNiches = [...niches];
+    const nextNiches = selectedNiches.map((niche) => {
+      const existingNiche = niches.find((item) => item.niche === niche);
+      return existingNiche ?? { niche, status: "unverified" as const };
+    });
 
     try {
       setIsSubmitting(true);
-      setNiches(updatedNiches);
-      setNewNiche("");
+      setNiches(nextNiches);
       setOpen(false);
 
-      const response = await updateInfluencerNiches({ niches: nicheStrings });
-
-      toast.success(response.message || "Niche added successfully");
+      const response = await updateInfluencerNiches({ niches: selectedNiches });
+      toast.success(response.message || "Niches updated successfully");
+      await fetchProfile();
     } catch (error: any) {
       setNiches(previousNiches);
-      setNewNiche(newNiche);
       setOpen(true);
-      toast.error(error?.response?.data?.message || "Failed to add niche");
+      toast.error(error?.response?.data?.message || "Failed to update niches");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleRemoveNiche = async (nicheToRemove: string) => {
-    const updatedNiches = niches.filter((n) => n.niche !== nicheToRemove);
     const previousNiches = [...niches];
+    const updatedNiches = niches.filter((item) => item.niche !== nicheToRemove);
+    const nicheNames = updatedNiches.map((item) => item.niche);
 
     try {
       setDeletingNiche(nicheToRemove);
-      // Optimistically update UI
       setNiches(updatedNiches);
-      
-      // Transform to array of strings for API
-      const response = await updateInfluencerNiches({ 
-        niches: updatedNiches.map(n => n.niche) 
-      });
-      
+
+      const response = await updateInfluencerNiches({ niches: nicheNames });
       toast.success(response.message || "Niche removed successfully");
+      await fetchProfile();
     } catch (error: any) {
-      // Revert on error
       setNiches(previousNiches);
       toast.error(error?.response?.data?.message || "Failed to remove niche");
     } finally {
@@ -110,83 +161,127 @@ export default function NichesCard() {
   };
 
   return (
-    <div>
+    <div className="h-full">
       <CollapseCard
         title={t("Niches")}
         icon={<SquarePen size={15} className="text-dark-gray" />}
+        className="h-full"
       >
-        {isLoading ? (
-          <div className="flex justify-center py-6">
-            <div className="w-6 h-6 border-2 border-[#9DB47B] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : niches.length === 0 ? (
-          <p className="text-sm text-gray-500 mb-6">No niches added yet</p>
-        ) : (
-          <div className="flex flex-wrap gap-2 mb-6">
-          {niches.map((item) => (
-            <span
-              key={item.niche}
-              className="px-3 py-1 rounded-full text-sm bg-[#F1F6DE] text-[#2D5016] flex items-center gap-1"
-            >
-              {item.niche}
-              <Check className="w-3 h-3" />
-              <button
-                onClick={() => handleRemoveNiche(item.niche)}
-                className="ml-1 hover:bg-[#2D5016]/10 rounded-full p-0.5 disabled:opacity-50"
-                disabled={deletingNiche === item.niche}
-              >
-                {deletingNiche === item.niche ? (
-                  <div className="w-3 h-3 border border-[#2D5016] border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <X className="w-3 h-3" />
-                )}
-              </button>
-            </span>
-          ))}
-        </div>
-        )}
+        <div className="flex h-full min-h-[190px] flex-col">
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="flex justify-center py-6">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#9DB47B] border-t-transparent" />
+              </div>
+            ) : niches.length === 0 ? (
+              <p className="mb-6 text-sm text-gray-500">No niches added yet</p>
+            ) : (
+              <div className="mb-6 flex flex-wrap gap-2">
+                {niches.map((item, index) => {
+                  const isUnverified = item.status === "unverified";
 
-        {/* Action */}
-        <button
-          onClick={() => setOpen(true)}
-          className="w-full border border-dashed border-[#9DB47B] rounded-lg py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC] disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={isLoading}
-        >
-          {t("+ Add another Niche")}
-        </button>
+                  return (
+                    <span
+                      key={`${item.niche}-${index}`}
+                      className="flex items-center gap-1 rounded-full bg-[#F1F6DE] px-3 py-1 text-sm text-[#2D5016]"
+                    >
+                      {item.niche}
+                      {isUnverified ? (
+                        <Clock3 className="h-3 w-3 text-[#E57A1F]" />
+                      ) : (
+                        <CheckCircle2 className="h-3 w-3 text-[#078834]" />
+                      )}
+                      <button
+                        onClick={() => handleRemoveNiche(item.niche)}
+                        className="ml-1 rounded-full p-0.5 hover:bg-[#2D5016]/10 disabled:opacity-50"
+                        disabled={deletingNiche === item.niche}
+                        type="button"
+                      >
+                        {deletingNiche === item.niche ? (
+                          <div className="h-3 w-3 animate-spin rounded-full border border-[#2D5016] border-t-transparent" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleOpenDialog}
+            className="mt-auto w-full rounded-lg border border-dashed border-[#9DB47B] py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC] disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isLoading}
+            type="button"
+          >
+            {t("+ Add another Niche")}
+          </button>
+        </div>
       </CollapseCard>
 
-      {/* Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[430px] rounded-xl p-5">
           <DialogHeader>
-            <DialogTitle>Add New Niche</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-[#2D5016]">
+              Niche
+            </DialogTitle>
           </DialogHeader>
 
-          <Input
-            placeholder="Enter niche name (e.g., Fashion, Travel)"
-            value={newNiche}
-            onChange={(e) => setNewNiche(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !isSubmitting) {
-                handleAddNiche();
-              }
-            }}
-          />
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+              <Input
+                placeholder="Search Niche"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="h-11 rounded-xl pl-10"
+              />
+            </div>
+
+            <div className="min-h-[120px] rounded-xl border p-3">
+              {isOptionsLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#9DB47B] border-t-transparent" />
+                </div>
+              ) : filteredNicheOptions.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-500">
+                  No niches found
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {filteredNicheOptions.map((item) => {
+                    const isSelected = selectedNiches.includes(item.name);
+
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleNiche(item.name)}
+                        className={`rounded-full px-3 py-1.5 text-xs transition ${
+                          isSelected
+                            ? "bg-[#F1F6DE] text-[#2D5016]"
+                            : "bg-gray-100 text-[#2D5016] hover:bg-[#F7FAEC]"
+                        }`}
+                      >
+                        {item.name}
+                        {isSelected && <X className="ml-2 inline h-3 w-3" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
 
           <DialogFooter>
             <Button
-              variant="outline"
-              onClick={() => {
-                setOpen(false);
-                setNewNiche("");
-              }}
-              disabled={isSubmitting}
+              onClick={handleSaveNiches}
+              disabled={isSubmitting || isOptionsLoading}
+              className="w-full bg-[#7A9A55] text-white hover:bg-[#6C894B]"
             >
-              Cancel
-            </Button>
-            <Button onClick={handleAddNiche} disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add"}
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

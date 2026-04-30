@@ -1,6 +1,6 @@
 // Types derived from the Postman API collection responses
 
-export type JobStatus = "new_offer" | "pending" | "active" | "completed" | "declined";
+export type JobStatus = "new_offer" | "pending_payment" | "active" | "completed" | "declined";
 export type JobSortOption = "high_budget" | "low_budget";
 
 // GET /campaign/influencer/jobs response

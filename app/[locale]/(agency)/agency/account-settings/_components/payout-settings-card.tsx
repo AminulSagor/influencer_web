@@ -260,21 +260,21 @@ const PayoutSettingsCard = ({
                   <>
                     {bankAccounts.map((item, index) => (
                       <BankPayoutItem
-                        key={`bank-${item.id}`}
+                        key={`bank-${item.id ?? item.bankAccNo ?? index}`}
                         item={item}
                         index={index}
-                        isDeleting={deletingKey === `bank-${item.id}`}
-                        onRemove={() => void handleDeletePayout("bank", item.id)}
+                        isDeleting={Boolean(item.id) && deletingKey === `bank-${item.id}`}
+                        onRemove={() => item.id && void handleDeletePayout("bank", item.id)}
                       />
                     ))}
 
                     {mobileBankingAccounts.map((item, index) => (
                       <MobilePayoutItem
-                        key={`mobile-${item.id}`}
+                        key={`mobile-${item.id ?? item.accountNo ?? index}`}
                         item={item}
                         index={index}
-                        isDeleting={deletingKey === `mobile-${item.id}`}
-                        onRemove={() => void handleDeletePayout("mobile", item.id)}
+                        isDeleting={Boolean(item.id) && deletingKey === `mobile-${item.id}`}
+                        onRemove={() => item.id && void handleDeletePayout("mobile", item.id)}
                       />
                     ))}
 

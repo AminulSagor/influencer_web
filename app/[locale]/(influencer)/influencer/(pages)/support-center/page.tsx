@@ -58,9 +58,11 @@ const SupportCenter = () => {
 
               <div className="px-5 pb-5 space-y-3">
                 {helpLines.map((item) => (
-                  <div
+                  <a
                     key={item.label}
-                    className="rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3"
+                    href={`tel:${item.phone.replace(/\s/g, "")}`}
+                    aria-label={`Call ${item.phone}`}
+                    className="block rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3 transition hover:border-[#AFC58A] hover:bg-[#F1F8EA]"
                   >
                     <p className="text-sm font-semibold text-[#617C50]">
                       {item.label}
@@ -71,7 +73,7 @@ const SupportCenter = () => {
                     <p className="mt-0.5 text-xs text-[#8E9A8A]">
                       {item.hours}
                     </p>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -89,14 +91,16 @@ const SupportCenter = () => {
 
               <div className="px-5 pb-5 space-y-3">
                 {emails.map((email) => (
-                  <div
+                  <a
                     key={email}
-                    className="rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3"
+                    href={`mailto:${email}`}
+                    aria-label={`Email ${email}`}
+                    className="block rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3 transition hover:border-[#AFC58A] hover:bg-[#F1F8EA]"
                   >
                     <p className="text-sm font-semibold text-[#D79552]">
                       {email}
                     </p>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>

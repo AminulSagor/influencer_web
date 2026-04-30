@@ -140,7 +140,7 @@ const page = () => {
         {!verifiedStatus ? (
           <>
             <div className="col-span-8">
-              <InfoCard status={verifiedStatus} />
+              <InfoCard status={verifiedStatus} profile={profile} />
             </div>
             <div className="col-span-4">
               <VerificationInProgress />
@@ -148,7 +148,7 @@ const page = () => {
           </>
         ) : (
           <div className="col-span-12">
-            <InfoCard status={verifiedStatus} />
+            <InfoCard status={verifiedStatus} profile={profile} />
           </div>
         )}
       </div>

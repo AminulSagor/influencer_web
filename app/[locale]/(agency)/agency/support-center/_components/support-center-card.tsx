@@ -1,6 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MdEmail, MdLocalPhone } from "react-icons/md";
+import { MdEmail } from "react-icons/md";
 import { FaPhone } from "react-icons/fa6";
+
+const helplines = [
+  { label: "Help Line 1", number: "+8801234567890", time: "10AM-8PM" },
+  { label: "Help Line 2", number: "+8801234567890", time: "10AM-8PM" },
+  { label: "Help Line 3", number: "+8801234567890", time: "10AM-8PM" },
+  { label: "Help Line 4", number: "+8801234567890", time: "10AM-8PM" },
+];
+
+const emails = [
+  "support1@brandguru.io",
+  "support1@brandguru.io",
+  "support1@brandguru.io",
+  "support1@brandguru.io",
+];
 
 const SupportCenterCard = () => {
   return (
@@ -23,26 +37,17 @@ const SupportCenterCard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <h3 className="text-Primary">Help Line 1</h3>
-                  <p className="text-sm text-orange">+8801234567890</p>
-                  <p className="text-light-green text-xs">10AM-8PM</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <h3 className="text-Primary">Help Line 1</h3>
-                  <p className="text-sm text-orange">+8801234567890</p>
-                  <p className="text-light-green text-xs">10AM-8PM</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <h3 className="text-Primary">Help Line 1</h3>
-                  <p className="text-sm text-orange">+8801234567890</p>
-                  <p className="text-light-green text-xs">10AM-8PM</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <h3 className="text-Primary">Help Line 1</h3>
-                  <p className="text-sm text-orange">+8801234567890</p>
-                  <p className="text-light-green text-xs">10AM-8PM</p>
-                </div>
+                {helplines.map((item, index) => (
+                  <a
+                    key={`${item.number}-${index}`}
+                    href={`tel:${item.number}`}
+                    className="block p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1 transition hover:shadow-sm"
+                  >
+                    <h3 className="text-Primary">{item.label}</h3>
+                    <p className="text-sm text-orange">{item.number}</p>
+                    <p className="text-light-green text-xs">{item.time}</p>
+                  </a>
+                ))}
               </CardContent>
             </Card>
           </div>
@@ -55,18 +60,15 @@ const SupportCenterCard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <p className="text-sm text-orange">support1@brandguru.io</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <p className="text-sm text-orange">support1@brandguru.io</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <p className="text-sm text-orange">support1@brandguru.io</p>
-                </div>
-                <div className="p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1">
-                  <p className="text-sm text-orange">support1@brandguru.io</p>
-                </div>
+                {emails.map((email, index) => (
+                  <a
+                    key={`${email}-${index}`}
+                    href={`mailto:${email}`}
+                    className="block p-2 border border-light-green rounded-lg bg-linear-to-r from-white to-Secondary space-y-1 transition hover:shadow-sm"
+                  >
+                    <p className="text-sm text-orange">{email}</p>
+                  </a>
+                ))}
               </CardContent>
             </Card>
           </div>

@@ -45,12 +45,18 @@ const formSchema = z.object({
     z.object({
       description: z.string().optional(),
       paymentAmount: z.string().min(1, "Payment amount required"),
-      proofs: z
+      liveLinks: z
         .array(
           z.object({
-            liveLink: z.string().url("Invalid link"),
-            performanceMetric: z.string().min(1, "Performance metric is required"),
-            attachment: z.any().optional(),
+            url: z.string().trim().min(1, "Live link is required"),
+          })
+        )
+        .min(1, "At least one live link is required"),
+      performanceMetric: z.string().min(1, "Performance metric is required"),
+      attachments: z
+        .array(
+          z.object({
+            attachment: z.string().trim().min(1, "Proof attachment is required"),
           })
         )
         .min(1, "At least one proof is required"),
@@ -62,44 +68,56 @@ export type FormType = z.infer<typeof formSchema>;
 
 interface SubmissionFormProps {
   milestoneId: string;
+  initialSubmissionCount?: number;
+  maxRequestAmount?: number;
   onSubmitted?: (submission: AgencyMilestoneSubmissionItem) => void;
 }
 
 type StatusByIndex = Record<number, string>;
 
-const defaultSubmission = {
+const createDefaultSubmission = (): FormType["submissions"][number] => ({
   description: "",
   paymentAmount: "",
-  proofs: [
-    {
-      attachment: "",
-      liveLink: "",
-      performanceMetric: "",
-    },
-  ],
-};
+  liveLinks: [{ url: "" }],
+  performanceMetric: "",
+  attachments: [{ attachment: "" }],
+});
 
 function parseAmount(value: string): number {
   return Number(value.replace(/[^\d.]/g, "").trim());
 }
 
+function formatAmount(value: number) {
+  return new Intl.NumberFormat("en-BD", {
+    maximumFractionDigits: 2,
+  }).format(Math.max(value, 0));
+}
+
 function parseMetricValue(value: string): number | null {
-  const normalized = value.trim().toUpperCase();
+  const normalized = value.trim().replace(/,/g, "").toUpperCase();
 
   if (!normalized) return null;
 
   if (normalized.endsWith("K")) {
     const base = Number(normalized.replace("K", ""));
-    return Number.isFinite(base) ? base * 1000 : null;
+    return Number.isFinite(base) ? Math.round(base * 1000) : null;
   }
 
   if (normalized.endsWith("M")) {
     const base = Number(normalized.replace("M", ""));
-    return Number.isFinite(base) ? base * 1000000 : null;
+    return Number.isFinite(base) ? Math.round(base * 1000000) : null;
   }
 
   const numberValue = Number(normalized.replace(/[^\d.]/g, ""));
-  return Number.isFinite(numberValue) ? numberValue : null;
+  return Number.isFinite(numberValue) ? Math.round(numberValue) : null;
+}
+
+function buildMetricPayload(targetTitle: MilestoneTargetTitle, metricValue: number) {
+  if (targetTitle === "Reach") return { achievedReach: metricValue };
+  if (targetTitle === "Views") return { achievedViews: metricValue };
+  if (targetTitle === "Likes") return { achievedLikes: metricValue };
+  if (targetTitle === "Comments") return { achievedComments: metricValue };
+  return { achievedFollows: metricValue };
 }
 
 function resolveMilestoneTarget(
@@ -162,11 +180,9 @@ function isAgencyMilestoneDetails(
 function buildOptimisticSubmission(
   milestoneId: string,
   payload: SubmitAgencyMilestonePayload,
-  rawMetricValue: string,
+  metricValue: number,
   targetTitle: MilestoneTargetTitle
 ): AgencyMilestoneSubmissionItem {
-  const metricValue = parseMetricValue(rawMetricValue);
-
   return {
     id: `temp-${Date.now()}`,
     submissionDescription: payload.description || null,
@@ -193,7 +209,12 @@ function buildOptimisticSubmission(
   };
 }
 
-const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
+const SubmissionForm = ({
+  milestoneId,
+  initialSubmissionCount = 0,
+  maxRequestAmount,
+  onSubmitted,
+}: SubmissionFormProps) => {
   const [statusByIndex, setStatusByIndex] = useState<StatusByIndex>({});
   const [submittingIndex, setSubmittingIndex] = useState<number | null>(null);
   const [milestoneDetails, setMilestoneDetails] =
@@ -203,7 +224,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      submissions: [defaultSubmission],
+      submissions: [createDefaultSubmission()],
     },
   });
 
@@ -263,6 +284,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
 
     const submission = form.getValues(`submissions.${index}`);
     const requestPaymentAmount = parseAmount(submission.paymentAmount);
+    const remainingAmount = maxRequestAmount ?? Number.POSITIVE_INFINITY;
 
     if (!Number.isFinite(requestPaymentAmount) || requestPaymentAmount <= 0) {
       form.setError(`submissions.${index}.paymentAmount`, {
@@ -272,23 +294,38 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
       return;
     }
 
-    const liveLinks = submission.proofs
-      .map((proof) => proof.liveLink?.trim())
+    if (requestPaymentAmount > remainingAmount) {
+      form.setError(`submissions.${index}.paymentAmount`, {
+        type: "manual",
+        message: `You can request up to ৳${formatAmount(remainingAmount)} remaining.`,
+      });
+      return;
+    }
+
+    const liveLinks = submission.liveLinks
+      .map((item) => item.url?.trim())
       .filter(Boolean);
 
-    const proofAttachments = submission.proofs
-      .map((proof) =>
-        typeof proof.attachment === "string" ? proof.attachment.trim() : ""
-      )
+    const proofAttachments = submission.attachments
+      .map((item) => item.attachment?.trim())
       .filter(Boolean);
+
+    const achievedMetricValue = parseMetricValue(submission.performanceMetric);
+
+    if (!achievedMetricValue || achievedMetricValue <= 0) {
+      form.setError(`submissions.${index}.performanceMetric`, {
+        type: "manual",
+        message: "Enter a valid metric number",
+      });
+      return;
+    }
 
     const payload: SubmitAgencyMilestonePayload = {
       description: submission.description?.trim() || "",
       liveLinks,
       proofAttachments,
       requestPaymentAmount,
-      targetTitle: targetConfig.targetTitle,
-      targetAmount: targetConfig.targetAmount,
+      ...buildMetricPayload(targetConfig.targetTitle, achievedMetricValue),
     };
 
     try {
@@ -302,7 +339,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
       const optimisticSubmission = buildOptimisticSubmission(
         milestoneId,
         payload,
-        submission.proofs[0]?.performanceMetric ?? "",
+        achievedMetricValue,
         targetConfig.targetTitle
       );
 
@@ -340,6 +377,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
             const ownershipId = `ownership-${index}`;
             const termsId = `terms-${index}`;
             const isSubmitting = submittingIndex === index;
+            const submissionNumber = initialSubmissionCount + index + 1;
 
             return (
               <div key={field.id} className="rounded-xl border p-4">
@@ -348,7 +386,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
                     <AccordionTrigger className="flex cursor-pointer justify-between hover:no-underline">
                       <div className="flex items-center gap-4">
                         <p className="text-lg font-semibold text-Primary">
-                          Submission {index + 1}
+                          Submission {submissionNumber}
                         </p>
                         {statusByIndex[index] && (
                           <Badge className="bg-orange/30 text-orange">
@@ -408,7 +446,30 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
                               </FormLabel>
 
                               <FormControl>
-                                <Input placeholder="৳3,000" {...field} />
+                                <Input
+                                  inputMode="decimal"
+                                  placeholder={
+                                    Number.isFinite(maxRequestAmount ?? NaN)
+                                      ? `Remaining ৳${formatAmount(maxRequestAmount ?? 0)}`
+                                      : "৳3,000"
+                                  }
+                                  {...field}
+                                  onChange={(event) => {
+                                    const sanitized = event.target.value.replace(/[^0-9.]/g, "");
+                                    const numericValue = Number(sanitized);
+
+                                    if (
+                                      Number.isFinite(maxRequestAmount) &&
+                                      Number.isFinite(numericValue) &&
+                                      numericValue > (maxRequestAmount ?? 0)
+                                    ) {
+                                      field.onChange(String(maxRequestAmount ?? 0));
+                                      return;
+                                    }
+
+                                    field.onChange(sanitized);
+                                  }}
+                                />
                               </FormControl>
 
                               <FormMessage />
@@ -419,6 +480,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
                         <SubmissionProofs
                           control={form.control}
                           submissionIndex={index}
+                          targetTitle={targetConfig?.targetTitle}
                         />
 
                         <div className="flex items-center gap-2">
@@ -468,7 +530,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted }: SubmissionFormProps) => {
 
         <button
           type="button"
-          onClick={() => append(defaultSubmission)}
+          onClick={() => append(createDefaultSubmission())}
           className="mt-2 w-full cursor-pointer rounded-lg border border-dashed border-light-green py-6 font-semibold text-light-green transition-all duration-150 hover:bg-light-green hover:text-white"
         >
           + Add Another Submission

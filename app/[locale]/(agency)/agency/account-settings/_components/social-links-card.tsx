@@ -1,34 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Facebook,
+  Instagram,
+  Linkedin,
+  Music2,
+  SquarePen,
+  Twitter,
+  X,
+  Youtube,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
-  FaClock,
-  FaEdit,
-  FaFacebookF,
-  FaInstagram,
-  FaLink,
-  FaLinkedinIn,
-  FaPinterestP,
-} from "react-icons/fa";
-import { SlSocialYoutube } from "react-icons/sl";
-import { TbBrandTiktok, TbBrandX } from "react-icons/tb";
-import { TiTick } from "react-icons/ti";
-import { ImCross } from "react-icons/im";
-import type {
-  AgencyProfileResponse,
-  UpdateAgencySocialLinksPayload,
-} from "@/types/agency/account-settings";
-import { updateAgencySocialLinks } from "@/service/agency/account-settings";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { AgencyProfileResponse, AgencySocialLinkItem } from "@/types/agency/account-settings";
+import {
+  getAgencyPlatformOptions,
+  updateAgencySocialLinks,
+} from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+
+const SOCIAL_LINKS_PER_PAGE = 4;
 
 type SocialLinksCardProps = {
   profile: AgencyProfileResponse | null;
@@ -36,37 +44,23 @@ type SocialLinksCardProps = {
   onProfileUpdated: (updatedProfile: AgencyProfileResponse) => void;
 };
 
-type EditableSocialLink = {
+type PlatformOption = {
   id: string;
-  platform: string;
-  url: string;
-  status?: "approved" | "rejected" | "pending";
-  isEditing?: boolean;
-  isNew?: boolean;
-  originalPlatform?: string;
-  originalUrl?: string;
+  name: string;
 };
 
-const createLocalId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+const getPlatformIcon = (platform?: string) => {
+  const normalizedPlatform = platform?.trim().toLowerCase();
 
-const normalizeUrl = (url: string) =>
-  url.trim().toLowerCase().replace(/\/+$/, "");
-
-const getPlatformIcon = (platform: string) => {
-  const normalized = platform.trim().toLowerCase();
-
-  if (normalized === "instagram") return <FaInstagram size={28} />;
-  if (normalized === "youtube") return <SlSocialYoutube size={28} />;
-  if (normalized === "tiktok") return <TbBrandTiktok size={28} />;
-  if (normalized === "facebook") return <FaFacebookF size={24} />;
-  if (normalized === "linkedin") return <FaLinkedinIn size={24} />;
-  if (normalized === "x" || normalized === "twitter") {
-    return <TbBrandX size={24} />;
+  if (normalizedPlatform === "youtube") return Youtube;
+  if (normalizedPlatform === "tiktok") return Music2;
+  if (normalizedPlatform === "facebook") return Facebook;
+  if (normalizedPlatform === "twitter" || normalizedPlatform === "x") {
+    return Twitter;
   }
-  if (normalized === "pinterest") return <FaPinterestP size={24} />;
+  if (normalizedPlatform === "linkedin") return Linkedin;
 
-  return <FaLink size={24} />;
+  return Instagram;
 };
 
 const SocialLinksCard = ({
@@ -74,348 +68,373 @@ const SocialLinksCard = ({
   isLoading,
   onProfileUpdated,
 }: SocialLinksCardProps) => {
-  const [isSaving, setIsSaving] = useState(false);
-  const [socialLinks, setSocialLinks] = useState<EditableSocialLink[]>([]);
+  const [socialLinks, setSocialLinks] = useState<AgencySocialLinkItem[]>([]);
+  const [platformOptions, setPlatformOptions] = useState<PlatformOption[]>([]);
+  const [open, setOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [formData, setFormData] = useState<AgencySocialLinkItem>({
+    platform: "",
+    url: "",
+    status: "pending",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingIndex, setDeletingIndex] = useState<number | null>(null);
+  const [isPlatformLoading, setIsPlatformLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
-    setSocialLinks(
-      (profile?.socialLinks ?? []).map((item, index) => ({
-        id: `${item.platform}-${item.url}-${index}`,
-        platform: item.platform,
-        url: item.url,
-        status: item.status,
-        isEditing: false,
-        isNew: false,
-        originalPlatform: item.platform,
-        originalUrl: item.url,
-      }))
-    );
-  }, [profile]);
+    setSocialLinks(profile?.socialLinks ?? []);
+  }, [profile?.socialLinks]);
 
-  const handleAddAnotherSocialLink = () => {
-    setSocialLinks((prev) => [
-      ...prev,
-      {
-        id: createLocalId(),
-        platform: "",
-        url: "",
-        status: "pending",
-        isEditing: true,
-        isNew: true,
-        originalPlatform: "",
-        originalUrl: "",
-      },
-    ]);
+  const fetchPlatformOptions = async () => {
+    try {
+      setIsPlatformLoading(true);
+      const options = await getAgencyPlatformOptions();
+      setPlatformOptions(options);
+    } catch (error: any) {
+      notifyError(error?.response?.data?.message || "Failed to load platforms");
+    } finally {
+      setIsPlatformLoading(false);
+    }
   };
 
-  const handleEditRow = (index: number) => {
-    setSocialLinks((prev) =>
-      prev.map((item, currentIndex) =>
-        currentIndex === index ? { ...item, isEditing: true } : item
-      )
-    );
+  const mergedPlatformOptions = useMemo(() => {
+    const optionMap = new Map<string, string>();
+
+    platformOptions.forEach((item) => {
+      const name = item.name.trim();
+      if (name) optionMap.set(name.toLowerCase(), name);
+    });
+
+    socialLinks.forEach((item) => {
+      const platform = item.platform.trim();
+      if (platform && !optionMap.has(platform.toLowerCase())) {
+        optionMap.set(platform.toLowerCase(), platform);
+      }
+    });
+
+    const currentPlatform = formData.platform.trim();
+    if (currentPlatform && !optionMap.has(currentPlatform.toLowerCase())) {
+      optionMap.set(currentPlatform.toLowerCase(), currentPlatform);
+    }
+
+    return Array.from(optionMap.values());
+  }, [formData.platform, platformOptions, socialLinks]);
+
+  const totalPages = Math.ceil(socialLinks.length / SOCIAL_LINKS_PER_PAGE);
+
+  const paginatedSocialLinks = useMemo(() => {
+    const startIndex = currentPage * SOCIAL_LINKS_PER_PAGE;
+
+    return socialLinks.slice(startIndex, startIndex + SOCIAL_LINKS_PER_PAGE);
+  }, [currentPage, socialLinks]);
+
+  useEffect(() => {
+    if (totalPages === 0 && currentPage !== 0) {
+      setCurrentPage(0);
+      return;
+    }
+
+    if (totalPages > 0 && currentPage > totalPages - 1) {
+      setCurrentPage(totalPages - 1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handleOpenAddDialog = () => {
+    setEditingIndex(null);
+    setFormData({ platform: "", url: "", status: "pending" });
+    setOpen(true);
+    void fetchPlatformOptions();
   };
 
-  const handleChangeRow = (
-    index: number,
-    key: "platform" | "url",
-    value: string
-  ) => {
-    setSocialLinks((prev) =>
-      prev.map((item, currentIndex) =>
-        currentIndex === index ? { ...item, [key]: value } : item
-      )
-    );
+  const handleOpenEditDialog = (index: number) => {
+    setEditingIndex(index);
+    setFormData(socialLinks[index]);
+    setOpen(true);
+    void fetchPlatformOptions();
   };
 
   const buildMergedProfile = (
     baseProfile: AgencyProfileResponse,
-    updatedProfile: AgencyProfileResponse,
-    finalSocialLinks: EditableSocialLink[]
-  ): AgencyProfileResponse => {
-    return {
-      ...baseProfile,
-      ...updatedProfile,
-      socialLinks: finalSocialLinks.map((item) => {
-        const existingSocial = baseProfile.socialLinks?.find(
-          (socialItem) =>
-            socialItem.platform.toLowerCase() === item.platform.toLowerCase() &&
-            normalizeUrl(socialItem.url) === normalizeUrl(item.url)
-        );
+    updatedLinks: AgencySocialLinkItem[],
+    updatedProfile?: AgencyProfileResponse
+  ): AgencyProfileResponse => ({
+    ...baseProfile,
+    ...(updatedProfile ?? {}),
+    socialLinks: updatedLinks,
+  });
 
-        return {
-          platform: item.platform.trim(),
-          url: item.url.trim(),
-          status: existingSocial?.status ?? "pending",
-        };
-      }),
-    };
-  };
-
-  const syncLocalSocialLinks = (mergedProfile: AgencyProfileResponse) => {
-    setSocialLinks(
-      (mergedProfile.socialLinks ?? []).map((item, index) => ({
-        id: `${item.platform}-${item.url}-${index}`,
-        platform: item.platform,
-        url: item.url,
-        status: item.status,
-        isEditing: false,
-        isNew: false,
-        originalPlatform: item.platform,
-        originalUrl: item.url,
-      }))
-    );
-  };
-
-  const handleRemoveRow = async (index: number) => {
+  const handleSave = async () => {
     if (!profile) return;
 
-    const row = socialLinks[index];
-
-    if (row.isNew) {
-      setSocialLinks((prev) =>
-        prev.filter((_, currentIndex) => currentIndex !== index)
-      );
-      return;
-    }
-
-    const nextSocialLinks = socialLinks.filter(
-      (_, currentIndex) => currentIndex !== index
-    );
-
-    const payload: UpdateAgencySocialLinksPayload = {
-      socialLinks: nextSocialLinks
-        .filter((item) => item.platform.trim() && item.url.trim())
-        .map((item) => ({
-          platform: item.platform.trim(),
-          url: item.url.trim(),
-        })),
+    const normalizedFormData: AgencySocialLinkItem = {
+      ...formData,
+      platform: formData.platform.trim(),
+      url: formData.url.trim(),
     };
 
-    try {
-      setIsSaving(true);
-
-      const updatedProfile = await updateAgencySocialLinks(payload);
-
-      const mergedProfile: AgencyProfileResponse = {
-        ...profile,
-        ...updatedProfile,
-        socialLinks: nextSocialLinks
-          .filter((item) => item.platform.trim() && item.url.trim())
-          .map((item) => ({
-            platform: item.platform.trim(),
-            url: item.url.trim(),
-            status: item.status ?? "pending",
-          })),
-      };
-
-      setSocialLinks(nextSocialLinks);
-      onProfileUpdated(mergedProfile);
-      notifySuccess("Social link removed successfully");
-    } catch (error) {
-      console.error("Failed to remove social link:", error);
-      notifyError("Failed to remove social link");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveRow = async (index: number) => {
-    if (!profile) return;
-
-    const currentRow = socialLinks[index];
-
-    if (!currentRow.platform.trim()) {
+    if (!normalizedFormData.platform) {
       notifyError("Platform is required");
       return;
     }
 
-    if (!currentRow.url.trim()) {
+    if (!normalizedFormData.url) {
       notifyError("Social link URL is required");
       return;
     }
 
-    const currentNormalizedUrl = normalizeUrl(currentRow.url);
-
-    const isDuplicate = socialLinks.some((item, i) => {
-      if (i === index) return false;
-      return normalizeUrl(item.url) === currentNormalizedUrl;
+    const isDuplicatePlatform = socialLinks.some((link, index) => {
+      if (editingIndex === index) return false;
+      return (
+        link.platform.trim().toLowerCase() ===
+        normalizedFormData.platform.toLowerCase()
+      );
     });
 
-    if (isDuplicate) {
-      notifyError("This social link already exists");
+    if (isDuplicatePlatform) {
+      notifyError("This platform has already been added");
       return;
     }
 
-    const savedCurrentRow: EditableSocialLink = {
-      ...currentRow,
-      platform: currentRow.platform.trim(),
-      url: currentRow.url.trim(),
-      isEditing: false,
-      isNew: false,
-      originalPlatform: currentRow.platform.trim(),
-      originalUrl: currentRow.url.trim(),
-    };
+    let updatedLinks: AgencySocialLinkItem[];
+    const previousLinks = [...socialLinks];
 
-    const persistedRows: EditableSocialLink[] = (profile.socialLinks ?? []).map(
-      (item, rowIndex) => ({
-        id: `${item.platform}-${item.url}-${rowIndex}`,
-        platform: item.platform,
-        url: item.url,
-        status: item.status,
-        isEditing: false,
-        isNew: false,
-        originalPlatform: item.platform,
-        originalUrl: item.url,
-      })
-    );
-
-    let finalSocialLinks: EditableSocialLink[];
-
-    if (currentRow.isNew) {
-      finalSocialLinks = [...persistedRows, savedCurrentRow];
+    if (editingIndex !== null) {
+      updatedLinks = [...socialLinks];
+      updatedLinks[editingIndex] = normalizedFormData;
     } else {
-      finalSocialLinks = persistedRows.map((item) => {
-        const isMatchedRow =
-          item.originalPlatform === currentRow.originalPlatform &&
-          item.originalUrl === currentRow.originalUrl;
-
-        return isMatchedRow ? savedCurrentRow : item;
-      });
+      updatedLinks = [...socialLinks, { ...normalizedFormData, status: "pending" }];
     }
 
-    const payload: UpdateAgencySocialLinksPayload = {
-      socialLinks: finalSocialLinks.map((item) => ({
-        platform: item.platform.trim(),
-        url: item.url.trim(),
-      })),
-    };
+    try {
+      setIsSubmitting(true);
+      setSocialLinks(updatedLinks);
+      if (editingIndex === null) {
+        setCurrentPage(
+          Math.max(0, Math.ceil(updatedLinks.length / SOCIAL_LINKS_PER_PAGE) - 1)
+        );
+      }
+      setOpen(false);
+      setFormData({ platform: "", url: "", status: "pending" });
+
+      const updatedProfile = await updateAgencySocialLinks({
+        socialLinks: updatedLinks.map((link) => ({
+          platform: link.platform.trim(),
+          url: link.url.trim(),
+        })),
+      });
+
+      onProfileUpdated(buildMergedProfile(profile, updatedLinks, updatedProfile));
+      notifySuccess(
+        editingIndex !== null
+          ? "Social link updated successfully"
+          : "Social link added successfully"
+      );
+    } catch (error: any) {
+      setSocialLinks(previousLinks);
+      setOpen(true);
+      notifyError(error?.response?.data?.message || "Failed to save social link");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemove = async (index: number) => {
+    if (!profile) return;
+
+    const previousLinks = [...socialLinks];
+    const updatedLinks = socialLinks.filter((_, itemIndex) => itemIndex !== index);
 
     try {
-      setIsSaving(true);
+      setDeletingIndex(index);
+      setSocialLinks(updatedLinks);
 
-      const updatedProfile = await updateAgencySocialLinks(payload);
+      const updatedProfile = await updateAgencySocialLinks({
+        socialLinks: updatedLinks.map((link) => ({
+          platform: link.platform.trim(),
+          url: link.url.trim(),
+        })),
+      });
 
-      const mergedProfile = buildMergedProfile(
-        profile,
-        updatedProfile,
-        finalSocialLinks
-      );
-
-      syncLocalSocialLinks(mergedProfile);
-      onProfileUpdated(mergedProfile);
-      notifySuccess("Social link updated successfully");
-    } catch (error) {
-      console.error("Failed to update social links:", error);
-      notifyError("Failed to update social links");
+      onProfileUpdated(buildMergedProfile(profile, updatedLinks, updatedProfile));
+      notifySuccess("Social link removed successfully");
+    } catch (error: any) {
+      setSocialLinks(previousLinks);
+      notifyError(error?.response?.data?.message || "Failed to remove social link");
     } finally {
-      setIsSaving(false);
+      setDeletingIndex(null);
     }
   };
 
   return (
-    <Card>
-      <div className="px-4">
-        <Accordion type="single" collapsible defaultValue="item-1">
-          <AccordionItem value="item-1">
-            <AccordionTrigger className="mb-4 p-0 text-md font-semibold text-Primary hover:cursor-pointer hover:no-underline">
-              Social Links
-            </AccordionTrigger>
+    <Card className="h-full">
+      <div className="flex h-full min-h-[230px] flex-col px-4 py-4">
+        <div className="mb-4 flex min-h-6 items-center justify-between gap-2 text-md font-semibold text-Primary">
+          <p>Social Links</p>
+        </div>
 
-            <AccordionContent className="space-y-6">
-              <div className="space-y-2">
-                {isLoading ? (
-                  <div className="text-sm text-muted-foreground">Loading...</div>
-                ) : socialLinks.length ? (
-                  socialLinks.map((item, index) => (
-                    <div key={item.id} className="flex items-start gap-4">
-                      <div className="pt-2">{getPlatformIcon(item.platform)}</div>
+        <div className="flex-1">
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#9DB47B] border-t-transparent" />
+            </div>
+          ) : socialLinks.length === 0 ? (
+            <p className="mb-6 text-sm text-gray-500">No social links found.</p>
+          ) : (
+            <div className="mb-6 space-y-3">
+              {paginatedSocialLinks.map((item, index) => {
+                const originalIndex = currentPage * SOCIAL_LINKS_PER_PAGE + index;
+                const Icon = getPlatformIcon(item.platform);
 
-                      {item.isEditing ? (
-                        <div className="flex-1 space-y-2">
-                          <Input
-                            value={item.platform}
-                            onChange={(e) =>
-                              handleChangeRow(index, "platform", e.target.value)
-                            }
-                            placeholder="Enter platform name"
-                            disabled={isSaving}
-                          />
-                          <Input
-                            value={item.url}
-                            onChange={(e) =>
-                              handleChangeRow(index, "url", e.target.value)
-                            }
-                            placeholder="Enter social link URL"
-                            disabled={isSaving}
-                          />
-                        </div>
-                      ) : (
-                        <div className="min-w-0 flex-1 overflow-hidden break-words whitespace-normal rounded-2xl border px-4 py-2">
-                          {item.url}
-                        </div>
-                      )}
+                return (
+                  <div
+                    key={`${item.platform}-${item.url}-${originalIndex}`}
+                    className="flex items-center gap-3"
+                  >
+                    <Icon className="h-5 w-5 text-[#2D5016]" />
 
-                      <div className="flex shrink-0 items-center gap-3 self-center">
-                        {!item.isEditing && item.status === "pending" ? (
-                          <FaClock className="fill-orange" />
-                        ) : null}
+                    <div className="flex flex-1 items-center rounded-lg border px-3 py-2">
+                      <span className="flex-1 truncate text-sm text-gray-600">
+                        {item.url}
+                      </span>
 
-                        {item.isEditing ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => void handleSaveRow(index)}
-                              disabled={isSaving}
-                              className="cursor-pointer text-light-green"
-                            >
-                              <TiTick size={26} />
-                            </button>
+                      <span className="mx-3 h-2 w-2 rounded-full bg-[#E57A1F]" />
 
-                            <button
-                              type="button"
-                              onClick={() => void handleRemoveRow(index)}
-                              disabled={isSaving}
-                              className="cursor-pointer text-light-green"
-                            >
-                              <ImCross size={14} />
-                            </button>
-                          </>
+                      <button
+                        onClick={() => handleOpenEditDialog(originalIndex)}
+                        type="button"
+                      >
+                        <SquarePen className="h-4 w-4 cursor-pointer text-[#6B7A4C] hover:text-[#2D5016]" />
+                      </button>
+
+                      <button
+                        onClick={() => void handleRemove(originalIndex)}
+                        className="ml-2 rounded-full p-1 hover:bg-red-100 disabled:opacity-50"
+                        disabled={deletingIndex === originalIndex}
+                        type="button"
+                      >
+                        {deletingIndex === originalIndex ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleEditRow(index)}
-                            disabled={isSaving}
-                            className="cursor-pointer text-gray-500"
-                          >
-                            <FaEdit />
-                          </button>
+                          <X className="h-4 w-4 text-red-600" />
                         )}
-                      </div>
+                      </button>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No social links found.
-                  </p>
-                )}
-              </div>
+                  </div>
+                );
+              })}
 
-              <div>
-                <Button
-                  className="w-full cursor-pointer border border-dashed border-light-green bg-transparent text-light-green hover:bg-light-green hover:text-white"
-                  size="sm"
-                  type="button"
-                  onClick={handleAddAnotherSocialLink}
-                  disabled={isSaving}
-                >
-                  + Add another Social Link
-                </Button>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      aria-label={`Go to social links page ${index + 1}`}
+                      onClick={() => setCurrentPage(index)}
+                      className={`h-2.5 w-2.5 rounded-full transition-all ${
+                        currentPage === index
+                          ? "w-5 bg-[#2D5016]"
+                          : "bg-[#D8E2C8] hover:bg-[#9DB47B]"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleOpenAddDialog}
+          className="mt-auto w-full rounded-lg border border-dashed border-[#9DB47B] py-2 text-sm text-[#2D5016] hover:bg-[#F7FAEC] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={isLoading || !profile}
+          type="button"
+        >
+          + Add another Social Link
+        </button>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingIndex !== null ? "Edit Social Link" : "Add Social Link"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="platform">Platform</Label>
+              <Select
+                value={formData.platform}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, platform: value })
+                }
+                disabled={isSubmitting || isPlatformLoading}
+              >
+                <SelectTrigger id="platform">
+                  <SelectValue
+                    placeholder={
+                      isPlatformLoading ? "Loading platforms..." : "Select platform"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {isPlatformLoading && mergedPlatformOptions.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      Loading platforms...
+                    </div>
+                  ) : mergedPlatformOptions.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      No platforms found
+                    </div>
+                  ) : (
+                    mergedPlatformOptions.map((platform) => (
+                      <SelectItem key={platform} value={platform}>
+                        {platform}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="url">URL or Username</Label>
+              <Input
+                id="url"
+                placeholder="https://instagram.com/username or just username"
+                value={formData.url}
+                onChange={(e) =>
+                  setFormData({ ...formData, url: e.target.value })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !isSubmitting) {
+                    void handleSave();
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpen(false);
+                setFormData({ platform: "", url: "", status: "pending" });
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={() => void handleSave()} disabled={isSubmitting || isPlatformLoading}>
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

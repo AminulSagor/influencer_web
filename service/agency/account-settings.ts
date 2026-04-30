@@ -15,6 +15,7 @@ import type {
     UpdateAgencySocialLinksPayload,
     UpdateAgencyTinPayload,
     UpdateAgencyTradeLicensePayload,
+    LookupOption,
     UpdateDollarRatePayload,
     UpdateServiceFeePayload,
 } from "@/types/agency/account-settings";
@@ -181,6 +182,21 @@ export const updateAgencyBin = async (
     const response = await serviceClient.patch<AgencyProfileResponse>(
         "/agency/profile/verification/bin",
         payload
+    );
+
+    return response.data;
+};
+export const getAgencyNicheOptions = async (): Promise<LookupOption[]> => {
+    const response = await serviceClient.get<LookupOption[]>(
+        "/campaign/get/niches"
+    );
+
+    return response.data;
+};
+
+export const getAgencyPlatformOptions = async (): Promise<LookupOption[]> => {
+    const response = await serviceClient.get<LookupOption[]>(
+        "/campaign/get/platforms"
     );
 
     return response.data;

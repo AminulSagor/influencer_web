@@ -21,11 +21,49 @@ import {
   BasicInfoUpdateResponse,
 } from "../../../schemas/influencer/basic-info-validation";
 
+export type InfluencerLookupOption = {
+  id: string;
+  name: string;
+};
+
+const normalizeLookupResponse = (data: unknown): InfluencerLookupOption[] => {
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray((data as { data?: unknown })?.data)
+      ? (data as { data: unknown[] }).data
+      : [];
+
+  return items
+    .map((item) => {
+      const value = item as Partial<InfluencerLookupOption>;
+      return {
+        id: String(value.id ?? value.name ?? ""),
+        name: String(value.name ?? ""),
+      };
+    })
+    .filter((item) => item.name.trim().length > 0);
+};
+
 export const getInfluencerProfile = async (
 ): Promise<InfluencerProfileData> => {
   const response = await serviceClient.get(`/influencer/profile`);
 
   return response.data;
+};
+
+export const getInfluencerSkillOptions = async (): Promise<InfluencerLookupOption[]> => {
+  const response = await serviceClient.get(`/campaign/get/skills`);
+  return normalizeLookupResponse(response.data);
+};
+
+export const getInfluencerNicheOptions = async (): Promise<InfluencerLookupOption[]> => {
+  const response = await serviceClient.get(`/campaign/get/niches`);
+  return normalizeLookupResponse(response.data);
+};
+
+export const getInfluencerPlatformOptions = async (): Promise<InfluencerLookupOption[]> => {
+  const response = await serviceClient.get(`/campaign/get/platforms`);
+  return normalizeLookupResponse(response.data);
 };
 
 /**

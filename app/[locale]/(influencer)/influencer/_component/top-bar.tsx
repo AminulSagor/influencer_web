@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/popover";
 import { FaBell } from "react-icons/fa6";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -36,6 +35,8 @@ const TopBar = () => {
     notifications,
     loading,
     unreadCount,
+    loadingMore,
+    handleNotificationsScroll,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
@@ -130,7 +131,7 @@ const TopBar = () => {
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[350px]">
+                  <div className="h-[350px] overflow-y-auto" onScroll={handleNotificationsScroll}>
                     <div className="space-y-1.5 pr-3">
                       {notifications.map((n, index) => {
                         const isUnread = n.isRead === false;
@@ -174,8 +175,13 @@ const TopBar = () => {
                           </div>
                         );
                       })}
+                      {loadingMore && (
+                        <div className="flex items-center justify-center py-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                  </ScrollArea>
+                  </div>
                 )}
               </div>
             </PopoverContent>

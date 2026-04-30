@@ -17,4 +17,4 @@ export type EarningOverviewResponse = {
     data: EarningOverviewData;
 };
 
-export type EarningRange = "7d" | "15d" | "30d";
+export type EarningRange = "7d" | "15d" | "30d" | "90d";

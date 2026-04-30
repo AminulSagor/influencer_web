@@ -49,7 +49,7 @@ export default function AccountSettingsPage() {
         {/* Right */}
         <ProfileCompletionCard profileData={profileData} loading={loading} refreshProfile={fetchProfile} />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 items-stretch gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
         <SkillsCard />
         <NichesCard />
         <SocialLinksCard />

@@ -1,3 +1,5 @@
+import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
+
 export type AgencyCampaignAsset = {
     id: string;
     category: string;
@@ -31,6 +33,7 @@ export type AgencyCampaignMilestone = {
     campaignId: string;
     createdAt: string;
     updatedAt: string;
+    submissions?: AgencyMilestoneSubmissionItem[];
 };
 
 export type AgencyCampaignClientSocialLink = {

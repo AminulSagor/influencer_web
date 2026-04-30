@@ -1,3 +1,8 @@
+export type LookupOption = {
+    id: string;
+    name: string;
+};
+
 export type AgencyNicheItem = {
     niche: string;
     status: "approved" | "rejected" | "pending";

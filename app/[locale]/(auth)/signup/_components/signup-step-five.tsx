@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react"; // ✅ Added useEffect
+import { useEffect } from "react"; // ✅ Added useEffect
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
@@ -16,15 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import { BD_LOCATIONS } from "@/location-data/bd-location";
+import ZillaThanaFields from "@/components/location/zilla-thana-fields";
 import type { UserRole } from "@/types/auth/role_type";
 
 import { notifyError } from "@/utils/toast_util";
@@ -50,23 +42,13 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
   const methods = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
-    defaultValues: savedAddress, 
+    defaultValues: savedAddress,
     mode: "onChange",
     reValidateMode: "onChange",
   });
 
   const selectedZila = methods.watch("zila");
-
-  const zilaOptions = useMemo(
-    () => BD_LOCATIONS.map((x) => x.zila).sort((a, b) => a.localeCompare(b)),
-    []
-  );
-
-  const thanaOptions = useMemo(() => {
-    const found = BD_LOCATIONS.find((x) => x.zila === selectedZila);
-    return (found?.thanas ?? []).slice().sort((a, b) => a.localeCompare(b));
-  }, [selectedZila]);
-
+  const selectedThana = methods.watch("thana");
   const token = useAuthStore((s) => s.token);
 
   // ✅ CRITICAL: Use useEffect to set userRole on component mount
@@ -77,7 +59,7 @@ const SignUpStepFive = ({ nextStep }: Props) => {
         // console.log("jwt payload:", jwt);
         // console.log("jwt role:", jwt?.role);
         // console.log("isVerified:", jwt?.isVerified);
-        
+
         // ✅ CRITICAL: Set the role in Zustand store
         if (jwt?.role) {
           setUserRole(jwt.role);
@@ -162,69 +144,39 @@ const SignUpStepFive = ({ nextStep }: Props) => {
 
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 mt-4">
-            {/* Zila */}
-            <FormField
-              control={methods.control}
-              name="zila"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-light-green">{t("zilaLabel")}</FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={(v) => {
-                        field.onChange(v);
-                        methods.setValue("thana", "", { shouldValidate: true, shouldDirty: true });
-                      }}
-                    >
-                      <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
-                        <SelectValue placeholder={t("zilaPlaceholder")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {zilaOptions.map((z) => (
-                          <SelectItem key={z} value={z}>
-                            {z}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className="space-y-4">
+              <ZillaThanaFields
+                zilla={selectedZila || ""}
+                thana={selectedThana || ""}
+                zillaLabel={t("zilaLabel")}
+                thanaLabel={t("thanaLabel")}
+                zillaPlaceholder={t("zilaPlaceholder")}
+                thanaPlaceholder={t("thanaPlaceholder")}
+                selectClassName="h-12 border bg-white py-3 font-normal focus-visible:ring-1"
+                onZillaChange={(value) =>
+                  methods.setValue("zila", value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                onThanaChange={(value) =>
+                  methods.setValue("thana", value, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+              />
+              {methods.formState.errors.zila?.message && (
+                <p className="text-sm font-medium text-destructive">
+                  {methods.formState.errors.zila.message}
+                </p>
               )}
-            />
-
-            {/* Thana */}
-            <FormField
-              control={methods.control}
-              name="thana"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-light-green">{t("thanaLabel")}</FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      disabled={!selectedZila}
-                    >
-                      <SelectTrigger className="bg-white border py-3 font-normal focus-visible:ring-1 h-12 w-full">
-                        <SelectValue
-                          placeholder={selectedZila ? t("thanaPlaceholder") : "Select Zila first"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {thanaOptions.map((th) => (
-                          <SelectItem key={th} value={th}>
-                            {th}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {methods.formState.errors.thana?.message && (
+                <p className="text-sm font-medium text-destructive">
+                  {methods.formState.errors.thana.message}
+                </p>
               )}
-            />
+            </div>
 
             {/* Full Address */}
             <FormField

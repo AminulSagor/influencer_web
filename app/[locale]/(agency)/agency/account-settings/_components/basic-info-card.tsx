@@ -55,8 +55,8 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
       : (profile?.logo ?? "");
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-linear-to-r from-Primary to-light-green p-4">
-      <div className="flex min-h-[260px] gap-6 overflow-hidden">
+    <div className="h-full overflow-hidden rounded-xl border bg-linear-to-r from-Primary to-light-green p-4">
+      <div className="flex h-full min-h-[260px] gap-6 overflow-hidden">
         <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-2">
           <div className="relative h-[100px] w-[100px] overflow-hidden rounded-full bg-off-white">
             {profile?.logo ? (

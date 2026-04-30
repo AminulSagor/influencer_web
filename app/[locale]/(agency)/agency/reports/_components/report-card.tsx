@@ -33,6 +33,7 @@ const defaultMeta: ReportsMeta = {
 const STATUS_CONFIG: Record<
   ReportStatus,
   {
+    label: string;
     Icon: React.ElementType;
     badgeBg: string;
     badgeBorder: string;
@@ -47,7 +48,8 @@ const STATUS_CONFIG: Record<
     summaryActiveRing: string;
   }
 > = {
-  Flagged: {
+  flagged: {
+    label: "Flagged",
     Icon: FaFlag,
     badgeBg: "bg-rose-600",
     badgeBorder: "border-rose-600",
@@ -61,7 +63,8 @@ const STATUS_CONFIG: Record<
     summaryActiveText: "text-white",
     summaryActiveRing: "ring-rose-300",
   },
-  Pending: {
+  pending: {
+    label: "Pending",
     Icon: FaClock,
     badgeBg: "bg-orange",
     badgeBorder: "border-orange",
@@ -75,7 +78,8 @@ const STATUS_CONFIG: Record<
     summaryActiveText: "text-white",
     summaryActiveRing: "ring-orange/30",
   },
-  Resolved: {
+  resolved: {
+    label: "Resolved",
     Icon: FaCheckCircle,
     badgeBg: "bg-[#7A9B57]",
     badgeBorder: "border-[#7A9B57]",
@@ -91,6 +95,14 @@ const STATUS_CONFIG: Record<
   },
 };
 
+const normalizeReportStatus = (status?: string): ReportStatus => {
+  const normalized = String(status ?? "").trim().toLowerCase();
+
+  if (normalized === "flagged") return "flagged";
+  if (normalized === "resolved") return "resolved";
+  return "pending";
+};
+
 const ReportCard = () => {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [meta, setMeta] = useState<ReportsMeta>(defaultMeta);
@@ -99,6 +111,7 @@ const ReportCard = () => {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
   const [activeFilter, setActiveFilter] = useState<ReportStatus | null>(null);
 
   const [flaggedCount, setFlaggedCount] = useState(0);
@@ -132,6 +145,10 @@ const ReportCard = () => {
 
     return () => window.clearTimeout(timer);
   }, [searchInput]);
+
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
 
   useEffect(() => {
     let isMounted = true;
@@ -189,9 +206,9 @@ const ReportCard = () => {
       try {
         const [flaggedResponse, pendingResponse, resolvedResponse] =
           await Promise.all([
-            getReports({ page: 1, limit: 1, status: "Flagged" }),
-            getReports({ page: 1, limit: 1, status: "Pending" }),
-            getReports({ page: 1, limit: 1, status: "Resolved" }),
+            getReports({ page: 1, limit: 1, status: "flagged" }),
+            getReports({ page: 1, limit: 1, status: "pending" }),
+            getReports({ page: 1, limit: 1, status: "resolved" }),
           ]);
 
         if (!isMounted) return;
@@ -219,9 +236,9 @@ const ReportCard = () => {
 
   const reportsSummary = useMemo(
     () => [
-      { id: 1, tag: "Flagged" as ReportStatus, count: flaggedCount },
-      { id: 2, tag: "Pending" as ReportStatus, count: pendingCount },
-      { id: 3, tag: "Resolved" as ReportStatus, count: resolvedCount },
+      { id: 1, tag: "flagged" as ReportStatus, count: flaggedCount },
+      { id: 2, tag: "pending" as ReportStatus, count: pendingCount },
+      { id: 3, tag: "resolved" as ReportStatus, count: resolvedCount },
     ],
     [flaggedCount, pendingCount, resolvedCount]
   );
@@ -229,6 +246,21 @@ const ReportCard = () => {
   const handleFilterClick = (status: ReportStatus) => {
     setPage(1);
     setActiveFilter((previous) => (previous === status ? null : status));
+  };
+
+  const handlePageInputChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    setPageInput(numericValue);
+
+    if (!numericValue) return;
+
+    const nextPage = Math.min(
+      Math.max(Number(numericValue), 1),
+      Math.max(meta.totalPages, 1)
+    );
+
+    setPageInput(String(nextPage));
+    setPage(nextPage);
   };
 
   const handlePrevious = () => {
@@ -278,7 +310,7 @@ const ReportCard = () => {
                   )
                 )}
               >
-                <h2 className="text-xl">{report.tag}</h2>
+                <h2 className="text-xl">{config.label}</h2>
                 <p className="text-2xl font-medium">{report.count}</p>
               </button>
             );
@@ -311,14 +343,16 @@ const ReportCard = () => {
         ) : (
           <div className="space-y-4">
             {reports.map((item) => {
+              const normalizedStatus = normalizeReportStatus(item.status);
               const {
+                label,
                 Icon,
                 badgeBg,
                 badgeBorder,
                 badgeText,
                 cardBg,
                 cardBorder,
-              } = STATUS_CONFIG[item.status];
+              } = STATUS_CONFIG[normalizedStatus];
 
               return (
                 <div
@@ -372,7 +406,7 @@ const ReportCard = () => {
                         )}
                       >
                         <Icon className="size-4" />
-                        {item.status}
+                        {label}
                       </div>
 
                       <ChevronRight size={14} className="text-gray-600" />
@@ -387,9 +421,14 @@ const ReportCard = () => {
         <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
           <div className="flex items-center gap-2 text-gray-500">
             <span>Page</span>
-            <div className="flex h-9 min-w-10 items-center justify-center rounded-2xl border border-light-green bg-Secondary px-3 text-Primary">
-              {meta.page}
-            </div>
+            <Input
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={pageInput}
+              onChange={(event) => handlePageInputChange(event.target.value)}
+              disabled={isLoading}
+              className="h-9 w-16 rounded-2xl border-light-green bg-Secondary px-3 text-center text-Primary"
+            />
             <span>Of {meta.totalPages}</span>
           </div>
 

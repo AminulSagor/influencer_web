@@ -17,45 +17,12 @@ import {
 import { cn } from "@/lib/utils";
 import SubmissionHistory from "./submission-history";
 import { milestoneSubmissionService } from "@/service/agency/campaign/milestone-submission.service";
-import type {
-  AgencyMilestoneSubmissionItem,
-  GetMilestoneSubmissionsResponse,
-  MilestoneSubmissionApiItem,
-} from "@/types/agency/campaign/milestone-submission.types";
+import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
 }
 
-function mapApiSubmissionToHistoryItem(
-  submission: MilestoneSubmissionApiItem,
-  fallbackMilestoneId: string
-): AgencyMilestoneSubmissionItem {
-  return {
-    id: submission.id,
-    submissionDescription: submission.description,
-    submissionAttachments: submission.attachments ?? [],
-    submissionLiveLinks: submission.liveLinks ?? [],
-    requestedAmount: String(submission.requestedAmount),
-    submittedByRole: "agency",
-    rejectionReason: submission.rejectionReason,
-    isClientApproved: submission.isClientApproved,
-    achievedReach: submission.metrics?.reach ?? null,
-    achievedViews: submission.metrics?.views ?? null,
-    achievedLikes: submission.metrics?.likes ?? null,
-    achievedComments: submission.metrics?.comments ?? null,
-    achievedFollows: submission.metrics?.follows ?? null,
-    paidAmount: String(submission.paidAmount ?? 0),
-    paymentStatus: submission.paymentStatus,
-    adminFeedback: submission.adminFeedback,
-    status: submission.status,
-    assignmentId: submission.assignmentId,
-    milestoneId: fallbackMilestoneId,
-    assignedMilestoneId: submission.assignedMilestoneId,
-    createdAt: submission.submittedAt,
-    updatedAt: submission.submittedAt,
-  };
-}
 
 const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
   const [showNewSubmissionForm, setShowNewSubmissionForm] = useState(false);
@@ -112,21 +79,18 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
       try {
         setIsLoadingSubmissions(true);
 
-        const response: GetMilestoneSubmissionsResponse =
-          await milestoneSubmissionService.getMilestoneSubmissions(
-            resolvedMilestoneId
-          );
+        const response = await milestoneSubmissionService.getMilestoneDetails(
+          resolvedMilestoneId
+        );
 
-        const mappedSubmissions = (response.data?.submissions ?? [])
-          .map((item) => mapApiSubmissionToHistoryItem(item, resolvedMilestoneId))
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+        const milestoneSubmissions = (response.data?.submissions ?? []).sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
 
-        setLocalSubmissions(mappedSubmissions);
+        setLocalSubmissions(milestoneSubmissions);
       } catch (error) {
-        console.error("Failed to load milestone submissions:", error);
+        console.error("Failed to load milestone details submissions:", error);
       } finally {
         setIsLoadingSubmissions(false);
       }
@@ -137,28 +101,38 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
 
   const displaySubmissions = useMemo(() => localSubmissions, [localSubmissions]);
 
+  const requestedAmountTotal = useMemo(
+    () =>
+      displaySubmissions.reduce((sum, submission) => {
+        const amount = Number(submission.requestedAmount ?? 0);
+        return sum + (Number.isFinite(amount) ? amount : 0);
+      }, 0),
+    [displaySubmissions]
+  );
+
+  const remainingRequestAmount = Math.max(payout - requestedAmountTotal, 0);
+  const hasRequestableAmount = remainingRequestAmount > 0.009;
   const hasSubmissions = displaySubmissions.length > 0;
   const canShowHistory = hasSubmissions;
-  const canAddAnotherSubmission = Boolean(resolvedMilestoneId);
+  const canAddAnotherSubmission =
+    Boolean(resolvedMilestoneId) && hasRequestableAmount;
 
   const handleSubmitted = async (submission: AgencyMilestoneSubmissionItem) => {
     setLocalSubmissions((prev) => [submission, ...prev]);
     setShowNewSubmissionForm(false);
 
     try {
-      const response = await milestoneSubmissionService.getMilestoneSubmissions(
+      const response = await milestoneSubmissionService.getMilestoneDetails(
         resolvedMilestoneId
       );
 
-      const mappedSubmissions = (response.data?.submissions ?? [])
-        .map((item) => mapApiSubmissionToHistoryItem(item, resolvedMilestoneId))
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+      const milestoneSubmissions = (response.data?.submissions ?? []).sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
-      if (mappedSubmissions.length > 0) {
-        setLocalSubmissions(mappedSubmissions);
+      if (milestoneSubmissions.length > 0) {
+        setLocalSubmissions(milestoneSubmissions);
       }
     } catch (error) {
       console.error("Failed to refresh submissions after submit:", error);
@@ -234,7 +208,9 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
               <h2 className="text-xl font-medium text-Primary">
                 Promotion Target
               </h2>
-              <p className="text-sm text-Primary">Reach / View Target</p>
+              <p className="text-sm text-Primary">
+                {milestone?.targetTitle ? `${milestone.targetTitle} Target` : "Target"}
+              </p>
               <p className="text-2xl font-bold text-Primary">
                 {milestone?.promotionTarget}
               </p>
@@ -304,14 +280,22 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           </div>
         </div>
 
-        {!hasSubmissions && resolvedMilestoneId && !showNewSubmissionForm && (
+        {!hasSubmissions && resolvedMilestoneId && hasRequestableAmount && !showNewSubmissionForm && (
           <SubmissionForm
             milestoneId={resolvedMilestoneId}
+            initialSubmissionCount={displaySubmissions.length}
+            maxRequestAmount={remainingRequestAmount}
             onSubmitted={handleSubmitted}
           />
         )}
 
-        {canShowHistory && <SubmissionHistory submissions={displaySubmissions} />}
+        {canShowHistory && <SubmissionHistory submissions={displaySubmissions} targetTitle={milestone?.targetTitle} />}
+
+        {hasSubmissions && !hasRequestableAmount && (
+          <p className="mt-4 rounded-lg border border-light-green/40 bg-light-green/5 p-3 text-center text-sm font-medium text-Primary">
+            Full payout amount has already been requested.
+          </p>
+        )}
 
         {hasSubmissions && canAddAnotherSubmission && !showNewSubmissionForm && (
           <Button
@@ -329,6 +313,8 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           <div className="mt-4">
             <SubmissionForm
               milestoneId={resolvedMilestoneId}
+              initialSubmissionCount={displaySubmissions.length}
+              maxRequestAmount={remainingRequestAmount}
               onSubmitted={handleSubmitted}
             />
           </div>

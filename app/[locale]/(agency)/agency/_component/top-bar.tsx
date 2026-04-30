@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Popover,
@@ -9,9 +10,10 @@ import {
 } from "@/components/ui/popover";
 import { FaBell } from "react-icons/fa6";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
+import { getAgencyProfile } from "@/service/agency/account-settings";
+import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
 const formatRelativeTime = (dateString: string) => {
   const now = new Date();
@@ -29,14 +31,44 @@ const formatRelativeTime = (dateString: string) => {
 };
 
 const TopBar = () => {
+  const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
   const {
     notifications,
     loading,
     unreadCount,
+    loadingMore,
+    handleNotificationsScroll,
     fetchNotifications,
     markAsRead,
     markAllAsRead,
   } = useNotifications();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      try {
+        const response = await getAgencyProfile();
+        if (isMounted) setProfile(response);
+      } catch (error) {
+        console.error("Failed to load agency top bar profile:", error);
+      }
+    };
+
+    void loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const agencyName = profile?.agencyName?.trim() || "Agency";
+  const agencyInitials = agencyName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((item) => item[0]?.toUpperCase())
+    .join("") || "AG";
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -107,7 +139,7 @@ const TopBar = () => {
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[350px]">
+                  <div className="h-[350px] overflow-y-auto" onScroll={handleNotificationsScroll}>
                     <div className="space-y-1.5 pr-3">
                       {notifications.map((n, index) => {
                         const isUnread = n.isRead === false;
@@ -153,8 +185,13 @@ const TopBar = () => {
                           </div>
                         );
                       })}
+                      {loadingMore && (
+                        <div className="flex items-center justify-center py-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
-                  </ScrollArea>
+                  </div>
                 )}
               </div>
             </PopoverContent>
@@ -164,11 +201,11 @@ const TopBar = () => {
         {/* Agency Avatar */}
         <div className="flex items-center gap-3">
           <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" alt="Agency" />
-            <AvatarFallback>AG</AvatarFallback>
+            <AvatarImage src={profile?.logo || undefined} alt={agencyName} />
+            <AvatarFallback>{agencyInitials}</AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-semibold">GrowBig</h2>
+            <h2 className="text-xl font-semibold">{agencyName}</h2>
             <p className="text-xs font-medium text-muted-foreground ml-1">
               Ad Agency
             </p>

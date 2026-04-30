@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FaClock } from "react-icons/fa";
 
 interface Props {
@@ -24,29 +24,29 @@ const DeadlineCard = ({ startingDate, duration }: Props) => {
   const remainingDays = Math.max(Math.ceil(diffMs / (1000 * 60 * 60 * 24)), 0);
 
   return (
-    <Card className="bg-linear-to-r from-Primary to-light-green h-full justify-between">
-      <CardHeader>
-        <CardTitle className="text-Secondary flex items-center gap-2">
-          <FaClock />
-          Deadline
-        </CardTitle>
-      </CardHeader>
+    <Card className="h-full overflow-hidden border-0 py-0">
+      <CardContent className="h-full p-0">
+        <div className="flex min-h-[96px] h-full items-stretch justify-between rounded-xl bg-linear-to-r from-Primary to-light-green p-4 text-Secondary">
+          <div className="flex flex-col justify-between">
+            <p className="flex items-center gap-2 text-base font-semibold">
+              <FaClock className="size-4" />
+              Deadline
+            </p>
 
-      <CardContent>
-        <h2 className="text-Secondary text-5xl font-bold">
-          {remainingDays} Days
-        </h2>
-        <p className="text-Secondary ml-1 text-sm font-medium mt-1">
-          Remaining
-        </p>
-      </CardContent>
+            <div>
+              <h2 className="text-4xl font-bold leading-none">
+                {remainingDays} Days
+              </h2>
+              <p className="mt-1 text-sm font-medium">Remaining</p>
+            </div>
+          </div>
 
-      <div className="px-6">
-        <div className="flex justify-between">
-          <p className="text-sm text-Secondary">{formatDate(deadline)}</p>
-          <p className="text-sm text-Secondary">Duration: {duration} Days</p>
+          <div className="flex flex-col items-end justify-between text-right">
+            <p className="text-base font-medium">{formatDate(deadline)}</p>
+            <p className="text-sm font-medium">Duration: {duration} Days</p>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

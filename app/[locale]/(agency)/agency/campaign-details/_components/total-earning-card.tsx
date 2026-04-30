@@ -14,10 +14,10 @@ const formatCurrency = (value: string | number) => {
 
 const TotalEarningCard = ({ amount }: Props) => {
   return (
-    <Card>
-      <CardContent>
-        <div className="border-light-green border p-4 rounded-lg bg-linear-to-r from-Secondary to-white">
-          <div className="flex justify-between items-center">
+    <Card className="h-full py-4">
+      <CardContent className="h-full">
+        <div className="border-light-green border p-4 rounded-lg bg-linear-to-r from-Secondary to-white min-h-[96px] h-full flex items-center">
+          <div className="flex w-full justify-between items-center">
             <div className="space-y-2">
               <p className="text-sm font-medium">Total Campaign Earnings</p>
               <p className="text-2xl font-semibold text-Primary">

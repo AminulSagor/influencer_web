@@ -28,16 +28,47 @@ type ReportItem = {
   status: ReportStatus;
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+const REPORT_STATUSES: ReportStatus[] = ["flagged", "pending", "resolved"];
+
+function normalizeReportStatus(status?: string | null): ReportStatus {
+  const normalized = status?.trim().toLowerCase();
+
+  if (
+    normalized === "flagged" ||
+    normalized === "pending" ||
+    normalized === "resolved"
+  ) {
+    return normalized;
+  }
+
+  if (normalized === "approved" || normalized === "approve") {
+    return "resolved";
+  }
+
+  if (normalized === "declined" || normalized === "decline") {
+    return "flagged";
+  }
+
+  return "pending";
+}
+
+function getSafeDate(iso?: string | null): string {
+  const parsed = iso ? new Date(iso) : new Date();
+  return Number.isNaN(parsed.getTime())
+    ? new Date().toISOString()
+    : parsed.toISOString();
+}
+
+function formatDate(iso?: string | null): string {
+  return new Date(getSafeDate(iso)).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+function timeAgo(iso?: string | null): string {
+  const diff = Math.max(0, Date.now() - new Date(getSafeDate(iso)).getTime());
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins} Min${mins !== 1 ? "s" : ""} Ago`;
   const hrs = Math.floor(mins / 60);
@@ -46,15 +77,17 @@ function timeAgo(iso: string): string {
   return `${days} Day${days !== 1 ? "s" : ""} Ago`;
 }
 
-function mapToReportItem(item: ReportLogItem): ReportItem {
+function mapToReportItem(item: ReportLogItem, index: number): ReportItem {
+  const rawStatus = item.logStatus ?? item.submissionStatus;
+
   return {
-    id: item.reportId,
-    campaignName: item.campaignName,
-    milestone: item.milestoneTitle,
+    id: item.reportId || `${item.campaignName || "report"}-${item.date || index}`,
+    campaignName: item.campaignName || "Untitled Campaign",
+    milestone: item.milestoneTitle || "Untitled Milestone",
     timeAgo: timeAgo(item.date),
-    message: item.feedback,
+    message: item.feedback || "No feedback provided.",
     date: formatDate(item.date),
-    status: item.logStatus as ReportStatus,
+    status: normalizeReportStatus(rawStatus),
   };
 }
 
@@ -64,36 +97,82 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function countByStatus(items: ReportItem[]) {
-  const base: Record<ReportStatus, number> = {
-    flagged: 0,
-    pending: 0,
-    resolved: 0,
-  };
-  for (const r of items) base[r.status] += 1;
-  return base;
-}
-
 const ReportPage = () => {
   const t = useTranslations("influencer.reports");
 
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [statusCounts, setStatusCounts] = useState<Record<ReportStatus, number>>({
+    flagged: 0,
+    pending: 0,
+    resolved: 0,
+  });
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeStatus, setActiveStatus] = useState<ActiveFilter>(null);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedQuery(query.trim());
+      setPage(1);
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [query]);
+
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      const results = await Promise.all(
+        REPORT_STATUSES.map(async (status) => {
+          const res = await getReportLogs({
+            status,
+            page: 1,
+            limit: 1,
+            search: debouncedQuery || undefined,
+          });
+
+          return [status, res.meta?.total ?? 0] as const;
+        }),
+      );
+
+      setStatusCounts({
+        flagged: results.find(([status]) => status === "flagged")?.[1] ?? 0,
+        pending: results.find(([status]) => status === "pending")?.[1] ?? 0,
+        resolved: results.find(([status]) => status === "resolved")?.[1] ?? 0,
+      });
+    } catch (err) {
+      console.error("Failed to fetch report status counts:", err);
+      setStatusCounts({ flagged: 0, pending: 0, resolved: 0 });
+    }
+  }, [debouncedQuery]);
 
   const fetchReports = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const res = await getReportLogs();
-      setReports(res.data.map(mapToReportItem));
+      const res = await getReportLogs({
+        page,
+        limit: PAGE_SIZE,
+        status: activeStatus || undefined,
+        search: debouncedQuery || undefined,
+      });
+      const reportLogs = Array.isArray(res.data) ? res.data : [];
+      setReports(reportLogs.map(mapToReportItem));
+      setTotalPages(Math.max(1, res.meta?.totalPages ?? 1));
     } catch (err) {
       console.error("Failed to fetch report logs:", err);
       setError("Failed to load report logs.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeStatus, debouncedQuery, page]);
+
+  useEffect(() => {
+    fetchStatusCounts();
+  }, [fetchStatusCounts]);
 
   useEffect(() => {
     fetchReports();
@@ -138,37 +217,7 @@ const ReportPage = () => {
     [t]
   );
 
-  const [activeStatus, setActiveStatus] = useState<ActiveFilter>(null);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-
-  const counts = useMemo(() => countByStatus(reports), [reports]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-
-    return reports
-      .filter((r) => (activeStatus ? r.status === activeStatus : true))
-      .filter((r) => {
-        if (!q) return true;
-        return (
-          r.campaignName.toLowerCase().includes(q) ||
-          r.milestone.toLowerCase().includes(q)
-        );
-      });
-  }, [activeStatus, query, reports]);
-
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
-    [filtered.length]
-  );
-
   const currentPage = clamp(page, 1, totalPages);
-
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, currentPage]);
 
   const handleSelectStatus = useCallback((s: ReportStatus) => {
     setActiveStatus(s);
@@ -182,7 +231,6 @@ const ReportPage = () => {
 
   const handleSearch = useCallback((v: string) => {
     setQuery(v);
-    setPage(1);
   }, []);
 
   const handlePrev = useCallback(() => {
@@ -222,7 +270,10 @@ const ReportPage = () => {
           <p className="text-sm text-red-500">{error}</p>
           <button
             type="button"
-            onClick={fetchReports}
+            onClick={() => {
+              fetchStatusCounts();
+              fetchReports();
+            }}
             className="h-8 rounded-md px-4 text-sm font-semibold bg-[#6E8E59] text-white hover:brightness-95"
           >
             {t("Retry")}
@@ -246,7 +297,7 @@ const ReportPage = () => {
 
         {/* Summary */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(["flagged", "pending", "resolved"] as ReportStatus[]).map((s) => {
+          {REPORT_STATUSES.map((s) => {
             const ui = STATUS_UI[s];
             const isActive = activeStatus === s;
 
@@ -276,7 +327,7 @@ const ReportPage = () => {
                     isActive ? "text-white" : ui.accentText,
                   ].join(" ")}
                 >
-                  {counts[s]}
+                  {statusCounts[s]}
                 </p>
               </button>
             );
@@ -298,12 +349,12 @@ const ReportPage = () => {
 
         {/* List */}
         <div className="mt-4 space-y-4">
-          {paginated.length === 0 ? (
+          {reports.length === 0 ? (
             <div className="rounded-lg border border-[#E6E7EA] bg-white px-4 py-10 text-center">
               <p className="text-sm text-[#6B7280]">{t("No reports found")}</p>
             </div>
           ) : (
-            paginated.map((item) => {
+            reports.map((item) => {
               const ui = STATUS_UI[item.status];
               return (
                 <div

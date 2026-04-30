@@ -19,6 +19,7 @@ interface NotificationsResponse {
     unreadCount: number;
     page: number;
     limit: number;
+    totalPages?: number;
   };
 }
 

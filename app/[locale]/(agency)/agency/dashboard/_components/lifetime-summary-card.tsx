@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,7 +109,10 @@ export default function LifetimeSummaryCard() {
                         </p>
                     </div>
 
-                    <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                    <Link
+                        href="/agency/jobs/completed"
+                        className="border bg-secondary px-4 py-2 rounded-lg space-y-2 transition hover:bg-secondary/80"
+                    >
                         <div className="flex flex-col justify-center gap-1 h-full">
                             <h2 className="text-3xl font-semibold text-[#7a9b57]">
                                 {totalJobsCompleted}
@@ -121,9 +125,12 @@ export default function LifetimeSummaryCard() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
-                    <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
+                    <Link
+                        href="/agency/jobs/declined"
+                        className="border bg-secondary px-4 py-2 rounded-lg space-y-2 transition hover:bg-secondary/80"
+                    >
                         <div className="flex flex-col justify-center gap-1 h-full">
                             <h2 className="text-3xl font-semibold text-yellow-700">
                                 {totalJobsDeclined}
@@ -136,7 +143,7 @@ export default function LifetimeSummaryCard() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </Link>
 
                     <div className="border bg-secondary px-4 py-2 rounded-lg space-y-2">
                         <div className="flex flex-col justify-center gap-1 h-full">

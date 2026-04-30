@@ -10,6 +10,7 @@ type Props = {
   children: React.ReactNode;
   icon?: React.ReactNode;
   titleColor?: string;
+  className?: string;
 };
 
 const CollapseCard = ({
@@ -17,12 +18,17 @@ const CollapseCard = ({
   children,
   icon,
   titleColor = "text-Primary",
+  className = "",
 }: Props) => {
   const [open, setOpen] = useState<boolean>(true);
 
   return (
-    <Card className="border-none">
-      <Collapsible open={open} onOpenChange={setOpen}>
+    <Card className={`flex flex-col border-none ${className}`}>
+      <Collapsible
+        open={open}
+        onOpenChange={setOpen}
+        className="flex h-full flex-col"
+      >
         <CardHeader className="flex flex-row items-center justify-between">
           {title && (
             <p className="font-semibold flex items-center gap-2">
@@ -39,8 +45,10 @@ const CollapseCard = ({
             />
           </CollapsibleTrigger>
         </CardHeader>
-        <CardContent>
-          <CollapsibleContent className="mt-4">{children}</CollapsibleContent>
+        <CardContent className="flex flex-1 flex-col">
+          <CollapsibleContent className="mt-4 flex flex-1 flex-col">
+            {children}
+          </CollapsibleContent>
         </CardContent>
       </Collapsible>
     </Card>

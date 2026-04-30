@@ -18,6 +18,7 @@ import MilestoneClient from "./milestone-client";
 import NotificationRefresh from "./notification-refresh";
 import { getAgencyCampaignDetails } from "@/service/agency/job-details";
 import type { AgencyCampaignMilestone } from "@/types/agency/job-details";
+import type { MilestoneTargetTitle } from "@/types/agency/campaign/milestone-submission.types";
 import {
   IN_REVIEW,
   PAID,
@@ -55,14 +56,30 @@ const mapMilestoneStatus = (status: string) => {
   return TODO;
 };
 
-const getPromotionTarget = (milestone: AgencyCampaignMilestone) => {
-  return (
-    milestone.expectedReach ??
-    milestone.expectedViews ??
-    milestone.expectedLikes ??
-    milestone.expectedComments ??
-    milestone.expectedFollows
-  );
+const getPromotionTargetConfig = (
+  milestone: AgencyCampaignMilestone
+): { title: MilestoneTargetTitle | null; value: number | null } => {
+  if (milestone.expectedReach != null) {
+    return { title: "Reach", value: Number(milestone.expectedReach) };
+  }
+
+  if (milestone.expectedViews != null) {
+    return { title: "Views", value: Number(milestone.expectedViews) };
+  }
+
+  if (milestone.expectedLikes != null) {
+    return { title: "Likes", value: Number(milestone.expectedLikes) };
+  }
+
+  if (milestone.expectedComments != null) {
+    return { title: "Comments", value: Number(milestone.expectedComments) };
+  }
+
+  if (milestone.expectedFollows != null) {
+    return { title: "Follows", value: Number(milestone.expectedFollows) };
+  }
+
+  return { title: null, value: null };
 };
 
 const mapMilestones = (
@@ -70,17 +87,23 @@ const mapMilestones = (
 ): PaymanetMilestoneDataType[] => {
   return [...milestones]
     .sort((a, b) => a.order - b.order)
-    .map((milestone, index) => ({
-      id: index + 1,
-      milestoneId: milestone.id,
-      title: milestone.contentTitle,
-      contentRequirement: [milestone.contentQuantity],
-      promotionTarget: formatCompactNumber(getPromotionTarget(milestone)),
-      payout: Number(milestone.amount ?? 0),
-      status: mapMilestoneStatus(milestone.status),
-      day: milestone.deliveryDays,
-      promotionalGoal: milestone.promotionGoal ?? "N/A",
-    }));
+    .map((milestone, index) => {
+      const targetConfig = getPromotionTargetConfig(milestone);
+
+      return {
+        id: index + 1,
+        milestoneId: milestone.id,
+        title: milestone.contentTitle,
+        contentRequirement: [milestone.contentQuantity],
+        promotionTarget: formatCompactNumber(targetConfig.value),
+        targetTitle: targetConfig.title,
+        payout: Number(milestone.amount ?? 0),
+        status: mapMilestoneStatus(milestone.status),
+        day: milestone.deliveryDays,
+        promotionalGoal: milestone.promotionGoal ?? "N/A",
+        submissions: milestone.submissions,
+      };
+    });
 };
 
 const page = async ({
@@ -109,14 +132,20 @@ const page = async ({
   const paidMilestones = milestoneData.filter(
     (item) => item.status === PAID || item.status === PARTIAL_PAID
   ).length;
+  const contentAssets = (campaign.assets ?? []).filter(
+    (asset) => asset.category?.toLowerCase() === "content"
+  );
+  const brandAssets = (campaign.assets ?? []).filter(
+    (asset) => asset.category?.toLowerCase() === "brand"
+  );
 
   return (
     <div className="p-4 space-y-4">
       <NotificationRefresh />
-      <div className="grid-cols-12 grid gap-4">
-        <div className="col-span-12 sm:col-span-6">
+      <div className="grid grid-cols-12 items-stretch gap-4">
+        <div className="col-span-12 sm:col-span-6 h-full">
           {isAccepted ? (
-            <div className="p-4 rounded-lg bg-linear-to-r from-Primary to-light-green">
+            <div className="flex h-full flex-col rounded-lg bg-linear-to-r from-Primary to-light-green p-4">
               <div>
                 <Button
                   variant="link"
@@ -130,7 +159,7 @@ const page = async ({
                 </Button>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-1 flex-col space-y-2">
                 <h2 className="text-lg font-semibold text-Secondary">
                   {campaign.campaignName}
                 </h2>
@@ -164,7 +193,7 @@ const page = async ({
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-auto pt-6">
                   <Button
                     size="lg"
                     className="w-full bg-linear-to-r from-Secondary to-white text-light-green hover:from-Secondary hover:to-white hover:text-light-green hover:bg-linear-to-r"
@@ -184,14 +213,14 @@ const page = async ({
         </div>
 
         {isAccepted && (
-          <div className="col-span-12 sm:col-span-6 space-y-4">
-            <div>
+          <div className="col-span-12 sm:col-span-6 grid h-full grid-rows-2 gap-4">
+            <div className="h-full">
               <DeadlineCard
                 startingDate={campaign.startingDate}
                 duration={campaign.duration}
               />
             </div>
-            <div>
+            <div className="h-full">
               <TotalEarningCard
                 amount={campaign.budgetBreakdown.estimatedAgencyProfit}
               />
@@ -219,10 +248,10 @@ const page = async ({
 
       <div className="grid-cols-12 grid gap-4">
         <div className="col-span-12 sm:col-span-4">
-          <ContentAssetCard />
+          <ContentAssetCard assets={contentAssets} />
         </div>
         <div className="col-span-12 sm:col-span-4">
-          <BrandAssetCard />
+          <BrandAssetCard assets={brandAssets} />
         </div>
         <div className="col-span-12 sm:col-span-4">
           <QuoteDetailsCard budgetBreakdown={campaign.budgetBreakdown} />
