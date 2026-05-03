@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +22,6 @@ import { notifyError } from "@/utils/toast_util";
 const LoginForm = () => {
   const t = useTranslations("login");
   const locale = useLocale();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const { setAuth } = useAuthStore();
@@ -69,7 +67,8 @@ const onSubmit = async (data: LoginFormValues) => {
       influencer: "influencer",
     };
 
-    const basePath = pathMap[payload.role || ""];
+    const normalizedRole = String(payload.role || "").toLowerCase();
+    const basePath = pathMap[normalizedRole];
 
     if (!basePath) {
       throw new Error("Invalid user role");
@@ -79,8 +78,7 @@ const onSubmit = async (data: LoginFormValues) => {
       ? `/${locale}/${basePath}/dashboard`
       : `/${locale}/${basePath}/unverified`;
 
-    router.replace(nextPath);
-    router.refresh();
+    window.location.replace(nextPath);
   } catch (error: any) {
     const status = error?.response?.status;
 

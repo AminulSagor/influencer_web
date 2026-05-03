@@ -65,7 +65,7 @@ const ReviewInfoCard = ({ campaign }: Props) => {
   const profileImg = campaign?.client?.profileImg || "/avatar/avatar.png";
 
   return (
-    <Card>
+    <Card className="h-full min-h-[190px]">
       <CardContent className="space-y-3">
         <h1 className="text-Primary font-semibold text-lg">
           {campaign?.campaignName || "Campaign Name"}

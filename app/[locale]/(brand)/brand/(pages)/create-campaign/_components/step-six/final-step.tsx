@@ -101,7 +101,7 @@ const FinalStep = () => {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-stretch">
         <ReviewInfoCard campaign={campaign} />
         <DeadlineCard campaign={campaign} />
       </div>

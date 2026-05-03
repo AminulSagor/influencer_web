@@ -23,31 +23,38 @@ import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import SubmissionProofs from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/submission-proof";
 import { toast } from "sonner";
 import { MilestoneService } from "@/service/influencer/milestone-service";
+import type { MilestoneSubmission } from "@/types/influencer/milestone_types";
 
 /* =======================
    TYPES
 ======================= */
+export type MetricInputValue = string | number;
+
 export type PerformanceMetric = {
-  reach?: number;
-  views?: number;
-  likes?: number;
-  comments?: number;
+  reach?: MetricInputValue;
+  views?: MetricInputValue;
+  likes?: MetricInputValue;
+  comments?: MetricInputValue;
 };
 
-export type Proof = {
-  liveLink: string;
-  performanceMetric: PerformanceMetric;
-  attachment?: string;
+export type LiveLink = {
+  url: string;
+};
+
+export type Attachment = {
+  attachment: string;
 };
 
 export type Submission = {
   description?: string;
-  proofs: Proof[];
+  liveLinks: LiveLink[];
+  performanceMetric: PerformanceMetric;
+  attachments: Attachment[];
   ownershipConfirmed: boolean;
   termsAccepted: boolean;
 };
@@ -59,22 +66,28 @@ export type FormType = {
 /* =======================
    ZOD SCHEMA
 ======================= */
+const metricInputSchema = z.union([z.string(), z.number()]).optional();
+
 const performanceMetricSchema = z.object({
-  reach: z.number().optional(),
-  views: z.number().optional(),
-  likes: z.number().optional(),
-  comments: z.number().optional(),
+  reach: metricInputSchema,
+  views: metricInputSchema,
+  likes: metricInputSchema,
+  comments: metricInputSchema,
 });
 
-const proofSchema = z.object({
-  liveLink: z.string().url("Invalid link"),
-  performanceMetric: performanceMetricSchema,
-  attachment: z.string().optional(),
+const liveLinkSchema = z.object({
+  url: z.string().trim().url("Invalid link"),
+});
+
+const attachmentSchema = z.object({
+  attachment: z.string().trim().min(1, "Proof attachment is required"),
 });
 
 const submissionSchema = z.object({
   description: z.string().optional(),
-  proofs: z.array(proofSchema),
+  liveLinks: z.array(liveLinkSchema).min(1, "At least one live link is required"),
+  performanceMetric: performanceMetricSchema,
+  attachments: z.array(attachmentSchema).min(1, "At least one proof is required"),
   ownershipConfirmed: z.boolean().refine((v) => v === true, {
     message: "You must confirm ownership",
   }),
@@ -87,43 +100,115 @@ const formSchema = z.object({
   submissions: z.array(submissionSchema),
 });
 
-const defaultValues: FormType = {
-  submissions: [
-    {
-      description: "",
-      proofs: [
-        {
-          liveLink: "",
-          attachment: undefined,
-          performanceMetric: {
-            reach: undefined,
-            views: undefined,
-            likes: undefined,
-            comments: undefined,
-          },
+function metricToInputValue(value?: number | null): string | undefined {
+  if (value === null || value === undefined) return undefined;
+
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return undefined;
+  if (numericValue === 0) return "0";
+
+  const formatCompact = (amount: number, suffix: "K" | "M") => {
+    const formatted = Number(amount.toFixed(1)).toString();
+    return `${formatted}${suffix}`;
+  };
+
+  if (Math.abs(numericValue) >= 1_000_000) {
+    return formatCompact(numericValue / 1_000_000, "M");
+  }
+
+  if (Math.abs(numericValue) >= 1_000) {
+    return formatCompact(numericValue / 1_000, "K");
+  }
+
+  return String(numericValue);
+}
+
+function createDefaultValues(initialSubmission?: MilestoneSubmission | null): FormType {
+  const liveLinks = initialSubmission?.submissionLiveLinks?.length
+    ? initialSubmission.submissionLiveLinks.map((url) => ({ url }))
+    : [{ url: "" }];
+
+  const attachments = initialSubmission?.submissionAttachments?.length
+    ? initialSubmission.submissionAttachments.map((attachment) => ({ attachment }))
+    : [{ attachment: "" }];
+
+  return {
+    submissions: [
+      {
+        description: initialSubmission?.submissionDescription || "",
+        liveLinks,
+        performanceMetric: {
+          reach: metricToInputValue(initialSubmission?.achievedReach),
+          views: metricToInputValue(initialSubmission?.achievedViews),
+          likes: metricToInputValue(initialSubmission?.achievedLikes),
+          comments: metricToInputValue(initialSubmission?.achievedComments),
         },
-      ],
-      ownershipConfirmed: false as unknown as true,
-      termsAccepted: false as unknown as true,
-    },
-  ],
-};
+        attachments,
+        ownershipConfirmed: Boolean(initialSubmission),
+        termsAccepted: Boolean(initialSubmission),
+      },
+    ],
+  };
+}
+
+
+function formatSubmissionStatus(status?: string | null) {
+  if (!status) return "In Review";
+
+  return status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function parseMetricInput(value: MetricInputValue | undefined): number | null {
+  if (value === undefined || value === null || value === "") return 0;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Math.round(value) : null;
+  }
+
+  const normalized = value.trim().replace(/,/g, "").toUpperCase();
+  if (!normalized) return 0;
+
+  const match = normalized.match(/^(\d+(?:\.\d+)?)([KM])?$/);
+  if (!match) return null;
+
+  const base = Number(match[1]);
+  if (!Number.isFinite(base)) return null;
+
+  const multiplier = match[2] === "M" ? 1_000_000 : match[2] === "K" ? 1_000 : 1;
+  return Math.round(base * multiplier);
+}
 
 interface SubmissionFormProps {
   milestoneId: string;
   onSubmitted?: () => void;
   resubmitSubmissionId?: string;
+  initialSubmission?: MilestoneSubmission | null;
 }
 
-const SubmissionForm = ({ milestoneId, onSubmitted, resubmitSubmissionId }: SubmissionFormProps) => {
-  const [status, setStatus] = useState("");
+const SubmissionForm = ({
+  milestoneId,
+  onSubmitted,
+  resubmitSubmissionId,
+  initialSubmission,
+}: SubmissionFormProps) => {
+  const [status, setStatus] = useState(
+    initialSubmission ? formatSubmissionStatus(initialSubmission.status) : ""
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormType>({
     resolver: zodResolver(formSchema),
-    defaultValues,
+    defaultValues: createDefaultValues(initialSubmission),
     mode: "onSubmit",
   });
+
+  useEffect(() => {
+    form.reset(createDefaultValues(initialSubmission));
+    setStatus(initialSubmission ? formatSubmissionStatus(initialSubmission.status) : "");
+  }, [form, initialSubmission]);
 
   const onSubmit = async (values: FormType) => {
     try {
@@ -131,23 +216,43 @@ const SubmissionForm = ({ milestoneId, onSubmitted, resubmitSubmissionId }: Subm
       const submission = values.submissions[0];
       if (!submission) return;
 
-      const liveLinks = submission.proofs.map((p) => p.liveLink).filter(Boolean);
-      const proofAttachments = submission.proofs
-        .map((p) => p.attachment)
-        .filter((a): a is string => typeof a === "string" && a.length > 0);
-      const achievedReach = submission.proofs.reduce((sum, p) => sum + (p.performanceMetric.reach || 0), 0);
-      const achievedViews = submission.proofs.reduce((sum, p) => sum + (p.performanceMetric.views || 0), 0);
-      const achievedLikes = submission.proofs.reduce((sum, p) => sum + (p.performanceMetric.likes || 0), 0);
-      const achievedComments = submission.proofs.reduce((sum, p) => sum + (p.performanceMetric.comments || 0), 0);
+      const liveLinks = submission.liveLinks
+        .map((item) => item.url.trim())
+        .filter(Boolean);
+      const proofAttachments = submission.attachments
+        .map((item) => item.attachment.trim())
+        .filter(Boolean);
+
+      const achievedViews = parseMetricInput(submission.performanceMetric.views);
+      const achievedReach = parseMetricInput(submission.performanceMetric.reach);
+      const achievedLikes = parseMetricInput(submission.performanceMetric.likes);
+      const achievedComments = parseMetricInput(submission.performanceMetric.comments);
+
+      const metricErrors = [
+        { value: achievedReach, path: "submissions.0.performanceMetric.reach" },
+        { value: achievedViews, path: "submissions.0.performanceMetric.views" },
+        { value: achievedLikes, path: "submissions.0.performanceMetric.likes" },
+        { value: achievedComments, path: "submissions.0.performanceMetric.comments" },
+      ];
+
+      const invalidMetric = metricErrors.find((item) => item.value === null);
+      if (invalidMetric) {
+        form.setError(invalidMetric.path as any, {
+          type: "manual",
+          message: "Use a number, 10K, or 1M",
+        });
+        toast.error("Use a number, 10K, or 1M for metrics.");
+        return;
+      }
 
       const payload = {
         description: submission.description || "",
         liveLinks,
         proofAttachments,
-        achievedViews,
-        achievedReach,
-        achievedLikes,
-        achievedComments,
+        achievedViews: achievedViews ?? 0,
+        achievedReach: achievedReach ?? 0,
+        achievedLikes: achievedLikes ?? 0,
+        achievedComments: achievedComments ?? 0,
       };
 
       if (resubmitSubmissionId) {
@@ -170,7 +275,7 @@ const SubmissionForm = ({ milestoneId, onSubmitted, resubmitSubmissionId }: Subm
   return (
     <div className="space-y-2">
       <div className="border rounded-xl p-4">
-        <Accordion type="single" collapsible>
+        <Accordion type="single" collapsible defaultValue="submission-0">
           <AccordionItem value="submission-0">
             <AccordionTrigger className="flex justify-between hover:no-underline cursor-pointer">
               <div className="flex items-center gap-4">

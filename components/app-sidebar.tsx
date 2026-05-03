@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -60,6 +61,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const locale = useLocale();
   const { logout, loading: logoutLoading } = useLogout();
 
   return (
@@ -73,6 +75,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
+                const href = `/${locale}${item.url}`;
                 const isActive = pathname.includes(item.url);
 
                 return (
@@ -84,7 +87,7 @@ export function AppSidebar() {
                         isActive && "bg-[#7A9B57] text-white"
                       )}
                     >
-                      <Link href={item.url}>
+                      <Link href={href}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>

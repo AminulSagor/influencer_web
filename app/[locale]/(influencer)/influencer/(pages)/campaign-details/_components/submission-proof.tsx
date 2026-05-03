@@ -12,6 +12,7 @@ import {
   Heart,
   MessageCircle,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { useFileUpload } from "@/hooks/useFileUpload";
-import type { FormType, PerformanceMetric, Proof } from "./submission-form";
+import type { FormType, PerformanceMetric } from "./submission-form";
 
 interface Props {
   control: Control<FormType>;
@@ -58,7 +59,7 @@ function AttachmentPreview({ value }: { value?: unknown }) {
 
   // Uploaded URL string
   if (typeof value === "string") {
-    const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(value);
+    const isImage = /\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)(\?|#|$)/i.test(value);
     if (isImage) {
       return (
         <img
@@ -71,9 +72,6 @@ function AttachmentPreview({ value }: { value?: unknown }) {
     return (
       <div className="flex flex-col items-center gap-1">
         <span className="text-sm font-medium text-light-green">File Uploaded</span>
-        <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-          {value.split("/").pop()}
-        </span>
       </div>
     );
   }
@@ -82,120 +80,132 @@ function AttachmentPreview({ value }: { value?: unknown }) {
 }
 
 const SubmissionProofs = ({ control, submissionIndex }: Props) => {
-  const proofsPath = `submissions.${submissionIndex}.proofs` as const;
-
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: liveLinkFields,
+    append: appendLiveLink,
+    remove: removeLiveLink,
+  } = useFieldArray({
     control,
-    name: proofsPath,
+    name: `submissions.${submissionIndex}.liveLinks` as const,
   });
 
-  const appendDefaultProof = () =>
-    append({
-      liveLink: "",
-      attachment: undefined,
-      performanceMetric: {
-        reach: undefined,
-        views: undefined,
-        likes: undefined,
-        comments: undefined,
-      },
-    } satisfies Proof);
+  const {
+    fields: attachmentFields,
+    append: appendAttachment,
+    remove: removeAttachment,
+  } = useFieldArray({
+    control,
+    name: `submissions.${submissionIndex}.attachments` as const,
+  });
 
   return (
-    <div className="space-y-4">
-      {fields.map((field, proofIndex) => (
-        <Card key={field.id}>
-          <CardContent className="space-y-4">
-            {/* Remove proof */}
-            <div className="flex justify-end">
-              {fields.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => remove(proofIndex)}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            <div className="flex flex-col xl:flex-row gap-4 xl:gap-20">
-              <div className="flex-1 space-y-4">
-                {/* Live Link */}
-                <FormField
-                  control={control}
-                  name={`submissions.${submissionIndex}.proofs.${proofIndex}.liveLink`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Add Live Link</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://instagram/p/acc..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Performance Metric */}
+    <Card>
+      <CardContent className="space-y-5 p-4">
+        <div className="space-y-3">
+          {liveLinkFields.map((linkField, linkIndex) => (
+            <FormField
+              key={linkField.id}
+              control={control}
+              name={`submissions.${submissionIndex}.liveLinks.${linkIndex}.url`}
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Performance Metrics</FormLabel>
+                  <FormLabel>Add Live Link</FormLabel>
                   <FormControl>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {metricItems.map(({ key, label, icon: Icon }) => (
-                        <FormField
-                          key={String(key)}
-                          control={control}
-                          name={`submissions.${submissionIndex}.proofs.${proofIndex}.performanceMetric.${key}`}
-                          render={({ field }) => (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Icon className="h-4 w-4" />
-                                <span>{label}</span>
-                              </div>
-
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={field.value ?? ""}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  field.onChange(v === "" ? undefined : Number(v));
-                                }}
-                              />
-                            </div>
-                          )}
-                        />
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="https://instagram.com/p/acc..."
+                        {...field}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => appendLiveLink({ url: "" })}
+                        className="h-9 w-9 border-light-green text-light-green hover:bg-light-green hover:text-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      {liveLinkFields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => removeLiveLink(linkIndex)}
+                          className="h-9 w-9"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              </div>
+              )}
+            />
+          ))}
+        </div>
 
-              <div className="flex-1">
-                <ProofAttachmentField
+        {/* Performance Metric */}
+        <FormItem>
+          <FormLabel>Performance Metrics</FormLabel>
+          <FormControl>
+            <div className="grid gap-4 md:grid-cols-2">
+              {metricItems.map(({ key, label, icon: Icon }) => (
+                <FormField
+                  key={String(key)}
                   control={control}
-                  submissionIndex={submissionIndex}
-                  proofIndex={proofIndex}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                  name={`submissions.${submissionIndex}.performanceMetric.${key}`}
+                  render={({ field }) => (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon className="h-4 w-4" />
+                        <span>{label}</span>
+                      </div>
 
-      {/* Add another proof */}
-      <button
-        type="button"
-        className="border border-light-green rounded-lg border-dashed py-6 w-full text-light-green font-semibold cursor-pointer transition-all duration-150"
-        onClick={appendDefaultProof}
-      >
-        + Add Another Live Links
-      </button>
-    </div>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0, 10K or 1M"
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value.toUpperCase();
+                          if (/^[0-9.,]*[KM]?$/.test(v) || v === "") {
+                            field.onChange(v === "" ? undefined : v);
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                />
+              ))}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {attachmentFields.map((attachmentField, attachmentIndex) => (
+            <ProofAttachmentField
+              key={attachmentField.id}
+              control={control}
+              submissionIndex={submissionIndex}
+              attachmentIndex={attachmentIndex}
+              canRemove={attachmentFields.length > 1}
+              onRemove={() => removeAttachment(attachmentIndex)}
+            />
+          ))}
+        </div>
+
+        {/* Add another proof */}
+        <button
+          type="button"
+          className="w-full cursor-pointer rounded-lg border border-dashed border-light-green py-6 font-semibold text-light-green transition-all duration-150 hover:bg-light-green hover:text-white"
+          onClick={() => appendAttachment({ attachment: "" })}
+        >
+          + Add Another Proof
+        </button>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -203,11 +213,15 @@ const SubmissionProofs = ({ control, submissionIndex }: Props) => {
 function ProofAttachmentField({
   control,
   submissionIndex,
-  proofIndex,
+  attachmentIndex,
+  canRemove,
+  onRemove,
 }: {
   control: Control<FormType>;
   submissionIndex: number;
-  proofIndex: number;
+  attachmentIndex: number;
+  canRemove: boolean;
+  onRemove: () => void;
 }) {
   const { upload, isUploading, progress } = useFileUpload({
     module: "brandguru/influencer/submissions",
@@ -216,14 +230,27 @@ function ProofAttachmentField({
   return (
     <FormField
       control={control}
-      name={`submissions.${submissionIndex}.proofs.${proofIndex}.attachment`}
+      name={`submissions.${submissionIndex}.attachments.${attachmentIndex}.attachment`}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Attach Proof (Screenshots, Videos)</FormLabel>
+          <div className="flex items-center justify-between gap-2">
+            <FormLabel>Attach Proof (Screenshots, Videos)</FormLabel>
+            {canRemove && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={onRemove}
+                className="h-8 w-8"
+              >
+                <TrashIcon className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
 
           <FormControl>
-            <label className={`group ${isUploading ? "pointer-events-none" : "cursor-pointer"}`}>
-              <div className="flex flex-col items-center justify-center gap-2 w-full h-40 border-2 border-dashed rounded-xl border-light-green bg-light-green/5 hover:bg-light-green/10 transition">
+            <label className={`group block ${isUploading ? "pointer-events-none" : "cursor-pointer"}`}>
+              <div className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-light-green bg-light-green/5 text-center transition hover:bg-light-green/10">
                 {isUploading ? (
                   <div className="flex flex-col items-center gap-2 w-3/4">
                     <Loader2 className="h-6 w-6 animate-spin text-light-green" />
@@ -246,6 +273,7 @@ function ProofAttachmentField({
                   if (result) {
                     field.onChange(result.publicUrl);
                   }
+                  e.target.value = "";
                 }}
               />
             </label>

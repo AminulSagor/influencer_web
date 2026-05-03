@@ -8,6 +8,7 @@ import { decodeJwtPayload } from "./storage/jwt_decoder";
 const intlMiddleware = createMiddleware({
   locales: routing.locales,
   defaultLocale: routing.defaultLocale,
+  localePrefix: "always",
 });
 
 // 2) Role mapping
@@ -70,7 +71,9 @@ export function proxy(req: NextRequest) {
 
   const isAuthed = Boolean(token && payload && !isExpired(payload.exp));
   const isVerified = Boolean(payload?.isVerified);
-  const role = payload?.role as RouteRole | undefined;
+  const role = payload?.role
+    ? (String(payload.role).toLowerCase() as RouteRole)
+    : undefined;
 
   const LOGIN = `/${locale}/login`;
 

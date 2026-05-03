@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import LocationSelectDialog from "./location-select-dialog";
@@ -10,6 +10,7 @@ import AddEditLocationDialog from "./add-edit-location-dialog";
 import { JobAddress, InfluencerAddress } from "@/types/influencer/job_types";
 import { InfluencerJobService } from "@/service/influencer/job-service";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export type SavedLocation = {
   id: string;
@@ -27,6 +28,8 @@ interface DeliveryLocationProps {
   onAddressSelect?: (addressId: string) => void;
 }
 
+const ITEMS_PER_PAGE = 3;
+
 const DeliveryLocation = ({
   deliveryAddress,
   needSampleProduct,
@@ -39,8 +42,8 @@ const DeliveryLocation = ({
   const [openSelect, setOpenSelect] = useState(false);
   const [openAddEdit, setOpenAddEdit] = useState(false);
   const [editingLocation, setEditingLocation] = useState<SavedLocation | null>(null);
+  const [page, setPage] = useState(0);
 
-  // Fetch addresses from API
   const fetchAddresses = async () => {
     try {
       setLoadingAddresses(true);
@@ -51,15 +54,24 @@ const DeliveryLocation = ({
           addressName: addr.addressName,
           thana: addr.thana,
           zilla: addr.zilla,
-          fullAddress: addr.fullAddress || `${addr.street || ""}, ${addr.thana}, ${addr.zilla}`,
+          fullAddress:
+            addr.fullAddress ||
+            [addr.street, addr.thana, addr.zilla].filter(Boolean).join(", "),
           isSelected: addr.isDefault || false,
           isDefault: addr.isDefault || false,
         })
       );
-      // If no address is marked as default, select the first one
+
+      if (deliveryAddress) {
+        mapped.forEach((loc) => {
+          loc.isSelected = loc.addressName === deliveryAddress.addressName;
+        });
+      }
+
       if (mapped.length > 0 && !mapped.some((loc) => loc.isSelected)) {
         mapped[0].isSelected = true;
       }
+
       setSavedLocations(mapped);
       const selected = mapped.find((loc) => loc.isSelected);
       if (selected && onAddressSelect) {
@@ -75,17 +87,30 @@ const DeliveryLocation = ({
   };
 
   useEffect(() => {
-    if (needSampleProduct) {
+    if (needSampleProduct && !deliveryAddress) {
       fetchAddresses();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needSampleProduct]);
+  }, [needSampleProduct, deliveryAddress?.addressName]);
 
-  // Get currently selected location
-  const selectedLocation =
-    savedLocations.find((loc) => loc.isSelected) || savedLocations[0];
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(savedLocations.length / ITEMS_PER_PAGE));
+    if (page > totalPages - 1) {
+      setPage(totalPages - 1);
+    }
+  }, [page, savedLocations.length]);
 
-  // Handle location selection — only one selected at a time
+  const totalPages = Math.max(1, Math.ceil(savedLocations.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const visibleLocations = useMemo(
+    () =>
+      savedLocations.slice(
+        currentPage * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+      ),
+    [savedLocations, currentPage]
+  );
+
   const handleSelectLocation = (addressName: string) => {
     setSavedLocations((prev) =>
       prev.map((loc) => ({
@@ -94,14 +119,12 @@ const DeliveryLocation = ({
       }))
     );
     setOpenSelect(false);
-    // Pass the id back for the accept job API
     const selected = savedLocations.find((loc) => loc.addressName === addressName);
     if (selected) {
       onAddressSelect?.(selected.id);
     }
   };
 
-  // Handle editing a location
   const handleEditLocation = (addressName: string) => {
     const locationToEdit = savedLocations.find((loc) => loc.addressName === addressName);
     if (locationToEdit) {
@@ -110,39 +133,52 @@ const DeliveryLocation = ({
     }
   };
 
-  // Handle adding a new location
   const handleAddLocation = () => {
     setEditingLocation(null);
     setOpenAddEdit(true);
   };
 
-  // After address saved, re-fetch
   const handleAddressCreated = () => {
     fetchAddresses();
   };
 
   return (
     <Card className="h-full shadow-md">
-      <CardContent className="p-4 flex flex-col gap-4">
-        {/* Header */}
-        <div className="flex items-center gap-2 text-Primary font-semibold">
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="flex items-center gap-2 text-Primary">
           <MapPin size={22} />
-          <h1>{t("Delivery Location")}</h1>
-        </div>
+          {t("Delivery Location")}
+        </CardTitle>
+      </CardHeader>
 
-        {/* Address list */}
+      <CardContent className="flex flex-col gap-4 p-4 pt-2">
         {needSampleProduct ? (
-          loadingAddresses ? (
+          deliveryAddress ? (
+            <div className="flex min-h-[88px] flex-col justify-center rounded-md border border-light-green bg-linear-to-l from-bg-white to-Secondary p-4">
+              <p className="font-semibold text-Primary">
+                {deliveryAddress.addressName}
+              </p>
+              <p className="mt-1 text-sm text-dark-gray">
+                {deliveryAddress.fullAddress ||
+                  [deliveryAddress.street, deliveryAddress.thana, deliveryAddress.zilla]
+                    .filter(Boolean)
+                    .join(", ")}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {[deliveryAddress.thana, deliveryAddress.zilla].filter(Boolean).join(", ")}
+              </p>
+            </div>
+          ) : loadingAddresses ? (
             <div className="space-y-2">
-              <Skeleton className="h-16 w-full rounded-md" />
-              <Skeleton className="h-16 w-full rounded-md" />
+              <Skeleton className="h-[88px] w-full rounded-md" />
+              <Skeleton className="h-[88px] w-full rounded-md" />
             </div>
           ) : savedLocations.length > 0 ? (
             <div className="space-y-3">
-              {savedLocations.map((location) => (
+              {visibleLocations.map((location) => (
                 <div
-                  key={location.addressName}
-                  className={`p-4 rounded-md border ${
+                  key={location.id || location.addressName}
+                  className={`min-h-[88px] rounded-md border p-4 ${
                     location.isSelected
                       ? "border-light-green bg-linear-to-l from-bg-white to-Secondary"
                       : "border-gray-200 bg-white"
@@ -153,20 +189,39 @@ const DeliveryLocation = ({
                       {location.addressName}
                     </p>
                     {location.isDefault && (
-                      <span className="text-xs font-medium text-light-green bg-light-green/10 px-2 py-0.5 rounded-full">
+                      <span className="rounded-full bg-light-green/10 px-2 py-0.5 text-xs font-medium text-light-green">
                         Default
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-dark-gray mt-1">
+                  <p className="mt-1 text-sm text-dark-gray">
                     {location.fullAddress}
                   </p>
                 </div>
               ))}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-1">
+                  {Array.from({ length: totalPages }).map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      aria-label={`Show delivery location page ${index + 1}`}
+                      onClick={() => setPage(index)}
+                      className={cn(
+                        "h-2.5 w-2.5 rounded-full transition-all",
+                        index === currentPage
+                          ? "w-5 bg-light-green"
+                          : "bg-light-green/30 hover:bg-light-green/60"
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No saved addresses. Please add a delivery address.
+              No delivery address selected yet.
             </p>
           )
         ) : (
@@ -175,8 +230,7 @@ const DeliveryLocation = ({
           </p>
         )}
 
-        {/* Show change/add dialogs when delivery is needed */}
-        {needSampleProduct && (
+        {needSampleProduct && !deliveryAddress && (
           <>
             <LocationSelectDialog
               open={openSelect}

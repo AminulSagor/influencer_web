@@ -13,6 +13,8 @@ import DeliveryLocation from "@/app/[locale]/(influencer)/influencer/(pages)/cam
 import CampaignBriefSection from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/campaign-brief-card";
 import MilestoneClient from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/[id]/milestone-client";
 import OfferedCard from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/offered.card";
+import CampaignEarningsCard from "@/app/[locale]/(influencer)/influencer/(pages)/campaign-details/_components/campaign-earnings-card";
+import { cn } from "@/lib/utils";
 
 import { InfluencerJobService } from "@/service/influencer/job-service";
 import { JobDetail } from "@/types/influencer/job_types";
@@ -23,8 +25,6 @@ const Page = () => {
 
   const [job, setJob] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>(undefined);
-
   const fetchJob = useCallback(async () => {
     if (!jobId) return;
     try {
@@ -47,18 +47,18 @@ const Page = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <Card className="lg:w-1/2 p-6 space-y-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+          <Card className="p-6 space-y-4 lg:w-1/2">
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
           </Card>
-          <div className="space-y-3 lg:w-1/2">
-            <Card className="p-6">
+          <div className="flex flex-col gap-3 lg:w-1/2">
+            <Card className="flex-1 p-6">
               <Skeleton className="h-16 w-full" />
             </Card>
-            <Card className="p-6">
+            <Card className="flex-1 p-6">
               <Skeleton className="h-10 w-full" />
             </Card>
           </div>
@@ -76,15 +76,18 @@ const Page = () => {
   }
 
   const isAccepted = job.status === "active" || job.status === "completed";
+  const showDeliveryLocation = job.campaign.needSampleProduct === true;
+  const showCampaignEarnings =
+    job.status !== "new_offer" && job.status !== "declined";
 
   return (
     <div className="space-y-4">
       {/* campaign details, deadline and offered amount */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="lg:w-1/2">
-          <CampaignDetailsCard job={job} onStatusChange={fetchJob} selectedAddressId={selectedAddressId} />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+        <div className="flex lg:w-1/2">
+          <CampaignDetailsCard job={job} onStatusChange={fetchJob} />
         </div>
-        <div className="space-y-3 lg:w-1/2">
+        <div className="flex flex-col gap-3 lg:w-1/2 lg:self-stretch">
           <DeadlineCard
             startingDate={job.campaign.startingDate}
             duration={job.campaign.duration}
@@ -93,18 +96,27 @@ const Page = () => {
         </div>
       </div>
 
-      {/* assets and delivery location */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="lg:w-3/5">
-          <ContentAssetCard assets={job.campaign.assets} />
-        </div>
-        <div className="lg:w-2/5">
+      {/* assets, delivery location and earnings */}
+      <div
+        className={cn(
+          "grid gap-4",
+          showDeliveryLocation && showCampaignEarnings
+            ? "lg:grid-cols-3"
+            : showDeliveryLocation || showCampaignEarnings
+              ? "lg:grid-cols-2"
+              : "grid-cols-1"
+        )}
+      >
+        <ContentAssetCard assets={job.campaign.assets} />
+        {showDeliveryLocation && (
           <DeliveryLocation
             deliveryAddress={job.deliveryAddress}
             needSampleProduct={job.campaign.needSampleProduct}
-            onAddressSelect={setSelectedAddressId}
           />
-        </div>
+        )}
+        {showCampaignEarnings && (
+          <CampaignEarningsCard campaignId={job.campaignId} />
+        )}
       </div>
 
       {/* campaign brief and terms & conditions */}

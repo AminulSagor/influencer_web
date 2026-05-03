@@ -25,28 +25,28 @@ const DeadlineCard = ({ startingDate, duration }: DeadlineCardProps) => {
   });
 
   return (
-    <Card className="bg-linear-to-r from-Primary to-light-green justify-between">
-      <CardHeader>
-        <CardTitle className="text-Secondary flex items-center gap-2">
+    <Card className="flex flex-1 flex-col justify-between bg-linear-to-r from-Primary to-light-green p-5 text-Secondary shadow-md">
+      <CardHeader className="p-0">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-Secondary">
           <FaClock />
           {t("Deadline")}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <h2 className="text-Secondary text-5xl font-bold">
+
+      <CardContent className="p-0 py-2">
+        <h2 className="text-4xl font-bold leading-none text-Secondary">
           {daysRemaining} {t("Days")}
         </h2>
-        <p className="text-Secondary ml-1 text-sm font-medium mt-1">
+        <p className="mt-1 text-sm font-medium text-Secondary">
           {t("Remaining")}
         </p>
       </CardContent>
-      <div className="px-6">
-        <div className="flex justify-between">
-          <p className="text-sm text-Secondary">{endDateLabel}</p>
-          <p className="text-sm text-Secondary">
-            {t("Remaining")}: {duration} {t("Days")}
-          </p>
-        </div>
+
+      <div className="flex justify-between gap-3 text-sm text-Secondary">
+        <p>{endDateLabel}</p>
+        <p>
+          Duration: {duration} {t("Days")}
+        </p>
       </div>
     </Card>
   );

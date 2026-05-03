@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,6 +14,9 @@ import { useTranslations } from "next-intl";
 import { BsDownload, BsFileEarmarkText } from "react-icons/bs";
 import { PiImageLight, PiVideoLight } from "react-icons/pi";
 import { CampaignAsset } from "@/types/influencer/job_types";
+import { cn } from "@/lib/utils";
+
+const ITEMS_PER_PAGE = 3;
 
 function getAssetIcon(mimeType: string) {
   if (mimeType?.startsWith("image/")) return <PiImageLight size={30} />;
@@ -32,44 +38,78 @@ interface ContentAssetCardProps {
 
 const ContentAssetCard = ({ assets }: ContentAssetCardProps) => {
   const t = useTranslations("influencer.campaign-details");
+  const [page, setPage] = useState(0);
+
+  const totalPages = Math.max(1, Math.ceil(assets.length / ITEMS_PER_PAGE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const visibleAssets = useMemo(
+    () =>
+      assets.slice(
+        currentPage * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+      ),
+    [assets, currentPage]
+  );
+
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="p-4 pb-2">
         <CardTitle className="text-Primary flex items-center gap-2">
           <BsDownload /> {t("Content Assets")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 p-4 pt-2">
         {assets.length === 0 ? (
           <p className="text-sm text-muted-foreground">No assets available</p>
         ) : (
-          assets.map((asset) => (
-            <Item
-              key={asset.id}
-              variant="outline"
-              className="text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
-            >
-              <div>{getAssetIcon(asset.mimeType)}</div>
-              <ItemContent>
-                <ItemTitle>{asset.description || asset.fileName}</ItemTitle>
-                <ItemDescription className="text-light-green text-xs">
-                  {asset.assetType} - {formatFileSize(asset.fileSize)}
-                </ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hover:text-light-green/90 border border-light-green"
-                  asChild
-                >
-                  <a href={asset.fileUrl} target="_blank" rel="noopener noreferrer" download>
-                    <BsDownload />
-                  </a>
-                </Button>
-              </ItemActions>
-            </Item>
-          ))
+          <>
+            {visibleAssets.map((asset) => (
+              <Item
+                key={asset.id}
+                variant="outline"
+                className="min-h-[88px] text-light-green border border-light-green bg-linear-to-r bg-white to-Secondary"
+              >
+                <div>{getAssetIcon(asset.mimeType)}</div>
+                <ItemContent>
+                  <ItemTitle>{asset.description || asset.fileName}</ItemTitle>
+                  <ItemDescription className="text-light-green text-xs">
+                    {asset.assetType} - {formatFileSize(asset.fileSize)}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hover:text-light-green/90 border border-light-green"
+                    asChild
+                  >
+                    <a href={asset.fileUrl} target="_blank" rel="noopener noreferrer">
+                      <BsDownload />
+                    </a>
+                  </Button>
+                </ItemActions>
+              </Item>
+            ))}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-2">
+                {Array.from({ length: totalPages }).map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={`Show content asset page ${index + 1}`}
+                    onClick={() => setPage(index)}
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full transition-all",
+                      index === currentPage
+                        ? "w-5 bg-light-green"
+                        : "bg-light-green/30 hover:bg-light-green/60"
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

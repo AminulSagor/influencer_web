@@ -11,6 +11,7 @@ export interface JobListItem {
   brandName: string;
   offeredAmount: number | string;
   totalAmount: number | string;
+  needSampleProduct?: boolean;
   status: JobStatus;
   startingDate: string;
   duration: number;
@@ -23,7 +24,7 @@ export interface JobListItem {
 
 export interface JobAddress {
   addressName: string;
-  street: string;
+  street?: string | null;
   thana: string;
   zilla: string;
   fullAddress: string;
@@ -109,6 +110,9 @@ export interface JobDetailMilestone {
   order: number;
   expectedLikes: number;
   expectedComments: number;
+  expectedViews?: number | null;
+  expectedReach?: number | null;
+  expectedFollows?: number | null;
   status: string;
 }
 
@@ -135,7 +139,10 @@ export interface JobDetailResponse {
 
 // POST /campaign/influencer/job/:jobId/accept
 export interface AcceptJobPayload {
-  addressId?: string;
+  addressName?: string;
+  thana?: string;
+  zilla?: string;
+  fullAddress?: string;
 }
 
 export interface AcceptJobResponse {

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,7 +10,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { FaUserEdit } from "react-icons/fa";
+import {
+  FaComment,
+  FaEye,
+  FaGlobe,
+  FaHeart,
+  FaPlay,
+  FaRegImages,
+  FaUserEdit,
+} from "react-icons/fa";
 import { MilestoneSubmission } from "@/types/influencer/milestone_types";
 
 interface SubmissionHistoryProps {
@@ -22,10 +33,81 @@ const statusBadge: Record<string, { label: string; className: string }> = {
   declined: { label: "Declined", className: "bg-red-500" },
 };
 
-const formatMetric = (val: number) => {
-  if (val >= 1000) return `${Math.round(val / 1000)}K`;
-  return val.toString();
+const formatMetric = (val?: number | null) => {
+  const numericValue = Number(val ?? 0);
+  if (numericValue >= 1000000) return `${Number((numericValue / 1000000).toFixed(1))}M`;
+  if (numericValue >= 1000) return `${Number((numericValue / 1000).toFixed(1))}K`;
+  return numericValue.toString();
 };
+
+function getSubmissionMetrics(submission: MilestoneSubmission) {
+  return [
+    { label: "Reach", value: submission.achievedReach, icon: FaEye },
+    { label: "Views", value: submission.achievedViews, icon: FaPlay },
+    { label: "Likes", value: submission.achievedLikes, icon: FaHeart },
+    { label: "Comments", value: submission.achievedComments, icon: FaComment },
+  ];
+}
+
+function getExternalHref(url: string) {
+  const trimmed = url.trim();
+
+  if (!trimmed) return "#";
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url);
+}
+
+function AttachmentPreviewLink({ attachment }: { attachment: string }) {
+  const href = getExternalHref(attachment);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (isVideoUrl(attachment)) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="block overflow-hidden rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100"
+      >
+        <video
+          src={href}
+          className="h-[180px] w-[180px] object-cover"
+          muted
+          preload="metadata"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="flex h-[180px] w-[180px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100"
+      aria-label="Open submitted proof"
+    >
+      {imageFailed ? (
+        <FaRegImages className="text-2xl text-gray-400" />
+      ) : (
+        <img
+          src={href}
+          alt="Submitted proof preview"
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      )}
+    </a>
+  );
+}
 
 const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
   if (submissions.length === 0) return null;
@@ -34,6 +116,9 @@ const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
     <div className="mt-8 space-y-4">
       {submissions.map((sub, index) => {
         const badge = statusBadge[sub.status] || { label: sub.status, className: "bg-gray-400" };
+        const liveLinks = sub.submissionLiveLinks ?? [];
+        const attachments = sub.submissionAttachments ?? [];
+
         return (
           <div key={sub.id} className="border rounded-lg px-4">
             <Accordion type="single" collapsible>
@@ -75,72 +160,66 @@ const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
                     )}
 
                     <Card>
-                      <CardContent className="grid grid-cols-6 gap-4">
-                        <div className="space-y-8 col-span-2">
-                          {sub.submissionLiveLinks.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium flex items-center gap-2">
-                                <FaUserEdit size={20} />
-                                Live Links
-                              </p>
-                              {sub.submissionLiveLinks.map((link, i) => (
-                                <a
-                                  key={i}
-                                  href={link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-light-green text-sm hover:underline block"
-                                >
-                                  {link}
-                                </a>
-                              ))}
-                            </div>
-                          )}
+                      <CardContent className="grid grid-cols-1 gap-6 p-4 lg:grid-cols-2">
+                        <div className="space-y-8">
                           <div className="space-y-1">
                             <p className="text-sm font-medium flex items-center gap-2">
-                              <FaUserEdit size={20} />
-                              Performance Metrics
+                              <FaGlobe size={16} />
+                              Platform / Live Link
                             </p>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Reach: </span>
-                                <span className="font-semibold">{formatMetric(sub.achievedReach)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Views: </span>
-                                <span className="font-semibold">{formatMetric(sub.achievedViews)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Likes: </span>
-                                <span className="font-semibold">{formatMetric(sub.achievedLikes)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Comments: </span>
-                                <span className="font-semibold">{formatMetric(sub.achievedComments)}</span>
-                              </div>
+                            <div className="space-y-1">
+                              {liveLinks.length > 0 ? (
+                                liveLinks.map((link, i) => (
+                                  <a
+                                    key={`${link}-${i}`}
+                                    href={getExternalHref(link)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block break-all text-sm text-Primary hover:underline"
+                                  >
+                                    {link}
+                                  </a>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-400">No live link</p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <p className="text-sm font-medium">Performance Metrics</p>
+                            <div className="grid grid-cols-2 gap-x-10 gap-y-8">
+                              {getSubmissionMetrics(sub).map(({ label, value, icon: Icon }) => (
+                                <div key={label} className="space-y-2">
+                                  <div className="flex items-center gap-2 text-base font-semibold text-black">
+                                    <Icon className="h-5 w-5" />
+                                    <span>{label}</span>
+                                  </div>
+                                  <p className="text-4xl font-bold leading-none text-black">
+                                    {formatMetric(value)}
+                                  </p>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
-                        <div className="col-span-4 space-y-2">
+                        <div className="space-y-2">
                           <p className="text-sm font-medium flex items-center gap-2">
-                            <FaUserEdit size={20} />
+                            <FaRegImages size={16} />
                             Proof Attachments
                           </p>
-                          <div className="flex gap-4 flex-wrap">
-                            {sub.submissionAttachments.length > 0 ? (
-                              sub.submissionAttachments.map((attachment, i) => (
-                                <a
-                                  key={i}
-                                  href={attachment}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="h-50 w-50 border border-dashed border-light-green bg-gray-50 rounded-lg flex items-center justify-center text-sm text-light-green hover:bg-light-green/10"
-                                >
-                                  View Attachment {i + 1}
-                                </a>
+                          <div className="flex flex-wrap gap-4">
+                            {attachments.length > 0 ? (
+                              attachments.map((attachment, i) => (
+                                <AttachmentPreviewLink
+                                  key={`${attachment}-${i}`}
+                                  attachment={attachment}
+                                />
                               ))
                             ) : (
-                              <p className="text-sm text-muted-foreground">No attachments</p>
+                              <div className="flex h-[180px] w-[180px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-400">
+                                No attachment
+                              </div>
                             )}
                           </div>
                         </div>

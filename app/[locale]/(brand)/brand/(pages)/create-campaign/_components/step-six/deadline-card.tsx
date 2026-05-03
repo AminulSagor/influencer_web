@@ -11,21 +11,21 @@ type Props = { campaign: Campaignservice | null };
 
 const DeadlineCard = ({ campaign }: Props) => {
   return (
-    <Card className="border-none bg-linear-to-r form-Primary to-light-green text-white bg-Primary">
-      <CardHeader>
-        <p className="flex gap-2 items-center">
-          <Clock size={14} />
-          <span className="font-semibold">Deadline</span>
+    <Card className="flex h-full min-h-[190px] flex-col border-none bg-linear-to-r from-Primary to-light-green text-white">
+      <CardHeader className="pb-2">
+        <p className="flex items-center gap-2 text-base font-semibold">
+          <Clock size={16} />
+          <span>Deadline</span>
         </p>
       </CardHeader>
 
-      <CardContent>
-        <h1 className="text-3xl font-bold t">
+      <CardContent className="flex-1 py-2">
+        <h1 className="text-3xl font-bold leading-tight">
           {campaign?.startingDate || "Not Selected"}
         </h1>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="mt-auto pt-2">
         <p className="text-sm">
           Duration: {campaign?.duration ?? "not selected"} days
         </p>

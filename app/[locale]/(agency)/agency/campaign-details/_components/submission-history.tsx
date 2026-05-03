@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +20,71 @@ import type {
 interface SubmissionHistoryProps {
   submissions: AgencyMilestoneSubmissionItem[];
   targetTitle?: MilestoneTargetTitle | null;
+}
+
+
+function getExternalHref(url: string) {
+  const trimmed = url.trim();
+
+  if (!trimmed) return "#";
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g|gif|webp|svg|bmp|avif)(\?|#|$)/i.test(url);
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url);
+}
+
+function AttachmentPreviewLink({ attachment }: { attachment: string }) {
+  const href = getExternalHref(attachment);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (isVideoUrl(attachment)) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="block overflow-hidden rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100"
+      >
+        <video
+          src={href}
+          className="h-[180px] w-[180px] object-cover"
+          muted
+          preload="metadata"
+        />
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="flex h-[180px] w-[180px] items-center justify-center overflow-hidden rounded-md border border-gray-200 bg-gray-50 hover:bg-gray-100"
+      aria-label="Open submitted proof"
+    >
+      {imageFailed && !isImageUrl(attachment) ? (
+        <FaRegImages className="text-2xl text-gray-400" />
+      ) : (
+        <img
+          src={href}
+          alt="Submitted proof preview"
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      )}
+    </a>
+  );
 }
 
 function formatSubmissionStatus(status: string) {
@@ -169,13 +235,16 @@ const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps)
 
                             <div className="space-y-1">
                               {liveLinks.length ? (
-                                liveLinks.map((link) => (
-                                  <p
-                                    key={link}
-                                    className="break-all text-sm text-Primary"
+                                liveLinks.map((link, linkIndex) => (
+                                  <a
+                                    key={`${link}-${linkIndex}`}
+                                    href={getExternalHref(link)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block break-all text-sm text-Primary hover:underline"
                                   >
                                     {link}
-                                  </p>
+                                  </a>
                                 ))
                               ) : (
                                 <p className="text-sm text-gray-400">No live link</p>
@@ -210,16 +279,11 @@ const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps)
 
                           <div className="flex flex-wrap gap-4">
                             {attachments.length ? (
-                              attachments.map((attachment) => (
-                                <a
-                                  key={attachment}
-                                  href={attachment}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="flex h-[180px] w-[180px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-3 text-center text-sm text-Primary hover:bg-gray-100"
-                                >
-                                  View Attachment
-                                </a>
+                              attachments.map((attachment, attachmentIndex) => (
+                                <AttachmentPreviewLink
+                                  key={`${attachment}-${attachmentIndex}`}
+                                  attachment={attachment}
+                                />
                               ))
                             ) : (
                               <div className="flex h-[180px] w-[180px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-400">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { ChevronRight } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ const formatPlatform = (platform?: string) => {
 };
 
 export default function LifetimeSummaryCard() {
+    const locale = useLocale();
     const [summary, setSummary] = useState<LifetimeSummaryData>(
         defaultLifetimeSummary
     );
@@ -110,7 +112,7 @@ export default function LifetimeSummaryCard() {
                     </div>
 
                     <Link
-                        href="/agency/jobs/completed"
+                        href={`/${locale}/agency/jobs/completed`}
                         className="border bg-secondary px-4 py-2 rounded-lg space-y-2 transition hover:bg-secondary/80"
                     >
                         <div className="flex flex-col justify-center gap-1 h-full">
@@ -128,7 +130,7 @@ export default function LifetimeSummaryCard() {
                     </Link>
 
                     <Link
-                        href="/agency/jobs/declined"
+                        href={`/${locale}/agency/jobs/declined`}
                         className="border bg-secondary px-4 py-2 rounded-lg space-y-2 transition hover:bg-secondary/80"
                     >
                         <div className="flex flex-col justify-center gap-1 h-full">

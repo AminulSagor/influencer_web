@@ -45,15 +45,20 @@ const MileStoneCard = ({ milestoneId }: MileStoneCardProps) => {
   const [milestone, setMilestone] = useState<MilestoneDetail | null>(null);
   const [status, setStatus] = useState<MilestoneStatus>("todo");
   const [submissions, setSubmissions] = useState<MilestoneSubmission[]>([]);
+  const [latestSubmission, setLatestSubmission] = useState<MilestoneSubmission | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchDetail = useCallback(async () => {
     try {
       setLoading(true);
       const res = await MilestoneService.getMilestoneDetail(milestoneId);
+      const nextSubmissions = res.data.submissions ?? [];
       setMilestone(res.data.milestone);
       setStatus(res.data.status);
-      setSubmissions(res.data.submissions);
+      setSubmissions(nextSubmissions);
+      setLatestSubmission(
+        res.data.latestSubmission ?? nextSubmissions[0] ?? nextSubmissions[nextSubmissions.length - 1] ?? null
+      );
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to load milestone details"
@@ -188,15 +193,20 @@ const MileStoneCard = ({ milestoneId }: MileStoneCardProps) => {
           <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
         )}
 
-        {status === "declined" && submissions.length > 0 && (
+        {(status === "declined" || status === "in_review") && latestSubmission && (
           <SubmissionForm
             milestoneId={milestoneId}
             onSubmitted={fetchDetail}
-            resubmitSubmissionId={submissions[submissions.length - 1]?.id}
+            resubmitSubmissionId={latestSubmission.id}
+            initialSubmission={latestSubmission}
           />
         )}
 
-        {(status === "paid" || status === "in_review" || status === "approved" || status === "partial_paid") &&
+        {status === "declined" && !latestSubmission && (
+          <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
+        )}
+
+        {(status === "paid" || status === "approved" || status === "partial_paid") &&
           submissions.length > 0 && (
             <SubmissionHistory submissions={submissions} />
           )}

@@ -31,10 +31,11 @@ export interface MilestoneDetail {
   platform: string;
   contentQuantity: string;
   deliveryDays: number;
-  expectedReach: number;
-  expectedViews: number;
-  expectedLikes: number;
-  expectedComments: number;
+  expectedReach: number | null;
+  expectedViews: number | null;
+  expectedLikes: number | null;
+  expectedComments: number | null;
+  expectedFollows?: number | null;
   promotionGoal: string | null;
   order: number;
   createdAt: string;
@@ -56,6 +57,7 @@ export interface MilestoneSubmission {
   achievedViews: number;
   achievedLikes: number;
   achievedComments: number;
+  achievedFollows?: number | null;
   paidAmount: string;
   paymentStatus: string;
   adminFeedback: string | null;
@@ -166,11 +168,22 @@ export interface SubmissionDetailResponse {
 }
 
 // GET /campaign/influencer/campaign/:campaignId/withdrawable-balance
+export interface WithdrawableBalanceData {
+  campaignId: string;
+  campaignName: string;
+  totalBudget: number;
+  financials: {
+    totalInReview: number;
+    totalApproved: number;
+    totalPaid: number;
+    pendingWithdrawalAmount: number;
+    availableToWithdraw: number;
+  };
+}
+
 export interface WithdrawableBalanceResponse {
   success: boolean;
-  data: {
-    withdrawableBalance: number;
-  };
+  data: WithdrawableBalanceData;
 }
 
 // POST /campaign/influencer/withdrawal/request
