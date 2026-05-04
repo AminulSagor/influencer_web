@@ -3,10 +3,13 @@ import { ServiceResponse } from "@/types/service-response";
 
 export type SubmissionReportItem = {
   id: string;
+  milestoneId?: string;
+  authorId?: string;
   content: string;
-  authorRole: string;
-  actionTaken: string;
-  createdAt: string;
+  authorRole?: string;
+  actionTaken?: string;
+  createdAt?: string;
+  date?: string;
 };
 
 export type CreateSubmissionReportPayload = {

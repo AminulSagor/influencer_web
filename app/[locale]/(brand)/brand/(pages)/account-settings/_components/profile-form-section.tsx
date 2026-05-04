@@ -12,8 +12,6 @@ type Props = {
   isSaving: boolean;
   email: string;
   phone: string;
-  nidNumber: string;
-  binNumber: string;
   errors: Partial<Record<keyof ProfileFormState, string>>;
   onChange: (field: keyof ProfileFormState, value: string) => void;
 };
@@ -24,8 +22,6 @@ const ProfileFormSection = ({
   isSaving,
   email,
   phone,
-  nidNumber,
-  binNumber,
   errors,
   onChange,
 }: Props) => {
@@ -116,24 +112,6 @@ const ProfileFormSection = ({
         </div>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-3">
-
-        <ProfileField label={t("fields.nidNumber")}>
-          <Input
-            value={nidNumber}
-            readOnly
-            className="h-10 border-light-green/25 bg-muted/30"
-          />
-        </ProfileField>
-
-        <ProfileField label={t("fields.binNumber")}>
-          <Input
-            value={binNumber}
-            readOnly
-            className="h-10 border-light-green/25 bg-muted/30"
-          />
-        </ProfileField>
-      </div>
 
       <ProfileField
         label={t("fields.fullAddress")}
@@ -149,15 +127,6 @@ const ProfileFormSection = ({
         />
       </ProfileField>
 
-      <ProfileField label={t("fields.website")} error={errors.website}>
-        <Input
-          value={form.website}
-          onChange={(e) => onChange("website", e.target.value)}
-          disabled={isDisabled}
-          placeholder={t("fields.website")}
-          className="h-10 border-light-green/25 focus-visible:ring-1 focus-visible:ring-light-green/30"
-        />
-      </ProfileField>
     </div>
   );
 };

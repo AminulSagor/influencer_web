@@ -1,10 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import BrandAssetCard from "../_components/brand-asset-card";
-import CampaignDetailsCard from "../_components/campaign-details-card";
 import ContentAssetCard from "../_components/content-asset-card";
 import DeadlineCard from "../_components/deadline-card";
 import QuoteDetailsCard from "../_components/quote-details-card";
-import RequoteTimeLeftCard from "../_components/requote-time-left-card";
 import CampaignBrief from "../_components/campaign-brief";
 import TermsAndConditions from "../_components/terms-and-conditions";
 import TotalEarningCard from "../_components/total-earning-card";
@@ -16,6 +14,7 @@ import { RiInstagramFill, RiYoutubeFill } from "react-icons/ri";
 import { AiFillTikTok } from "react-icons/ai";
 import MilestoneClient from "./milestone-client";
 import NotificationRefresh from "./notification-refresh";
+import PendingCampaignHeader from "./pending-campaign-header";
 import { getAgencyCampaignDetails } from "@/service/agency/job-details";
 import type { AgencyCampaignMilestone } from "@/types/agency/job-details";
 import type { MilestoneTargetTitle } from "@/types/agency/campaign/milestone-submission.types";
@@ -51,6 +50,13 @@ const mapMilestoneStatus = (status: string) => {
   }
   if (normalized === "in_review" || normalized === "in-review") {
     return IN_REVIEW;
+  }
+  if (
+    normalized === "declined" ||
+    normalized === "decline" ||
+    normalized === "rejected"
+  ) {
+    return "Declined";
   }
 
   return TODO;
@@ -143,106 +149,87 @@ const page = async ({
     <div className="p-4 space-y-4">
       <NotificationRefresh />
       <div className="grid grid-cols-12 items-stretch gap-4">
-        <div className="col-span-12 sm:col-span-6 h-full">
-          {isAccepted ? (
-            <div className="flex h-full flex-col rounded-lg bg-linear-to-r from-Primary to-light-green p-4">
-              <div>
-                <Button
-                  variant="link"
-                  asChild
-                  className="has-[>svg]:px-0 text-dark-gray font-medium"
-                >
-                  <Link href={`/${locale}/agency/jobs`}>
-                    <BiSolidLeftArrow />
-                    Back to Campaigns
-                  </Link>
-                </Button>
-              </div>
-
-              <div className="flex flex-1 flex-col space-y-2">
-                <h2 className="text-lg font-semibold text-Secondary">
-                  {campaign.campaignName}
-                </h2>
-
-                <div className="flex items-center gap-2">
-                  <Avatar>
-                    <AvatarImage src={campaign.client.profileImg ?? ""} />
-                    <AvatarFallback>
-                      {campaign.client.brandName?.charAt(0) ?? "B"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="text-Secondary text-sm font-medium">
-                    {campaign.client.brandName}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <p className="text-Secondary text-sm font-medium">
-                    Platforms
-                  </p>
-                  <div className="flex gap-2">
-                    <span>
-                      <RiInstagramFill size={30} className="fill-Secondary" />
-                    </span>
-                    <span>
-                      <RiYoutubeFill size={30} className="fill-Secondary" />
-                    </span>
-                    <span>
-                      <AiFillTikTok size={30} className="fill-Secondary" />
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-6">
+        {isAccepted ? (
+          <>
+            <div className="col-span-12 h-full sm:col-span-6">
+              <div className="flex h-full flex-col rounded-lg bg-linear-to-r from-Primary to-light-green p-4">
+                <div>
                   <Button
-                    size="lg"
-                    className="w-full bg-linear-to-r from-Secondary to-white text-light-green hover:from-Secondary hover:to-white hover:text-light-green hover:bg-linear-to-r"
+                    variant="link"
+                    asChild
+                    className="has-[>svg]:px-0 text-dark-gray font-medium"
                   >
-                    Ongoing Campaign
+                    <Link href={`/${locale}/agency/jobs`}>
+                      <BiSolidLeftArrow />
+                      Back to Campaigns
+                    </Link>
                   </Button>
+                </div>
+
+                <div className="flex flex-1 flex-col space-y-2">
+                  <h2 className="text-lg font-semibold text-Secondary">
+                    {campaign.campaignName}
+                  </h2>
+
+                  <div className="flex items-center gap-2">
+                    <Avatar>
+                      <AvatarImage src={campaign.client.profileImg ?? ""} />
+                      <AvatarFallback>
+                        {campaign.client.brandName?.charAt(0) ?? "B"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-Secondary text-sm font-medium">
+                      {campaign.client.brandName}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <p className="text-Secondary text-sm font-medium">
+                      Platforms
+                    </p>
+                    <div className="flex gap-2">
+                      <span>
+                        <RiInstagramFill
+                          size={30}
+                          className="fill-Secondary"
+                        />
+                      </span>
+                      <span>
+                        <RiYoutubeFill size={30} className="fill-Secondary" />
+                      </span>
+                      <span>
+                        <AiFillTikTok size={30} className="fill-Secondary" />
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-6">
+                    <Button
+                      size="lg"
+                      className="w-full bg-linear-to-r from-Secondary to-white text-light-green hover:from-Secondary hover:to-white hover:text-light-green hover:bg-linear-to-r"
+                    >
+                      Ongoing Campaign
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          ) : (
-            <CampaignDetailsCard
-              isAccepted={false}
-              campaign={campaign}
-              forceQuotedView={isForcedQuotedView}
-            />
-          )}
-        </div>
 
-        {isAccepted && (
-          <div className="col-span-12 sm:col-span-6 grid h-full grid-rows-2 gap-4">
-            <div className="h-full">
+            <div className="col-span-12 flex flex-col gap-4 sm:col-span-6">
               <DeadlineCard
                 startingDate={campaign.startingDate}
                 duration={campaign.duration}
               />
-            </div>
-            <div className="h-full">
               <TotalEarningCard
                 amount={campaign.budgetBreakdown.estimatedAgencyProfit}
               />
             </div>
-          </div>
-        )}
-
-        {!isAccepted && (
-          <>
-            <div className="col-span-12 sm:col-span-3">
-              <RequoteTimeLeftCard
-                timeLeftToRequoteMinutes={campaign.timeLeftToRequoteMinutes}
-                invitedAt={campaign.invitedAt}
-              />
-            </div>
-            <div className="col-span-12 sm:col-span-3">
-              <DeadlineCard
-                startingDate={campaign.startingDate}
-                duration={campaign.duration}
-              />
-            </div>
           </>
+        ) : (
+          <PendingCampaignHeader
+            campaign={campaign}
+            forceQuotedView={isForcedQuotedView}
+          />
         )}
       </div>
 

@@ -67,9 +67,9 @@ const MilestoneClient = ({ jobId, isAccepted }: Props) => {
           onSelectMilestone={setSelectedMilestone}
         />
       </div>
-      {isAccepted && selectedMilestone && (
+      {selectedMilestone && (
         <div>
-          <MileStoneCard milestoneId={selectedMilestone.id} />
+          <MileStoneCard milestoneId={selectedMilestone.id} canSubmit={isAccepted} />
         </div>
       )}
     </>

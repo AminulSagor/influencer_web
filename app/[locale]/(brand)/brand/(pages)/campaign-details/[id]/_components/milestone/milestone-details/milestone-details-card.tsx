@@ -21,6 +21,7 @@ import MilestoneBonusCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-de
 import SubmissionReportActions from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-details/submissions/submission-report-actions";
 import { useMilestoneStatusStore } from "@/store/use-milestone-status-store";
 import { reviewSubmission } from "@/service/client/campaigns/campaign-submission.service";
+import { useCampaignDetails } from "../../campaign-details-provider";
 
 type Props = {
   campaign: ClientCampaignDetails;
@@ -68,6 +69,7 @@ export default function MilestoneDetailsCard({
 }: Props) {
   const router = useRouter();
   const t = useTranslations("brand.CampaignDetailsPage");
+  const { refreshCampaign } = useCampaignDetails();
 
   const [selectedSubmissionIds, setSelectedSubmissionIds] = React.useState<
     string[]
@@ -120,6 +122,8 @@ export default function MilestoneDetailsCard({
         ...(isInfluencerPromotion ? {} : { submissionIds }),
       });
 
+      await refreshCampaign();
+      window.dispatchEvent(new Event("campaign-details-submissions:refresh"));
       router.refresh();
     } catch (error) {
       console.error("Approve submission failed:", error);
@@ -146,6 +150,8 @@ export default function MilestoneDetailsCard({
       });
 
       removeMilestoneOverride(milestone.id);
+      await refreshCampaign();
+      window.dispatchEvent(new Event("campaign-details-submissions:refresh"));
       router.refresh();
     } catch (error) {
       console.error("Decline submission failed:", error);

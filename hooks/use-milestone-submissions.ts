@@ -42,6 +42,23 @@ export function useMilestoneSubmissions({
   >({});
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleRefresh = () => setRefreshKey((key) => key + 1);
+
+    window.addEventListener(
+      "campaign-details-submissions:refresh",
+      handleRefresh,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "campaign-details-submissions:refresh",
+        handleRefresh,
+      );
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!enabled || !campaignId || !milestoneId) {
@@ -118,6 +135,7 @@ export function useMilestoneSubmissions({
     campaignType,
     assignedInfluencers,
     enabled,
+    refreshKey,
   ]);
 
   return { items, prefetchedDetailsById, isLoading, error };

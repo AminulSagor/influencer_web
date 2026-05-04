@@ -23,6 +23,23 @@ export function useSubmissionDetails({
   );
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleRefresh = () => setRefreshKey((key) => key + 1);
+
+    window.addEventListener(
+      "campaign-details-submissions:refresh",
+      handleRefresh,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "campaign-details-submissions:refresh",
+        handleRefresh,
+      );
+    };
+  }, []);
 
   React.useEffect(() => {
     setItem(prefetchedDetail ?? null);
@@ -66,7 +83,7 @@ export function useSubmissionDetails({
     return () => {
       ignore = true;
     };
-  }, [submissionId, enabled, campaignType]);
+  }, [submissionId, enabled, campaignType, refreshKey]);
 
   return { item, isLoading, error };
 }

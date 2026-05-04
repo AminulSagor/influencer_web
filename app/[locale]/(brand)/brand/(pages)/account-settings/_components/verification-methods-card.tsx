@@ -261,40 +261,39 @@ export default function VerificationMethodsCard() {
     setIsSaving(true);
 
     try {
+      const [uploadedNidFrontUrl, uploadedNidBackUrl, uploadedTradeLicenseUrl, uploadedTinUrl] =
+        await Promise.all([
+          uploads.nidFront.file
+            ? uploadVerificationFile(uploads.nidFront.file, "brandguru/client/profile")
+            : Promise.resolve(null),
+          uploads.nidBack.file
+            ? uploadVerificationFile(uploads.nidBack.file, "brandguru/client/profile")
+            : Promise.resolve(null),
+          uploads.tradeLicense.file
+            ? uploadVerificationFile(uploads.tradeLicense.file, "brandguru/client/docs")
+            : Promise.resolve(null),
+          uploads.tinCertificate.file
+            ? uploadVerificationFile(uploads.tinCertificate.file, "brandguru/client/docs")
+            : Promise.resolve(null),
+        ]);
+
+      if (
+        (uploads.nidFront.file && !uploadedNidFrontUrl) ||
+        (uploads.nidBack.file && !uploadedNidBackUrl) ||
+        (uploads.tradeLicense.file && !uploadedTradeLicenseUrl) ||
+        (uploads.tinCertificate.file && !uploadedTinUrl)
+      ) {
+        notifyError(t("messages_v.uploadFailed"));
+        return;
+      }
+
       let nextProfile: BrandProfile = { ...profile };
 
       if (hasNidChanged) {
-        let nidFrontImg = uploads.nidFront.existingUrl;
-        let nidBackImg = uploads.nidBack.existingUrl;
-
-        if (uploads.nidFront.file) {
-          const uploadedUrl = await uploadVerificationFile(
-            uploads.nidFront.file,
-            "brandguru/client/profile",
-          );
-          if (!uploadedUrl) {
-            notifyError(t("messages_v.uploadFailed"));
-            return;
-          }
-          nidFrontImg = uploadedUrl;
-        }
-
-        if (uploads.nidBack.file) {
-          const uploadedUrl = await uploadVerificationFile(
-            uploads.nidBack.file,
-            "brandguru/client/profile",
-          );
-          if (!uploadedUrl) {
-            notifyError(t("messages_v.uploadFailed"));
-            return;
-          }
-          nidBackImg = uploadedUrl;
-        }
-
         const nidPayload = {
           nidNumber: normalizeText(form.nidNumber),
-          nidFrontImg,
-          nidBackImg,
+          nidFrontImg: uploadedNidFrontUrl ?? uploads.nidFront.existingUrl,
+          nidBackImg: uploadedNidBackUrl ?? uploads.nidBack.existingUrl,
         };
 
         const validation = clientNidUpdateSchema.safeParse(nidPayload);
@@ -325,23 +324,10 @@ export default function VerificationMethodsCard() {
       }
 
       if (hasTradeLicenseChanged) {
-        let tradeLicenseImg = uploads.tradeLicense.existingUrl;
-
-        if (uploads.tradeLicense.file) {
-          const uploadedUrl = await uploadVerificationFile(
-            uploads.tradeLicense.file,
-            "brandguru/client/docs",
-          );
-          if (!uploadedUrl) {
-            notifyError(t("messages_v.uploadFailed"));
-            return;
-          }
-          tradeLicenseImg = uploadedUrl;
-        }
-
         const tradeLicensePayload = {
           tradeLicenseNumber: normalizeText(form.tradeLicenseNumber),
-          tradeLicenseImg,
+          tradeLicenseImg:
+            uploadedTradeLicenseUrl ?? uploads.tradeLicense.existingUrl,
         };
 
         const validation =
@@ -371,23 +357,9 @@ export default function VerificationMethodsCard() {
       }
 
       if (hasTinChanged) {
-        let tinImage = uploads.tinCertificate.existingUrl;
-
-        if (uploads.tinCertificate.file) {
-          const uploadedUrl = await uploadVerificationFile(
-            uploads.tinCertificate.file,
-            "brandguru/client/docs",
-          );
-          if (!uploadedUrl) {
-            notifyError(t("messages_v.uploadFailed"));
-            return;
-          }
-          tinImage = uploadedUrl;
-        }
-
         const tinPayload = {
           tinNumber: normalizeText(form.tinNumber),
-          tinImage,
+          tinImage: uploadedTinUrl ?? uploads.tinCertificate.existingUrl,
         };
 
         const validation = clientTinUpdateSchema.safeParse(tinPayload);
@@ -458,27 +430,23 @@ export default function VerificationMethodsCard() {
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1" className="border-none">
             <AccordionTrigger className="py-0 hover:no-underline">
-              <div className="flex w-full items-center justify-between pr-16">
+              <div className="flex w-full items-center justify-between pr-64">
                 <h1 className="text-base font-semibold text-orange">
                   {t("verification.title")}
                 </h1>
               </div>
             </AccordionTrigger>
 
-            <button
-              type="button"
+            <Link
+              href={`/${locale}/brand/account-settings/varification-checklist`}
               className="absolute top-4.5 left-[210px] hidden text-dark-gray hover:text-orange md:inline-flex"
               aria-label={t("verification.open")}
               title={t("verification.open")}
             >
-              <Link
-                href={`/${locale}/brand/account-settings/varification-checklist`}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-            </button>
+              <ExternalLink className="h-4 w-4" />
+            </Link>
 
-            <div className="absolute top-4 right-6 flex items-center gap-3">
+            <div className="absolute top-4 right-16 flex items-center gap-3">
               {isEditing && (
                 <Button
                   type="button"

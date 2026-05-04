@@ -21,6 +21,7 @@ import {
 
 interface MileStoneCardProps {
   milestoneId: string;
+  canSubmit?: boolean;
 }
 
 const statusConfig: Record<MilestoneStatus, { border: string; text: string; badge: string }> = {
@@ -29,7 +30,7 @@ const statusConfig: Record<MilestoneStatus, { border: string; text: string; badg
   approved: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
   paid: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
   partial_paid: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
-  declined: { border: "from-white to bg-red-300 border-red-300", text: "text-red-400", badge: "bg-red-400" },
+  declined: { border: "from-[#FFF8F8] to-[#FFF8F8] border-[#FF5A5A]", text: "text-[#FF1616]", badge: "bg-[#FF1616] text-white" },
 };
 
 const statusLabel: Record<MilestoneStatus, string> = {
@@ -41,7 +42,7 @@ const statusLabel: Record<MilestoneStatus, string> = {
   declined: "Declined",
 };
 
-const MileStoneCard = ({ milestoneId }: MileStoneCardProps) => {
+const MileStoneCard = ({ milestoneId, canSubmit = true }: MileStoneCardProps) => {
   const [milestone, setMilestone] = useState<MilestoneDetail | null>(null);
   const [status, setStatus] = useState<MilestoneStatus>("todo");
   const [submissions, setSubmissions] = useState<MilestoneSubmission[]>([]);
@@ -189,11 +190,11 @@ const MileStoneCard = ({ milestoneId }: MileStoneCardProps) => {
             </div>
           </div>
         </div>
-        {status === "todo" && (
+        {canSubmit && status === "todo" && (
           <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
         )}
 
-        {(status === "declined" || status === "in_review") && latestSubmission && (
+        {canSubmit && (status === "declined" || status === "in_review") && latestSubmission && (
           <SubmissionForm
             milestoneId={milestoneId}
             onSubmitted={fetchDetail}
@@ -202,13 +203,13 @@ const MileStoneCard = ({ milestoneId }: MileStoneCardProps) => {
           />
         )}
 
-        {status === "declined" && !latestSubmission && (
+        {canSubmit && status === "declined" && !latestSubmission && (
           <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
         )}
 
-        {(status === "paid" || status === "approved" || status === "partial_paid") &&
-          submissions.length > 0 && (
-            <SubmissionHistory submissions={submissions} />
+        {submissions.length > 0 &&
+          !(canSubmit && (status === "declined" || status === "in_review") && latestSubmission) && (
+            <SubmissionHistory submissions={submissions} milestoneStatus={status} />
           )}
       </CardContent>
     </Card>

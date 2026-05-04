@@ -19,7 +19,7 @@ import { notifyError, notifySuccess } from "@/utils/toast_util";
 
 interface RequestToRequoteProps {
   campaignId: string;
-  setIsQuotationSent: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsQuotationSent: (value: boolean) => void;
 }
 
 const RequestToRequote = ({

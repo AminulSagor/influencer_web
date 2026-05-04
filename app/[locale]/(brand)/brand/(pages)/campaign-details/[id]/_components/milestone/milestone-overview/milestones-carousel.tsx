@@ -28,7 +28,7 @@ const getStatusLabel = (status?: string) => {
   if (value === "completed") return "Completed";
   if (value === "approved" || value === "accepted") return "Completed";
   if (value === "in_review" || value === "in_progress") return "In Review";
-  if (value === "declined") return "Declined";
+  if (value === "declined" || value === "decline" || value === "rejected") return "Declined";
   if (value === "pending") return "Pending";
 
   if (!value) return "Pending";
@@ -79,7 +79,7 @@ const getStatusClasses = (status?: string) => {
     };
   }
 
-  if (value === "declined") {
+  if (value === "declined" || value === "decline" || value === "rejected") {
     return {
       card: "border-red-500 bg-linear-to-r from-white to-red-500/10",
       activeBorder: "ring-red-500 border-[3px] border-red-500",

@@ -22,13 +22,65 @@ interface PaymentMilestoneProps {
   onSelectMilestone: (m: MilestoneListItem) => void;
 }
 
-const statusStyles: Record<MilestoneStatus, { border: string; bg: string; text: string; badge: string; circle: string }> = {
-  todo: { border: "border-gray-200", bg: "bg-linear-to-r from-white to-light-gray", text: "text-dark-gray", badge: "bg-dark-gray", circle: "bg-dark-gray" },
-  in_review: { border: "border-orange-400", bg: "bg-linear-to-r from-orange/20 to-white", text: "text-orange", badge: "bg-orange", circle: "bg-orange" },
-  approved: { border: "border-light-green", bg: "bg-linear-to-r from-Secondary to-white", text: "text-light-green", badge: "bg-light-green", circle: "bg-light-green" },
-  paid: { border: "border-light-green", bg: "bg-linear-to-r from-Secondary to-white", text: "text-light-green", badge: "bg-light-green", circle: "bg-light-green" },
-  partial_paid: { border: "border-light-green", bg: "bg-linear-to-r from-Secondary to-white", text: "text-light-green", badge: "bg-light-green", circle: "bg-light-green" },
-  declined: { border: "border-red-500", bg: "bg-linear-to-r from-red-100/70 to-white", text: "text-red-500", badge: "bg-red-500", circle: "bg-red-500" },
+const statusStyles: Record<
+  MilestoneStatus,
+  {
+    border: string;
+    bg: string;
+    text: string;
+    badge: string;
+    circle: string;
+    activeRing: string;
+  }
+> = {
+  todo: {
+    border: "border-gray-200",
+    bg: "bg-linear-to-r from-white to-light-gray",
+    text: "text-dark-gray",
+    badge: "bg-dark-gray",
+    circle: "bg-dark-gray",
+    activeRing: "ring-light-green",
+  },
+  in_review: {
+    border: "border-orange-400",
+    bg: "bg-linear-to-r from-orange/20 to-white",
+    text: "text-orange",
+    badge: "bg-orange",
+    circle: "bg-orange",
+    activeRing: "ring-orange",
+  },
+  approved: {
+    border: "border-light-green",
+    bg: "bg-linear-to-r from-Secondary to-white",
+    text: "text-light-green",
+    badge: "bg-light-green",
+    circle: "bg-light-green",
+    activeRing: "ring-light-green",
+  },
+  paid: {
+    border: "border-light-green",
+    bg: "bg-linear-to-r from-Secondary to-white",
+    text: "text-light-green",
+    badge: "bg-light-green",
+    circle: "bg-light-green",
+    activeRing: "ring-light-green",
+  },
+  partial_paid: {
+    border: "border-light-green",
+    bg: "bg-linear-to-r from-Secondary to-white",
+    text: "text-light-green",
+    badge: "bg-light-green",
+    circle: "bg-light-green",
+    activeRing: "ring-light-green",
+  },
+  declined: {
+    border: "border-red-500",
+    bg: "bg-linear-to-r from-white to-red-500/10",
+    text: "text-red-500",
+    badge: "bg-red-500 text-white",
+    circle: "bg-red-500",
+    activeRing: "ring-red-500",
+  },
 };
 
 const statusLabel: Record<MilestoneStatus, string> = {
@@ -92,7 +144,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                     className={cn(
                       "border p-4 rounded-md space-y-2 cursor-pointer transition",
                       selectedMilestone?.id === item.id &&
-                        "ring-2 ring-offset-0 ring-light-green",
+                        `ring-2 ring-offset-0 ${style.activeRing}`,
                       style.border,
                       style.bg
                     )}

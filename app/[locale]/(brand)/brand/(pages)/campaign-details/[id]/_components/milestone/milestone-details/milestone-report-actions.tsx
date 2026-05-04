@@ -33,8 +33,7 @@ export default function MilestoneReportActions({
   const isTodo = status === "todo";
 
   const disableReportAdmin = !milestoneId || isPending || isCompleted || isTodo;
-  const disableViewSubmittedReport =
-    !milestoneId || isPending || isInReview || isTodo;
+  const disableViewSubmittedReport = !milestoneId;
 
   return (
     <>
@@ -54,7 +53,7 @@ export default function MilestoneReportActions({
           type="button"
           variant="outline"
           onClick={() => {
-            if (!disableViewSubmittedReport) setReportsOpen(true);
+            if (milestoneId) setReportsOpen(true);
           }}
           disabled={disableViewSubmittedReport}
           className="h-10 rounded-[12px] border border-[#D5D5D5] bg-[#FAFAFA] px-4 text-xs font-medium text-[#2E5B1F] hover:bg-[#FAFAFA] disabled:bg-[#F3F3F3] disabled:text-[#BDBDBD] sm:h-11 sm:text-sm"

@@ -20,14 +20,25 @@ interface Props {
   isAccepted?: boolean;
   campaign: AgencyCampaignDetails;
   forceQuotedView?: boolean;
+  quotationSent?: boolean;
+  onQuotationSentChange?: (value: boolean) => void;
 }
 
 const CampaignDetailsCard = ({
   isAccepted,
   campaign,
   forceQuotedView = false,
+  quotationSent,
+  onQuotationSentChange,
 }: Props) => {
-  const [isQuotationSent, setIsQuotationSent] = useState(forceQuotedView);
+  const [internalQuotationSent, setInternalQuotationSent] =
+    useState(forceQuotedView);
+  const isQuotationSent = quotationSent ?? internalQuotationSent;
+
+  const handleQuotationSentChange = (value: boolean) => {
+    setInternalQuotationSent(value);
+    onQuotationSentChange?.(value);
+  };
   const [isAccepting, setIsAccepting] = useState(false);
   const router = useRouter();
   const params = useParams<{ locale: string }>();
@@ -166,7 +177,7 @@ const CampaignDetailsCard = ({
 
                 <RequestToRequote
                   campaignId={campaign.id}
-                  setIsQuotationSent={setIsQuotationSent}
+                  setIsQuotationSent={handleQuotationSentChange}
                 />
               </div>
             )}

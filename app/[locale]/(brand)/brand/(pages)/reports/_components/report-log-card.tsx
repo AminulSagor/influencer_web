@@ -3,13 +3,12 @@
 import React from "react";
 import {
   Search,
-  ChevronRight,
   Clock3,
   CheckCircle2,
   CalendarDays,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { ClientReportItem, ReportStatusFilter } from "@/types/client/reports/reports";
+import { ClientReportItem } from "@/types/client/reports/reports";
 import {
   formatCurrencyBDT,
   formatReportDate,
@@ -23,10 +22,8 @@ type Props = {
   page: number;
   totalPages: number;
   search: string;
-  activeStatus: ReportStatusFilter;
   loading?: boolean;
   onSearchChange: (value: string) => void;
-  onSelectStatus: (value: ReportStatusFilter) => void;
   onPrevPage: () => void;
   onNextPage: () => void;
   canGoPrev: boolean;
@@ -56,10 +53,8 @@ export default function ReportLogCard({
   page,
   totalPages,
   search,
-  activeStatus,
   loading = false,
   onSearchChange,
-  onSelectStatus,
   onPrevPage,
   onNextPage,
   canGoPrev,
@@ -92,16 +87,6 @@ export default function ReportLogCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {activeStatus !== "all" && (
-          <button
-            type="button"
-            onClick={() => onSelectStatus("all")}
-            className="h-8 rounded-md border border-[#E6E7EA] bg-white px-4 text-sm font-semibold text-[#2F3B2E] hover:bg-[#FAFAFB]"
-          >
-            {t("showAll")}
-          </button>
-        )}
-
         <span className="text-xs text-[#8C919A]">
           {t("showingResults", { total: totalResults })}
         </span>

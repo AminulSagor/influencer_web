@@ -60,6 +60,12 @@ const formSchema = z.object({
           })
         )
         .min(1, "At least one proof is required"),
+      ownershipConfirmed: z.boolean().refine((value) => value === true, {
+        message: "You must confirm ownership",
+      }),
+      termsAccepted: z.boolean().refine((value) => value === true, {
+        message: "You must accept terms",
+      }),
     })
   ),
 });
@@ -81,6 +87,8 @@ const createDefaultSubmission = (): FormType["submissions"][number] => ({
   liveLinks: [{ url: "" }],
   performanceMetric: "",
   attachments: [{ attachment: "" }],
+  ownershipConfirmed: false,
+  termsAccepted: false,
 });
 
 function parseAmount(value: string): number {
@@ -283,6 +291,23 @@ const SubmissionForm = ({
     }
 
     const submission = form.getValues(`submissions.${index}`);
+
+    if (submission.ownershipConfirmed !== true) {
+      form.setError(`submissions.${index}.ownershipConfirmed`, {
+        type: "manual",
+        message: "You must confirm ownership",
+      });
+      return;
+    }
+
+    if (submission.termsAccepted !== true) {
+      form.setError(`submissions.${index}.termsAccepted`, {
+        type: "manual",
+        message: "You must accept terms",
+      });
+      return;
+    }
+
     const requestPaymentAmount = parseAmount(submission.paymentAmount);
     const remainingAmount = maxRequestAmount ?? Number.POSITIVE_INFINITY;
 
@@ -483,39 +508,78 @@ const SubmissionForm = ({
                           targetTitle={targetConfig?.targetTitle}
                         />
 
-                        <div className="flex items-center gap-2">
-                          <Checkbox id={ownershipId} />
-                          <Label htmlFor={ownershipId} className="text-gray-400">
-                            Confirm you own all the submitted assets & links
-                          </Label>
-                        </div>
+                        <FormField
+                          control={form.control}
+                          name={`submissions.${index}.ownershipConfirmed`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Checkbox
+                                    id={ownershipId}
+                                    checked={field.value === true}
+                                    onCheckedChange={(checked) =>
+                                      field.onChange(checked === true)
+                                    }
+                                  />
+                                </FormControl>
+                                <Label htmlFor={ownershipId} className="text-gray-400">
+                                  Confirm you own all the submitted assets & links
+                                </Label>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                        <div className="flex items-center gap-2">
-                          <Checkbox id={termsId} />
-                          <Label htmlFor={termsId} className="text-gray-400">
-                            You accept the{" "}
-                            <Link
-                              href="/"
-                              className="text-light-green hover:underline"
-                            >
-                              user license agreement
-                            </Link>{" "}
-                            &{" "}
-                            <Link
-                              href="/"
-                              className="text-light-green hover:underline"
-                            >
-                              Terms and condition
-                            </Link>{" "}
-                            of our platform
-                          </Label>
-                        </div>
+                        <FormField
+                          control={form.control}
+                          name={`submissions.${index}.termsAccepted`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center gap-2">
+                                <FormControl>
+                                  <Checkbox
+                                    id={termsId}
+                                    checked={field.value === true}
+                                    onCheckedChange={(checked) =>
+                                      field.onChange(checked === true)
+                                    }
+                                  />
+                                </FormControl>
+                                <Label htmlFor={termsId} className="text-gray-400">
+                                  You accept the{" "}
+                                  <Link
+                                    href="/"
+                                    className="text-light-green hover:underline"
+                                  >
+                                    user license agreement
+                                  </Link>{" "}
+                                  &{" "}
+                                  <Link
+                                    href="/"
+                                    className="text-light-green hover:underline"
+                                  >
+                                    Terms and condition
+                                  </Link>{" "}
+                                  of our platform
+                                </Label>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
                         <Button
                           type="button"
                           onClick={() => void handleSubmitSingle(index)}
-                          disabled={isSubmitting || isMilestoneLoading}
-                          className="w-full bg-light-green hover:bg-light-green/90"
+                          disabled={
+                            isSubmitting ||
+                            isMilestoneLoading ||
+                            form.watch(`submissions.${index}.ownershipConfirmed`) !== true ||
+                            form.watch(`submissions.${index}.termsAccepted`) !== true
+                          }
+                          className="w-full bg-light-green hover:bg-light-green/90 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {isSubmitting ? "Submitting..." : "Submit for Admin Review"}
                         </Button>

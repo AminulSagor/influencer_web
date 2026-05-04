@@ -10,7 +10,7 @@ export const getMilestoneStatusLabel = (status?: string) => {
   if (value === "accepted" || value === "approved") return "Completed";
   if (value === "completed_plus_plus") return "Completed++";
   if (value === "in_review" || value === "in_progress") return "In Review";
-  if (value === "declined") return "Declined";
+  if (value === "declined" || value === "decline" || value === "rejected") return "Declined";
   if (value === "pending") return "Pending";
 
   if (!value) return "Pending";
@@ -52,7 +52,7 @@ export const getMilestoneStatusClasses = (status?: string) => {
     };
   }
 
-  if (value === "declined") {
+  if (value === "declined" || value === "decline" || value === "rejected") {
     return {
       wrapper: "border-[#FF5A5A] bg-[#FFF8F8]",
       badge: "bg-[#FF1616] text-white",

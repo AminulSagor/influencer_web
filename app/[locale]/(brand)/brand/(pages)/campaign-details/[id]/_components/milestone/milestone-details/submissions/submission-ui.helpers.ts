@@ -12,6 +12,8 @@ export function formatSubmissionStatusLabel(status: SubmissionStatus | string) {
     case "in_review":
       return "In Review";
     case "declined":
+    case "decline":
+    case "rejected":
       return "Declined";
     case "approved":
     case "completed":
@@ -24,11 +26,13 @@ export function formatSubmissionStatusLabel(status: SubmissionStatus | string) {
 export function getSubmissionStatusClasses(status: SubmissionStatus | string) {
   switch (String(status ?? "").toLowerCase()) {
     case "declined":
+    case "decline":
+    case "rejected":
       return {
-        badge: "bg-red-500 text-white",
-        border: "border-red-400",
-        text: "text-red-500",
-        panel: "border-red-400",
+        badge: "bg-[#FF1616] text-white",
+        border: "border-[#FF1616]",
+        text: "text-[#FF1616]",
+        panel: "border-[#FF1616]",
       };
     case "approved":
     case "completed":

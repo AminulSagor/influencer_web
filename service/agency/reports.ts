@@ -1,8 +1,14 @@
 import { serviceClient } from "@/service/base/axios_client";
 import type {
     GetReportsParams,
+    ReportStatus,
     ReportsResponse,
 } from "@/types/agency/reports";
+
+const toApiStatus = (status?: ReportStatus) => {
+    if (!status) return undefined;
+    return status.charAt(0).toUpperCase() + status.slice(1);
+};
 
 export const getReports = async ({
     page,
@@ -19,8 +25,10 @@ export const getReports = async ({
         params.set("search", search.trim());
     }
 
-    if (status) {
-        params.set("status", status);
+    const apiStatus = toApiStatus(status);
+
+    if (apiStatus) {
+        params.set("status", apiStatus);
     }
 
     const response = await serviceClient.get<ReportsResponse>(

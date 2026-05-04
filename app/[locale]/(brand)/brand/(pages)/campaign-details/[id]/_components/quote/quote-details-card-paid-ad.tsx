@@ -118,6 +118,7 @@ export default function QuoteDetailsCardPaidAd({
       showQuoteActions={showQuoteActions}
       isLoadingNegotiations={isLoadingNegotiations}
       isNegotiating={isNegotiating}
+      showConfirmedState={showConfirmedState}
       actionSection={actionSection}
     />
   );

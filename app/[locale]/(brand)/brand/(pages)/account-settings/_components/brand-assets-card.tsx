@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { serviceClient } from "@/service/base/axios_client";
 import { getProfile } from "@/service/client/profile/profile";
 import { updateProfileSocial } from "@/service/client/profile/update-profile-social";
 import { BrandProfile } from "@/types/client/profile/profile";
@@ -26,55 +27,113 @@ import { notifyError, notifySuccess } from "@/utils/toast_util";
 import Loader from "@/components/spin-loader";
 import { brandAssetsSchema } from "@/schemas/client/brand-assets.schema";
 
-type SocialPlatform =
-  | "facebook"
-  | "instagram"
-  | "tiktok"
-  | "youtube"
-  | "linkedin";
+type PlatformOption = {
+  id: string;
+  name: string;
+};
 
 type SocialHandleRow = {
   id: string;
-  platform: SocialPlatform;
+  platform: string;
   url: string;
 };
 
-const PLATFORM_LABELS: Record<SocialPlatform, string> = {
-  facebook: "Facebook",
-  instagram: "Instagram",
-  tiktok: "TikTok",
-  youtube: "YouTube",
-  linkedin: "LinkedIn",
+const FALLBACK_PLATFORMS = ["Facebook", "Instagram", "Tiktok", "Youtube"];
+
+const createRowId = () => {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `row-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-const AVAILABLE_PLATFORMS = Object.keys(PLATFORM_LABELS) as SocialPlatform[];
+const normalizePlatform = (platform: string) => platform.trim().toLowerCase();
+
+const normalizePlatformOptions = (data: unknown): PlatformOption[] => {
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray((data as { data?: unknown })?.data)
+      ? (data as { data: unknown[] }).data
+      : [];
+
+  const seen = new Set<string>();
+
+  return items
+    .map((item) => {
+      const value = item as Partial<PlatformOption>;
+      return {
+        id: String(value.id ?? value.name ?? ""),
+        name: String(value.name ?? "").trim(),
+      };
+    })
+    .filter((item) => {
+      const key = normalizePlatform(item.name);
+      if (!item.name || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
+const getPlatformOptions = async (): Promise<PlatformOption[]> => {
+  const response = await serviceClient.get<PlatformOption[]>(
+    "/campaign/get/platforms",
+  );
+
+  return normalizePlatformOptions(response.data);
+};
 
 const BrandAssetsCard = () => {
   const t = useTranslations("brand.profile");
   const [profile, setProfile] = useState<BrandProfile | null>(null);
   const [rows, setRows] = useState<SocialHandleRow[]>([]);
   const [website, setWebsite] = useState("");
+  const [platformOptions, setPlatformOptions] = useState<PlatformOption[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const availablePlatformNames = useMemo(() => {
+    const optionMap = new Map<string, string>();
+
+    platformOptions.forEach((item) => {
+      const name = item.name.trim();
+      if (name) optionMap.set(normalizePlatform(name), name);
+    });
+
+    FALLBACK_PLATFORMS.forEach((name) => {
+      if (!optionMap.has(normalizePlatform(name))) {
+        optionMap.set(normalizePlatform(name), name);
+      }
+    });
+
+    rows.forEach((row) => {
+      const platform = row.platform.trim();
+      if (platform && !optionMap.has(normalizePlatform(platform))) {
+        optionMap.set(normalizePlatform(platform), platform);
+      }
+    });
+
+    return Array.from(optionMap.values());
+  }, [platformOptions, rows]);
+
+  const getDefaultPlatform = () => availablePlatformNames[0] || "Instagram";
+
   const mapProfileToRows = (data: BrandProfile): SocialHandleRow[] => {
     const socialRows = (data.socialLinks || [])
-      .filter((item) =>
-        AVAILABLE_PLATFORMS.includes(item.platform as SocialPlatform),
-      )
       .map((item, index) => ({
-        id: `${item.platform}-${index}`,
-        platform: item.platform as SocialPlatform,
+        id: `${item.platform || "platform"}-${index}`,
+        platform: String(item.platform || getDefaultPlatform()),
         url: item.url || "",
-      }));
+      }))
+      .filter((item) => item.platform.trim().length > 0);
 
     if (socialRows.length > 0) return socialRows;
 
     return [
       {
-        id: crypto.randomUUID(),
-        platform: "instagram",
+        id: createRowId(),
+        platform: getDefaultPlatform(),
         url: "",
       },
     ];
@@ -83,11 +142,36 @@ const BrandAssetsCard = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const loadProfile = async () => {
+    const loadData = async () => {
       setIsProfileLoading(true);
-      const result = await getProfile();
+
+      const [profileResult, platformsResult] = await Promise.allSettled([
+        getProfile(),
+        getPlatformOptions(),
+      ]);
 
       if (!isMounted) return;
+
+      const nextPlatformOptions =
+        platformsResult.status === "fulfilled" ? platformsResult.value : [];
+      setPlatformOptions(nextPlatformOptions);
+
+      if (profileResult.status !== "fulfilled") {
+        notifyError("Failed to fetch profile");
+        setProfile(null);
+        setWebsite("");
+        setRows([
+          {
+            id: createRowId(),
+            platform: nextPlatformOptions[0]?.name || "Instagram",
+            url: "",
+          },
+        ]);
+        setIsProfileLoading(false);
+        return;
+      }
+
+      const result = profileResult.value;
 
       if (typeof result === "string") {
         notifyError(result);
@@ -95,8 +179,8 @@ const BrandAssetsCard = () => {
         setWebsite("");
         setRows([
           {
-            id: crypto.randomUUID(),
-            platform: "instagram",
+            id: createRowId(),
+            platform: nextPlatformOptions[0]?.name || "Instagram",
             url: "",
           },
         ]);
@@ -110,25 +194,28 @@ const BrandAssetsCard = () => {
       setIsProfileLoading(false);
     };
 
-    loadProfile();
+    loadData();
 
     return () => {
       isMounted = false;
     };
   }, []);
 
-  const usedPlatforms = useMemo(() => rows.map((row) => row.platform), [rows]);
+  const usedPlatforms = useMemo(
+    () => rows.map((row) => normalizePlatform(row.platform)),
+    [rows],
+  );
 
   const addRow = () => {
     const firstAvailable =
-      AVAILABLE_PLATFORMS.find(
-        (platform) => !usedPlatforms.includes(platform),
-      ) || "instagram";
+      availablePlatformNames.find(
+        (platform) => !usedPlatforms.includes(normalizePlatform(platform)),
+      ) || getDefaultPlatform();
 
     setRows((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id: createRowId(),
         platform: firstAvailable,
         url: "",
       },
@@ -143,8 +230,8 @@ const BrandAssetsCard = () => {
 
       return [
         {
-          id: crypto.randomUUID(),
-          platform: "instagram",
+          id: createRowId(),
+          platform: getDefaultPlatform(),
           url: "",
         },
       ];
@@ -169,7 +256,7 @@ const BrandAssetsCard = () => {
   const handleSave = async () => {
     const filteredRows = rows
       .map((row) => ({
-        platform: row.platform,
+        platform: row.platform.trim(),
         url: row.url.trim(),
       }))
       .filter((row) => row.url.trim() !== "");
@@ -274,7 +361,7 @@ const BrandAssetsCard = () => {
                               value={row.platform}
                               onValueChange={(value) =>
                                 updateRow(row.id, {
-                                  platform: value as SocialPlatform,
+                                  platform: value,
                                 })
                               }
                               disabled={!isEditing || isSaving}
@@ -285,9 +372,9 @@ const BrandAssetsCard = () => {
                                 />
                               </SelectTrigger>
                               <SelectContent>
-                                {AVAILABLE_PLATFORMS.map((platform) => (
+                                {availablePlatformNames.map((platform) => (
                                   <SelectItem key={platform} value={platform}>
-                                    {PLATFORM_LABELS[platform]}
+                                    {platform}
                                   </SelectItem>
                                 ))}
                               </SelectContent>

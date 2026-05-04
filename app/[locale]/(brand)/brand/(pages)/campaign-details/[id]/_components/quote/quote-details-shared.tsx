@@ -17,6 +17,7 @@ type SharedQuoteLayoutProps = {
   showQuoteActions: boolean;
   isLoadingNegotiations: boolean;
   isNegotiating: boolean;
+  showConfirmedState?: boolean;
   actionSection: React.ReactNode;
 };
 
@@ -121,6 +122,7 @@ export function SharedQuoteLayout({
   showQuoteActions,
   isLoadingNegotiations,
   isNegotiating,
+  showConfirmedState = false,
   actionSection,
 }: SharedQuoteLayoutProps) {
   return (
@@ -140,7 +142,7 @@ export function SharedQuoteLayout({
                 />
 
                 <SummaryRow
-                  label="VAT/Tax"
+                  label="VAT/Tax  (15%)"
                   value={formatBDT(displayVatAmount)}
                 />
 
@@ -149,10 +151,12 @@ export function SharedQuoteLayout({
                 <SummaryRow
                   label="Total Campaign Cost"
                   value={formatBDT(displayTotalCost)}
-                  valueClassName="text-base font-semibold tracking-tight text-light-green"
+                  valueClassName="text-3xl font-bold leading-none tracking-tight text-light-green"
                 />
 
-                {!showQuoteActions && (paidAmount > 0 || dueAmount > 0 || isPaid) && (
+                {!showQuoteActions &&
+                  !showConfirmedState &&
+                  (paidAmount > 0 || dueAmount > 0 || isPaid) && (
                   <>
                     <div className="mt-2" />
                     <SummaryRow label="Paid" value={formatBDT(paidAmount)} />

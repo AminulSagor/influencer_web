@@ -78,7 +78,7 @@ function timeAgo(iso?: string | null): string {
 }
 
 function mapToReportItem(item: ReportLogItem, index: number): ReportItem {
-  const rawStatus = item.logStatus ?? item.submissionStatus;
+  const rawStatus = item.status ?? item.logStatus ?? item.submissionStatus;
 
   return {
     id: item.reportId || `${item.campaignName || "report"}-${item.date || index}`,
@@ -220,14 +220,10 @@ const ReportPage = () => {
   const currentPage = clamp(page, 1, totalPages);
 
   const handleSelectStatus = useCallback((s: ReportStatus) => {
-    setActiveStatus(s);
+    setActiveStatus((previous) => (previous === s ? null : s));
     setPage(1);
   }, []);
 
-  const handleResetAll = useCallback(() => {
-    setActiveStatus(null);
-    setPage(1);
-  }, []);
 
   const handleSearch = useCallback((v: string) => {
     setQuery(v);
@@ -412,15 +408,6 @@ const ReportPage = () => {
 
         {/* Pagination */}
         <div className="mt-6 flex items-center justify-end gap-3">
-          {activeStatus !== null && (
-            <button
-              type="button"
-              onClick={handleResetAll}
-              className="h-8 rounded-md px-4 text-sm font-semibold border border-[#E6E7EA] bg-white text-[#2F3B2E] hover:bg-[#FAFAFB]"
-            >
-              {t("Show All")}
-            </button>
-          )}
 
           <div className="flex items-center gap-2 text-sm text-[#8C919A]">
             <span>{t("Page")}</span>

@@ -143,15 +143,15 @@ const DeliveryLocation = ({
   };
 
   return (
-    <Card className="h-full shadow-md">
-      <CardHeader className="p-4 pb-2">
+    <Card className="h-full gap-0 py-0 shadow-md">
+      <CardHeader className="p-6 pb-3">
         <CardTitle className="flex items-center gap-2 text-Primary">
           <MapPin size={22} />
           {t("Delivery Location")}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4 p-4 pt-2">
+      <CardContent className="flex flex-col gap-4 p-6 pt-0">
         {needSampleProduct ? (
           deliveryAddress ? (
             <div className="flex min-h-[88px] flex-col justify-center rounded-md border border-light-green bg-linear-to-l from-bg-white to-Secondary p-4">

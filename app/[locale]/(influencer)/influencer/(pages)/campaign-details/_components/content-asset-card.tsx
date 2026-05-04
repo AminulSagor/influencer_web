@@ -52,13 +52,13 @@ const ContentAssetCard = ({ assets }: ContentAssetCardProps) => {
   );
 
   return (
-    <Card className="h-full">
-      <CardHeader className="p-4 pb-2">
+    <Card className="h-full gap-0 py-0">
+      <CardHeader className="p-6 pb-3">
         <CardTitle className="text-Primary flex items-center gap-2">
           <BsDownload /> {t("Content Assets")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 p-4 pt-2">
+      <CardContent className="space-y-2 p-6 pt-0">
         {assets.length === 0 ? (
           <p className="text-sm text-muted-foreground">No assets available</p>
         ) : (

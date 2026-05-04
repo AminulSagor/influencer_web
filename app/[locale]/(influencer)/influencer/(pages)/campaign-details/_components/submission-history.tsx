@@ -23,14 +23,15 @@ import { MilestoneSubmission } from "@/types/influencer/milestone_types";
 
 interface SubmissionHistoryProps {
   submissions: MilestoneSubmission[];
+  milestoneStatus?: string;
 }
 
 const statusBadge: Record<string, { label: string; className: string }> = {
   approved: { label: "Approved", className: "bg-light-green" },
   pending: { label: "Pending", className: "bg-orange" },
   in_review: { label: "In Review", className: "bg-orange" },
-  rejected: { label: "Rejected", className: "bg-red-500" },
-  declined: { label: "Declined", className: "bg-red-500" },
+  rejected: { label: "Rejected", className: "bg-[#FF1616] text-white" },
+  declined: { label: "Declined", className: "bg-[#FF1616] text-white" },
 };
 
 const formatMetric = (val?: number | null) => {
@@ -109,18 +110,29 @@ function AttachmentPreviewLink({ attachment }: { attachment: string }) {
   );
 }
 
-const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
+const SubmissionHistory = ({ submissions, milestoneStatus }: SubmissionHistoryProps) => {
   if (submissions.length === 0) return null;
 
   return (
     <div className="mt-8 space-y-4">
       {submissions.map((sub, index) => {
-        const badge = statusBadge[sub.status] || { label: sub.status, className: "bg-gray-400" };
+        const normalizedStatus = String(sub.status ?? "").toLowerCase();
+        const normalizedMilestoneStatus = String(milestoneStatus ?? "").toLowerCase();
+        const isDeclined = ["declined", "decline", "rejected"].some((status) =>
+          [normalizedStatus, normalizedMilestoneStatus].includes(status),
+        );
+        const showDeclinedReason = isDeclined && Boolean(sub.rejectionReason?.trim());
+        const badge = isDeclined
+          ? { label: "Declined", className: "bg-[#FF1616] text-white" }
+          : statusBadge[sub.status] || { label: sub.status, className: "bg-gray-400" };
         const liveLinks = sub.submissionLiveLinks ?? [];
         const attachments = sub.submissionAttachments ?? [];
 
         return (
-          <div key={sub.id} className="border rounded-lg px-4">
+          <div
+            key={sub.id}
+            className={`rounded-lg border px-4 ${isDeclined ? "border-[#FF1616]" : ""}`}
+          >
             <Accordion type="single" collapsible>
               <AccordionItem value={`submission-${sub.id}`}>
                 <AccordionTrigger className="hover:no-underline cursor-pointer">
@@ -131,26 +143,37 @@ const SubmissionHistory = ({ submissions }: SubmissionHistoryProps) => {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-2">
-                    <div className="space-y-2">
-                      <p className="text-lg flex items-center gap-2">
-                        <FaUserEdit size={20} />
-                        Description / Update
-                      </p>
-                      <div className="px-1">
-                        <Textarea
-                          value={sub.submissionDescription || ""}
-                          placeholder="No description provided"
-                          disabled
-                        />
+                    <div
+                      className={`grid grid-cols-1 gap-4 ${
+                        showDeclinedReason ? "lg:grid-cols-2" : ""
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <p className="text-lg flex items-center gap-2">
+                          <FaUserEdit size={20} />
+                          Description / Update
+                        </p>
+                        <div className="px-1">
+                          <Textarea
+                            value={sub.submissionDescription || ""}
+                            placeholder="No description provided"
+                            disabled
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {sub.rejectionReason && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <p className="text-sm font-medium text-red-600">Rejection Reason:</p>
-                        <p className="text-sm text-red-500">{sub.rejectionReason}</p>
-                      </div>
-                    )}
+                      {showDeclinedReason ? (
+                        <div className="space-y-2">
+                          <p className="text-lg font-medium text-[#FF1616]">
+                            Declined Reason
+                          </p>
+                          <div className="min-h-[112px] rounded-[10px] border border-[#FF1616] bg-white p-4 text-sm leading-relaxed text-black/80">
+                            {sub.rejectionReason?.trim() ||
+                              "Declined reason will be visible here"}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
 
                     {sub.adminFeedback && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">

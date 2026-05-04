@@ -76,11 +76,11 @@ const CampaignEarningsCard = ({ campaignId }: CampaignEarningsCardProps) => {
   };
 
   return (
-    <Card className="h-full shadow-md">
-      <CardHeader className="p-4 pb-2">
+    <Card className="h-full gap-0 py-0 shadow-md">
+      <CardHeader className="p-6 pb-3">
         <CardTitle className="text-Primary">Campaign Earnings</CardTitle>
       </CardHeader>
-      <CardContent className="flex h-full flex-col justify-center p-4 pt-2">
+      <CardContent className="flex h-full flex-col justify-center p-6 pt-0">
         {loading ? (
           <div className="rounded-lg border border-light-green bg-linear-to-r from-Secondary to-white p-5">
             <Skeleton className="mb-4 h-4 w-2/3" />

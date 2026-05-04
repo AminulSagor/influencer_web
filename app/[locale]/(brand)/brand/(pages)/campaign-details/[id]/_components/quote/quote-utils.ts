@@ -187,6 +187,7 @@ export const getQuoteSummary = (campaign: QuoteDetailsCampaign) => {
 
   const isReceived = normalizedStatus === "received";
   const isNegotiating = normalizedStatus === "negotiating";
+  const isAgencyNegotiating = normalizedStatus === "agency_negotiating";
 
   const isPendingPayment = normalizedPaymentStatus === "pending";
   const isPartialPayment = normalizedPaymentStatus === "partial";
@@ -198,13 +199,14 @@ export const getQuoteSummary = (campaign: QuoteDetailsCampaign) => {
 
   const canPay =
     !isNegotiating &&
+    !isAgencyNegotiating &&
     !isReceived &&
     !isPaid &&
     dueAmount > 0 &&
     (isPendingPayment || isPartialPayment || paidAmount > 0);
 
   const showConfirmedState =
-    !isNegotiating && !isReceived && !isPaid && dueAmount <= 0;
+    isAgencyNegotiating || (!isNegotiating && !isReceived && !isPaid && dueAmount <= 0);
 
   return {
     baseBudget,

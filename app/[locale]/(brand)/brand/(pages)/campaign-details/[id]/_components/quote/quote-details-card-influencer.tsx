@@ -121,6 +121,7 @@ function QuoteDetailsCardInfluencer({
       showQuoteActions={showQuoteActions}
       isLoadingNegotiations={isLoadingNegotiations}
       isNegotiating={isNegotiating}
+      showConfirmedState={showConfirmedState}
       actionSection={actionSection}
     />
   );

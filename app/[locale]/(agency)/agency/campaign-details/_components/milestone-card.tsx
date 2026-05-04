@@ -21,10 +21,11 @@ import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/mile
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
+  canSubmit?: boolean;
 }
 
 
-const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
+const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
   const [showNewSubmissionForm, setShowNewSubmissionForm] = useState(false);
   const [localSubmissions, setLocalSubmissions] = useState<
     AgencyMilestoneSubmissionItem[]
@@ -113,9 +114,20 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
   const remainingRequestAmount = Math.max(payout - requestedAmountTotal, 0);
   const hasRequestableAmount = remainingRequestAmount > 0.009;
   const hasSubmissions = displaySubmissions.length > 0;
+  const normalizedMilestoneStatus = String(milestone?.status ?? "").toLowerCase();
+  const isDeclinedMilestone = ["declined", "decline", "rejected"].includes(
+    normalizedMilestoneStatus
+  );
+  const milestoneBadgeLabel = isDeclinedMilestone
+    ? "Declined"
+    : hasSubmissions
+      ? IN_REVIEW
+      : milestone?.status;
   const canShowHistory = hasSubmissions;
+  const canSubmitForMilestone =
+    canSubmit && milestone?.status !== PAID && milestone?.status !== PARTIAL_PAID;
   const canAddAnotherSubmission =
-    Boolean(resolvedMilestoneId) && hasRequestableAmount;
+    canSubmitForMilestone && Boolean(resolvedMilestoneId) && hasRequestableAmount;
 
   const handleSubmitted = async (submission: AgencyMilestoneSubmissionItem) => {
     setLocalSubmissions((prev) => [submission, ...prev]);
@@ -234,7 +246,8 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                 "from-white to-orange/20 border-orange-400",
                 (milestone?.status === PAID ||
                   milestone?.status === PARTIAL_PAID) &&
-                "from-Secondary to-white border-light-green"
+                "from-Secondary to-white border-light-green",
+                isDeclinedMilestone && "from-[#FFF8F8] to-[#FFF8F8] border-[#FF5A5A]"
               )}
             >
               <p
@@ -243,7 +256,8 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
                     milestone?.status === PARTIAL_PAID) &&
-                  "text-light-green"
+                  "text-light-green",
+                  isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
                 Status
@@ -255,10 +269,11 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                   milestone?.status === TODO && "bg-dark-gray",
                   milestone?.status === IN_REVIEW && "bg-orange",
                   milestone?.status === PAID && "bg-light-green",
-                  milestone?.status === PARTIAL_PAID && "bg-light-green"
+                  milestone?.status === PARTIAL_PAID && "bg-light-green",
+                  isDeclinedMilestone && "bg-[#FF1616] text-white"
                 )}
               >
-                {hasSubmissions ? IN_REVIEW : milestone?.status}
+                {milestoneBadgeLabel}
               </Badge>
 
               <div
@@ -268,7 +283,8 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
                     milestone?.status === PARTIAL_PAID) &&
-                  "text-light-green"
+                  "text-light-green",
+                  isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
                 <span>
@@ -280,7 +296,7 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           </div>
         </div>
 
-        {!hasSubmissions && resolvedMilestoneId && hasRequestableAmount && !showNewSubmissionForm && (
+        {canSubmitForMilestone && !hasSubmissions && resolvedMilestoneId && hasRequestableAmount && !showNewSubmissionForm && (
           <SubmissionForm
             milestoneId={resolvedMilestoneId}
             initialSubmissionCount={displaySubmissions.length}
@@ -289,9 +305,15 @@ const MileStoneCard = ({ milestone }: MileStoneCardProps) => {
           />
         )}
 
-        {canShowHistory && <SubmissionHistory submissions={displaySubmissions} targetTitle={milestone?.targetTitle} />}
+        {canShowHistory && (
+          <SubmissionHistory
+            submissions={displaySubmissions}
+            targetTitle={milestone?.targetTitle}
+            milestoneStatus={milestone?.status}
+          />
+        )}
 
-        {hasSubmissions && !hasRequestableAmount && (
+        {canSubmitForMilestone && hasSubmissions && !hasRequestableAmount && (
           <p className="mt-4 rounded-lg border border-light-green/40 bg-light-green/5 p-3 text-center text-sm font-medium text-Primary">
             Full payout amount has already been requested.
           </p>

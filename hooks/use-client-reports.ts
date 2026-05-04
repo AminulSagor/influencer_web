@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getClientReports } from "@/service/client/reports/get-client-reports";
 import {
@@ -24,6 +24,7 @@ export function useClientReports() {
   const [loading, setLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [counts, setCounts] = useState({ pending: 0, resolved: 0 });
 
   const [search, setSearchState] = useState("");
   const [page, setPage] = useState(1);
@@ -68,6 +69,45 @@ export function useClientReports() {
     };
   }, [page, debouncedSearch, statusFilter]);
 
+  useEffect(() => {
+    let active = true;
+
+    const run = async () => {
+      try {
+        const [pendingResult, resolvedResult] = await Promise.all([
+          getClientReports({
+            page: 1,
+            limit: 1,
+            search: debouncedSearch || undefined,
+            status: "Pending",
+          }),
+          getClientReports({
+            page: 1,
+            limit: 1,
+            search: debouncedSearch || undefined,
+            status: "Resolved",
+          }),
+        ]);
+
+        if (!active) return;
+
+        setCounts({
+          pending: pendingResult.meta?.total ?? 0,
+          resolved: resolvedResult.meta?.total ?? 0,
+        });
+      } catch (err) {
+        if (!active) return;
+        setCounts({ pending: 0, resolved: 0 });
+      }
+    };
+
+    run();
+
+    return () => {
+      active = false;
+    };
+  }, [debouncedSearch]);
+
   const setSearch = useCallback((value: string) => {
     setIsFetching(true);
     setSearchState(value);
@@ -76,7 +116,9 @@ export function useClientReports() {
 
   const setStatusFilter = useCallback((value: ReportStatusFilter) => {
     setIsFetching(true);
-    setStatusFilterState(value);
+    setStatusFilterState((previous) =>
+      previous === value && value !== "all" ? "all" : value,
+    );
     setPage(1);
   }, []);
 
@@ -100,18 +142,6 @@ export function useClientReports() {
       return prev;
     });
   }, []);
-
-  const counts = useMemo(() => {
-    let pending = 0;
-    let resolved = 0;
-
-    for (const item of items) {
-      if (item.status === "Pending") pending += 1;
-      if (item.status === "Resolved") resolved += 1;
-    }
-
-    return { pending, resolved };
-  }, [items]);
 
   const canGoPrev = page > 1;
   const canGoNext = page < (meta.totalPages ?? 1);

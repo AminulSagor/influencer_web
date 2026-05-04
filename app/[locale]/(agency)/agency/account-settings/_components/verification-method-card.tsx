@@ -308,61 +308,55 @@ const VerificationMethodCard = ({
   const isFieldDisabled = isSaving || isLoading || !isEditing;
 
   return (
-    <Card>
+    <Card className="relative">
       <div className="px-4 py-4">
         <Accordion type="single" collapsible defaultValue="item-1">
           <AccordionItem value="item-1">
-            <AccordionTrigger className="mb-4 p-0 text-md font-semibold text-orange hover:no-underline">
-              <div className="flex w-full items-center justify-between pr-2">
-                <span>Verification Methods</span>
-
-                <div
-                  className="flex items-center gap-2"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                >
-                  {isEditing && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="cursor-pointer"
-                      onClick={handleCancelEdit}
-                      disabled={isSaving || isLoading}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-
-                  {isEditing ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="cursor-pointer bg-light-green hover:bg-light-green/90"
-                      onClick={() => {
-                        void handleEditOrSave();
-                      }}
-                      disabled={isSaving || isLoading}
-                    >
-                      {isSaving ? "Saving..." : "Save"}
-                    </Button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="cursor-pointer text-gray-500"
-                      onClick={() => {
-                        void handleEditOrSave();
-                      }}
-                      disabled={isSaving || isLoading}
-                    >
-                      <BiSolidEdit size={20} />
-                    </button>
-                  )}
-                </div>
-              </div>
+            <AccordionTrigger className="mb-4 p-0 pr-36 text-md font-semibold text-orange hover:no-underline">
+              <span>Verification Methods</span>
             </AccordionTrigger>
+
+            <div className="absolute top-4 right-12 flex items-center gap-2">
+              {isEditing && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving || isLoading}
+                >
+                  Cancel
+                </Button>
+              )}
+
+              {isEditing ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="cursor-pointer bg-light-green hover:bg-light-green/90"
+                  onClick={() => {
+                    void handleEditOrSave();
+                  }}
+                  disabled={isSaving || isLoading}
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+              ) : (
+                <button
+                  type="button"
+                  className="cursor-pointer text-gray-500"
+                  onClick={() => {
+                    void handleEditOrSave();
+                  }}
+                  disabled={isSaving || isLoading}
+                  aria-label="Edit documents"
+                  title="Edit documents"
+                >
+                  <BiSolidEdit size={20} />
+                </button>
+              )}
+            </div>
 
             <AccordionContent>
               <div className="space-y-4 px-1">

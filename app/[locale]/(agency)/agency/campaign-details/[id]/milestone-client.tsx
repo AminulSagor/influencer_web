@@ -36,9 +36,9 @@ const MilestoneClient = ({ isAccepted, milestones, paid, total }: Props) => {
         />
       </div>
 
-      {isAccepted && selectedMilestone && (
+      {selectedMilestone && (
         <div>
-          <MileStoneCard milestone={selectedMilestone} />
+          <MileStoneCard milestone={selectedMilestone} canSubmit={isAccepted} />
         </div>
       )}
     </>

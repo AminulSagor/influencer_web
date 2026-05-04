@@ -27,8 +27,8 @@ export default function CampaignBriefSection({ campaign, milestones }: CampaignB
 
   return (
     <Card
-      className={`relative rounded-2xl bg-white p-3 md:px-4 xl:px-6 ${
-        open ? "pb-4" : "pb-0"
+      className={`relative rounded-2xl bg-white p-6 ${
+        open ? "pb-6" : "pb-0"
       }`}
     >
       <div className="grid md:grid-cols-2 gap-6">
@@ -40,7 +40,7 @@ export default function CampaignBriefSection({ campaign, milestones }: CampaignB
         >
           {/* HEADER */}
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 text-Primary font-semibold mb-4 pt-4 md:pt-0">
+            <div className="flex items-center gap-2 text-Primary font-semibold mb-4">
               <FileText className="w-5 h-5" />
               <span className="text-base md:text-lg">
                 {t("Campaign Details")}
@@ -183,24 +183,24 @@ function DoDont({ dos, donts }: { dos: string; donts: string }) {
   const dontsList = donts ? donts.split("\n").filter(Boolean) : [];
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-light-green-200 bg-light-green-50 p-4">
-        <div className="flex items-center gap-2 text-light-green-700 font-medium mb-2">
+      <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+        <div className="flex items-center gap-2 text-light-green-600 font-medium mb-2">
           <CheckCircle2 className="w-4 h-4" />
           <span>{t("Do's")}</span>
         </div>
-        <ul className="text-sm text-light-green-700 space-y-1">
+        <ul className="text-sm text-light-green-600 space-y-1">
           {dosList.length > 0 ? dosList.map((item, i) => (
             <li key={i}>• {item}</li>
           )) : <li>—</li>}
         </ul>
       </div>
 
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-        <div className="flex items-center gap-2 text-red-600 font-medium mb-2">
+      <div className="rounded-md border border-rose-200 bg-rose-50 p-4">
+        <div className="flex items-center gap-2 text-rose-600 font-medium mb-2">
           <XCircle className="w-4 h-4" />
           <span>{t("Don'ts")}</span>
         </div>
-        <ul className="text-sm text-red-600 space-y-1">
+        <ul className="text-sm text-rose-600 space-y-1">
           {dontsList.length > 0 ? dontsList.map((item, i) => (
             <li key={i}>• {item}</li>
           )) : <li>—</li>}

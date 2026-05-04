@@ -3,7 +3,6 @@
  * Handles signed URL generation and S3 uploads
  */
 
-import axios from "axios";
 import { serviceClient } from "../base/axios_client";
 import {
   signedUrlRequestSchema,
@@ -31,15 +30,17 @@ export const uploadFileToS3 = async (
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<void> => {
-  await axios.put(signedUrl, file, {
+  const response = await fetch(signedUrl, {
+    method: "PUT",
     headers: { "Content-Type": file.type },
-    onUploadProgress: (progressEvent) => {
-      if (onProgress && progressEvent.total) {
-        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        onProgress(percent);
-      }
-    },
+    body: file,
   });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload file to storage");
+  }
+
+  onProgress?.(100);
 };
 
 // Complete upload flow (get signed URL + upload to S3)

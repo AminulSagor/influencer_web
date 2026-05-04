@@ -46,6 +46,17 @@ export default function InfluencerSubmissionDetailsPanel({
   const averagePerformance = getAveragePerformance(metrics);
   const hasTargetMetrics = metrics.some((item) => item.target > 0);
 
+  const normalizedSubmissionStatus = String(
+    submission.status ?? detail.status ?? "",
+  )
+    .trim()
+    .toLowerCase();
+  const declineReason =
+    submission.rejectionReason?.trim() || detail.rejectionReason?.trim() || "";
+  const showDeclineReason =
+    ["declined", "decline", "rejected"].includes(normalizedSubmissionStatus) &&
+    Boolean(declineReason);
+
   React.useEffect(() => {
     if (!milestone.id) return;
 
@@ -65,7 +76,16 @@ export default function InfluencerSubmissionDetailsPanel({
 
   return (
     <div className="space-y-4 rounded-[18px] p-4">
-      <SubmissionDescriptionBlock description={detail.submissionDescription} />
+      <div
+        className={`grid grid-cols-1 gap-4 ${
+          showDeclineReason ? "xl:grid-cols-2" : ""
+        }`}
+      >
+        <SubmissionDescriptionBlock description={detail.submissionDescription} />
+        {showDeclineReason ? (
+          <SubmissionDeclineReason reason={declineReason} />
+        ) : null}
+      </div>
 
       <div className="rounded-[14px] border border-[#D9D9D9] p-4 md:p-5">
         <SubmissionAttachmentsGrid
@@ -80,12 +100,6 @@ export default function InfluencerSubmissionDetailsPanel({
             <SubmissionPerformanceRing value={averagePerformance} />
           </div>
         </div>
-
-        {detail.status === "declined" && detail.rejectionReason ? (
-          <div className="mt-6">
-            <SubmissionDeclineReason reason={detail.rejectionReason} />
-          </div>
-        ) : null}
       </div>
     </div>
   );

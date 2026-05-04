@@ -3,6 +3,11 @@ import { ReportLogsResponse } from "@/types/influencer/report_logs";
 
 export type ReportLogStatus = "flagged" | "pending" | "resolved";
 
+const toApiStatus = (status?: ReportLogStatus) => {
+  if (!status) return undefined;
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
 export interface ReportLogsQueryParams {
   page?: number;
   limit?: number;
@@ -17,7 +22,7 @@ export const getReportLogs = async (
     params: {
       page: params.page ?? 1,
       limit: params.limit ?? 10,
-      status: params.status || undefined,
+      status: toApiStatus(params.status),
       search: params.search?.trim() || undefined,
     },
   });

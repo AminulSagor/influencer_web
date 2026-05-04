@@ -20,6 +20,7 @@ import type {
 interface SubmissionHistoryProps {
   submissions: AgencyMilestoneSubmissionItem[];
   targetTitle?: MilestoneTargetTitle | null;
+  milestoneStatus?: string;
 }
 
 
@@ -104,7 +105,7 @@ function getStatusClassName(status: string) {
   }
 
   if (normalized === "declined" || normalized === "rejected") {
-    return "bg-red-500";
+    return "bg-[#FF1616] text-white";
   }
 
   return "bg-orange";
@@ -172,18 +173,37 @@ function getAchievedMetric(
   return null;
 }
 
-const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps) => {
+const SubmissionHistory = ({
+  submissions,
+  targetTitle,
+  milestoneStatus,
+}: SubmissionHistoryProps) => {
   if (!submissions?.length) return null;
 
   return (
     <div className="mt-8 space-y-4">
       {submissions.map((submission, index) => {
+        const normalizedStatus = String(submission.status ?? "").toLowerCase();
+        const normalizedMilestoneStatus = String(milestoneStatus ?? "").toLowerCase();
+        const isDeclined = ["declined", "decline", "rejected"].some((status) =>
+          [normalizedStatus, normalizedMilestoneStatus].includes(status),
+        );
+        const showDeclinedReason = isDeclined && Boolean(submission.rejectionReason?.trim());
+        const statusClassName = isDeclined
+          ? "bg-[#FF1616] text-white"
+          : getStatusClassName(submission.status);
+        const statusLabel = isDeclined
+          ? "Declined"
+          : formatSubmissionStatus(submission.status);
         const metric = getAchievedMetric(submission, targetTitle);
         const attachments = submission.submissionAttachments ?? [];
         const liveLinks = submission.submissionLiveLinks ?? [];
 
         return (
-          <div key={submission.id} className="rounded-lg border px-4">
+          <div
+            key={submission.id}
+            className={`rounded-lg border px-4 ${isDeclined ? "border-[#FF1616]" : ""}`}
+          >
             <Accordion
               type="single"
               collapsible
@@ -196,8 +216,8 @@ const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps)
                   <div className="flex w-full items-center justify-between pr-4">
                     <div className="flex items-center gap-4">
                       <p className="text-xl">Submission {submissions.length - index}</p>
-                      <Badge className={getStatusClassName(submission.status)}>
-                        {formatSubmissionStatus(submission.status)}
+                      <Badge className={statusClassName}>
+                        {statusLabel}
                       </Badge>
                     </div>
 
@@ -209,19 +229,38 @@ const SubmissionHistory = ({ submissions, targetTitle }: SubmissionHistoryProps)
 
                 <AccordionContent>
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="flex items-center gap-2 text-lg">
-                        <FaUserEdit size={18} />
-                        Description / Update (Optional)
-                      </p>
+                    <div
+                      className={`grid grid-cols-1 gap-4 ${
+                        showDeclinedReason ? "lg:grid-cols-2" : ""
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <p className="flex items-center gap-2 text-lg">
+                          <FaUserEdit size={18} />
+                          Description / Update (Optional)
+                        </p>
 
-                      <div className="px-1">
-                        <Textarea
-                          value={submission.submissionDescription ?? ""}
-                          placeholder="Description of the proof will be visible here"
-                          disabled
-                        />
+                        <div className="px-1">
+                          <Textarea
+                            value={submission.submissionDescription ?? ""}
+                            placeholder="Description of the proof will be visible here"
+                            disabled
+                          />
+                        </div>
                       </div>
+
+                      {showDeclinedReason ? (
+                        <div className="space-y-2">
+                          <p className="text-lg font-medium text-[#FF1616]">
+                            Declined Reason
+                          </p>
+
+                          <div className="min-h-[112px] rounded-[10px] border border-[#FF1616] bg-white p-4 text-sm leading-relaxed text-black/80">
+                            {submission.rejectionReason?.trim() ||
+                              "Declined reason will be visible here"}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
                     <Card>

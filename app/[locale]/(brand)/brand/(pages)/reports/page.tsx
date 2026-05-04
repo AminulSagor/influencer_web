@@ -45,10 +45,8 @@ const ReportPage = () => {
         page={page}
         totalPages={meta.totalPages ?? 1}
         search={search}
-        activeStatus={statusFilter}
         loading={loading || isFetching}
         onSearchChange={setSearch}
-        onSelectStatus={setStatusFilter}
         onPrevPage={goPrev}
         onNextPage={goNext}
         canGoPrev={canGoPrev}

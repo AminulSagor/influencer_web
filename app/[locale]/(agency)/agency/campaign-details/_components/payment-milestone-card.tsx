@@ -30,6 +30,22 @@ interface PaymentMilestoneProps {
   onSelectMilestone: (m: PaymanetMilestoneDataType) => void;
 }
 
+function normalizeStatus(status?: string) {
+  return String(status ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function isDeclinedStatus(status?: string) {
+  return ["declined", "decline", "rejected"].includes(normalizeStatus(status));
+}
+
+function getStatusLabel(status?: string) {
+  if (isDeclinedStatus(status)) return "Declined";
+  if (status === TODO) return "To Do";
+  return status || "To Do";
+}
+
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paid = 0,
   total = 4,
@@ -71,7 +87,10 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
       <CardContent>
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 -ml-4 pr-24">
-            {paymentMilestoneData.map((item) => (
+            {paymentMilestoneData.map((item) => {
+              const isDeclined = isDeclinedStatus(item.status);
+
+              return (
               <CarouselItem
                 key={item.milestoneId}
                 className="basis-full md:basis-[34%]"
@@ -81,14 +100,16 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                   className={cn(
                     "border p-4 rounded-md space-y-2 cursor-pointer transition",
                     selectedMilestone?.milestoneId === item.milestoneId &&
-                    "ring-2 ring-light-green",
+                    `ring-2 ${isDeclined ? "ring-red-500" : "ring-light-green"}`,
                     item.status === TODO &&
                     "border-gray-200 bg-linear-to-r from-white to-light-gray",
                     (item.status === PAID ||
                       item.status === PARTIAL_PAID) &&
                     "border-light-green bg-linear-to-r from-Secondary to-white",
                     item.status === IN_REVIEW &&
-                    "border-orange-400 bg-linear-to-r from-orange/20 to-white"
+                    "border-orange-400 bg-linear-to-r from-orange/20 to-white",
+                    isDeclined &&
+                    "border-red-500 bg-linear-to-r from-white to-red-500/10"
                   )}
                 >
                   <div className="flex justify-between">
@@ -100,13 +121,19 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                           item.status === IN_REVIEW && "bg-orange",
                           (item.status === PAID ||
                             item.status === PARTIAL_PAID) &&
-                          "bg-light-green"
+                          "bg-light-green",
+                          isDeclined && "bg-red-500"
                         )}
                       >
                         {item.id}
                       </div>
 
-                      <h2 className="text-base font-medium text-Primary">
+                      <h2
+                        className={cn(
+                          "text-base font-medium",
+                          isDeclined ? "text-red-500" : "text-Primary"
+                        )}
+                      >
                         {item.title}
                       </h2>
                     </div>
@@ -117,10 +144,11 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                         item.status === IN_REVIEW && "bg-orange",
                         (item.status === PAID ||
                           item.status === PARTIAL_PAID) &&
-                        "bg-light-green"
+                        "bg-light-green",
+                        isDeclined && "bg-red-500 text-white"
                       )}
                     >
-                      {item.status === TODO ? "To Do" : item.status}
+                      {getStatusLabel(item.status)}
                       <ChevronRight />
                     </Badge>
                   </div>
@@ -129,13 +157,19 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                     {item.contentRequirement.join(" + ")}
                   </p>
 
-                  <div className="flex justify-between text-light-green">
+                  <div
+                    className={cn(
+                      "flex justify-between",
+                      isDeclined ? "text-red-500" : "text-light-green"
+                    )}
+                  >
                     <p className="text-xl font-semibold">৳ {item.payout}</p>
                     <p className="text-sm">DAY {item.day}</p>
                   </div>
                 </div>
               </CarouselItem>
-            ))}
+              );
+            })}
           </CarouselContent>
 
           <CarouselPrevious />

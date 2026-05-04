@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Flag } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,13 +26,30 @@ function formatReportDate(value?: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
 
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const hours = date.getHours();
+  const displayHour = hours % 12 || 12;
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const period = hours >= 12 ? "PM" : "AM";
+
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}, ${displayHour}:${minutes} ${period}`;
+}
+
+function getReportDate(item: SubmissionReportItem) {
+  return item.date ?? item.createdAt;
 }
 
 export default function SubmittedReportsDialog({
@@ -70,7 +88,7 @@ export default function SubmittedReportsDialog({
       }
     }
 
-    load();
+    void load();
 
     return () => {
       active = false;
@@ -79,52 +97,44 @@ export default function SubmittedReportsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[760px] rounded-2xl border border-[#DADADA] bg-white p-0 shadow-xl">
-        <DialogHeader className="border-b border-[#E9E9E9] px-5 py-4 sm:px-6">
-          <DialogTitle className="text-base font-semibold text-[#2E5B1F] sm:text-lg">
+      <DialogContent showCloseButton={false} className="w-[calc(100vw-32px)] max-w-[527px] gap-0 rounded-[14px] border border-[#9AB279] bg-white p-0 shadow-xl sm:max-w-[527px]">
+        <DialogHeader className="px-7 pb-4 pt-7">
+          <DialogTitle className="flex items-center gap-3 text-xl font-semibold text-[#6F9655]">
+            <Flag className="h-8 w-8 fill-[#6F9655] text-[#6F9655]" />
             Submitted Report
           </DialogTitle>
         </DialogHeader>
 
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+        <div className="max-h-[70vh] overflow-y-auto px-7 pb-8 pr-5">
           {isLoading ? (
-            <div className="rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-sm text-muted-foreground">
+            <div className="rounded-[12px] border border-[#9AB279] bg-white p-4 text-sm text-[#355B25]">
               Loading report...
             </div>
           ) : error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-500">
+            <div className="rounded-[12px] border border-[#FF1616] bg-[#FFF8F8] p-4 text-sm text-[#FF1616]">
               {error}
             </div>
           ) : !items.length ? (
-            <div className="rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] p-4 text-sm text-muted-foreground">
+            <div className="rounded-[12px] border border-[#9AB279] bg-white p-4 text-sm text-[#355B25]">
               No report found.
             </div>
           ) : (
-            <div className="space-y-4">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-[#D8D8D8] bg-white p-4"
-                >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h4 className="text-sm font-semibold text-[#2E5B1F] sm:text-base">
-                        Submitted Report
-                      </h4>
-                      <p className="mt-1 text-xs text-[#6B7280] sm:text-sm">
-                        {formatReportDate(item.createdAt)}
-                      </p>
-                    </div>
-
-                    <div className="inline-flex w-fit rounded-full bg-[#EEF5E7] px-3 py-1 text-[11px] font-medium capitalize text-[#5B7B3A] sm:text-xs">
-                      {item.authorRole || "client"}
-                    </div>
+            <div className="space-y-6 pr-2">
+              {items.map((item, index) => (
+                <article key={item.id} className="space-y-3">
+                  <div className="flex items-center justify-between gap-4 rounded-[10px] bg-[#F4F6DC] px-5 py-3 text-[#28521F]">
+                    <h4 className="text-lg font-semibold leading-none">
+                      Report {index + 1}
+                    </h4>
+                    <p className="text-base font-medium leading-none">
+                      {formatReportDate(getReportDate(item))}
+                    </p>
                   </div>
 
-                  <p className="mt-4 text-sm leading-6 text-[#355B25]">
+                  <div className="min-h-[86px] rounded-[14px] border border-[#9AB279] bg-white px-4 py-3 text-base leading-7 text-black">
                     {item.content?.trim() || "No report content."}
-                  </p>
-                </div>
+                  </div>
+                </article>
               ))}
             </div>
           )}

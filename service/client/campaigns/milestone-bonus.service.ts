@@ -31,6 +31,7 @@ export async function provideMilestoneBonus({
     ServiceResponse<ProvideMilestoneBonusResponse>
   >(endpoint, {
     amount,
+    "locale": "en"
   });
 
   return response.data;

@@ -4,9 +4,11 @@ export interface ReportLogItem {
     campaignName: string;
     milestoneTitle: string;
     feedback: string;
-    actionTaken: "approve" | "decline" | "comment" | "status_changed";
-    submissionStatus: "approved" | "declined" | "in_review";
-    logStatus: "resolved" | "flagged" | "pending";
+    actionTaken: "approve" | "decline" | "comment" | "status_changed" | string;
+    status: "Pending" | "Resolved" | "Flagged" | string;
+    milestoneStatus: string;
+    submissionStatus?: "approved" | "declined" | "in_review" | string;
+    logStatus?: "resolved" | "flagged" | "pending" | string;
 }
 
 export interface ReportLogsMeta {

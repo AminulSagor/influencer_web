@@ -86,6 +86,10 @@ function deriveMilestonesFromSelectedInfluencer(
       ) {
         milestoneStatus = "completed";
       } else if (
+        ["declined", "decline", "rejected"].includes(normalizedStatus)
+      ) {
+        milestoneStatus = "declined";
+      } else if (
         ["in_review", "active", "in_progress"].includes(normalizedStatus)
       ) {
         milestoneStatus = "in_progress";
@@ -175,6 +179,7 @@ function shouldShowMilestoneDetails(
       "in_review",
       "in_progress",
       "decline",
+      "declined",
       "completed",
       "completed_plus_plus",
     ];
@@ -186,6 +191,7 @@ function shouldShowMilestoneDetails(
   const allowedStatuses = [
     "in_review",
     "decline",
+    "declined",
     "completed",
     "completed_plus_plus",
     "in_progress",

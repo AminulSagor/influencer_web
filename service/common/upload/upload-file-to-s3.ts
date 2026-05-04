@@ -1,12 +1,16 @@
-import axios from "axios";
-
 export const uploadFileToS3 = async (
-    signedUrl: string,
-    file: File
+  signedUrl: string,
+  file: File
 ): Promise<void> => {
-    await axios.put(signedUrl, file, {
-        headers: {
-            "Content-Type": file.type,
-        },
-    });
+  const response = await fetch(signedUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type,
+    },
+    body: file,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to upload file to storage");
+  }
 };

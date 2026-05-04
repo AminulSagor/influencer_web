@@ -31,7 +31,6 @@ export type ProfileFormState = {
   thana: string;
   zilla: string;
   fullAddress: string;
-  website: string;
 };
 
 const defaultForm: ProfileFormState = {
@@ -42,7 +41,6 @@ const defaultForm: ProfileFormState = {
   thana: "",
   zilla: "",
   fullAddress: "",
-  website: "",
 };
 
 const ProfileUpdateCard = () => {
@@ -71,7 +69,6 @@ const ProfileUpdateCard = () => {
       thana: data.thana || "",
       zilla: data.zilla || "",
       fullAddress: data.fullAddress || "",
-      website: data.website || "",
     });
     setPreviewImage(data.profileImg || "");
     setSelectedFile(null);
@@ -223,7 +220,6 @@ const ProfileUpdateCard = () => {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       profileImg: finalProfileImg,
-      website: form.website.trim(),
     });
 
     if (profileResult !== "success") {
@@ -254,7 +250,6 @@ const ProfileUpdateCard = () => {
           thana: form.thana.trim(),
           zilla: form.zilla.trim(),
           fullAddress: form.fullAddress.trim(),
-          website: form.website.trim(),
         }
       : null;
 
@@ -265,7 +260,6 @@ const ProfileUpdateCard = () => {
       setForm((prev) => ({
         ...prev,
         profileImg: finalProfileImg,
-        website: form.website.trim(),
       }));
       setPreviewImage(finalProfileImg);
       setSelectedFile(null);
@@ -356,8 +350,6 @@ const ProfileUpdateCard = () => {
                     isSaving={isSaving}
                     email={profile?.email || ""}
                     phone={profile?.phone || ""}
-                    nidNumber={profile?.nidNumber || ""}
-                    binNumber={profile?.binNumber || ""}
                     errors={errors}
                     onChange={handleChange}
                   />

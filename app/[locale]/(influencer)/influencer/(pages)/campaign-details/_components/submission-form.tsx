@@ -210,6 +210,19 @@ const SubmissionForm = ({
     setStatus(initialSubmission ? formatSubmissionStatus(initialSubmission.status) : "");
   }, [form, initialSubmission]);
 
+  const ownershipConfirmed = form.watch("submissions.0.ownershipConfirmed");
+  const termsAccepted = form.watch("submissions.0.termsAccepted");
+  const canSubmit = ownershipConfirmed === true && termsAccepted === true;
+  const normalizedInitialStatus = String(initialSubmission?.status ?? "").toLowerCase();
+  const isInitialDeclined = ["declined", "decline", "rejected"].includes(
+    normalizedInitialStatus
+  );
+  const showDeclinedReason =
+    isInitialDeclined && Boolean(initialSubmission?.rejectionReason?.trim());
+  const statusBadgeClass = isInitialDeclined
+    ? "bg-[#FF1616] text-white"
+    : "bg-orange/30 text-orange";
+
   const onSubmit = async (values: FormType) => {
     try {
       setSubmitting(true);
@@ -274,7 +287,7 @@ const SubmissionForm = ({
 
   return (
     <div className="space-y-2">
-      <div className="border rounded-xl p-4">
+      <div className={`rounded-xl border p-4 ${isInitialDeclined ? "border-[#FF1616]" : ""}`}>
         <Accordion type="single" collapsible defaultValue="submission-0">
           <AccordionItem value="submission-0">
             <AccordionTrigger className="flex justify-between hover:no-underline cursor-pointer">
@@ -283,8 +296,8 @@ const SubmissionForm = ({
                   Your Submission
                 </p>
                 {status && (
-                  <Badge className="bg-orange/30 text-orange">
-                    {status}
+                  <Badge className={statusBadgeClass}>
+                    {isInitialDeclined ? "Declined" : status}
                   </Badge>
                 )}
               </div>
@@ -296,27 +309,45 @@ const SubmissionForm = ({
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="px-2 space-y-4"
                 >
-                  <FormField
-                    control={form.control}
-                    name="submissions.0.description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel className="text-lg flex items-center gap-2">
-                            <FaUserEdit size={20} />
-                            Description / Update (Optional)
-                          </FormLabel>
-                        </div>
+                  <div
+                    className={`grid grid-cols-1 gap-4 ${
+                      showDeclinedReason ? "lg:grid-cols-2" : ""
+                    }`}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="submissions.0.description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-lg flex items-center gap-2">
+                              <FaUserEdit size={20} />
+                              Description / Update (Optional)
+                            </FormLabel>
+                          </div>
 
-                        <FormControl>
-                          <Textarea
-                            placeholder="Write Description"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                          <FormControl>
+                            <Textarea
+                              placeholder="Write Description"
+                              {...field}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {showDeclinedReason ? (
+                      <div className="space-y-2">
+                        <p className="text-lg font-medium text-[#FF1616]">
+                          Declined Reason
+                        </p>
+                        <div className="min-h-[112px] rounded-[10px] border border-[#FF1616] bg-white p-4 text-sm leading-relaxed text-black/80">
+                          {initialSubmission?.rejectionReason?.trim() ||
+                            "Declined reason will be visible here"}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
 
                   <SubmissionProofs
                     control={form.control}
@@ -393,8 +424,8 @@ const SubmissionForm = ({
 
                   <Button
                     type="submit"
-                    disabled={submitting}
-                    className="bg-light-green hover:bg-light-green/90 w-full"
+                    disabled={submitting || !canSubmit}
+                    className="bg-light-green hover:bg-light-green/90 w-full disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {submitting
                       ? "Submitting..."
