@@ -22,12 +22,15 @@ import {
 interface MileStoneCardProps {
   milestoneId: string;
   canSubmit?: boolean;
+  onMilestoneChanged?: () => void | Promise<void>;
 }
 
 const statusConfig: Record<MilestoneStatus, { border: string; text: string; badge: string }> = {
   todo: { border: "from-off-white to-white border-gray-300", text: "text-dark-gray", badge: "bg-dark-gray" },
   in_review: { border: "from-white to-orange/20 border-orange-400", text: "text-orange", badge: "bg-orange" },
   approved: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
+  completed: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
+  completed_plus_plus: { border: "from-[#7F9B54] to-[#7F9B54] border-[#7F9B54]", text: "text-white", badge: "bg-[#E8F0DB] text-[#7F9B54]" },
   paid: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
   partial_paid: { border: "from-Secondary to-white border-light-green", text: "text-light-green", badge: "bg-light-green" },
   declined: { border: "from-[#FFF8F8] to-[#FFF8F8] border-[#FF5A5A]", text: "text-[#FF1616]", badge: "bg-[#FF1616] text-white" },
@@ -37,12 +40,40 @@ const statusLabel: Record<MilestoneStatus, string> = {
   todo: "To Do",
   in_review: "In Review",
   approved: "Approved",
+  completed: "Completed",
+  completed_plus_plus: "Completed++",
   paid: "Paid",
   partial_paid: "Partial Paid",
   declined: "Declined",
 };
 
-const MileStoneCard = ({ milestoneId, canSubmit = true }: MileStoneCardProps) => {
+function resolveMilestoneStatus(
+  status?: string | null,
+  isMetrixOverflowed?: boolean
+): MilestoneStatus {
+  const normalizedStatus = String(status ?? "").trim().toLowerCase();
+  const completedStatuses = ["complete", "completed", "approved", "accepted", "completed_plus_plus"];
+
+  if (isMetrixOverflowed && completedStatuses.includes(normalizedStatus)) {
+    return "completed_plus_plus";
+  }
+
+  if (normalizedStatus === "completed_plus_plus") return "completed_plus_plus";
+  if (normalizedStatus === "complete" || normalizedStatus === "completed" || normalizedStatus === "accepted") {
+    return "completed";
+  }
+  if (normalizedStatus === "in-review") return "in_review";
+  if (normalizedStatus === "partial-paid") return "partial_paid";
+  if (normalizedStatus === "decline" || normalizedStatus === "rejected") return "declined";
+
+  return (normalizedStatus as MilestoneStatus) || "todo";
+}
+
+const MileStoneCard = ({
+  milestoneId,
+  canSubmit = true,
+  onMilestoneChanged,
+}: MileStoneCardProps) => {
   const [milestone, setMilestone] = useState<MilestoneDetail | null>(null);
   const [status, setStatus] = useState<MilestoneStatus>("todo");
   const [submissions, setSubmissions] = useState<MilestoneSubmission[]>([]);
@@ -55,7 +86,12 @@ const MileStoneCard = ({ milestoneId, canSubmit = true }: MileStoneCardProps) =>
       const res = await MilestoneService.getMilestoneDetail(milestoneId);
       const nextSubmissions = res.data.submissions ?? [];
       setMilestone(res.data.milestone);
-      setStatus(res.data.status);
+      setStatus(
+        resolveMilestoneStatus(
+          res.data.status,
+          res.data.milestone?.isMetrixOverflowed
+        )
+      );
       setSubmissions(nextSubmissions);
       setLatestSubmission(
         res.data.latestSubmission ?? nextSubmissions[0] ?? nextSubmissions[nextSubmissions.length - 1] ?? null
@@ -72,6 +108,11 @@ const MileStoneCard = ({ milestoneId, canSubmit = true }: MileStoneCardProps) =>
   useEffect(() => {
     fetchDetail();
   }, [fetchDetail]);
+
+  const handleSubmitted = useCallback(async () => {
+    await fetchDetail();
+    await onMilestoneChanged?.();
+  }, [fetchDetail, onMilestoneChanged]);
 
   if (loading) {
     return (
@@ -191,20 +232,20 @@ const MileStoneCard = ({ milestoneId, canSubmit = true }: MileStoneCardProps) =>
           </div>
         </div>
         {canSubmit && status === "todo" && (
-          <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
+          <SubmissionForm milestoneId={milestoneId} onSubmitted={handleSubmitted} />
         )}
 
         {canSubmit && (status === "declined" || status === "in_review") && latestSubmission && (
           <SubmissionForm
             milestoneId={milestoneId}
-            onSubmitted={fetchDetail}
+            onSubmitted={handleSubmitted}
             resubmitSubmissionId={latestSubmission.id}
             initialSubmission={latestSubmission}
           />
         )}
 
         {canSubmit && status === "declined" && !latestSubmission && (
-          <SubmissionForm milestoneId={milestoneId} onSubmitted={fetchDetail} />
+          <SubmissionForm milestoneId={milestoneId} onSubmitted={handleSubmitted} />
         )}
 
         {submissions.length > 0 &&

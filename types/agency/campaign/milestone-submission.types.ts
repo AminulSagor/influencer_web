@@ -19,6 +19,8 @@ export interface AgencyMilestoneSubmissionItem {
     achievedLikes: number | null;
     achievedComments: number | null;
     achievedFollows: number | null;
+    targetTitle?: MilestoneTargetTitle | null;
+    targetAmount?: number | string | null;
     paidAmount: string;
     paymentStatus: string;
     adminFeedback: string | null;
@@ -45,6 +47,7 @@ export interface AgencyMilestoneDetails {
     amount: string;
     status: string;
     order: number;
+    isMetrixOverflowed?: boolean;
     campaignId: string;
     submissions: AgencyMilestoneSubmissionItem[];
     createdAt: string;
@@ -63,16 +66,28 @@ export interface SubmitAgencyMilestonePayload {
     liveLinks: string[];
     proofAttachments: string[];
     requestPaymentAmount: number;
-    achievedReach?: number;
-    achievedViews?: number;
-    achievedLikes?: number;
-    achievedComments?: number;
-    achievedFollows?: number;
+    targetTitle: MilestoneTargetTitle;
+    targetAmount: number;
 }
 
 export interface SubmitAgencyMilestoneResponse {
     success?: boolean;
-    message: string | string[];
+    message?: string | string[];
+    statusCode?: number;
+    error?: string;
+}
+
+export type UpdateAgencySubmissionResultsPayload = Partial<Record<
+    "achievedReach" | "achievedViews" | "achievedLikes" | "achievedComments" | "achievedFollows",
+    number
+>>;
+
+export interface UpdateAgencySubmissionResultsResponse {
+    success?: boolean;
+    message?: string | string[];
+    data?: {
+        submissionId?: string;
+    };
     statusCode?: number;
     error?: string;
 }
@@ -101,6 +116,8 @@ export interface MilestoneSubmissionApiItem {
     paymentStatus: string;
     isClientApproved: boolean;
     metrics: MilestoneSubmissionMetricsResponse | null;
+    targetTitle?: MilestoneTargetTitle | null;
+    targetAmount?: number | string | null;
     submittedAt: string;
     adminFeedback: string | null;
     rejectionReason: string | null;

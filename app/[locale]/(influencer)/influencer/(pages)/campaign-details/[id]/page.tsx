@@ -123,7 +123,11 @@ const Page = () => {
       <CampaignBriefSection campaign={job.campaign} milestones={job.milestones} />
 
       {/* milestone area */}
-      <MilestoneClient jobId={jobId} isAccepted={isAccepted} />
+      <MilestoneClient
+        jobId={jobId}
+        isAccepted={isAccepted}
+        onMilestoneChanged={fetchJob}
+      />
     </div>
   );
 };

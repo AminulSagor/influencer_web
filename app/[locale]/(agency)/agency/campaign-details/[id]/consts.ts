@@ -7,6 +7,8 @@ export const TODO = "To Do";
 export const PAID = "Paid";
 export const PARTIAL_PAID = "Partial Paid";
 export const IN_REVIEW = "In Review";
+export const COMPLETED = "Completed";
+export const COMPLETED_PLUS_PLUS = "Completed++";
 
 export interface PaymanetMilestoneDataType {
   id: number;
@@ -17,6 +19,7 @@ export interface PaymanetMilestoneDataType {
   targetTitle: MilestoneTargetTitle | null;
   payout: number;
   status: string;
+  isMetrixOverflowed?: boolean;
   day: number;
   promotionalGoal: string;
   submissions?: AgencyMilestoneSubmissionItem[];

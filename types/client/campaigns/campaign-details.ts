@@ -20,6 +20,21 @@ export type CampaignSocialLink = {
   url: string;
 };
 
+
+export type CampaignAgencyProfile = {
+  id?: string | null;
+  agencyId?: string | null;
+  agencyName?: string | null;
+  name?: string | null;
+  logo?: string | null;
+  image?: string | null;
+  profileImg?: string | null;
+};
+
+export type CampaignAssignedAgency = CampaignAgencyProfile & {
+  agency?: CampaignAgencyProfile | null;
+};
+
 export type CampaignClient = {
   id: string;
   brandName: string;
@@ -119,6 +134,9 @@ export type ClientCampaignDetails = {
   totalBudget: string;
   netPayableAmount: string;
   selectedAgencyId: string | null;
+  selectedAgency?: CampaignAgencyProfile | null;
+  agency?: CampaignAgencyProfile | null;
+  assignedAgencies?: CampaignAssignedAgency[];
   paymentStatus: CampaignPaymentStatus;
   paidAmount: string;
   dueAmount: string;

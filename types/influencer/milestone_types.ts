@@ -1,6 +1,14 @@
 // Types derived from the Postman API collection for milestones and submissions
 
-export type MilestoneStatus = "todo" | "in_review" | "approved" | "paid" | "declined" | "partial_paid";
+export type MilestoneStatus =
+  | "todo"
+  | "in_review"
+  | "approved"
+  | "completed"
+  | "completed_plus_plus"
+  | "paid"
+  | "declined"
+  | "partial_paid";
 
 // GET /campaign/influencer/job/:jobId/milestones
 export interface MilestoneListItem {
@@ -12,6 +20,8 @@ export interface MilestoneListItem {
   order: number;
   expectedLikes: number;
   expectedComments: number;
+  expectedFollows?: number | null;
+  isMetrixOverflowed?: boolean;
   status: MilestoneStatus;
 }
 
@@ -42,6 +52,7 @@ export interface MilestoneDetail {
   amount: number;
   bonusAmount: number;
   bonusStatus: string;
+  isMetrixOverflowed?: boolean;
 }
 
 export interface MilestoneSubmission {

@@ -26,9 +26,10 @@ export type AgencyCampaignMilestone = {
     expectedFollows: number | null;
     promotionGoal: string | null;
     amount: string;
-    bonusAmount: string;
+    bonusAmount: string | number;
     bonusStatus: string;
     status: string;
+    isMetrixOverflowed?: boolean;
     order: number;
     campaignId: string;
     createdAt: string;

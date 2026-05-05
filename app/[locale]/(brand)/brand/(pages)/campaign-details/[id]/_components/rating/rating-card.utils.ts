@@ -1,5 +1,9 @@
-import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
-import { RateableEntity } from "./rating-card.types";
+import type {
+  CampaignAgencyProfile,
+  CampaignAssignedAgency,
+  ClientCampaignDetails,
+} from "@/types/client/campaigns/campaign-details";
+import type { RateableEntity } from "./rating-card.types";
 
 export const MAX_RATING = 5;
 
@@ -11,6 +15,62 @@ export const normalizeRating = (value: number) => {
 export const formatRatedText = (value: number) => {
   if (Number.isInteger(value)) return `${value}`;
   return value.toFixed(1);
+};
+
+const toText = (value: unknown) => String(value ?? "").trim();
+
+const normalizeStatus = (status?: string | null) =>
+  toText(status).toLowerCase().replace(/[\s-]+/g, "_");
+
+export const isCampaignCompletedForRating = (
+  campaign: ClientCampaignDetails,
+) => {
+  const status = normalizeStatus(campaign.status);
+  return status === "completed" || status === "complete";
+};
+
+const pickAgencyProfile = (
+  campaign: ClientCampaignDetails,
+): CampaignAgencyProfile | null => {
+  const selectedAgencyId = toText(campaign.selectedAgencyId);
+
+  const selectedAssignedAgency = campaign.assignedAgencies?.find(
+    (item: CampaignAssignedAgency) => {
+      const agency = item.agency ?? item;
+      const agencyId = toText(
+        agency.agencyId ?? agency.id ?? item.agencyId ?? item.id,
+      );
+      return agencyId && agencyId === selectedAgencyId;
+    },
+  );
+
+  if (selectedAssignedAgency) {
+    return selectedAssignedAgency.agency ?? selectedAssignedAgency;
+  }
+
+  return campaign.selectedAgency ?? campaign.agency ?? null;
+};
+
+const getAgencyRateableEntity = (
+  campaign: ClientCampaignDetails,
+): RateableEntity => {
+  const agency = pickAgencyProfile(campaign);
+
+  return {
+    id:
+      toText(campaign.selectedAgencyId) ||
+      toText(agency?.agencyId) ||
+      toText(agency?.id) ||
+      toText(campaign.agencyOfferId) ||
+      campaign.id,
+    name: toText(agency?.agencyName) || toText(agency?.name) || "Agency",
+    image:
+      toText(agency?.logo) ||
+      toText(agency?.image) ||
+      toText(agency?.profileImg) ||
+      null,
+    type: "agency",
+  };
 };
 
 export const getCampaignRateableEntities = (
@@ -33,6 +93,10 @@ export const getCampaignRateableEntities = (
     }
 
     return Array.from(map.values());
+  }
+
+  if (campaign.campaignType === "paid_ad") {
+    return [getAgencyRateableEntity(campaign)];
   }
 
   return [];

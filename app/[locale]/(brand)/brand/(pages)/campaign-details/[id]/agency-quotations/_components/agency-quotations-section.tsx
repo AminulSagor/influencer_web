@@ -6,23 +6,21 @@ import { ChevronDown, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import { useCampaignBids } from "@/hooks/use-campaign-bids";
-import { CampaignBid } from "@/types/client/campaigns/campaign-bids.types";
+import {
+  CampaignBid,
+  CampaignBidsSortBy,
+} from "@/types/client/campaigns/campaign-bids.types";
 import { campaignBidsService } from "@/service/client/campaigns/campaign-bids.service";
 import { notifySuccess, notifyError } from "@/utils/toast_util";
 import PaymentDialog from "@/app/[locale]/(brand)/brand/(pages)/payment/_components/payment-dialog";
+import PageFooterPagination from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/page-footer-pagination";
 
 type AgencyQuotationsSectionProps = {
   campaign: ClientCampaignDetails;
 };
 
-const ITEMS_PER_PAGE = 12;
-
-type SortKey =
-  | "agencyName"
-  | "agencyFeePercent"
-  | "agencyFeeAmount"
-  | "budgetExcludingAgencyFee"
-  | "inDollar";
+const ITEMS_PER_PAGE = 10;
+const SEARCH_DEBOUNCE_MS = 500;
 
 type DateFilterKey = "all" | "last7Days" | "last30Days" | "thisMonth";
 
@@ -33,78 +31,116 @@ const DATE_FILTER_OPTIONS: Array<{ key: DateFilterKey; label: string }> = [
   { key: "thisMonth", label: "This Month" },
 ];
 
-const isWithinDateFilter = (
-  createdAt: string | undefined,
-  filter: DateFilterKey,
-) => {
-  if (filter === "all") return true;
-  if (!createdAt) return false;
+const SORT_OPTIONS: Array<{ key: CampaignBidsSortBy; label: string }> = [
+  { key: "date", label: "Newest" },
+  { key: "fee", label: "Agency Fee(%)" },
+  { key: "dollarRate", label: "Dollar Rate" },
+];
 
-  const createdDate = new Date(createdAt);
-  if (Number.isNaN(createdDate.getTime())) return false;
+const toIsoDate = (date: Date) => date.toISOString();
+
+const getDateRange = (filter: DateFilterKey) => {
+  if (filter === "all") {
+    return {};
+  }
 
   const now = new Date();
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
 
   if (filter === "last7Days") {
-    const start = new Date();
+    const start = new Date(now);
     start.setDate(now.getDate() - 7);
     start.setHours(0, 0, 0, 0);
-    return createdDate >= start && createdDate <= now;
+
+    return {
+      startDate: toIsoDate(start),
+      endDate: toIsoDate(end),
+    };
   }
 
   if (filter === "last30Days") {
-    const start = new Date();
+    const start = new Date(now);
     start.setDate(now.getDate() - 30);
     start.setHours(0, 0, 0, 0);
-    return createdDate >= start && createdDate <= now;
+
+    return {
+      startDate: toIsoDate(start),
+      endDate: toIsoDate(end),
+    };
   }
 
-  if (filter === "thisMonth") {
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-    return createdDate >= start && createdDate <= end;
-  }
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  start.setHours(0, 0, 0, 0);
 
-  return true;
+  return {
+    startDate: toIsoDate(start),
+    endDate: toIsoDate(end),
+  };
 };
 
 export default function AgencyQuotationsSection({
   campaign,
 }: AgencyQuotationsSectionProps) {
   const t = useTranslations("brand.payment");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState<CampaignBid | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("agencyName");
-  const [sortAsc, setSortAsc] = useState(true);
-  const [dateFilter, setDateFilter] = useState<DateFilterKey>("last30Days");
+  const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(
+    campaign.selectedAgencyId,
+  );
+  const [sortBy, setSortBy] = useState<CampaignBidsSortBy>("date");
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilterKey>("all");
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
 
+  const sortDropdownRef = useRef<HTMLDivElement | null>(null);
   const dateDropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const { items, isLoading, error, refetch } = useCampaignBids({
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+      setCurrentPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [searchInput]);
+
+  const dateRange = useMemo(() => getDateRange(dateFilter), [dateFilter]);
+
+  const { items, pagination, isLoading, error, refetch } = useCampaignBids({
     campaignId: campaign.id,
     baseBudget: campaign.baseBudget,
     enabled: Boolean(campaign.id),
+    search: debouncedSearch || undefined,
+    sortBy,
+    sortOrder: "DESC",
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
   });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
       if (
         dateDropdownRef.current &&
-        !dateDropdownRef.current.contains(event.target as Node)
+        !dateDropdownRef.current.contains(target)
       ) {
         setDateDropdownOpen(false);
+      }
+
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(target)
+      ) {
+        setSortDropdownOpen(false);
       }
     };
 
@@ -114,127 +150,57 @@ export default function AgencyQuotationsSection({
     };
   }, []);
 
-  const filteredItems = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    let list = [...items];
-
-    list = list.filter((item) =>
-      isWithinDateFilter(item.createdAt, dateFilter),
-    );
-
-    if (keyword) {
-      list = list.filter((item) => {
-        const nicheText = item.nicheLabels.join(" ").toLowerCase();
-
-        return (
-          item.agency.agencyName.toLowerCase().includes(keyword) ||
-          item.agencyId.toLowerCase().includes(keyword) ||
-          nicheText.includes(keyword) ||
-          (item.email ?? "").toLowerCase().includes(keyword) ||
-          (item.phone ?? "").toLowerCase().includes(keyword)
-        );
-      });
-    }
-
-    list.sort((a, b) => {
-      const aValue =
-        sortKey === "agencyName"
-          ? a.agency.agencyName.toLowerCase()
-          : a[sortKey];
-      const bValue =
-        sortKey === "agencyName"
-          ? b.agency.agencyName.toLowerCase()
-          : b[sortKey];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortAsc
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      return sortAsc
-        ? Number(aValue) - Number(bValue)
-        : Number(bValue) - Number(aValue);
-    });
-
-    return list;
-  }, [items, search, sortKey, sortAsc, dateFilter]);
-
-  const totalItems = filteredItems.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
-
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredItems, currentPage]);
-
-  const startItem =
-    totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const totalItems = pagination.total;
+  const totalPages = Math.max(1, pagination.totalPages);
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
-
-  const showFooter = totalItems > ITEMS_PER_PAGE;
-
-  const visiblePages = useMemo(() => {
-    const pages: number[] = [];
-    for (let i = 1; i <= totalPages; i += 1) {
-      pages.push(i);
-    }
-    return pages;
-  }, [totalPages]);
 
   const handleAccept = async (bid: CampaignBid) => {
     setSelectedBid(bid);
     setPaymentDialogOpen(true);
   };
 
-  const handleBeforePayment = async (amount: number) => {
+  const handleBeforePayment = async () => {
     if (!selectedBid) return;
 
-    // First, select the agency
     try {
       await campaignBidsService.selectAgency({
         campaignId: campaign.id,
         agencyId: selectedBid.agencyId,
       });
 
-      // Store the selected agency ID
       setSelectedAgencyId(selectedBid.agencyId);
-
       notifySuccess("Agency selected successfully!");
     } catch (error) {
       console.error("Failed to select agency:", error);
       notifyError("Failed to select agency. Please try again.");
-      throw error; // Prevent payment from proceeding
+      throw error;
     }
   };
 
   const handlePaymentSuccess = () => {
     setPaymentDialogOpen(false);
     setSelectedBid(null);
-    refetch(); // Refresh to update the selected status
+    refetch();
   };
 
-  const handleSortToggle = (key: SortKey) => {
+  const handleSortChange = (nextSortBy: CampaignBidsSortBy) => {
+    setSortBy(nextSortBy);
     setCurrentPage(1);
-
-    if (sortKey === key) {
-      setSortAsc((prev) => !prev);
-      return;
-    }
-
-    setSortKey(key);
-    setSortAsc(true);
+    setSortDropdownOpen(false);
   };
+
+  const selectedSortLabel =
+    SORT_OPTIONS.find((option) => option.key === sortBy)?.label ?? "Newest";
 
   const selectedDateFilterLabel =
     DATE_FILTER_OPTIONS.find((option) => option.key === dateFilter)?.label ??
-    "Last 30 Days";
+    "All Time";
 
-  // Get the total due amount from campaign
   const totalDue = Number(
     campaign.paymentInfo?.dueAmount ?? campaign.dueAmount ?? 0,
   );
+
   return (
     <>
       <section className="overflow-hidden rounded-3xl border border-light-gray bg-white">
@@ -252,25 +218,45 @@ export default function AgencyQuotationsSection({
             <div className="relative xl:col-span-8">
               <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-black/25" />
               <input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by agency name, phone or email..."
                 className="h-12 w-full rounded-[14px] border border-light-gray bg-white pl-12 pr-4 text-sm text-black outline-none placeholder:text-black/25"
               />
             </div>
 
-            <div className="xl:col-span-2">
+            <div className="relative xl:col-span-2" ref={sortDropdownRef}>
               <button
                 type="button"
-                onClick={() => handleSortToggle("agencyFeePercent")}
+                onClick={() => setSortDropdownOpen((prev) => !prev)}
                 className="flex h-12 w-full items-center justify-between rounded-[14px] border border-primary-color/40 bg-[#F7F8EA] px-4 text-sm font-medium text-primary-color"
               >
-                <span>Agency Fee (%)</span>
+                <span>{selectedSortLabel}</span>
                 <ChevronDown className="size-4" />
               </button>
+
+              {sortDropdownOpen ? (
+                <div className="absolute right-0 top-[calc(100%+8px)] z-20 min-w-[180px] overflow-hidden rounded-[14px] border border-light-gray bg-white shadow-lg">
+                  {SORT_OPTIONS.map((option) => {
+                    const isActive = option.key === sortBy;
+
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => handleSortChange(option.key)}
+                        className={`flex w-full items-center justify-start px-4 py-3 text-left text-sm transition ${
+                          isActive
+                            ? "bg-[#F7F8EA] font-medium text-primary-color"
+                            : "text-black hover:bg-[#F8F9ED]"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
 
             <div className="relative xl:col-span-2" ref={dateDropdownRef}>
@@ -320,35 +306,15 @@ export default function AgencyQuotationsSection({
                     <tr className="bg-[#7FA35A] text-left text-white">
                       <th className="px-6 py-4 text-sm">Name</th>
                       <th className="px-4 py-4 text-sm">Niche</th>
-                      <th
-                        className="cursor-pointer px-4 py-4 text-sm"
-                        onClick={() => handleSortToggle("agencyFeePercent")}
-                      >
-                        Agency Fee(%)
-                      </th>
-                      <th
-                        className="cursor-pointer px-4 py-4 text-sm"
-                        onClick={() => handleSortToggle("agencyFeeAmount")}
-                      >
-                        Agency Fee(৳)
-                      </th>
-                      <th
-                        className="cursor-pointer px-4 py-4 text-sm leading-tight"
-                        onClick={() =>
-                          handleSortToggle("budgetExcludingAgencyFee")
-                        }
-                      >
+                      <th className="px-4 py-4 text-sm">Agency Fee(%)</th>
+                      <th className="px-4 py-4 text-sm">Agency Fee(৳)</th>
+                      <th className="px-4 py-4 text-sm leading-tight">
                         Budget Exc.
                         <br />
                         Agency Fee
                       </th>
                       <th className="px-4 py-4 text-sm">Date</th>
-                      <th
-                        className="cursor-pointer px-4 py-4 text-sm"
-                        onClick={() => handleSortToggle("inDollar")}
-                      >
-                        In Dollar($)
-                      </th>
+                      <th className="px-4 py-4 text-sm">In Dollar($)</th>
                       <th className="px-6 py-4 text-right text-sm">Action</th>
                     </tr>
                   </thead>
@@ -372,7 +338,7 @@ export default function AgencyQuotationsSection({
                           {error}
                         </td>
                       </tr>
-                    ) : paginatedItems.length === 0 ? (
+                    ) : items.length === 0 ? (
                       <tr>
                         <td
                           colSpan={8}
@@ -382,7 +348,7 @@ export default function AgencyQuotationsSection({
                         </td>
                       </tr>
                     ) : (
-                      paginatedItems.map((item, index) => {
+                      items.map((item, index) => {
                         const firstNiche = item.nicheLabels[0] ?? "N/A";
                         const extraNicheCount =
                           item.nicheLabels.length > 1
@@ -400,7 +366,6 @@ export default function AgencyQuotationsSection({
                             )
                           : "N/A";
 
-                        // Check if this agency is selected
                         const isSelected = selectedAgencyId === item.agencyId;
 
                         return (
@@ -477,7 +442,7 @@ export default function AgencyQuotationsSection({
                                 disabled={isSelected}
                                 className={`inline-flex h-10 min-w-[104px] items-center justify-center rounded-[12px] px-5 text-sm text-white transition ${
                                   isSelected
-                                    ? "bg-gray-400 cursor-not-allowed"
+                                    ? "cursor-not-allowed bg-gray-400"
                                     : "bg-[#7FA35A] hover:opacity-90"
                                 }`}
                               >
@@ -492,8 +457,8 @@ export default function AgencyQuotationsSection({
                 </table>
               </div>
 
-              {showFooter ? (
-                <div className="flex items-center justify-between px-4 py-6 md:px-6">
+              {totalItems > 0 ? (
+                <div className="flex flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between md:px-6">
                   <div className="text-base text-black/60">
                     Showing{" "}
                     <span className="font-bold text-black/70">{startItem}</span>{" "}
@@ -505,48 +470,17 @@ export default function AgencyQuotationsSection({
                     Quotes
                   </div>
 
-                  <div className="flex items-center gap-3 text-base">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(1, prev - 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="font-medium text-black/50 disabled:cursor-not-allowed disabled:text-black/25"
-                    >
-                      Previous
-                    </button>
-
-                    {visiblePages.map((page) => {
-                      const isActive = currentPage === page;
-
-                      return (
-                        <button
-                          key={page}
-                          type="button"
-                          onClick={() => setCurrentPage(page)}
-                          className={
-                            isActive
-                              ? "flex size-10 items-center justify-center rounded-[10px] bg-primary-color text-base font-bold text-white"
-                              : "flex size-10 items-center justify-center rounded-[10px] text-base font-medium text-black/80"
-                          }
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="font-medium text-black/50 disabled:cursor-not-allowed disabled:text-black/25"
-                    >
-                      Next
-                    </button>
-                  </div>
+                  <PageFooterPagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    onPrev={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    onNext={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    onPageChange={(page) => setCurrentPage(page)}
+                  />
                 </div>
               ) : null}
             </div>
@@ -554,7 +488,6 @@ export default function AgencyQuotationsSection({
         </div>
       </section>
 
-      {/* Generic Payment Dialog */}
       <PaymentDialog
         campaignId={campaign.id}
         campaignName={campaign.campaignName}

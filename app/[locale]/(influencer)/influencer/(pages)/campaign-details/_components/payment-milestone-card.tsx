@@ -57,6 +57,22 @@ const statusStyles: Record<
     circle: "bg-light-green",
     activeRing: "ring-light-green",
   },
+  completed: {
+    border: "border-light-green",
+    bg: "bg-linear-to-r from-Secondary to-white",
+    text: "text-light-green",
+    badge: "bg-light-green",
+    circle: "bg-light-green",
+    activeRing: "ring-light-green",
+  },
+  completed_plus_plus: {
+    border: "border-[#7F9B54]",
+    bg: "bg-[#7F9B54]",
+    text: "text-white",
+    badge: "bg-[#E8F0DB] text-[#7F9B54] hover:bg-[#E8F0DB]",
+    circle: "bg-[#93AE69]",
+    activeRing: "ring-[#7F9B54]",
+  },
   paid: {
     border: "border-light-green",
     bg: "bg-linear-to-r from-Secondary to-white",
@@ -87,10 +103,31 @@ const statusLabel: Record<MilestoneStatus, string> = {
   todo: "To Do",
   in_review: "In Review",
   approved: "Approved",
+  completed: "Completed",
+  completed_plus_plus: "Completed++",
   paid: "Paid",
   partial_paid: "Partial Paid",
   declined: "Declined",
 };
+
+function resolveMilestoneStatus(item: MilestoneListItem): MilestoneStatus {
+  const normalizedStatus = String(item.status ?? "").trim().toLowerCase();
+  const completedStatuses = ["complete", "completed", "approved", "accepted", "completed_plus_plus"];
+
+  if (item.isMetrixOverflowed && completedStatuses.includes(normalizedStatus)) {
+    return "completed_plus_plus";
+  }
+
+  if (normalizedStatus === "completed_plus_plus") return "completed_plus_plus";
+  if (normalizedStatus === "complete" || normalizedStatus === "completed" || normalizedStatus === "accepted") {
+    return "completed";
+  }
+  if (normalizedStatus === "in-review") return "in_review";
+  if (normalizedStatus === "partial-paid") return "partial_paid";
+  if (normalizedStatus === "decline" || normalizedStatus === "rejected") return "declined";
+
+  return (normalizedStatus as MilestoneStatus) || "todo";
+}
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
   paid = 0,
@@ -136,7 +173,8 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2">
             {milestones.map((item) => {
-              const style = statusStyles[item.status] || statusStyles.todo;
+              const resolvedStatus = resolveMilestoneStatus(item);
+              const style = statusStyles[resolvedStatus] || statusStyles.todo;
               return (
                 <CarouselItem key={item.id} className="basis-full lg:basis-[44%] xl:basis-[28%]">
                   <div
@@ -170,7 +208,7 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
                       </div>
                       <div>
                         <Badge className={cn(style.badge)}>
-                          {statusLabel[item.status] || item.status} <ChevronRight />
+                          {statusLabel[resolvedStatus] || resolvedStatus} <ChevronRight />
                         </Badge>
                       </div>
                     </div>

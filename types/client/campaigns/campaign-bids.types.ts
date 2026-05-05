@@ -25,6 +25,8 @@ export type RawCampaignBid = {
   agencyName?: string;
   agencyLogo?: string | null;
   logo?: string | null;
+  email?: string | null;
+  phone?: string | null;
 
   agencyFeePercent?: string | number | null;
   appliedFeePercent?: string | number | null;
@@ -51,20 +53,40 @@ export type RawCampaignBid = {
     id?: string;
     agencyName?: string;
     logo?: string | null;
+    email?: string | null;
+    phone?: string | null;
     niches?: { name?: string }[];
   };
 };
 
+export type CampaignBidsSortBy = "fee" | "dollarRate" | "date";
+export type CampaignBidsSortOrder = "ASC" | "DESC";
+
+export type CampaignBidsQueryParams = {
+  search?: string;
+  minFee?: number;
+  maxFee?: number;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: CampaignBidsSortBy;
+  sortOrder?: CampaignBidsSortOrder;
+  page?: number;
+  limit?: number;
+};
+
+export type CampaignBidsPagination = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
 export type CampaignBidsResponse = {
   success: boolean;
-  campaignName: string;
+  campaignName?: string;
   data: RawCampaignBid[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  pagination?: CampaignBidsPagination;
+  meta?: CampaignBidsPagination;
 };
 
 export type SelectAgencyPayload = {

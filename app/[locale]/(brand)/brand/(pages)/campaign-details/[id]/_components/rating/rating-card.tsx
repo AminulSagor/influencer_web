@@ -3,7 +3,10 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getCampaignRateableEntities } from "./rating-card.utils";
+import {
+  getCampaignRateableEntities,
+  isCampaignCompletedForRating,
+} from "./rating-card.utils";
 import RatingSummaryStars from "./rating-summary-stars";
 import RatingDialog from "./rating-dialog";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
@@ -33,7 +36,7 @@ export default function RatingCard({
   );
 
   const hasEntities = entities.length > 0;
-  const isCompleted = campaign.status === "completed";
+  const isCompleted = isCampaignCompletedForRating(campaign);
   const canRate = isCompleted && hasEntities;
 
   const summaryActive =

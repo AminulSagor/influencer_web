@@ -1,4 +1,4 @@
-export type RateableEntityType = "influencer" | "client";
+export type RateableEntityType = "influencer" | "agency" | "client";
 
 export type RateableEntity = {
   id: string;

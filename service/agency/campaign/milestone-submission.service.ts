@@ -3,6 +3,8 @@ import type {
     GetAgencyMilestoneDetailsResponse,
     SubmitAgencyMilestonePayload,
     SubmitAgencyMilestoneResponse,
+    UpdateAgencySubmissionResultsPayload,
+    UpdateAgencySubmissionResultsResponse,
 } from "@/types/agency/campaign/milestone-submission.types";
 
 export const milestoneSubmissionService = {
@@ -19,6 +21,28 @@ export const milestoneSubmissionService = {
     ): Promise<SubmitAgencyMilestoneResponse> {
         const response = await serviceClient.post(
             `/campaign/agency/milestone/${milestoneId}/submit`,
+            payload
+        );
+        return response.data;
+    },
+
+    async resubmitMilestone(
+        submissionId: string,
+        payload: SubmitAgencyMilestonePayload
+    ): Promise<SubmitAgencyMilestoneResponse> {
+        const response = await serviceClient.patch(
+            `/campaign/agency/submission/${encodeURIComponent(submissionId)}/resubmit`,
+            payload
+        );
+        return response.data;
+    },
+
+    async updateSubmissionResults(
+        submissionId: string,
+        payload: UpdateAgencySubmissionResultsPayload
+    ): Promise<UpdateAgencySubmissionResultsResponse> {
+        const response = await serviceClient.patch(
+            `/campaign/agency/submission/${encodeURIComponent(submissionId)}/results`,
             payload
         );
         return response.data;

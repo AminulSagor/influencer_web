@@ -15,6 +15,8 @@ import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 import {
+  COMPLETED,
+  COMPLETED_PLUS_PLUS,
   IN_REVIEW,
   PAID,
   PARTIAL_PAID,
@@ -44,6 +46,68 @@ function getStatusLabel(status?: string) {
   if (isDeclinedStatus(status)) return "Declined";
   if (status === TODO) return "To Do";
   return status || "To Do";
+}
+
+function getStatusStyle(status?: string) {
+  const isDeclined = isDeclinedStatus(status);
+
+  if (status === COMPLETED_PLUS_PLUS) {
+    return {
+      card: "border-[#7F9B54] bg-[#7F9B54]",
+      activeRing: "ring-[#7F9B54] border-[#7F9B54]",
+      badge: "bg-[#E8F0DB] text-[#7F9B54] hover:bg-[#E8F0DB]",
+      circle: "bg-[#93AE69]",
+      title: "text-white",
+      meta: "text-white/90",
+      amount: "text-white",
+    };
+  }
+
+  if (status === COMPLETED || status === PAID || status === PARTIAL_PAID) {
+    return {
+      card: "border-light-green bg-linear-to-r from-Secondary to-white",
+      activeRing: "ring-light-green border-light-green",
+      badge: "bg-light-green text-white",
+      circle: "bg-light-green",
+      title: "text-Primary",
+      meta: "text-gray-500",
+      amount: "text-light-green",
+    };
+  }
+
+  if (status === IN_REVIEW) {
+    return {
+      card: "border-orange-400 bg-linear-to-r from-orange/20 to-white",
+      activeRing: "ring-orange border-orange-400",
+      badge: "bg-orange text-white",
+      circle: "bg-orange",
+      title: "text-orange",
+      meta: "text-gray-500",
+      amount: "text-orange",
+    };
+  }
+
+  if (isDeclined) {
+    return {
+      card: "border-red-500 bg-linear-to-r from-white to-red-500/10",
+      activeRing: "ring-red-500 border-red-500",
+      badge: "bg-red-500 text-white",
+      circle: "bg-red-500",
+      title: "text-red-500",
+      meta: "text-gray-500",
+      amount: "text-red-500",
+    };
+  }
+
+  return {
+    card: "border-gray-300 bg-linear-to-r from-white to-dark-gray/20",
+    activeRing: "ring-gray-400 border-gray-400",
+    badge: "bg-dark-gray text-white",
+    circle: "bg-dark-gray",
+    title: "text-Primary",
+    meta: "text-gray-500",
+    amount: "text-dark-gray",
+  };
 }
 
 const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
@@ -88,86 +152,54 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
         <Carousel className="overflow-visible">
           <CarouselContent className="p-2 -ml-4 pr-24">
             {paymentMilestoneData.map((item) => {
-              const isDeclined = isDeclinedStatus(item.status);
+              const style = getStatusStyle(item.status);
 
               return (
-              <CarouselItem
-                key={item.milestoneId}
-                className="basis-full md:basis-[34%]"
-              >
-                <div
-                  onClick={() => onSelectMilestone(item)}
-                  className={cn(
-                    "border p-4 rounded-md space-y-2 cursor-pointer transition",
-                    selectedMilestone?.milestoneId === item.milestoneId &&
-                    `ring-2 ${isDeclined ? "ring-red-500" : "ring-light-green"}`,
-                    item.status === TODO &&
-                    "border-gray-200 bg-linear-to-r from-white to-light-gray",
-                    (item.status === PAID ||
-                      item.status === PARTIAL_PAID) &&
-                    "border-light-green bg-linear-to-r from-Secondary to-white",
-                    item.status === IN_REVIEW &&
-                    "border-orange-400 bg-linear-to-r from-orange/20 to-white",
-                    isDeclined &&
-                    "border-red-500 bg-linear-to-r from-white to-red-500/10"
-                  )}
+                <CarouselItem
+                  key={item.milestoneId}
+                  className="basis-full md:basis-[34%]"
                 >
-                  <div className="flex justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center text-white",
-                          item.status === TODO && "bg-dark-gray",
-                          item.status === IN_REVIEW && "bg-orange",
-                          (item.status === PAID ||
-                            item.status === PARTIAL_PAID) &&
-                          "bg-light-green",
-                          isDeclined && "bg-red-500"
-                        )}
-                      >
-                        {item.id}
-                      </div>
-
-                      <h2
-                        className={cn(
-                          "text-base font-medium",
-                          isDeclined ? "text-red-500" : "text-Primary"
-                        )}
-                      >
-                        {item.title}
-                      </h2>
-                    </div>
-
-                    <Badge
-                      className={cn(
-                        item.status === TODO && "bg-dark-gray",
-                        item.status === IN_REVIEW && "bg-orange",
-                        (item.status === PAID ||
-                          item.status === PARTIAL_PAID) &&
-                        "bg-light-green",
-                        isDeclined && "bg-red-500 text-white"
-                      )}
-                    >
-                      {getStatusLabel(item.status)}
-                      <ChevronRight />
-                    </Badge>
-                  </div>
-
-                  <p className="text-gray-500 text-sm">
-                    {item.contentRequirement.join(" + ")}
-                  </p>
-
                   <div
+                    onClick={() => onSelectMilestone(item)}
                     className={cn(
-                      "flex justify-between",
-                      isDeclined ? "text-red-500" : "text-light-green"
+                      "space-y-2 rounded-md border p-4 cursor-pointer transition",
+                      style.card,
+                      selectedMilestone?.milestoneId === item.milestoneId &&
+                        `ring-2 ring-offset-0 border-[1.5px] ${style.activeRing}`
                     )}
                   >
-                    <p className="text-xl font-semibold">৳ {item.payout}</p>
-                    <p className="text-sm">DAY {item.day}</p>
+                    <div className="flex justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded-full text-white",
+                            style.circle
+                          )}
+                        >
+                          {item.id}
+                        </div>
+
+                        <h2 className={cn("text-base font-medium", style.title)}>
+                          {item.title}
+                        </h2>
+                      </div>
+
+                      <Badge className={cn(style.badge)}>
+                        {getStatusLabel(item.status)}
+                        <ChevronRight />
+                      </Badge>
+                    </div>
+
+                    <p className={cn("text-sm", style.meta)}>
+                      {item.contentRequirement.join(" + ")}
+                    </p>
+
+                    <div className={cn("flex justify-between", style.amount)}>
+                      <p className="text-xl font-semibold">৳ {item.payout}</p>
+                      <p className="text-sm">DAY {item.day}</p>
+                    </div>
                   </div>
-                </div>
-              </CarouselItem>
+                </CarouselItem>
               );
             })}
           </CarouselContent>

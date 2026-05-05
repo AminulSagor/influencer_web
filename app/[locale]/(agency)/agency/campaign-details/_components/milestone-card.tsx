@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import Image from "next/image";
 import { FaClock } from "react-icons/fa6";
 import SubmissionForm from "./submission-form";
 import {
+  COMPLETED,
+  COMPLETED_PLUS_PLUS,
   IN_REVIEW,
   PAID,
   PaymanetMilestoneDataType,
@@ -17,15 +20,41 @@ import {
 import { cn } from "@/lib/utils";
 import SubmissionHistory from "./submission-history";
 import { milestoneSubmissionService } from "@/service/agency/campaign/milestone-submission.service";
-import type { AgencyMilestoneSubmissionItem } from "@/types/agency/campaign/milestone-submission.types";
+import type {
+  AgencyMilestoneDetails,
+  AgencyMilestoneSubmissionItem,
+} from "@/types/agency/campaign/milestone-submission.types";
 
 interface MileStoneCardProps {
   milestone: PaymanetMilestoneDataType | null;
   canSubmit?: boolean;
+  onMilestoneDetailsLoaded?: (details: AgencyMilestoneDetails) => void;
 }
 
+const EDITABLE_SUBMISSION_STATUSES = [
+  "in_review",
+  "in-review",
+  "declined",
+  "decline",
+  "rejected",
+];
 
-const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
+function isEditableSubmissionStatus(status?: string | null) {
+  return EDITABLE_SUBMISSION_STATUSES.includes(
+    String(status ?? "").trim().toLowerCase()
+  );
+}
+
+function isCompletedMilestoneStatus(status?: string | null) {
+  return status === COMPLETED || status === COMPLETED_PLUS_PLUS;
+}
+
+const MileStoneCard = ({
+  milestone,
+  canSubmit = true,
+  onMilestoneDetailsLoaded,
+}: MileStoneCardProps) => {
+  const router = useRouter();
   const [showNewSubmissionForm, setShowNewSubmissionForm] = useState(false);
   const [localSubmissions, setLocalSubmissions] = useState<
     AgencyMilestoneSubmissionItem[]
@@ -84,6 +113,10 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
           resolvedMilestoneId
         );
 
+        if (response.data) {
+          onMilestoneDetailsLoaded?.(response.data);
+        }
+
         const milestoneSubmissions = (response.data?.submissions ?? []).sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -98,7 +131,7 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
     };
 
     void fetchSubmissions();
-  }, [resolvedMilestoneId]);
+  }, [resolvedMilestoneId, onMilestoneDetailsLoaded, milestone?.status]);
 
   const displaySubmissions = useMemo(() => localSubmissions, [localSubmissions]);
 
@@ -118,25 +151,56 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
   const isDeclinedMilestone = ["declined", "decline", "rejected"].includes(
     normalizedMilestoneStatus
   );
+  const isCompletedMilestone = isCompletedMilestoneStatus(milestone?.status);
   const milestoneBadgeLabel = isDeclinedMilestone
     ? "Declined"
-    : hasSubmissions
-      ? IN_REVIEW
-      : milestone?.status;
+    : isCompletedMilestone
+      ? milestone?.status
+      : hasSubmissions
+        ? IN_REVIEW
+        : milestone?.status;
   const canShowHistory = hasSubmissions;
   const canSubmitForMilestone =
-    canSubmit && milestone?.status !== PAID && milestone?.status !== PARTIAL_PAID;
+    canSubmit &&
+    milestone?.status !== PAID &&
+    milestone?.status !== PARTIAL_PAID &&
+    !isCompletedMilestone;
+  const editableSubmissions = displaySubmissions.filter((submission) =>
+    isEditableSubmissionStatus(submission.status)
+  );
+  const readOnlySubmissions = displaySubmissions.filter(
+    (submission) => !isEditableSubmissionStatus(submission.status)
+  );
+  const shouldShowEditableSubmissionForm =
+    canSubmitForMilestone && Boolean(resolvedMilestoneId) && editableSubmissions.length > 0;
   const canAddAnotherSubmission =
-    canSubmitForMilestone && Boolean(resolvedMilestoneId) && hasRequestableAmount;
+    canSubmitForMilestone &&
+    Boolean(resolvedMilestoneId) &&
+    hasRequestableAmount &&
+    !shouldShowEditableSubmissionForm;
 
   const handleSubmitted = async (submission: AgencyMilestoneSubmissionItem) => {
-    setLocalSubmissions((prev) => [submission, ...prev]);
+    setLocalSubmissions((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === submission.id);
+
+      if (existingIndex >= 0) {
+        const next = [...prev];
+        next[existingIndex] = submission;
+        return next;
+      }
+
+      return [submission, ...prev];
+    });
     setShowNewSubmissionForm(false);
 
     try {
       const response = await milestoneSubmissionService.getMilestoneDetails(
         resolvedMilestoneId
       );
+
+      if (response.data) {
+        onMilestoneDetailsLoaded?.(response.data);
+      }
 
       const milestoneSubmissions = (response.data?.submissions ?? []).sort(
         (a, b) =>
@@ -146,8 +210,11 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
       if (milestoneSubmissions.length > 0) {
         setLocalSubmissions(milestoneSubmissions);
       }
+
+      router.refresh();
     } catch (error) {
       console.error("Failed to refresh submissions after submit:", error);
+      router.refresh();
     }
   };
 
@@ -245,8 +312,11 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
                 milestone?.status === IN_REVIEW &&
                 "from-white to-orange/20 border-orange-400",
                 (milestone?.status === PAID ||
-                  milestone?.status === PARTIAL_PAID) &&
+                  milestone?.status === PARTIAL_PAID ||
+                  milestone?.status === COMPLETED) &&
                 "from-Secondary to-white border-light-green",
+                milestone?.status === COMPLETED_PLUS_PLUS &&
+                "from-[#7F9B54] to-[#7F9B54] border-[#7F9B54]",
                 isDeclinedMilestone && "from-[#FFF8F8] to-[#FFF8F8] border-[#FF5A5A]"
               )}
             >
@@ -255,8 +325,10 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
                   milestone?.status === TODO && "text-dark-gray",
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
-                    milestone?.status === PARTIAL_PAID) &&
+                    milestone?.status === PARTIAL_PAID ||
+                    milestone?.status === COMPLETED) &&
                   "text-light-green",
+                  milestone?.status === COMPLETED_PLUS_PLUS && "text-white",
                   isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
@@ -270,6 +342,8 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
                   milestone?.status === IN_REVIEW && "bg-orange",
                   milestone?.status === PAID && "bg-light-green",
                   milestone?.status === PARTIAL_PAID && "bg-light-green",
+                  milestone?.status === COMPLETED && "bg-light-green",
+                  milestone?.status === COMPLETED_PLUS_PLUS && "bg-[#E8F0DB] text-[#7F9B54]",
                   isDeclinedMilestone && "bg-[#FF1616] text-white"
                 )}
               >
@@ -282,8 +356,10 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
                   milestone?.status === TODO && "text-gray-400",
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
-                    milestone?.status === PARTIAL_PAID) &&
+                    milestone?.status === PARTIAL_PAID ||
+                    milestone?.status === COMPLETED) &&
                   "text-light-green",
+                  milestone?.status === COMPLETED_PLUS_PLUS && "text-white",
                   isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
@@ -296,28 +372,46 @@ const MileStoneCard = ({ milestone, canSubmit = true }: MileStoneCardProps) => {
           </div>
         </div>
 
-        {canSubmitForMilestone && !hasSubmissions && resolvedMilestoneId && hasRequestableAmount && !showNewSubmissionForm && (
+        {canSubmitForMilestone &&
+          !hasSubmissions &&
+          resolvedMilestoneId &&
+          hasRequestableAmount &&
+          !showNewSubmissionForm && (
+            <SubmissionForm
+              milestoneId={resolvedMilestoneId}
+              initialSubmissionCount={displaySubmissions.length}
+              maxRequestAmount={remainingRequestAmount}
+              onSubmitted={handleSubmitted}
+            />
+          )}
+
+        {shouldShowEditableSubmissionForm && (
           <SubmissionForm
             milestoneId={resolvedMilestoneId}
-            initialSubmissionCount={displaySubmissions.length}
+            initialSubmissions={editableSubmissions}
             maxRequestAmount={remainingRequestAmount}
             onSubmitted={handleSubmitted}
+            canAddNewSubmission={hasRequestableAmount}
           />
         )}
 
-        {canShowHistory && (
+        {canShowHistory && (!shouldShowEditableSubmissionForm || readOnlySubmissions.length > 0) && (
           <SubmissionHistory
-            submissions={displaySubmissions}
+            submissions={shouldShowEditableSubmissionForm ? readOnlySubmissions : displaySubmissions}
             targetTitle={milestone?.targetTitle}
             milestoneStatus={milestone?.status}
+            isMetrixOverflowed={milestone?.isMetrixOverflowed}
           />
         )}
 
-        {canSubmitForMilestone && hasSubmissions && !hasRequestableAmount && (
-          <p className="mt-4 rounded-lg border border-light-green/40 bg-light-green/5 p-3 text-center text-sm font-medium text-Primary">
-            Full payout amount has already been requested.
-          </p>
-        )}
+        {canSubmitForMilestone &&
+          hasSubmissions &&
+          !hasRequestableAmount &&
+          !shouldShowEditableSubmissionForm && (
+            <p className="mt-4 rounded-lg border border-light-green/40 bg-light-green/5 p-3 text-center text-sm font-medium text-Primary">
+              Full payout amount has already been requested.
+            </p>
+          )}
 
         {hasSubmissions && canAddAnotherSubmission && !showNewSubmissionForm && (
           <Button

@@ -13,9 +13,10 @@ import { MilestoneListItem } from "@/types/influencer/milestone_types";
 interface Props {
   jobId: string;
   isAccepted: boolean;
+  onMilestoneChanged?: () => void | Promise<void>;
 }
 
-const MilestoneClient = ({ jobId, isAccepted }: Props) => {
+const MilestoneClient = ({ jobId, isAccepted, onMilestoneChanged }: Props) => {
   const [milestones, setMilestones] = useState<MilestoneListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMilestone, setSelectedMilestone] =
@@ -38,6 +39,11 @@ const MilestoneClient = ({ jobId, isAccepted }: Props) => {
   useEffect(() => {
     if (jobId) fetchMilestones();
   }, [fetchMilestones, jobId]);
+
+  const handleMilestoneChanged = useCallback(async () => {
+    await fetchMilestones();
+    await onMilestoneChanged?.();
+  }, [fetchMilestones, onMilestoneChanged]);
 
   if (loading) {
     return (
@@ -69,7 +75,11 @@ const MilestoneClient = ({ jobId, isAccepted }: Props) => {
       </div>
       {selectedMilestone && (
         <div>
-          <MileStoneCard milestoneId={selectedMilestone.id} canSubmit={isAccepted} />
+          <MileStoneCard
+            milestoneId={selectedMilestone.id}
+            canSubmit={isAccepted}
+            onMilestoneChanged={handleMilestoneChanged}
+          />
         </div>
       )}
     </>

@@ -63,5 +63,7 @@ export function mapRawCampaignBidToCampaignBid(
     dollarRate,
     inDollar,
     createdAt: input.createdAt ?? input.submittedAt,
+    email: input.email ?? input.agency?.email ?? undefined,
+    phone: input.phone ?? input.agency?.phone ?? undefined,
   };
 }

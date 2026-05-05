@@ -19,6 +19,8 @@ import { getAgencyCampaignDetails } from "@/service/agency/job-details";
 import type { AgencyCampaignMilestone } from "@/types/agency/job-details";
 import type { MilestoneTargetTitle } from "@/types/agency/campaign/milestone-submission.types";
 import {
+  COMPLETED,
+  COMPLETED_PLUS_PLUS,
   IN_REVIEW,
   PAID,
   PARTIAL_PAID,
@@ -41,9 +43,29 @@ const formatCompactNumber = (value: number | null | undefined) => {
   return String(value);
 };
 
-const mapMilestoneStatus = (status: string) => {
-  const normalized = String(status).toLowerCase();
+const COMPLETED_MILESTONE_STATUSES = [
+  "complete",
+  "completed",
+  "completed_plus_plus",
+  "approved",
+  "accepted",
+];
 
+const getPositiveMetricValue = (value: number | null | undefined) => {
+  const numericValue = Number(value ?? 0);
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null;
+};
+
+const mapMilestoneStatus = (milestone: AgencyCampaignMilestone) => {
+  const normalized = String(milestone.status ?? "").trim().toLowerCase();
+  const isCompletedStatus = COMPLETED_MILESTONE_STATUSES.includes(normalized);
+
+  if (milestone.isMetrixOverflowed && isCompletedStatus) {
+    return COMPLETED_PLUS_PLUS;
+  }
+
+  if (normalized === "completed_plus_plus") return COMPLETED_PLUS_PLUS;
+  if (isCompletedStatus) return COMPLETED;
   if (normalized === "paid") return PAID;
   if (normalized === "partial_paid" || normalized === "partial-paid") {
     return PARTIAL_PAID;
@@ -65,25 +87,20 @@ const mapMilestoneStatus = (status: string) => {
 const getPromotionTargetConfig = (
   milestone: AgencyCampaignMilestone
 ): { title: MilestoneTargetTitle | null; value: number | null } => {
-  if (milestone.expectedReach != null) {
-    return { title: "Reach", value: Number(milestone.expectedReach) };
-  }
+  const reach = getPositiveMetricValue(milestone.expectedReach);
+  if (reach !== null) return { title: "Reach", value: reach };
 
-  if (milestone.expectedViews != null) {
-    return { title: "Views", value: Number(milestone.expectedViews) };
-  }
+  const views = getPositiveMetricValue(milestone.expectedViews);
+  if (views !== null) return { title: "Views", value: views };
 
-  if (milestone.expectedLikes != null) {
-    return { title: "Likes", value: Number(milestone.expectedLikes) };
-  }
+  const likes = getPositiveMetricValue(milestone.expectedLikes);
+  if (likes !== null) return { title: "Likes", value: likes };
 
-  if (milestone.expectedComments != null) {
-    return { title: "Comments", value: Number(milestone.expectedComments) };
-  }
+  const comments = getPositiveMetricValue(milestone.expectedComments);
+  if (comments !== null) return { title: "Comments", value: comments };
 
-  if (milestone.expectedFollows != null) {
-    return { title: "Follows", value: Number(milestone.expectedFollows) };
-  }
+  const follows = getPositiveMetricValue(milestone.expectedFollows);
+  if (follows !== null) return { title: "Follows", value: follows };
 
   return { title: null, value: null };
 };
@@ -104,7 +121,8 @@ const mapMilestones = (
         promotionTarget: formatCompactNumber(targetConfig.value),
         targetTitle: targetConfig.title,
         payout: Number(milestone.amount ?? 0),
-        status: mapMilestoneStatus(milestone.status),
+        status: mapMilestoneStatus(milestone),
+        isMetrixOverflowed: Boolean(milestone.isMetrixOverflowed),
         day: milestone.deliveryDays,
         promotionalGoal: milestone.promotionGoal ?? "N/A",
         submissions: milestone.submissions,
