@@ -261,21 +261,37 @@ export default function VerificationMethodsCard() {
     setIsSaving(true);
 
     try {
-      const [uploadedNidFrontUrl, uploadedNidBackUrl, uploadedTradeLicenseUrl, uploadedTinUrl] =
-        await Promise.all([
-          uploads.nidFront.file
-            ? uploadVerificationFile(uploads.nidFront.file, "brandguru/client/profile")
-            : Promise.resolve(null),
-          uploads.nidBack.file
-            ? uploadVerificationFile(uploads.nidBack.file, "brandguru/client/profile")
-            : Promise.resolve(null),
-          uploads.tradeLicense.file
-            ? uploadVerificationFile(uploads.tradeLicense.file, "brandguru/client/docs")
-            : Promise.resolve(null),
-          uploads.tinCertificate.file
-            ? uploadVerificationFile(uploads.tinCertificate.file, "brandguru/client/docs")
-            : Promise.resolve(null),
-        ]);
+      const [
+        uploadedNidFrontUrl,
+        uploadedNidBackUrl,
+        uploadedTradeLicenseUrl,
+        uploadedTinUrl,
+      ] = await Promise.all([
+        uploads.nidFront.file
+          ? uploadVerificationFile(
+              uploads.nidFront.file,
+              "brandguru/client/profile",
+            )
+          : Promise.resolve(null),
+        uploads.nidBack.file
+          ? uploadVerificationFile(
+              uploads.nidBack.file,
+              "brandguru/client/profile",
+            )
+          : Promise.resolve(null),
+        uploads.tradeLicense.file
+          ? uploadVerificationFile(
+              uploads.tradeLicense.file,
+              "brandguru/client/docs",
+            )
+          : Promise.resolve(null),
+        uploads.tinCertificate.file
+          ? uploadVerificationFile(
+              uploads.tinCertificate.file,
+              "brandguru/client/docs",
+            )
+          : Promise.resolve(null),
+      ]);
 
       if (
         (uploads.nidFront.file && !uploadedNidFrontUrl) ||
@@ -437,14 +453,13 @@ export default function VerificationMethodsCard() {
               </div>
             </AccordionTrigger>
 
-            <Link
-              href={`/${locale}/brand/account-settings/varification-checklist`}
+            <button
               className="absolute top-4.5 left-[210px] hidden text-dark-gray hover:text-orange md:inline-flex"
               aria-label={t("verification.open")}
               title={t("verification.open")}
             >
               <ExternalLink className="h-4 w-4" />
-            </Link>
+            </button>
 
             <div className="absolute top-4 right-16 flex items-center gap-3">
               {isEditing && (

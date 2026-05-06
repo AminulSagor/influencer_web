@@ -6,11 +6,15 @@ import { ChevronRight } from "lucide-react";
 
 interface Props {
   item: VerificationStepType;
+  onClick?: () => void;
 }
 
-const VerificationStatusCard = ({ item }: Props) => {
+const VerificationStatusCard = ({ item, onClick }: Props) => {
   return (
-    <Card>
+    <Card
+      onClick={onClick}
+      className={cn(onClick && "cursor-pointer transition hover:bg-gray-50")}
+    >
       <div className="px-4">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
@@ -18,16 +22,16 @@ const VerificationStatusCard = ({ item }: Props) => {
             <div className="flex items-center gap-2">
               <div
                 className={cn(
-                  "bg-light-green w-2 h-2 rounded-full",
+                  "bg-light-green h-2 w-2 rounded-full",
                   item.status === "Unverified" ? "bg-gray-500" : "",
-                  item.status === "Under Review" ? "bg-orange" : ""
+                  item.status === "Under Review" ? "bg-orange" : "",
                 )}
               ></div>
               <p
                 className={cn(
                   "text-light-green text-xs",
                   item.status === "Unverified" ? "text-gray-500" : "",
-                  item.status === "Under Review" ? "text-orange" : ""
+                  item.status === "Under Review" ? "text-orange" : "",
                 )}
               >
                 {item.status}

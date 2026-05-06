@@ -11,6 +11,9 @@ import {
 import { SlSocialYoutube } from "react-icons/sl";
 import { TbBrandTiktok, TbBrandX } from "react-icons/tb";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
+import { useLogout } from "@/hooks/useLogout";
+import Link from "next/link";
+import { useLocale } from "next-intl";
 
 type BasicInfoCardProps = {
   profile: AgencyProfileResponse | null;
@@ -43,6 +46,7 @@ const getDisplayUrl = (url: string) => {
 };
 
 const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
+  const { logout } = useLogout();
   const location = [profile?.address?.thana, profile?.address?.zilla]
     .filter(Boolean)
     .join(", ");
@@ -53,6 +57,8 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
     profile?.logo && profile?.updatedAt
       ? `${profile.logo}${profile.logo.includes("?") ? "&" : "?"}v=${encodeURIComponent(profile.updatedAt)}`
       : (profile?.logo ?? "");
+
+  const locale = useLocale();
 
   return (
     <div className="h-full overflow-hidden rounded-xl border bg-linear-to-r from-Primary to-light-green p-4">
@@ -71,7 +77,12 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
           </div>
 
           <div className="inline-block rounded-lg bg-off-white px-4 py-1 text-sm font-semibold">
-            {profile?.isVerified ? "Verified" : "Unverified"}
+            <Link
+              href={`/${locale}/agency/account-settings/verification-checklist`}
+              className="block h-full"
+            >
+              {profile?.isVerified ? "Verified" : "Unverified"}
+            </Link>
           </div>
 
           <div className="min-w-0">
@@ -79,7 +90,7 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
               {isLoading ? "Loading..." : profile?.agencyName || "-"}{" "}
               <BsFillQuestionCircleFill />
             </h2>
-            <p className="break-words whitespace-normal text-light-green/40">
+            <p className="break-words whitespace-normal text-white text-center">
               {isLoading ? "Loading..." : location || "-"}
             </p>
           </div>
@@ -121,12 +132,10 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
             ) : (
               <>
                 <p className="flex items-center gap-2 text-lg text-off-white">
-                  <FaLink size={20} />
-                  -
+                  <FaLink size={20} />-
                 </p>
                 <p className="flex items-center gap-2 text-lg text-off-white">
-                  <FaLink size={20} />
-                  -
+                  <FaLink size={20} />-
                 </p>
               </>
             )}
@@ -137,6 +146,7 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
               className="w-full cursor-pointer bg-off-white text-light-green hover:bg-off-white/90 hover:text-light-green"
               size="sm"
               type="button"
+              onClick={logout}
             >
               Log out
             </Button>

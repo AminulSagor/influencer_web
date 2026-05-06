@@ -1,15 +1,12 @@
 "use client";
 
+import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/useLogout";
-import {
-  LayoutDashboard,
-  BriefcaseBusiness,
-  Wallet,
-  BarChart3,
-  LifeBuoy,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import type { SidebarItem } from "@/types/app_sidebar-type";
 
 import {
   Sidebar,
@@ -21,47 +18,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
-import { cn } from "@/lib/utils";
 
-const items = [
-  {
-    title: "Dashboard",
-    url: "/agency/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Jobs",
-    url: "/agency/jobs",
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: "Earnings",
-    url: "/agency/earnings",
-    icon: Wallet,
-  },
-  {
-    title: "Reports",
-    url: "/agency/reports",
-    icon: BarChart3,
-  },
-  {
-    title: "Support Center",
-    url: "/agency/support-center",
-    icon: LifeBuoy,
-  },
-  {
-    title: "Account Settings",
-    url: "/agency/account-settings",
-    icon: Settings,
-  },
-];
+type AppSidebarProps = {
+  items: SidebarItem[];
+};
 
-export function AppSidebar() {
+export function AppSidebar({ items }: AppSidebarProps) {
   const pathname = usePathname();
-  const locale = useLocale();
   const { logout, loading: logoutLoading } = useLogout();
 
   return (
@@ -75,19 +38,18 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const href = `/${locale}${item.url}`;
-                const isActive = pathname.includes(item.url);
+                const isActive = pathname === item.url;
 
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild
                       className={cn(
-                        "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white",
-                        isActive && "bg-[#7A9B57] text-white"
+                        "border py-5 transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white",
+                        isActive && "bg-[#7A9B57] text-white",
                       )}
                     >
-                      <Link href={href}>
+                      <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
@@ -99,8 +61,8 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(
-                    "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white cursor-pointer",
-                    logoutLoading && "opacity-50 pointer-events-none"
+                    "cursor-pointer border py-5 transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white",
+                    logoutLoading && "pointer-events-none opacity-50",
                   )}
                   onClick={logout}
                 >
