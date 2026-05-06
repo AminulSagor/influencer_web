@@ -10,6 +10,7 @@ import {
 import RatingSummaryStars from "./rating-summary-stars";
 import RatingDialog from "./rating-dialog";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import type { AgencyRatingFallback } from "./rating-card.types";
 import { useTranslations } from "next-intl";
 
 type RatingCardProps = {
@@ -18,6 +19,7 @@ type RatingCardProps = {
   buttonText?: string;
   compact?: boolean;
   className?: string;
+  agencyFallback?: AgencyRatingFallback;
 };
 
 export default function RatingCard({
@@ -26,13 +28,14 @@ export default function RatingCard({
   buttonText,
   compact = false,
   className = "",
+  agencyFallback,
 }: RatingCardProps) {
   const [open, setOpen] = React.useState(false);
   const t = useTranslations("brand.CampaignDetailsPage");
 
   const entities = React.useMemo(
-    () => getCampaignRateableEntities(campaign),
-    [campaign],
+    () => getCampaignRateableEntities(campaign, { agencyFallback }),
+    [campaign, agencyFallback],
   );
 
   const hasEntities = entities.length > 0;
@@ -49,12 +52,12 @@ export default function RatingCard({
       <Card className={`${compact ? "" : "h-full"} ${className}`}>
         <CardContent
           className={`flex flex-col ${
-            compact ? "min-h-[128px] p-4" : "h-full p-6"
+            compact ? "min-h-[128px] px-4" : "h-full px-6"
           }`}
         >
-          <h3 className="text-base font-semibold text-Primary">
+          <h2 className="text-base font-semibold text-Primary">
             {title ?? t("ratingCard.title")}
-          </h3>
+          </h2>
 
           <div
             className={`flex flex-col items-center justify-center ${
@@ -85,6 +88,7 @@ export default function RatingCard({
         onOpenChange={setOpen}
         campaign={campaign}
         title={title ?? t("ratingCard.title")}
+        agencyFallback={agencyFallback}
       />
     </>
   );

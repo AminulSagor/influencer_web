@@ -62,12 +62,17 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                       <SidebarMenuSubButton
                         asChild
                         className={cn(
-                          "py-5 border transition-all duration-150 hover:bg-[#7A9B57] hover:text-white",
-                          active && "bg-[#7A9B57] text-white"
+                          "py-5 border text-[#2D5016] transition-all duration-150 hover:bg-[#7A9B57] hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current",
+                          active && "bg-[#7A9B57] text-white [&_svg]:!text-white [&_svg]:!stroke-white"
                         )}
                       >
                         <Link href={item.url} className="flex items-center gap-2">
-                          <Icon className="w-5 h-5" />
+                          <Icon
+                            className={cn(
+                              "w-5 h-5 shrink-0 transition-colors",
+                              active && "!text-white !stroke-white"
+                            )}
+                          />
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuSubButton>
@@ -82,7 +87,7 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                       onClick={logout}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-md border px-2 py-3",
-                        "text-[#2D5016] hover:bg-red-50 hover:text-red-600 transition",
+                        "text-[#2D5016] transition hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current",
                         loading && "opacity-60 cursor-not-allowed"
                       )}
                       disabled={loading}

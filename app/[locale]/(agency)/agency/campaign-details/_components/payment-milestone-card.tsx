@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 import {
@@ -186,7 +185,6 @@ const PaymentMilestone: React.FC<PaymentMilestoneProps> = ({
 
                       <Badge className={cn(style.badge)}>
                         {getStatusLabel(item.status)}
-                        <ChevronRight />
                       </Badge>
                     </div>
 

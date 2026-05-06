@@ -47,6 +47,31 @@ const statusLabel: Record<MilestoneStatus, string> = {
   declined: "Declined",
 };
 
+function formatMilestoneStatusDate(
+  status: MilestoneStatus,
+  deliveryDays?: number | null,
+  updatedAt?: string | null,
+  createdAt?: string | null
+) {
+  const normalizedStatus = String(status ?? "").trim().toLowerCase();
+
+  if (["todo", "to do", "pending"].includes(normalizedStatus)) {
+    return `Day ${deliveryDays ?? "—"}`;
+  }
+
+  const value = updatedAt ?? createdAt;
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function resolveMilestoneStatus(
   status?: string | null,
   isMetrixOverflowed?: boolean
@@ -140,6 +165,12 @@ const MileStoneCard = ({
     reactions: milestone.expectedLikes,
     comments: milestone.expectedComments,
   };
+  const statusDateLabel = formatMilestoneStatusDate(
+    status,
+    milestone.deliveryDays,
+    milestone.updatedAt,
+    milestone.createdAt
+  );
 
   return (
     <Card>
@@ -220,13 +251,7 @@ const MileStoneCard = ({
                 <span>
                   <FaClock size={12} />
                 </span>
-                <span className="text-xs">
-                  {new Date(milestone.createdAt).toLocaleDateString("en-US", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
+                <span className="text-xs">{statusDateLabel}</span>
               </div>
             </div>
           </div>

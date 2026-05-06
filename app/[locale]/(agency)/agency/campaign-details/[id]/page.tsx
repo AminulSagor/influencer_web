@@ -124,6 +124,7 @@ const mapMilestones = (
         status: mapMilestoneStatus(milestone),
         isMetrixOverflowed: Boolean(milestone.isMetrixOverflowed),
         day: milestone.deliveryDays,
+        updatedAt: milestone.updatedAt,
         promotionalGoal: milestone.promotionGoal ?? "N/A",
         submissions: milestone.submissions,
       };

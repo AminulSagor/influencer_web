@@ -6,3 +6,8 @@ export type RateableEntity = {
   image: string | null;
   type: RateableEntityType;
 };
+
+export type AgencyRatingFallback = {
+  name?: string | null;
+  image?: string | null;
+};

@@ -21,6 +21,7 @@ export interface PaymanetMilestoneDataType {
   status: string;
   isMetrixOverflowed?: boolean;
   day: number;
+  updatedAt?: string | null;
   promotionalGoal: string;
   submissions?: AgencyMilestoneSubmissionItem[];
 }

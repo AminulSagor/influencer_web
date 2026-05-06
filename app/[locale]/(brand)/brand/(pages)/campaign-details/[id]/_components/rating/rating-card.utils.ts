@@ -3,7 +3,7 @@ import type {
   CampaignAssignedAgency,
   ClientCampaignDetails,
 } from "@/types/client/campaigns/campaign-details";
-import type { RateableEntity } from "./rating-card.types";
+import type { AgencyRatingFallback, RateableEntity } from "./rating-card.types";
 
 export const MAX_RATING = 5;
 
@@ -53,8 +53,11 @@ const pickAgencyProfile = (
 
 const getAgencyRateableEntity = (
   campaign: ClientCampaignDetails,
+  fallback?: AgencyRatingFallback,
 ): RateableEntity => {
   const agency = pickAgencyProfile(campaign);
+  const fallbackName = toText(fallback?.name);
+  const fallbackImage = toText(fallback?.image);
 
   return {
     id:
@@ -63,8 +66,13 @@ const getAgencyRateableEntity = (
       toText(agency?.id) ||
       toText(campaign.agencyOfferId) ||
       campaign.id,
-    name: toText(agency?.agencyName) || toText(agency?.name) || "Agency",
+    name:
+      fallbackName ||
+      toText(agency?.agencyName) ||
+      toText(agency?.name) ||
+      "Agency",
     image:
+      fallbackImage ||
       toText(agency?.logo) ||
       toText(agency?.image) ||
       toText(agency?.profileImg) ||
@@ -75,6 +83,7 @@ const getAgencyRateableEntity = (
 
 export const getCampaignRateableEntities = (
   campaign: ClientCampaignDetails,
+  options?: { agencyFallback?: AgencyRatingFallback },
 ): RateableEntity[] => {
   if (campaign.campaignType === "influencer_promotion") {
     const map = new Map<string, RateableEntity>();
@@ -96,7 +105,7 @@ export const getCampaignRateableEntities = (
   }
 
   if (campaign.campaignType === "paid_ad") {
-    return [getAgencyRateableEntity(campaign)];
+    return [getAgencyRateableEntity(campaign, options?.agencyFallback)];
   }
 
   return [];

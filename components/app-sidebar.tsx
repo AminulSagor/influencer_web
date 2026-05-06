@@ -83,12 +83,17 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       className={cn(
-                        "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white",
-                        isActive && "bg-[#7A9B57] text-white"
+                        "py-5 border text-[#2D5016] transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current",
+                        isActive && "bg-[#7A9B57] text-white [&_svg]:!text-white [&_svg]:!stroke-white"
                       )}
                     >
                       <Link href={href}>
-                        <item.icon />
+                        <item.icon
+                          className={cn(
+                            "size-4 shrink-0 transition-colors",
+                            isActive && "!text-white !stroke-white"
+                          )}
+                        />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -99,7 +104,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(
-                    "py-5 border transition-all duration-150 ease-in-out hover:bg-[#7A9B57] hover:text-white cursor-pointer",
+                    "py-5 border text-[#2D5016] transition-all duration-150 ease-in-out hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer",
                     logoutLoading && "opacity-50 pointer-events-none"
                   )}
                   onClick={logout}

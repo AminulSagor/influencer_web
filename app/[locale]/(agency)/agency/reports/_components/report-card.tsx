@@ -21,7 +21,7 @@ import type {
   ReportStatus,
 } from "@/types/agency/reports";
 
-const LIMIT = 4;
+const LIMIT = 10;
 
 const defaultMeta: ReportsMeta = {
   total: 0,
@@ -357,59 +357,48 @@ const ReportCard = () => {
               return (
                 <div
                   key={item.reportId}
-                  className={cn(
-                    "rounded-[20px] border p-6",
-                    cardBg,
-                    cardBorder
-                  )}
+                  className={cn("overflow-hidden rounded-lg border", cardBg, cardBorder)}
                 >
-                  <div className="space-y-1">
-                    <h2 className="text-[20px] font-semibold leading-tight text-Primary md:text-[22px]">
+                  <div className="px-4 py-4">
+                    <p className="text-sm font-semibold text-Primary">
                       {item.campaignName}
-                    </h2>
+                    </p>
 
-                    <p className="text-[15px] font-medium text-light-green md:text-[16px]">
+                    <p className="mt-1 text-sm font-semibold text-light-green">
                       {item.milestoneTitle}
                     </p>
 
-                    <p className="text-sm text-gray-400">
-                      Time not available
+                    <p className="mt-1 text-sm text-gray-400">
+                      {item.submissionStatus || "Time not available"}
                     </p>
-                  </div>
 
-                  <div className="mt-5 rounded-[18px] border border-gray-200 bg-white px-4 py-6">
-                    <p className="text-sm text-gray-500 md:text-base">
-                      {item.issueSummary}
-                    </p>
-                  </div>
+                    <div className="mt-3 rounded-md border border-gray-200 bg-white px-3 py-3">
+                      <p className="text-sm text-gray-500">
+                        {item.issueSummary}
+                      </p>
+                    </div>
 
-                  <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                    <div className="space-y-2 text-orange">
-                      <div className="flex items-center gap-2 text-sm md:text-base">
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-orange">
                         <span>👤</span>
                         <span>Brand name not available</span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-sm md:text-base">
-                        <span>🕒</span>
-                        <span>Date not available</span>
-                      </div>
-                    </div>
+                      <div className="flex items-center justify-end gap-3">
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold",
+                            badgeBg,
+                            badgeBorder,
+                            badgeText
+                          )}
+                        >
+                          <Icon className="size-4" />
+                          {label}
+                        </div>
 
-                    <div className="flex items-center justify-end gap-2">
-                      <div
-                        className={cn(
-                          "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm",
-                          badgeBg,
-                          badgeBorder,
-                          badgeText
-                        )}
-                      >
-                        <Icon className="size-4" />
-                        {label}
+                        <ChevronRight size={14} className="text-gray-600" />
                       </div>
-
-                      <ChevronRight size={14} className="text-gray-600" />
                     </div>
                   </div>
                 </div>

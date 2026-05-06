@@ -111,12 +111,17 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         asChild
                         className={cn(
-                          "py-5 hover:bg-light-green hover:text-white border",
-                          isActive && "bg-light-green text-white"
+                          "py-5 border text-Primary hover:bg-light-green hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current",
+                          isActive && "bg-light-green text-white [&_svg]:!text-white [&_svg]:!stroke-white"
                         )}
                       >
                         <Link href={item.url!}>
-                          <item.icon />
+                          <item.icon
+                            className={cn(
+                              "size-4 shrink-0 transition-colors",
+                              isActive && "!text-white !stroke-white"
+                            )}
+                          />
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -135,9 +140,14 @@ export function AppSidebar() {
                     defaultValue={isChildActive ? `item-${index}` : undefined}
                   >
                     <AccordionItem value={`item-${index}`} className="border-0">
-                      <AccordionTrigger className="px-3 py-5 hover:bg-light-green hover:text-white data-[state=open]:bg-light-green data-[state=open]:text-white p-2 hover:no-underline font-normal hover:cursor-pointer border ">
+                      <AccordionTrigger className="px-3 py-5 p-2 border text-Primary font-normal hover:cursor-pointer hover:no-underline hover:bg-light-green hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white data-[state=open]:bg-light-green data-[state=open]:text-white data-[state=open]:[&_svg]:!text-white data-[state=open]:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current">
                         <div className="flex items-center gap-2 ">
-                          <item.icon />
+                          <item.icon
+                            className={cn(
+                              "size-4 shrink-0 transition-colors",
+                              isActive && "!text-white !stroke-white"
+                            )}
+                          />
                           <span>{item.title}</span>
                         </div>
                       </AccordionTrigger>
@@ -169,7 +179,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className={cn(
-                    "py-5 hover:bg-light-green hover:text-white border cursor-pointer",
+                    "py-5 border text-Primary hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer",
                     logoutLoading && "opacity-50 pointer-events-none"
                   )}
                   onClick={logout}

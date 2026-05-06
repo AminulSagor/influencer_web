@@ -7,9 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import ListShell from "../list-shell";
 import { getAssignedUserBasedText } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/card-helpers";
 import AvatarStack from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/avatar-stack";
-import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { getPlatformIcon } from "@/utils/platforms_util";
 import { formatDeadline } from "@/utils/date_util";
+import RatingSummaryStars from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/rating/rating-summary-stars";
+import { buildCampaignDetailsHref } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
 
 export default function CompletedCampaignsList({
   campaigns,
@@ -94,26 +95,19 @@ function CompletedCard({ c }: { c: CampaignOverView }) {
           <p>{formatDeadline(c.deadline)}</p>
         </div>
 
-        <div className="flex gap-1 text-xl leading-none items-center justify-center mt-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span
-              key={i}
-              className={
-                i < rating
-                  ? "text-yellow-400 text-6xl"
-                  : "text-6xl text-muted-foreground"
-              }
-            >
-              ★
-            </span>
-          ))}
+        <div className="mt-2 flex items-center justify-center">
+          <RatingSummaryStars
+            active={rating}
+            size="h-10 w-10 md:h-12 md:w-12"
+          />
         </div>
 
-        <SecondaryButton className="w-full text-Primary px-2 py-2">
-          <Link href={`/brand/campaign-details/${c.id}`}>
-            {t("viewCampaignDetails")}
-          </Link>
-        </SecondaryButton>
+        <Link
+          href={buildCampaignDetailsHref(c)}
+          className="flex w-full items-center justify-center rounded-md border border-light-gray bg-[#F8F8F8] px-2 py-2 text-sm font-medium text-Primary transition-all duration-200 active:scale-[0.98]"
+        >
+          {t("viewCampaignDetails")}
+        </Link>
       </CardContent>
     </Card>
   );

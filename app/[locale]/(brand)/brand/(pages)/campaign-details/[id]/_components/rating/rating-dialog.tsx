@@ -18,6 +18,7 @@ import {
   rateInfluencer,
 } from "@/service/client/campaigns/campaign-rating";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
+import type { AgencyRatingFallback } from "./rating-card.types";
 import Loader from "@/components/spin-loader";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
 
@@ -26,6 +27,7 @@ type RatingDialogProps = {
   onOpenChange: (open: boolean) => void;
   campaign: ClientCampaignDetails;
   title: string;
+  agencyFallback?: AgencyRatingFallback;
 };
 
 export default function RatingDialog({
@@ -33,16 +35,23 @@ export default function RatingDialog({
   onOpenChange,
   campaign,
   title,
+  agencyFallback,
 }: RatingDialogProps) {
   const entities = React.useMemo(
-    () => getCampaignRateableEntities(campaign),
-    [campaign],
+    () => getCampaignRateableEntities(campaign, { agencyFallback }),
+    [campaign, agencyFallback],
   );
 
   const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [ratings, setRatings] = React.useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+
+  const isAlreadyRated = Boolean(campaign.isRated);
+  const alreadyRatedMessage =
+    campaign.campaignType === "influencer_promotion"
+      ? "Influencers are already rated."
+      : "Agency is already rated.";
 
   React.useEffect(() => {
     if (!open) return;
@@ -105,7 +114,7 @@ export default function RatingDialog({
   };
 
   const handleSubmit = async () => {
-    if (!allRated || isSubmitting) return;
+    if (!allRated || isSubmitting || isAlreadyRated || isSubmitted) return;
 
     try {
       setIsSubmitting(true);
@@ -137,13 +146,15 @@ export default function RatingDialog({
     }
   };
 
-  const helperText = isSubmitted
-    ? "Your ratings have been submitted."
-    : totalSelected > 0
-      ? `You have rated ${totalSelected} of ${
-          campaign.campaignType === "influencer_promotion" ? entities.length : 1
-        }.`
-      : "You haven’t submitted your ratings yet.";
+  const helperText = isAlreadyRated
+    ? alreadyRatedMessage
+    : isSubmitted
+      ? "Your ratings have been submitted."
+      : totalSelected > 0
+        ? `You have rated ${totalSelected} of ${
+            campaign.campaignType === "influencer_promotion" ? entities.length : 1
+          }.`
+        : "You haven’t submitted your ratings yet.";
 
   const rows =
     campaign.campaignType === "influencer_promotion"
@@ -184,7 +195,7 @@ export default function RatingDialog({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!allRated || isSubmitting}
+            disabled={!allRated || isSubmitting || isAlreadyRated || isSubmitted}
             className="mt-8 h-[54px] w-full rounded-[16px] bg-[#5D8238] text-sm font-medium text-white hover:bg-[#4f6f2f] disabled:bg-[#9AA58B] disabled:text-white"
           >
             {isSubmitting ? (
@@ -197,7 +208,11 @@ export default function RatingDialog({
             )}
           </Button>
 
-          <p className="mt-3 text-center text-sm text-[#A0A0A0]">
+          <p
+            className={`mt-3 text-center text-sm ${
+              isAlreadyRated ? "font-medium text-[#5D8238]" : "text-[#A0A0A0]"
+            }`}
+          >
             {helperText}
           </p>
         </div>

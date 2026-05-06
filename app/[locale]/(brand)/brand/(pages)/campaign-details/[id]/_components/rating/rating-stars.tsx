@@ -23,27 +23,39 @@ export default function RatingStars({
         const starValue = index + 1;
         const active = starValue <= value;
 
+        const starIcon = (
+          <Star
+            className={cn(
+              "shrink-0",
+              active
+                ? "fill-[#F4C400] text-[#F4C400]"
+                : "fill-white text-white"
+            )}
+            style={{ width: size, height: size }}
+          />
+        );
+
+        if (readonly) {
+          return (
+            <span
+              key={starValue}
+              className="cursor-default transition-transform"
+              aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
+            >
+              {starIcon}
+            </span>
+          );
+        }
+
         return (
           <button
             key={starValue}
             type="button"
-            disabled={readonly}
             onClick={() => onChange?.(starValue)}
-            className={cn(
-              "transition-transform",
-              readonly ? "cursor-default" : "hover:scale-105"
-            )}
+            className="transition-transform hover:scale-105"
             aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
           >
-            <Star
-              className={cn(
-                "shrink-0",
-                active
-                  ? "fill-[#F4C400] text-[#F4C400]"
-                  : "fill-white text-white"
-              )}
-              style={{ width: size, height: size }}
-            />
+            {starIcon}
           </button>
         );
       })}

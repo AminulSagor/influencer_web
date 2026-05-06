@@ -26,7 +26,11 @@ export default function RatingEntityRow({
 
   return (
     <div className="overflow-hidden rounded-[18px] bg-[#5D8238] text-white">
-      <div className="flex items-center gap-4 px-5 py-4">
+      <button
+        type="button"
+        onClick={onExpand}
+        className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-white/5"
+      >
         <RatingAvatar name={entity.name} image={entity.image} />
 
         <div className="min-w-0 flex-1">
@@ -39,19 +43,15 @@ export default function RatingEntityRow({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={onExpand}
-          className="flex items-center gap-1 text-[16px] font-medium text-white/95"
-        >
+        <span className="flex items-center gap-1 text-[16px] font-medium text-white/95">
           <span>{t("rate")}</span>
           {expanded ? (
             <ChevronDown className="h-4 w-4" />
           ) : (
             <ChevronRight className="h-4 w-4" />
           )}
-        </button>
-      </div>
+        </span>
+      </button>
 
       {expanded && (
         <div className="px-5 pb-6 pt-2">

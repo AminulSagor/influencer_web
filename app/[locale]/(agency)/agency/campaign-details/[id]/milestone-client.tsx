@@ -128,6 +128,7 @@ const MilestoneClient = ({ isAccepted, milestones, paid, total }: Props) => {
       status: mapMilestoneStatus(details),
       isMetrixOverflowed: Boolean(details.isMetrixOverflowed),
       day: details.deliveryDays,
+      updatedAt: details.updatedAt,
       promotionalGoal: details.promotionGoal ?? "N/A",
       submissions: details.submissions,
     };

@@ -7,10 +7,10 @@ import { FaClock } from "react-icons/fa";
 
 import { formatBDT } from "../../_lib/card-helpers";
 import ListShell from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_components/list-shell";
-import SecondaryButton from "@/app/[locale]/(brand)/brand/_components/secondary-button";
 import { formatDeadline } from "@/utils/date_util";
 import { getPlatformIcon } from "@/utils/platforms_util";
 import type { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
+import { buildCampaignDetailsHref } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
 import {
   BUDGETING_FILTER_ITEMS,
   type BudgetingFilter,
@@ -177,11 +177,12 @@ function BudgetingAndQuotingCampaignCard({
           <p className="text-orange text-sm">{deadlineText}</p>
         </div>
 
-        <SecondaryButton className="w-full text-Primary px-2 py-2">
-          <Link href={`/brand/campaign-details/${campaign.id}`}>
-            {t("viewCampaignDetails")}
-          </Link>
-        </SecondaryButton>
+        <Link
+          href={buildCampaignDetailsHref(campaign)}
+          className="flex w-full items-center justify-center rounded-md border border-light-gray bg-[#F8F8F8] px-2 py-2 text-sm font-medium text-Primary transition-all duration-200 active:scale-[0.98]"
+        >
+          {t("viewCampaignDetails")}
+        </Link>
       </CardContent>
     </Card>
   );

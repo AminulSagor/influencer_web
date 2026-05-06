@@ -10,6 +10,7 @@ import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details
 import QuoteDetailsCard from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/quote/quote-details-card";
 import { useTranslations } from "next-intl";
 import ShippingAddressCard from "./shipping-address-card";
+import type { AgencyRatingFallback } from "./rating/rating-card.types";
 
 type CampaignDetailsContentProps = {
   campaign: ClientCampaignDetails;
@@ -22,6 +23,29 @@ export default function CampaignDetailsContent({
 
   const isInfluencerPromotion =
     campaign.campaignType === "influencer_promotion";
+
+  const [agencyRatingFallback, setAgencyRatingFallback] =
+    React.useState<AgencyRatingFallback | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (campaign.campaignType !== "paid_ad" || typeof window === "undefined") {
+      setAgencyRatingFallback(undefined);
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("agencyName")?.trim() ?? "";
+    const image = params.get("agencyImage")?.trim() ?? "";
+
+    setAgencyRatingFallback(
+      name || image
+        ? {
+            name: name || null,
+            image: image || null,
+          }
+        : undefined,
+    );
+  }, [campaign.campaignType, campaign.id]);
 
   const ratingTitle = isInfluencerPromotion
     ? t("campaignDetailsContent.rateTheInfluencers")
@@ -75,6 +99,7 @@ export default function CampaignDetailsContent({
             buttonText={ratingButtonText}
             compact={showShippingAddress}
             className={showShippingAddress ? "lg:flex-none" : "lg:flex-1"}
+            agencyFallback={agencyRatingFallback}
           />
 
           {showShippingAddress ? (

@@ -13,6 +13,7 @@ import { buildDueLabelFromDeadline, formatDeadline } from "@/utils/date_util";
 import { getPlatformIcon } from "@/utils/platforms_util";
 import { CampaignOverView } from "@/types/client/campaigns/campaign-overview";
 import { formatBudget } from "@/utils/fomat_budget_utils";
+import { buildCampaignDetailsHref } from "@/app/[locale]/(brand)/brand/(pages)/campaigns/_lib/campaign-list-utils";
 
 export default function ActiveCampaignsList({
   campaigns,
@@ -109,7 +110,7 @@ function ActiveCard({ c }: { c: CampaignOverView }) {
         <PercentageBar value={c.progress} />
 
         <Button asChild variant="outline" className="w-full rounded-xl">
-          <Link href={`/brand/campaign-details/${c.id}`}>
+          <Link href={buildCampaignDetailsHref(c)}>
             {t("viewCampaignDetails")}
           </Link>
         </Button>

@@ -49,6 +49,7 @@ export interface MilestoneDetail {
   promotionGoal: string | null;
   order: number;
   createdAt: string;
+  updatedAt?: string | null;
   amount: number;
   bonusAmount: number;
   bonusStatus: string;

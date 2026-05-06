@@ -36,6 +36,8 @@ type DerivedAssignedWork = {
   status?: string;
   isMetrixOverflowed?: boolean;
   submissions?: Array<{ id?: string }>;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 function filterTopLevelMilestonesForInfluencer(
@@ -104,8 +106,8 @@ function deriveMilestonesFromSelectedInfluencer(
         platform: work.platform ?? "",
         deliveryDays: work.deliveryDays ?? 0,
         status: milestoneStatus,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
+        createdAt: work.createdAt ?? campaign.createdAt,
+        updatedAt: work.updatedAt ?? campaign.updatedAt,
         isMetrixOverflowed,
         expectedReach: work.expectedReach ?? null,
         expectedViews: work.expectedViews ?? null,

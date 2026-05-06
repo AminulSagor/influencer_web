@@ -63,3 +63,33 @@ export function paginate<T>(items: T[], page: number, perPage: number) {
     end: Math.min(startIndex + perPage, total),
   };
 }
+
+export function buildCampaignDetailsHref(campaign: CampaignOverView): string {
+  const baseHref = `/brand/campaign-details/${campaign.id}/details`;
+
+  if (campaign.campaignType !== "paid_ad") {
+    return baseHref;
+  }
+
+  const assignedAgency = campaign.assignedTo?.find(
+    (member) => member?.name || member?.image,
+  );
+
+  if (!assignedAgency) {
+    return baseHref;
+  }
+
+  const params = new URLSearchParams();
+
+  if (assignedAgency.name) {
+    params.set("agencyName", assignedAgency.name);
+  }
+
+  if (assignedAgency.image) {
+    params.set("agencyImage", assignedAgency.image);
+  }
+
+  const query = params.toString();
+
+  return query ? `${baseHref}?${query}` : baseHref;
+}

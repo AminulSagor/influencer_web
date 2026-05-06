@@ -49,6 +49,24 @@ function isCompletedMilestoneStatus(status?: string | null) {
   return status === COMPLETED || status === COMPLETED_PLUS_PLUS;
 }
 
+function isPendingMilestoneStatus(status?: string | null) {
+  const normalized = String(status ?? "").trim().toLowerCase();
+  return ["todo", "to do", "pending"].includes(normalized);
+}
+
+function formatMilestoneUpdatedDate(value?: string | null) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 const MileStoneCard = ({
   milestone,
   canSubmit = true,
@@ -159,6 +177,11 @@ const MileStoneCard = ({
       : hasSubmissions
         ? IN_REVIEW
         : milestone?.status;
+  const detailStatusLabel =
+    milestone?.status === COMPLETED_PLUS_PLUS ? "Completed++" : milestoneBadgeLabel;
+  const statusDateLabel = isPendingMilestoneStatus(milestone?.status)
+    ? `Day ${milestone?.day ?? "—"}`
+    : formatMilestoneUpdatedDate(milestone?.updatedAt);
   const canShowHistory = hasSubmissions;
   const canSubmitForMilestone =
     canSubmit &&
@@ -313,10 +336,9 @@ const MileStoneCard = ({
                 "from-white to-orange/20 border-orange-400",
                 (milestone?.status === PAID ||
                   milestone?.status === PARTIAL_PAID ||
-                  milestone?.status === COMPLETED) &&
+                  milestone?.status === COMPLETED ||
+                  milestone?.status === COMPLETED_PLUS_PLUS) &&
                 "from-Secondary to-white border-light-green",
-                milestone?.status === COMPLETED_PLUS_PLUS &&
-                "from-[#7F9B54] to-[#7F9B54] border-[#7F9B54]",
                 isDeclinedMilestone && "from-[#FFF8F8] to-[#FFF8F8] border-[#FF5A5A]"
               )}
             >
@@ -326,9 +348,9 @@ const MileStoneCard = ({
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
                     milestone?.status === PARTIAL_PAID ||
-                    milestone?.status === COMPLETED) &&
+                    milestone?.status === COMPLETED ||
+                    milestone?.status === COMPLETED_PLUS_PLUS) &&
                   "text-light-green",
-                  milestone?.status === COMPLETED_PLUS_PLUS && "text-white",
                   isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
@@ -337,17 +359,20 @@ const MileStoneCard = ({
 
               <Badge
                 className={cn(
-                  "px-10 py-1 text-lg",
+                  "py-1 text-lg",
+                  milestone?.status === COMPLETED_PLUS_PLUS
+                    ? "mx-3 max-w-[calc(100%-24px)] px-6"
+                    : "px-10",
                   milestone?.status === TODO && "bg-dark-gray",
                   milestone?.status === IN_REVIEW && "bg-orange",
                   milestone?.status === PAID && "bg-light-green",
                   milestone?.status === PARTIAL_PAID && "bg-light-green",
                   milestone?.status === COMPLETED && "bg-light-green",
-                  milestone?.status === COMPLETED_PLUS_PLUS && "bg-[#E8F0DB] text-[#7F9B54]",
+                  milestone?.status === COMPLETED_PLUS_PLUS && "bg-light-green",
                   isDeclinedMilestone && "bg-[#FF1616] text-white"
                 )}
               >
-                {milestoneBadgeLabel}
+                {detailStatusLabel}
               </Badge>
 
               <div
@@ -357,16 +382,16 @@ const MileStoneCard = ({
                   milestone?.status === IN_REVIEW && "text-orange",
                   (milestone?.status === PAID ||
                     milestone?.status === PARTIAL_PAID ||
-                    milestone?.status === COMPLETED) &&
+                    milestone?.status === COMPLETED ||
+                    milestone?.status === COMPLETED_PLUS_PLUS) &&
                   "text-light-green",
-                  milestone?.status === COMPLETED_PLUS_PLUS && "text-white",
                   isDeclinedMilestone && "text-[#FF1616]"
                 )}
               >
                 <span>
                   <FaClock size={12} />
                 </span>
-                <span className="text-xs">Day {milestone?.day}</span>
+                <span className="text-xs">{statusDateLabel}</span>
               </div>
             </div>
           </div>
@@ -400,7 +425,6 @@ const MileStoneCard = ({
             submissions={shouldShowEditableSubmissionForm ? readOnlySubmissions : displaySubmissions}
             targetTitle={milestone?.targetTitle}
             milestoneStatus={milestone?.status}
-            isMetrixOverflowed={milestone?.isMetrixOverflowed}
           />
         )}
 

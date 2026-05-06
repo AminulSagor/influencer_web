@@ -77,6 +77,12 @@ function getEffectiveStatus(milestone: CampaignMilestone) {
 }
 
 function getStatusDate(milestone: CampaignMilestone) {
+  const normalizedStatus = normalizeStatus(milestone.status);
+
+  if (["todo", "to do", "pending"].includes(normalizedStatus)) {
+    return `Day ${milestone.deliveryDays || "—"}`;
+  }
+
   return formatMilestoneDate(milestone.updatedAt ?? milestone.createdAt);
 }
 

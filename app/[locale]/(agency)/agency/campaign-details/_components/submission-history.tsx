@@ -21,7 +21,6 @@ interface SubmissionHistoryProps {
   submissions: AgencyMilestoneSubmissionItem[];
   targetTitle?: MilestoneTargetTitle | null;
   milestoneStatus?: string;
-  isMetrixOverflowed?: boolean;
 }
 
 
@@ -92,6 +91,11 @@ function AttachmentPreviewLink({ attachment }: { attachment: string }) {
 function formatSubmissionStatus(status: string) {
   if (!status) return "In Review";
 
+  const normalized = status.trim().toLowerCase();
+  if (normalized === "completed++" || normalized === "completed_plus_plus") {
+    return "Completed";
+  }
+
   return status
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -101,12 +105,13 @@ function formatSubmissionStatus(status: string) {
 function getStatusClassName(status: string) {
   const normalized = status?.toLowerCase();
 
-  if (normalized === "approved" || normalized === "completed") {
+  if (
+    normalized === "approved" ||
+    normalized === "completed" ||
+    normalized === "completed++" ||
+    normalized === "completed_plus_plus"
+  ) {
     return "bg-light-green";
-  }
-
-  if (normalized === "completed++" || normalized === "completed_plus_plus") {
-    return "bg-[#E8F0DB] text-[#7F9B54]";
   }
 
   if (normalized === "declined" || normalized === "rejected") {
@@ -114,27 +119,6 @@ function getStatusClassName(status: string) {
   }
 
   return "bg-orange";
-}
-
-function resolveCompletedMilestoneLabel(
-  milestoneStatus?: string,
-  isMetrixOverflowed?: boolean
-) {
-  const normalized = String(milestoneStatus ?? "").trim().toLowerCase();
-  const completedStatuses = [
-    "complete",
-    "completed",
-    "completed++",
-    "completed_plus_plus",
-    "approved",
-    "accepted",
-  ];
-
-  if (!completedStatuses.includes(normalized)) return null;
-
-  return isMetrixOverflowed || normalized === "completed++" || normalized === "completed_plus_plus"
-    ? "Completed++"
-    : "Completed";
 }
 
 function getTargetMetricValue(
@@ -209,7 +193,6 @@ const SubmissionHistory = ({
   submissions,
   targetTitle,
   milestoneStatus,
-  isMetrixOverflowed,
 }: SubmissionHistoryProps) => {
   if (!submissions?.length) return null;
 
@@ -221,19 +204,13 @@ const SubmissionHistory = ({
         const isDeclined = ["declined", "decline", "rejected"].some((status) =>
           [normalizedStatus, normalizedMilestoneStatus].includes(status),
         );
-        const completedMilestoneLabel = resolveCompletedMilestoneLabel(
-          milestoneStatus,
-          isMetrixOverflowed
-        );
         const showDeclinedReason = isDeclined && Boolean(submission.rejectionReason?.trim());
         const statusClassName = isDeclined
           ? "bg-[#FF1616] text-white"
-          : completedMilestoneLabel
-            ? getStatusClassName(completedMilestoneLabel)
-            : getStatusClassName(submission.status);
+          : getStatusClassName(submission.status);
         const statusLabel = isDeclined
           ? "Declined"
-          : completedMilestoneLabel ?? formatSubmissionStatus(submission.status);
+          : formatSubmissionStatus(submission.status);
         const metric = getAchievedMetric(submission, targetTitle);
         const attachments = submission.submissionAttachments ?? [];
         const liveLinks = submission.submissionLiveLinks ?? [];
