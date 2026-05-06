@@ -4,6 +4,7 @@ import type {
     CreateAgencyPayoutPayload,
     DeleteAgencyPayoutPayload,
     DeleteAgencyPayoutResponse,
+    DeleteAgencySocialLinkResponse,
     DollarRateResponse,
     ServiceFeeResponse,
     UpdateAgencyAddressPayload,
@@ -19,6 +20,31 @@ import type {
     UpdateDollarRatePayload,
     UpdateServiceFeePayload,
 } from "@/types/agency/account-settings";
+
+const normalizeLookupResponse = (data: unknown): LookupOption[] => {
+    const items = Array.isArray(data)
+        ? data
+        : Array.isArray((data as { data?: unknown })?.data)
+            ? (data as { data: unknown[] }).data
+            : [];
+
+    const seen = new Set<string>();
+
+    return items
+        .map((item) => {
+            const value = item as Partial<LookupOption>;
+            return {
+                id: String(value.id ?? value.name ?? ""),
+                name: String(value.name ?? "").trim(),
+            };
+        })
+        .filter((item) => {
+            const key = item.name.toLowerCase();
+            if (!item.name || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+};
 
 export const getAgencyProfile = async (): Promise<AgencyProfileResponse> => {
     const response = await serviceClient.get<AgencyProfileResponse>(
@@ -143,6 +169,16 @@ export const updateAgencySocialLinks = async (
     return response.data;
 };
 
+export const deleteAgencySocialLink = async (
+    platform: string
+): Promise<DeleteAgencySocialLinkResponse> => {
+    const response = await serviceClient.delete<DeleteAgencySocialLinkResponse>(
+        `/agency/profile/socials/${encodeURIComponent(platform)}`
+    );
+
+    return response.data;
+};
+
 export const updateAgencyNid = async (
     payload: UpdateAgencyNidPayload
 ): Promise<AgencyProfileResponse> => {
@@ -191,7 +227,7 @@ export const getAgencyNicheOptions = async (): Promise<LookupOption[]> => {
         "/campaign/get/niches"
     );
 
-    return response.data;
+    return normalizeLookupResponse(response.data);
 };
 
 export const getAgencyPlatformOptions = async (): Promise<LookupOption[]> => {
@@ -199,5 +235,5 @@ export const getAgencyPlatformOptions = async (): Promise<LookupOption[]> => {
         "/campaign/get/platforms"
     );
 
-    return response.data;
+    return normalizeLookupResponse(response.data);
 };

@@ -22,6 +22,8 @@ const emails = [
   "support4@brandguru.io",
 ];
 
+const getTelHref = (phone: string) => `tel:${phone.replace(/[^+\d]/g, "")}`;
+
 const SupportCenter = () => {
   const t = useTranslations("influencer.support-center");
   return (
@@ -58,9 +60,10 @@ const SupportCenter = () => {
 
               <div className="px-5 pb-5 space-y-3">
                 {helpLines.map((item) => (
-                  <div
+                  <a
                     key={item.label}
-                    className="rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3"
+                    href={getTelHref(item.phone)}
+                    className="block rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3 transition hover:border-[#617C50] hover:bg-[#F0F6DA]"
                   >
                     <p className="text-sm font-semibold text-[#617C50]">
                       {item.label}
@@ -71,7 +74,7 @@ const SupportCenter = () => {
                     <p className="mt-0.5 text-xs text-[#8E9A8A]">
                       {item.hours}
                     </p>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
@@ -89,14 +92,15 @@ const SupportCenter = () => {
 
               <div className="px-5 pb-5 space-y-3">
                 {emails.map((email) => (
-                  <div
+                  <a
                     key={email}
-                    className="rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3"
+                    href={`mailto:${email}`}
+                    className="block rounded-lg border border-[#D8E3C4] bg-[#F7FBF2] px-4 py-3 transition hover:border-[#617C50] hover:bg-[#F0F6DA]"
                   >
                     <p className="text-sm font-semibold text-[#D79552]">
                       {email}
                     </p>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>

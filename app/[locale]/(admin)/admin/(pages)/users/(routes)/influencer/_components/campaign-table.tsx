@@ -75,14 +75,6 @@ const CampaignTable = () => {
               </Select>
             </div>
 
-            <Select>
-              <SelectTrigger className="bg-white border border-light-green text-sm">
-                <SelectValue placeholder="Nov 20 - Dec 20" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">Nov 20 - Dec 20</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
         <div className="rounded-md overflow-hidden border mt-2 overflow-x-auto">

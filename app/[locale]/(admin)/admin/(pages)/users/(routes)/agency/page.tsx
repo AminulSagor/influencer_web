@@ -14,6 +14,7 @@ type PageProps = {
     minRevenue?: string;
     sortBy?: string;
     niche?: string;
+    view?: string;
   }>;
 };
 
@@ -25,6 +26,7 @@ const page = async ({ searchParams }: PageProps) => {
   const status = resolvedSearchParams?.status ?? "";
   const sortBy = resolvedSearchParams?.sortBy ?? "";
   const niche = resolvedSearchParams?.niche ?? "";
+  const view = resolvedSearchParams?.view === "grid" ? "grid" : "list";
 
   const minRating = resolvedSearchParams?.minRating
     ? Number(resolvedSearchParams.minRating)
@@ -42,7 +44,7 @@ const page = async ({ searchParams }: PageProps) => {
     getAdminUserCounts(),
     getAllAgencies({
       page: currentPage,
-      limit: 10,
+      limit: view === "grid" ? 12 : 10,
       search,
       status,
       minRating,

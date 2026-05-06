@@ -31,7 +31,9 @@ import {
 } from "@/components/ui/select";
 import type { AgencyProfileResponse, AgencySocialLinkItem } from "@/types/agency/account-settings";
 import {
+  deleteAgencySocialLink,
   getAgencyPlatformOptions,
+  getAgencyProfile,
   updateAgencySocialLinks,
 } from "@/service/agency/account-settings";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
@@ -98,7 +100,7 @@ const SocialLinksCard = ({
     }
   };
 
-  const mergedPlatformOptions = useMemo(() => {
+  const apiPlatformOptions = useMemo(() => {
     const optionMap = new Map<string, string>();
 
     platformOptions.forEach((item) => {
@@ -106,20 +108,8 @@ const SocialLinksCard = ({
       if (name) optionMap.set(name.toLowerCase(), name);
     });
 
-    socialLinks.forEach((item) => {
-      const platform = item.platform.trim();
-      if (platform && !optionMap.has(platform.toLowerCase())) {
-        optionMap.set(platform.toLowerCase(), platform);
-      }
-    });
-
-    const currentPlatform = formData.platform.trim();
-    if (currentPlatform && !optionMap.has(currentPlatform.toLowerCase())) {
-      optionMap.set(currentPlatform.toLowerCase(), currentPlatform);
-    }
-
     return Array.from(optionMap.values());
-  }, [formData.platform, platformOptions, socialLinks]);
+  }, [platformOptions]);
 
   const totalPages = Math.ceil(socialLinks.length / SOCIAL_LINKS_PER_PAGE);
 
@@ -242,6 +232,14 @@ const SocialLinksCard = ({
   const handleRemove = async (index: number) => {
     if (!profile) return;
 
+    const linkToRemove = socialLinks[index];
+    const platform = linkToRemove?.platform?.trim();
+
+    if (!platform) {
+      notifyError("Platform is required to remove social link");
+      return;
+    }
+
     const previousLinks = [...socialLinks];
     const updatedLinks = socialLinks.filter((_, itemIndex) => itemIndex !== index);
 
@@ -249,14 +247,11 @@ const SocialLinksCard = ({
       setDeletingIndex(index);
       setSocialLinks(updatedLinks);
 
-      const updatedProfile = await updateAgencySocialLinks({
-        socialLinks: updatedLinks.map((link) => ({
-          platform: link.platform.trim(),
-          url: link.url.trim(),
-        })),
-      });
+      await deleteAgencySocialLink(platform);
+      const refreshedProfile = await getAgencyProfile();
 
-      onProfileUpdated(buildMergedProfile(profile, updatedLinks, updatedProfile));
+      setSocialLinks(refreshedProfile.socialLinks ?? []);
+      onProfileUpdated(refreshedProfile);
       notifySuccess("Social link removed successfully");
     } catch (error: any) {
       setSocialLinks(previousLinks);
@@ -381,16 +376,16 @@ const SocialLinksCard = ({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {isPlatformLoading && mergedPlatformOptions.length === 0 ? (
+                  {isPlatformLoading && apiPlatformOptions.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500">
                       Loading platforms...
                     </div>
-                  ) : mergedPlatformOptions.length === 0 ? (
+                  ) : apiPlatformOptions.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-gray-500">
                       No platforms found
                     </div>
                   ) : (
-                    mergedPlatformOptions.map((platform) => (
+                    apiPlatformOptions.map((platform) => (
                       <SelectItem key={platform} value={platform}>
                         {platform}
                       </SelectItem>

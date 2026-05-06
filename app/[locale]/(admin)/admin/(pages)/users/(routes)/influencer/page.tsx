@@ -7,16 +7,49 @@ import { getAllInfluencers } from "@/service/admin/users/get-all-influencers";
 type PageProps = {
   searchParams?: Promise<{
     page?: string;
+    search?: string;
+    status?: string;
+    niche?: string;
+    minRating?: string;
+    minJobsDone?: string;
+    minRevenue?: string;
+    view?: string;
   }>;
 };
 
 const page = async ({ searchParams }: PageProps) => {
   const resolvedSearchParams = await searchParams;
+
   const currentPage = Number(resolvedSearchParams?.page ?? "1");
+  const search = resolvedSearchParams?.search ?? "";
+  const status = resolvedSearchParams?.status ?? "";
+  const niche = resolvedSearchParams?.niche ?? "";
+  const view = resolvedSearchParams?.view === "grid" ? "grid" : "list";
+
+  const minRating = resolvedSearchParams?.minRating
+    ? Number(resolvedSearchParams.minRating)
+    : undefined;
+
+  const minJobsDone = resolvedSearchParams?.minJobsDone
+    ? Number(resolvedSearchParams.minJobsDone)
+    : undefined;
+
+  const minRevenue = resolvedSearchParams?.minRevenue
+    ? Number(resolvedSearchParams.minRevenue)
+    : undefined;
 
   const [counts, influencerRes] = await Promise.all([
     getAdminUserCounts(),
-    getAllInfluencers(currentPage, 10),
+    getAllInfluencers({
+      page: currentPage,
+      limit: view === "grid" ? 12 : 10,
+      search,
+      status,
+      niche,
+      minRating,
+      minJobsDone,
+      minRevenue,
+    }),
   ]);
 
   return (

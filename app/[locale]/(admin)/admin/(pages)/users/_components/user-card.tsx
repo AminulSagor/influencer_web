@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search, Star } from "lucide-react";
 import {
@@ -18,8 +21,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -32,9 +33,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PlatformIcon from "./platform-icon";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import UserCardItem from "./user-card-item";
 import { InfluencerListItem, ListMeta } from "@/types/admin/user/user_type";
+import { CampaignService } from "@/service/campaign/campaign-service";
 
 function capitalizeFirstLetter(text?: string): string {
   if (!text) return "";
@@ -51,9 +52,6 @@ interface Props {
 }
 
 const UserCard = ({ users, meta }: Props) => {
-  const [view, setView] = useState<"list" | "grid">("list");
-  const [activeTab, setActiveTab] = useState<"all" | "blocked">("all");
-
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,35 +59,114 @@ const UserCard = ({ users, meta }: Props) => {
   const url = pathname.split("/").pop();
   const cardTitle = capitalizeFirstLetter(url);
 
+  const [searchText, setSearchText] = useState(searchParams.get("search") ?? "");
+  const [nicheOptions, setNicheOptions] = useState<string[]>([]);
+
+  const searchParamsString = searchParams.toString();
+  const currentSearchParam = searchParams.get("search") ?? "";
+  const view = searchParams.get("view") === "grid" ? "grid" : "list";
+  const activeTab = searchParams.get("status") === "blocked" ? "blocked" : "all";
+  const niche = searchParams.get("niche") ?? "";
+  const minRating = searchParams.get("minRating") ?? "";
+  const minJobsDone = searchParams.get("minJobsDone") ?? "";
+  const minRevenue = searchParams.get("minRevenue") ?? "";
+
   const currentPage = meta?.page ?? Number(searchParams.get("page") ?? "1");
   const totalPages = meta?.totalPages ?? 1;
   const limit = meta?.limit ?? 10;
   const total = meta?.total ?? 0;
 
   const startItem = total === 0 ? 0 : (currentPage - 1) * limit + 1;
-  const endItem = Math.min(currentPage * limit, total);
+  const endItem = total === 0 ? 0 : Math.min(currentPage * limit, total);
 
-  const paginationPages = useMemo(() => {
-    if (totalPages <= 1) return [1];
+  useEffect(() => {
+    CampaignService.getCampaignNiches()
+      .then((niches) => setNicheOptions(niches))
+      .catch(() => setNicheOptions([]));
+  }, []);
 
-    const pages = new Set<number>();
-    pages.add(1);
-    pages.add(totalPages);
-    pages.add(currentPage);
+  useEffect(() => {
+    setSearchText(currentSearchParam);
+  }, [currentSearchParam]);
 
-    if (currentPage - 1 > 1) pages.add(currentPage - 1);
-    if (currentPage + 1 < totalPages) pages.add(currentPage + 1);
+  useEffect(() => {
+    const nextSearch = searchText.trim();
 
-    return Array.from(pages).sort((a, b) => a - b);
-  }, [currentPage, totalPages]);
+    if (nextSearch === currentSearchParam) return;
+
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParamsString);
+
+      if (nextSearch) {
+        params.set("search", nextSearch);
+      } else {
+        params.delete("search");
+      }
+
+      params.set("page", "1");
+
+      const queryString = params.toString();
+      router.push(queryString ? `${pathname}?${queryString}` : pathname);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [searchText, currentSearchParam, searchParamsString, pathname, router]);
+
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (!value || value === "all") {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    if (!("page" in updates)) {
+      params.set("page", "1");
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  };
+
+  const handleSearch = () => {
+    updateQuery({
+      search: searchText.trim() || null,
+    });
+  };
+
+  const handleTabChange = (tab: "all" | "blocked") => {
+    updateQuery({
+      status: tab === "blocked" ? "blocked" : null,
+    });
+  };
+
+  const handleViewChange = (nextView: "list" | "grid") => {
+    updateQuery({
+      view: nextView === "grid" ? "grid" : null,
+      page: "1",
+    });
+  };
 
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages || page === currentPage) return;
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.push(`${pathname}?${params.toString()}`);
+    updateQuery({ page: String(page) });
   };
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 2) return [1, 2, 3];
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
+  }, [currentPage, totalPages]);
 
   const getButtonClass = (tab: "all" | "blocked") =>
     activeTab === tab
@@ -100,6 +177,51 @@ const UserCard = ({ users, meta }: Props) => {
     "bg-Secondary text-light-green border border-light-green hover:bg-Secondary/90 hover:text-light-green";
   const activeBtn =
     "bg-light-green text-white hover:bg-light-green/90 hover:text-white";
+
+  const pagination = meta && total > 0 && (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t bg-white">
+      <div className="text-sm text-muted-foreground">
+        Showing <span className="font-medium text-foreground">{startItem} - {endItem}</span> of{" "}
+        <span className="font-medium text-foreground">{total}</span> Influencers
+      </div>
+
+      <div className="flex items-center gap-2 text-sm">
+        <Button
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage <= 1}
+          onClick={() => goToPage(currentPage - 1)}
+        >
+          Previous
+        </Button>
+
+        {paginationPages.map((pageNumber) => (
+          <Button
+            key={pageNumber}
+            variant="ghost"
+            onClick={() => goToPage(pageNumber)}
+            className={cn(
+              "h-8 min-w-8 px-0",
+              currentPage === pageNumber
+                ? "bg-light-green text-white hover:bg-light-green/90"
+                : "text-Primary"
+            )}
+          >
+            {pageNumber}
+          </Button>
+        ))}
+
+        <Button
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage >= totalPages}
+          onClick={() => goToPage(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -117,7 +239,7 @@ const UserCard = ({ users, meta }: Props) => {
             <Button
               variant="link"
               className={getButtonClass("all")}
-              onClick={() => setActiveTab("all")}
+              onClick={() => handleTabChange("all")}
             >
               All
             </Button>
@@ -125,7 +247,7 @@ const UserCard = ({ users, meta }: Props) => {
             <Button
               variant="link"
               className={getButtonClass("blocked")}
-              onClick={() => setActiveTab("blocked")}
+              onClick={() => handleTabChange("blocked")}
             >
               Blocked
             </Button>
@@ -142,6 +264,11 @@ const UserCard = ({ users, meta }: Props) => {
                 size={18}
               />
               <Input
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
                 placeholder="Search by influencer name, phone or email..."
                 className="pl-10"
               />
@@ -151,14 +278,14 @@ const UserCard = ({ users, meta }: Props) => {
           <div className="flex gap-2 shrink-0">
             <Button
               className={cn(baseBtn, view === "list" && activeBtn)}
-              onClick={() => setView("list")}
+              onClick={() => handleViewChange("list")}
             >
               List View
             </Button>
 
             <Button
               className={cn(baseBtn, view === "grid" && activeBtn)}
-              onClick={() => setView("grid")}
+              onClick={() => handleViewChange("grid")}
             >
               Grid View
             </Button>
@@ -181,36 +308,96 @@ const UserCard = ({ users, meta }: Props) => {
                 </SelectContent>
               </Select>
 
-              <Button className="bg-light-green text-white hover:bg-light-green/90">
+              <Button
+                className="bg-light-green text-white hover:bg-light-green/90"
+                onClick={handleSearch}
+              >
                 Go
               </Button>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Select>
+              <Select
+                value={niche || "all"}
+                onValueChange={(value) =>
+                  updateQuery({
+                    niche: value === "all" ? null : value,
+                  })
+                }
+              >
                 <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[140px]">
                   <SelectValue placeholder="Niche" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">Niche</SelectItem>
+                  {nicheOptions.map((nicheName) => (
+                    <SelectItem key={nicheName} value={nicheName}>
+                      {nicheName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[190px]">
+              <Select
+                value={minRating || "all"}
+                onValueChange={(value) =>
+                  updateQuery({
+                    minRating: value === "all" ? null : value,
+                  })
+                }
+              >
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[140px]">
+                  <SelectValue placeholder="Rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Rating</SelectItem>
+                  <SelectItem value="1">1+</SelectItem>
+                  <SelectItem value="2">2+</SelectItem>
+                  <SelectItem value="3">3+</SelectItem>
+                  <SelectItem value="4">4+</SelectItem>
+                  <SelectItem value="4.5">4.5+</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={minJobsDone || "all"}
+                onValueChange={(value) =>
+                  updateQuery({
+                    minJobsDone: value === "all" ? null : value,
+                  })
+                }
+              >
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[150px]">
+                  <SelectValue placeholder="Job Completed" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Job Completed</SelectItem>
+                  <SelectItem value="1">1+</SelectItem>
+                  <SelectItem value="2">2+</SelectItem>
+                  <SelectItem value="5">5+</SelectItem>
+                  <SelectItem value="10">10+</SelectItem>
+                  <SelectItem value="25">25+</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={minRevenue || "all"}
+                onValueChange={(value) =>
+                  updateQuery({
+                    minRevenue: value === "all" ? null : value,
+                  })
+                }
+              >
+                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[180px]">
                   <SelectValue placeholder="Revenue Generated" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="revenue">Revenue Generated</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select>
-                <SelectTrigger className="bg-white border border-light-green text-sm w-[calc(50%-4px)] sm:w-[160px]">
-                  <SelectValue placeholder="Nov 20 - Dec 20" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date-range">Nov 20 - Dec 20</SelectItem>
+                  <SelectItem value="all">Revenue Generated</SelectItem>
+                  <SelectItem value="5000">5,000+</SelectItem>
+                  <SelectItem value="10000">10,000+</SelectItem>
+                  <SelectItem value="50000">50,000+</SelectItem>
+                  <SelectItem value="100000">100,000+</SelectItem>
+                  <SelectItem value="500000">500,000+</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -229,18 +416,10 @@ const UserCard = ({ users, meta }: Props) => {
                   <TableHead className="text-white">Niche</TableHead>
                   <TableHead className="text-white">Rating</TableHead>
                   <TableHead className="text-white">Platforms</TableHead>
-                  <TableHead className="text-white text-center">
-                    Active Job
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Job Done
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Revenue
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Status
-                  </TableHead>
+                  <TableHead className="text-white text-center">Active Job</TableHead>
+                  <TableHead className="text-white text-center">Job Done</TableHead>
+                  <TableHead className="text-white text-center">Revenue</TableHead>
+                  <TableHead className="text-white text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -254,7 +433,7 @@ const UserCard = ({ users, meta }: Props) => {
                     <TableCell>
                       <Link
                         href={`/admin/users/influencer/${user.id}`}
-                        className="flex items-center gap-3"
+                        className="flex items-center gap-3 hover:opacity-80 transition"
                       >
                         <Avatar>
                           <AvatarImage src={user.image ?? ""} />
@@ -266,9 +445,7 @@ const UserCard = ({ users, meta }: Props) => {
                       </Link>
                     </TableCell>
 
-                    <TableCell>
-                      {user.niche.length ? user.niche.join(", ") : "—"}
-                    </TableCell>
+                    <TableCell>{user.niche.length ? user.niche.join(", ") : "—"}</TableCell>
 
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -279,10 +456,10 @@ const UserCard = ({ users, meta }: Props) => {
 
                     <TableCell>
                       <div className="flex gap-2">
-                        {user.platforms.map((platform) => (
+                        {user.platforms.map((platform, index) => (
                           <PlatformIcon
                             className="text-light-green"
-                            key={`${user.id}-${platform}`}
+                            key={`${user.id}-${platform}-${index}`}
                             size={18}
                             platform={platform}
                           />
@@ -290,21 +467,15 @@ const UserCard = ({ users, meta }: Props) => {
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-center font-semibold">
-                      {user.activeJobs}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      {user.jobDone}
-                    </TableCell>
+                    <TableCell className="text-center font-semibold">{user.activeJobs}</TableCell>
+                    <TableCell className="text-center font-semibold">{user.jobDone}</TableCell>
                     <TableCell className="text-center font-semibold">
                       {formatCurrency(user.revenue)}
                     </TableCell>
 
                     <TableCell className="text-center">
                       <Badge
-                        variant={
-                          user.status === "Approved" ? "lightGreen" : "destructive"
-                        }
+                        variant={user.status === "Approved" ? "lightGreen" : "destructive"}
                       >
                         {user.status}
                       </Badge>
@@ -322,114 +493,17 @@ const UserCard = ({ users, meta }: Props) => {
               </TableBody>
             </Table>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t bg-white">
-              <div className="text-sm text-muted-foreground">
-                Showing{" "}
-                <span className="font-medium text-foreground">
-                  {startItem} - {endItem}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-foreground">{total}</span>{" "}
-                Campaigns
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                  disabled={currentPage <= 1}
-                  onClick={() => goToPage(currentPage - 1)}
-                >
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {paginationPages.map((pageNumber) => (
-                    <Button
-                      key={pageNumber}
-                      variant="ghost"
-                      onClick={() => goToPage(pageNumber)}
-                      className={cn(
-                        "h-9 w-9 rounded-md p-0",
-                        currentPage === pageNumber
-                          ? "bg-light-green text-white hover:bg-light-green/90"
-                          : "text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {pageNumber}
-                    </Button>
-                  ))}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => goToPage(currentPage + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            {pagination}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div className="rounded-md border bg-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-2">
               {users.map((user) => (
                 <UserCardItem influencer={user} key={user.id} />
               ))}
             </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-3">
-              <div className="text-sm text-muted-foreground">
-                Showing{" "}
-                <span className="font-medium text-foreground">
-                  {startItem} - {endItem}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-foreground">{total}</span>{" "}
-                Campaigns
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                  disabled={currentPage <= 1}
-                  onClick={() => goToPage(currentPage - 1)}
-                >
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {paginationPages.map((pageNumber) => (
-                    <Button
-                      key={pageNumber}
-                      variant="ghost"
-                      onClick={() => goToPage(pageNumber)}
-                      className={cn(
-                        "h-9 w-9 rounded-md p-0",
-                        currentPage === pageNumber
-                          ? "bg-light-green text-white hover:bg-light-green/90"
-                          : "text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {pageNumber}
-                    </Button>
-                  ))}
-                </div>
-
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-foreground"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => goToPage(currentPage + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
+            {pagination}
+          </div>
         )}
       </CardContent>
     </Card>

@@ -12,6 +12,7 @@ type PageProps = {
     minJobsPlaced?: string;
     minSpent?: string;
     sortBy?: string;
+    view?: string;
   }>;
 };
 
@@ -22,6 +23,7 @@ const page = async ({ searchParams }: PageProps) => {
   const search = resolvedSearchParams?.search ?? "";
   const status = resolvedSearchParams?.status ?? "";
   const sortBy = resolvedSearchParams?.sortBy ?? "";
+  const view = resolvedSearchParams?.view === "grid" ? "grid" : "list";
 
   const minJobsPlaced = resolvedSearchParams?.minJobsPlaced
     ? Number(resolvedSearchParams.minJobsPlaced)
@@ -35,7 +37,7 @@ const page = async ({ searchParams }: PageProps) => {
     getAdminUserCounts(),
     getAllBrands({
       page: currentPage,
-      limit: 10,
+      limit: view === "grid" ? 12 : 10,
       search,
       status,
       minJobsPlaced,

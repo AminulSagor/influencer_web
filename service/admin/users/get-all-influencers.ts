@@ -33,12 +33,45 @@ export type InfluencerListResponse = {
   meta: ListMeta;
 };
 
-export async function getAllInfluencers(
+type GetAllInfluencersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  niche?: string;
+  minRating?: number;
+  minJobsDone?: number;
+  minRevenue?: number;
+};
+
+export async function getAllInfluencers({
   page = 1,
-  limit = 10
-): Promise<InfluencerListResponse> {
+  limit = 10,
+  search,
+  status,
+  niche,
+  minRating,
+  minJobsDone,
+  minRevenue,
+}: GetAllInfluencersParams = {}): Promise<InfluencerListResponse> {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  if (search?.trim()) query.set("search", search.trim());
+  if (status?.trim()) query.set("status", status.trim());
+  if (niche?.trim()) query.set("niche", niche.trim());
+  if (typeof minRating === "number") query.set("minRating", String(minRating));
+  if (typeof minJobsDone === "number") {
+    query.set("minJobsDone", String(minJobsDone));
+  }
+  if (typeof minRevenue === "number") {
+    query.set("minRevenue", String(minRevenue));
+  }
+
   const res = await serviceServer.get<GetAllInfluencersResponse>(
-    `/influencer/admin/browsing/influencers?page=${page}&limit=${limit}`
+    `/influencer/admin/browsing/influencers?${query.toString()}`
   );
 
   return {

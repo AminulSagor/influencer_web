@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -36,6 +36,7 @@ import PlatformIcon from "./platform-icon";
 import { Badge } from "@/components/ui/badge";
 import AgencyCardItem from "./agency-card-item";
 import { AgencyListItem, ListMeta } from "@/types/admin/user/user_type";
+import { CampaignService } from "@/service/campaign/campaign-service";
 
 function capitalizeFirstLetter(text?: string): string {
   if (!text) return "";
@@ -48,8 +49,6 @@ interface Props {
 }
 
 const AgencyUserCard = ({ users, meta }: Props) => {
-  const [view, setView] = useState<"list" | "grid">("list");
-
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -58,6 +57,9 @@ const AgencyUserCard = ({ users, meta }: Props) => {
   const cardTitle = capitalizeFirstLetter(url);
 
   const [searchText, setSearchText] = useState(searchParams.get("search") ?? "");
+  const [nicheOptions, setNicheOptions] = useState<string[]>([]);
+
+  const view = searchParams.get("view") === "grid" ? "grid" : "list";
 
   const activeTab = useMemo<"all" | "blocked">(() => {
     const status = searchParams.get("status");
@@ -78,6 +80,12 @@ const AgencyUserCard = ({ users, meta }: Props) => {
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
   const endItem = totalItems === 0 ? 0 : Math.min(currentPage * limit, totalItems);
 
+  useEffect(() => {
+    CampaignService.getCampaignNiches()
+      .then((niches) => setNicheOptions(niches))
+      .catch(() => setNicheOptions([]));
+  }, []);
+
   const updateQuery = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -93,7 +101,8 @@ const AgencyUserCard = ({ users, meta }: Props) => {
       params.set("page", "1");
     }
 
-    router.push(`${pathname}?${params.toString()}`);
+    const queryString = params.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
   };
 
   const handleSearch = () => {
@@ -105,6 +114,13 @@ const AgencyUserCard = ({ users, meta }: Props) => {
   const handleTabChange = (tab: "all" | "blocked") => {
     updateQuery({
       status: tab === "blocked" ? "blocked" : null,
+    });
+  };
+
+  const handleViewChange = (nextView: "list" | "grid") => {
+    updateQuery({
+      view: nextView === "grid" ? "grid" : null,
+      page: "1",
     });
   };
 
@@ -135,6 +151,50 @@ const AgencyUserCard = ({ users, meta }: Props) => {
     "bg-Secondary text-light-green border border-light-green hover:bg-Secondary/90 hover:text-light-green";
   const activeBtn =
     "bg-light-green text-white hover:bg-light-green/90 hover:text-white";
+
+  const pagination = meta && totalItems > 0 && (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t bg-white">
+      <div className="text-sm text-muted-foreground">
+        Showing {startItem} - {endItem} of {totalItems} Agencies
+      </div>
+
+      <div className="flex items-center gap-2 text-sm">
+        <Button
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage <= 1}
+          onClick={() => handlePageChange(currentPage - 1)}
+        >
+          Previous
+        </Button>
+
+        {visiblePages.map((page) => (
+          <Button
+            key={page}
+            variant="ghost"
+            onClick={() => handlePageChange(page)}
+            className={cn(
+              "h-8 min-w-8 px-0",
+              currentPage === page
+                ? "bg-light-green text-white hover:bg-light-green/90"
+                : "text-Primary"
+            )}
+          >
+            {page}
+          </Button>
+        ))}
+
+        <Button
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage >= totalPages}
+          onClick={() => handlePageChange(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -191,14 +251,14 @@ const AgencyUserCard = ({ users, meta }: Props) => {
           <div className="flex gap-2 shrink-0">
             <Button
               className={cn(baseBtn, view === "list" && activeBtn)}
-              onClick={() => setView("list")}
+              onClick={() => handleViewChange("list")}
             >
               List View
             </Button>
 
             <Button
               className={cn(baseBtn, view === "grid" && activeBtn)}
-              onClick={() => setView("grid")}
+              onClick={() => handleViewChange("grid")}
             >
               Grid View
             </Button>
@@ -243,12 +303,11 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Niche</SelectItem>
-                  <SelectItem value="Fashion">Fashion</SelectItem>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Travel">Travel</SelectItem>
-                  <SelectItem value="Food">Food</SelectItem>
-                  <SelectItem value="Fitness">Fitness</SelectItem>
-                  <SelectItem value="Beauty">Beauty</SelectItem>
+                  {nicheOptions.map((nicheName) => (
+                    <SelectItem key={nicheName} value={nicheName}>
+                      {nicheName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -286,6 +345,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   <SelectItem value="2">2+</SelectItem>
                   <SelectItem value="3">3+</SelectItem>
                   <SelectItem value="4">4+</SelectItem>
+                  <SelectItem value="4.5">4.5+</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -303,6 +363,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                 <SelectContent>
                   <SelectItem value="all">Job Completed</SelectItem>
                   <SelectItem value="1">1+</SelectItem>
+                  <SelectItem value="2">2+</SelectItem>
                   <SelectItem value="5">5+</SelectItem>
                   <SelectItem value="10">10+</SelectItem>
                   <SelectItem value="25">25+</SelectItem>
@@ -322,6 +383,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Revenue Generated</SelectItem>
+                  <SelectItem value="5000">5,000+</SelectItem>
                   <SelectItem value="10000">10,000+</SelectItem>
                   <SelectItem value="50000">50,000+</SelectItem>
                   <SelectItem value="100000">100,000+</SelectItem>
@@ -344,18 +406,10 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                   <TableHead className="text-white">Niche</TableHead>
                   <TableHead className="text-white">Rating</TableHead>
                   <TableHead className="text-white">Platforms</TableHead>
-                  <TableHead className="text-white text-center">
-                    Active Job
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Job Done
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Revenue
-                  </TableHead>
-                  <TableHead className="text-white text-center">
-                    Status
-                  </TableHead>
+                  <TableHead className="text-white text-center">Active Job</TableHead>
+                  <TableHead className="text-white text-center">Job Done</TableHead>
+                  <TableHead className="text-white text-center">Revenue</TableHead>
+                  <TableHead className="text-white text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -381,9 +435,7 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                       </Link>
                     </TableCell>
 
-                    <TableCell>
-                      {user.niche.length ? user.niche.join(", ") : "—"}
-                    </TableCell>
+                    <TableCell>{user.niche.length ? user.niche.join(", ") : "—"}</TableCell>
 
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -405,25 +457,15 @@ const AgencyUserCard = ({ users, meta }: Props) => {
                       </div>
                     </TableCell>
 
-                    <TableCell className="text-center font-semibold">
-                      {user.activeJobs}
-                    </TableCell>
-
-                    <TableCell className="text-center font-semibold">
-                      {user.jobDone}
-                    </TableCell>
-
+                    <TableCell className="text-center font-semibold">{user.activeJobs}</TableCell>
+                    <TableCell className="text-center font-semibold">{user.jobDone}</TableCell>
                     <TableCell className="text-center font-semibold">
                       ৳{user.revenue.toLocaleString()}
                     </TableCell>
 
                     <TableCell className="text-center">
                       <Badge
-                        variant={
-                          user.status === "Approved"
-                            ? "lightGreen"
-                            : "destructive"
-                        }
+                        variant={user.status === "Approved" ? "lightGreen" : "destructive"}
                       >
                         {user.status}
                       </Badge>
@@ -441,55 +483,16 @@ const AgencyUserCard = ({ users, meta }: Props) => {
               </TableBody>
             </Table>
 
-            {meta && totalItems > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4 sm:py-5 border-t">
-                <div className="text-sm text-muted-foreground">
-                  Showing {startItem} - {endItem} of {totalItems} Agencies
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Button
-                    variant="ghost"
-                    className="h-8 px-2 text-muted-foreground"
-                    disabled={currentPage <= 1}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                  >
-                    Previous
-                  </Button>
-
-                  {visiblePages.map((page) => (
-                    <Button
-                      key={page}
-                      variant="ghost"
-                      onClick={() => handlePageChange(page)}
-                      className={cn(
-                        "h-8 min-w-8 px-0",
-                        currentPage === page
-                          ? "bg-light-green text-white hover:bg-light-green/90"
-                          : "text-Primary"
-                      )}
-                    >
-                      {page}
-                    </Button>
-                  ))}
-
-                  <Button
-                    variant="ghost"
-                    className="h-8 px-2 text-muted-foreground"
-                    disabled={currentPage >= totalPages}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+            {pagination}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-            {users.map((user) => (
-              <AgencyCardItem agency={user} key={user.id} />
-            ))}
+          <div className="rounded-md border bg-white">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 p-2">
+              {users.map((user) => (
+                <AgencyCardItem agency={user} key={user.id} />
+              ))}
+            </div>
+            {pagination}
           </div>
         )}
       </CardContent>

@@ -191,16 +191,6 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Select defaultValue="range">
-                <SelectTrigger className="w-full sm:w-[180px] bg-white border-light-green/30 h-9 text-sm">
-                  <SelectValue placeholder="Nov 20 - Dec 20" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="range">Nov 20 - Dec 20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </div>
 

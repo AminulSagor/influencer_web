@@ -138,6 +138,11 @@ export type DeleteAgencyPayoutResponse = {
     message: string;
 };
 
+export type DeleteAgencySocialLinkResponse = {
+    success: boolean;
+    message: string;
+};
+
 export type UpdateAgencyBasicInfoPayload = {
     agencyName: string;
     agencyBio: string;

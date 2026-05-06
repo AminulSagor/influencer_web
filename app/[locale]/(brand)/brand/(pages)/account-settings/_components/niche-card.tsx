@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Edit, Plus, Search } from "lucide-react";
+import { Check, Clock3, Edit, Plus, Search } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { Card } from "@/components/ui/card";
@@ -24,10 +24,17 @@ type ProfileNicheItem = {
   status?: string;
 };
 
-const getProfileNicheName = (item: string | ProfileNicheItem) => {
-  if (typeof item === "string") return item;
-  return item.niche;
+const getProfileNicheItem = (item: string | ProfileNicheItem): ProfileNicheItem => {
+  if (typeof item === "string") return { niche: item };
+
+  return {
+    niche: item.niche,
+    status: item.status,
+  };
 };
+
+const isPendingNicheStatus = (status?: string) =>
+  ["pending", "unverified"].includes(status?.trim().toLowerCase() ?? "");
 
 const NicheCard = () => {
   const profile = useProfileStore((s) => s.profile);
@@ -40,13 +47,18 @@ const NicheCard = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const profileNiches = useMemo(() => {
+  const profileNicheItems = useMemo(() => {
     const rawNiches = profile?.niches ?? [];
 
     return rawNiches.map((item) =>
-      getProfileNicheName(item as string | ProfileNicheItem),
+      getProfileNicheItem(item as string | ProfileNicheItem),
     );
   }, [profile?.niches]);
+
+  const profileNiches = useMemo(
+    () => profileNicheItems.map((item) => item.niche),
+    [profileNicheItems],
+  );
 
   const filteredNiches = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -141,17 +153,35 @@ const NicheCard = () => {
         </div>
 
         <div className="flex h-34 flex-wrap gap-3 overflow-y-auto rounded-md p-2">
-          {profileNiches.map((niche) => (
-            <span
-              key={niche}
-              className="inline-flex h-fit items-center gap-2 rounded-full bg-[#F0F6DA] px-4 py-2 text-xs font-medium text-[#2F5423]"
-            >
-              {niche}
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2F5423] text-white">
-                <Check className="h-2.5 w-2.5" />
+          {profileNicheItems.map((item) => {
+            const isPending = isPendingNicheStatus(item.status);
+
+            return (
+              <span
+                key={item.niche}
+                className={cn(
+                  "inline-flex h-fit items-center gap-2 rounded-full px-4 py-2 text-xs font-medium",
+                  isPending
+                    ? "bg-[#FFF2E0] text-[#D79552]"
+                    : "bg-[#F0F6DA] text-[#2F5423]",
+                )}
+              >
+                {item.niche}
+                <span
+                  className={cn(
+                    "flex h-4 w-4 items-center justify-center rounded-full text-white",
+                    isPending ? "bg-[#D79552]" : "bg-[#2F5423]",
+                  )}
+                >
+                  {isPending ? (
+                    <Clock3 className="h-2.5 w-2.5" />
+                  ) : (
+                    <Check className="h-2.5 w-2.5" />
+                  )}
+                </span>
               </span>
-            </span>
-          ))}
+            );
+          })}
         </div>
 
         <button
