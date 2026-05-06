@@ -4,6 +4,7 @@ import ProfileCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_
 import ProfileUpdateCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/profile-update-card";
 import VerificationMethodsCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/verification-methods-card";
 import BrandDeleteAccountSection from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/brand-delete-account-section";
+import NicheCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/niche-card";
 
 const AccountSettingsPage = () => {
   return (
@@ -14,13 +15,20 @@ const AccountSettingsPage = () => {
       </div>
 
       {/* assets card */}
-      <BrandAssetsCard />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-4">
+          <NicheCard />
+        </div>
+        <div className="lg:col-span-8">
+          <BrandAssetsCard />
+        </div>
+      </div>
 
       {/* profile update card */}
-      <ProfileUpdateCard/>
+      <ProfileUpdateCard />
 
       {/* verification */}
-      <VerificationMethodsCard/>
+      <VerificationMethodsCard />
 
       <BrandDeleteAccountSection />
     </div>

@@ -1,23 +1,17 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import TopBar from "./_component/top-bar";
+import { cookies } from "next/headers";
+import { decodeJwtPayload } from "@/storage/jwt_decoder";
+import AgencyShell from "@/app/[locale]/(agency)/agency/_component/agency.shell";
 
-export default function layout({
+export default async function Layout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return (
-    <div>
-      <SidebarProvider>
-        <AppSidebar />
-        <main className="w-full flex flex-col">
-          <TopBar />
-          <div className="bg-[#F4F5F7] grow ">
-            <div>{children}</div>
-          </div>
-        </main>
-      </SidebarProvider>
-    </div>
-  );
+}) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("access_token")?.value ?? "";
+  const payload = token ? decodeJwtPayload(token) : null;
+
+  const isVerified = Boolean(payload?.isVerified);
+
+  return <AgencyShell isVerified={isVerified}>{children}</AgencyShell>;
 }

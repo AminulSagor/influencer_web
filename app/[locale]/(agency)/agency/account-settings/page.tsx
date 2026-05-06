@@ -15,7 +15,7 @@ import DeleteAccountDangerZone from "@/components/account-settings/delete-accoun
 import { getAgencyProfile } from "@/service/agency/account-settings";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 
-const page = () => {
+const Page = () => {
   const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const params = useParams<{ locale: string }>();
@@ -42,7 +42,9 @@ const page = () => {
     profile?.agencyName?.trim() ||
     `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim();
 
-  const handleProfileUpdated = (updatedProfile: Partial<AgencyProfileResponse>) => {
+  const handleProfileUpdated = (
+    updatedProfile: Partial<AgencyProfileResponse>,
+  ) => {
     setProfile((prev) => {
       if (!prev) return prev;
       return {
@@ -54,20 +56,16 @@ const page = () => {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="grid grid-cols-12 items-stretch gap-4">
-        <div className="col-span-12 md:col-span-6 h-full">
-          <BasicInfoCard profile={profile} isLoading={isLoading} />
-        </div>
-        <div className="col-span-12 md:col-span-6 h-full">
-          <Link href={`/${locale}/agency/account-settings/verification-checklist`} className="block h-full">
-            <div className="h-full">
-              <ProfileCompletionCard
-                profile={profile}
-                isLoading={isLoading}
-                onProfileUpdated={handleProfileUpdated}
-              />
-            </div>
-          </Link>
+      <div className="grid lg:grid-cols-2 gap-4 items-start">
+        <BasicInfoCard profile={profile} isLoading={isLoading} />
+        <div>
+          <div className="h-full">
+            <ProfileCompletionCard
+              profile={profile}
+              isLoading={isLoading}
+              onProfileUpdated={handleProfileUpdated}
+            />
+          </div>
         </div>
       </div>
 
@@ -124,4 +122,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

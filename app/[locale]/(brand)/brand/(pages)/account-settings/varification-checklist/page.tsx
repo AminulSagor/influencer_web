@@ -1,12 +1,20 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import toast from "react-hot-toast";
+
 import ProfileCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/profile-card";
 import ProfileCompletionPercentCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/varification-checklist/_components/profile-completion-percent-card";
 import VerificationInProgress from "@/app/[locale]/(brand)/brand/(pages)/account-settings/varification-checklist/_components/verification-in-progress";
 import VerificationStatusCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/varification-checklist/_components/veriication-status-card";
+import { EmailVerificationDialog } from "@/components/email-verification-dialog";
+
 import { useProfileStore } from "@/store/client-profile-store";
+import {
+  requestClientEmailOtp,
+  verifyClientEmailOtp,
+} from "@/service/client/profile/email-verification";
 
 export type VerificationStatus =
   | "verified"
@@ -33,7 +41,10 @@ const getDocStatus = (
 
 const VarificationCheckListPage = () => {
   const t = useTranslations("brand.verificationChecklist");
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+
   const profile = useProfileStore((state) => state.profile);
+  const setProfile = useProfileStore((state) => state.setProfile);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
 
   useEffect(() => {
@@ -45,46 +56,14 @@ const VarificationCheckListPage = () => {
   const verificationStep = useMemo<VerificationStepType[]>(() => {
     if (!profile) {
       return [
-        {
-          id: 1,
-          title: t("socialProfileVerification"),
-          status: "unverified",
-        },
-        {
-          id: 2,
-          title: t("phoneVerification"),
-          status: "unverified",
-        },
-        {
-          id: 3,
-          title: t("paymentSetup"),
-          status: "unverified",
-        },
-        {
-          id: 4,
-          title: t("nid"),
-          status: "unverified",
-        },
-        {
-          id: 5,
-          title: t("tradeLicense"),
-          status: "unverified",
-        },
-        {
-          id: 6,
-          title: t("tin"),
-          status: "unverified",
-        },
-        {
-          id: 7,
-          title: t("bin"),
-          status: "unverified",
-        },
-        {
-          id: 8,
-          title: t("email"),
-          status: "unverified",
-        },
+        { id: 1, title: t("socialProfileVerification"), status: "unverified" },
+        { id: 2, title: t("phoneVerification"), status: "unverified" },
+        { id: 3, title: t("paymentSetup"), status: "unverified" },
+        { id: 4, title: t("nid"), status: "unverified" },
+        { id: 5, title: t("tradeLicense"), status: "unverified" },
+        { id: 6, title: t("tin"), status: "unverified" },
+        { id: 7, title: t("bin"), status: "unverified" },
+        { id: 8, title: t("email"), status: "unverified" },
       ];
     }
 
@@ -154,6 +133,23 @@ const VarificationCheckListPage = () => {
     ];
   }, [profile, t]);
 
+  const handleVerificationStepClick = async (item: VerificationStepType) => {
+    if (item.id !== 8) return;
+
+    if (profile?.isEmailVerified) {
+      toast.success("Email already verified");
+      return;
+    }
+
+    try {
+      await requestClientEmailOtp();
+      toast.success("Verification code sent to your email");
+      setEmailDialogOpen(true);
+    } catch {
+      toast.error("Failed to send verification code");
+    }
+  };
+
   const completedCount = verificationStep.filter(
     (item) => item.status === "verified",
   ).length;
@@ -181,9 +177,34 @@ const VarificationCheckListPage = () => {
 
       <div className="space-y-2">
         {verificationStep.map((item) => (
-          <VerificationStatusCard key={item.id} item={item} />
+          <VerificationStatusCard
+            key={item.id}
+            item={item}
+            onClick={
+              item.id === 8 && item.status === "unverified"
+                ? () => handleVerificationStepClick(item)
+                : undefined
+            }
+          />
         ))}
       </div>
+
+      <EmailVerificationDialog
+        open={emailDialogOpen}
+        email={profile?.email ?? ""}
+        onOpenChange={setEmailDialogOpen}
+        verifyOtp={verifyClientEmailOtp}
+        onVerified={() =>
+          setProfile(
+            profile
+              ? {
+                  ...profile,
+                  isEmailVerified: true,
+                }
+              : profile,
+          )
+        }
+      />
     </div>
   );
 };

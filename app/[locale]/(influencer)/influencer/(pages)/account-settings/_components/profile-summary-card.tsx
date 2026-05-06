@@ -1,22 +1,27 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 import { getPlatformIcon } from "@/utils/platforms_util";
 import { useLogout } from "@/hooks/useLogout";
 import Image from "next/image";
+import Link from "next/link";
 
 interface ProfileSummaryCardProps {
   profileData: InfluencerProfileData | null;
   loading: boolean;
 }
 
-export default function ProfileSummaryCard({ profileData, loading }: ProfileSummaryCardProps) {
-  const t = useTranslations('influencer.account-setting');
+export default function ProfileSummaryCard({
+  profileData,
+  loading,
+}: ProfileSummaryCardProps) {
+  const t = useTranslations("influencer.account-setting");
   const { logout, loading: logoutLoading } = useLogout();
   const [imageError, setImageError] = useState(false);
+  const locale = useLocale();
 
   if (loading) {
     return (
@@ -26,11 +31,15 @@ export default function ProfileSummaryCard({ profileData, loading }: ProfileSumm
     );
   }
 
-  const fullName = `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim() || "User";
-  const location = profileData?.addresses?.[0] 
+  const fullName =
+    `${profileData?.firstName || ""} ${profileData?.lastName || ""}`.trim() ||
+    "User";
+  const location = profileData?.addresses?.[0]
     ? `${profileData.addresses[0].zilla}, ${profileData.addresses[0].country}`
     : "Location not set";
-  const verificationStatus = profileData?.isVerified ? "Verified" : "Unverified";
+  const verificationStatus = profileData?.isVerified
+    ? "Verified"
+    : "Unverified";
   const topSocialLinks = profileData?.socialLinks?.slice(0, 3) || [];
 
   return (
@@ -40,8 +49,8 @@ export default function ProfileSummaryCard({ profileData, loading }: ProfileSumm
         <div className="flex items-center gap-4 w-full">
           <div className="w-20 h-20 rounded-full bg-white border-2 border-white/70 overflow-hidden relative">
             {profileData?.profileImg && !imageError ? (
-              <Image 
-                src={profileData.profileImg} 
+              <Image
+                src={profileData.profileImg}
                 alt={fullName}
                 fill
                 className="object-cover"
@@ -66,13 +75,16 @@ export default function ProfileSummaryCard({ profileData, loading }: ProfileSumm
 
             <p className="text-sm text-[#DDE8C6]">{location}</p>
 
-            <span className={`inline-block mt-1 px-3 py-0.5 text-xs rounded-md ${
-              profileData?.isVerified 
-                ? "bg-green-100 text-green-800" 
-                : "bg-[#F1F6DE] text-[#2D5016]"
-            }`}>
+            <Link
+              href={`/${locale}/influencer/account-settings/verification-checklist`}
+              className={`inline-block mt-1 rounded-md px-3 py-0.5 text-xs ${
+                profileData?.isVerified
+                  ? "bg-green-100 text-green-800"
+                  : "bg-[#F1F6DE] text-[#2D5016]"
+              }`}
+            >
               {verificationStatus}
-            </span>
+            </Link>
           </div>
         </div>
 
@@ -89,11 +101,9 @@ export default function ProfileSummaryCard({ profileData, loading }: ProfileSumm
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                 >
-                  <span>
-                    {getPlatformIcon(link.platform, "h-6 w-6")}
-                  </span>
+                  <span>{getPlatformIcon(link.platform, "h-6 w-6")}</span>
                   <span className="truncate max-w-37.5">
-                    {link.url.replace(/https?:\/\/(www\.)?/, '').split('/')[0]}
+                    {link.url.replace(/https?:\/\/(www\.)?/, "").split("/")[0]}
                   </span>
                 </a>
               ))
@@ -103,7 +113,7 @@ export default function ProfileSummaryCard({ profileData, loading }: ProfileSumm
           </div>
 
           {/* Logout */}
-          <button 
+          <button
             onClick={logout}
             disabled={logoutLoading}
             className="px-6 py-1.5 rounded-lg bg-[#F1F6DE] text-[#2D5016] text-sm font-medium hover:opacity-90 gap-2 sm:max-w-44 disabled:opacity-50"

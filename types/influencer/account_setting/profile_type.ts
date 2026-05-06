@@ -1,7 +1,7 @@
-export interface InfluencerProfilePayload {
-  // Add specific payload fields if needed
-  // For GET requests, this might be query parameters
-}
+// export interface InfluencerProfilePayload {
+//   // Add specific payload fields if needed
+//   // For GET requests, this might be query parameters
+// }
 
 export interface Address {
   thana: string;
@@ -80,6 +80,7 @@ export interface InfluencerProfileData {
   userId: string;
   createdAt: string;
   updatedAt: string;
+  email: string;
 }
 
 export interface InfluencerProfileResponse {

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CheckCircle, SquarePen, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useMemo, useEffect } from "react";
 import { updateInfluencerBasicInfo } from "@/service/influencer/profile/profile";
 import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
@@ -16,6 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface ProfileCompletionCardProps {
   profileData: InfluencerProfileData | null;
@@ -23,7 +24,11 @@ interface ProfileCompletionCardProps {
   refreshProfile: () => void;
 }
 
-export default function ProfileCompletionCard({ profileData, loading, refreshProfile }: ProfileCompletionCardProps) {
+export default function ProfileCompletionCard({
+  profileData,
+  loading,
+  refreshProfile,
+}: ProfileCompletionCardProps) {
   const t = useTranslations("influencer.account-setting");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [bioText, setBioText] = useState("");
@@ -50,7 +55,8 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
       (profileData.skills?.length ?? 0) > 0,
       profileData.socialLinks?.length > 0,
       profileData.nidNumber,
-      profileData.payouts?.bank?.length || profileData.payouts?.mobileBanking?.length,
+      profileData.payouts?.bank?.length ||
+        profileData.payouts?.mobileBanking?.length,
     ];
 
     const filledFields = fields.filter(Boolean).length;
@@ -79,7 +85,7 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
 
     try {
       setSaving(true);
-      
+
       const updateData: any = {
         firstName: profileData.firstName.trim(),
         lastName: profileData.lastName.trim(),
@@ -96,8 +102,6 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
         updateData.website = profileData.website;
       }
 
-      console.log("Updating bio with data:", updateData);
-      
       const response = await updateInfluencerBasicInfo(updateData);
 
       if (response.success) {
@@ -130,7 +134,7 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
           </div>
           {/* Progress bar */}
           <div className="w-full h-2 rounded-full bg-[#E6ECD9]">
-            <div 
+            <div
               className="h-full rounded-full bg-[#5A7D3B] transition-all duration-500"
               style={{ width: `${loading ? 0 : completionPercentage}%` }}
             />
@@ -142,7 +146,7 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
 
         <CardContent>
           {/* Bio */}
-          <div 
+          <div
             onClick={handleOpenDialog}
             className="rounded-xl border p-4 flex-1 space-y-2 hover:border-light-green/50 transition-colors cursor-pointer"
           >
@@ -164,7 +168,7 @@ export default function ProfileCompletionCard({ profileData, loading, refreshPro
           <DialogHeader>
             <DialogTitle>Edit Bio</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Textarea

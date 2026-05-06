@@ -7,6 +7,13 @@ import VerificationInProgress from "./_components/verification-in-progress";
 import VerificationStatusCard from "./_components/veriication-status-card";
 import { getAgencyProfile } from "@/service/agency/account-settings";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
+import toast from "react-hot-toast";
+import {
+  requestAgencyEmailOtp,
+  verifyAgencyEmailOtp,
+} from "@/service/agency/email-verification";
+import { EmailVerificationDialog } from "@/components/email-verification-dialog";
+import { VerificationChecklistSkeleton } from "@/app/[locale]/(influencer)/influencer/(pages)/account-settings/verification-checklist/_components/verification-checklist-skeleton";
 
 export interface VerificationStepType {
   id: number;
@@ -26,6 +33,32 @@ const getVerificationStatus = (
   if (normalized === "pending" || normalized === "in_review") {
     return "Under Review";
   }
+
+  return "Unverified";
+};
+
+const getPaymentSetupStatus = (
+  profile: AgencyProfileResponse | null,
+): "Verified" | "Under Review" | "Unverified" => {
+  const payouts = [
+    ...(profile?.payouts?.bank ?? []),
+    ...(profile?.payouts?.mobileBanking ?? []),
+  ];
+
+  if (payouts.length === 0) return "Unverified";
+
+  const hasApproved = payouts.some(
+    (item) => item.accStatus?.trim().toLowerCase() === "approved",
+  );
+
+  if (hasApproved) return "Verified";
+
+  const hasPending = payouts.some((item) => {
+    const status = item.accStatus?.trim().toLowerCase();
+    return status === "pending" || status === "in_review";
+  });
+
+  if (hasPending) return "Under Review";
 
   return "Unverified";
 };
@@ -58,9 +91,10 @@ const getProfileCompletionPercentage = (
   return Math.round((completed / checks.length) * 100);
 };
 
-const page = () => {
+const Page = () => {
   const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchAgencyProfile = async () => {
@@ -79,11 +113,16 @@ const page = () => {
     fetchAgencyProfile();
   }, []);
 
+  if (isLoading) {
+    return <VerificationChecklistSkeleton />;
+  }
+
   const verificationStep: VerificationStepType[] = [
     {
       id: 1,
       title: "Social Profile Verification",
-      status: (profile?.socialLinks?.length ?? 0) > 0 ? "Verified" : "Unverified",
+      status:
+        (profile?.socialLinks?.length ?? 0) > 0 ? "Verified" : "Unverified",
     },
     {
       id: 2,
@@ -93,11 +132,7 @@ const page = () => {
     {
       id: 3,
       title: "Payment Setup",
-      status:
-        (profile?.payouts?.bank?.length ?? 0) > 0 ||
-          (profile?.payouts?.mobileBanking?.length ?? 0) > 0
-          ? "Under Review"
-          : "Unverified",
+      status: getPaymentSetupStatus(profile),
     },
     {
       id: 4,
@@ -134,38 +169,62 @@ const page = () => {
 
   const completionPercentage = getProfileCompletionPercentage(profile);
 
+  //verification for email
+
+  const handleVerificationStepClick = async (item: VerificationStepType) => {
+    if (item.title !== "Email") return;
+
+    if (profile?.isEmailVerified) {
+      toast.success("Email already verified");
+      return;
+    }
+
+    try {
+      await requestAgencyEmailOtp();
+      toast.success("Verification code sent to your email");
+      setEmailDialogOpen(true);
+    } catch (error) {
+      toast.error("Failed to send verification code");
+    }
+  };
+
   return (
-    <div className="space-y-4 p-4">
-      <div className="grid grid-cols-12 items-center gap-4">
-        {!verifiedStatus ? (
-          <>
-            <div className="col-span-8">
-              <InfoCard status={verifiedStatus} profile={profile} />
-            </div>
-            <div className="col-span-4">
-              <VerificationInProgress />
-            </div>
-          </>
-        ) : (
-          <div className="col-span-12">
-            <InfoCard status={verifiedStatus} profile={profile} />
-          </div>
-        )}
-      </div>
+    <div className="space-y-4 p-4 max-w-5xl mx-auto">
+      <section className="grid grid-cols-1 gap-4">
+        <InfoCard status={verifiedStatus} profile={profile} />
 
-      <div>
-        <ProfileCompletionPercentCard percentage={completionPercentage} />
-      </div>
+        {!verifiedStatus && <VerificationInProgress />}
+      </section>
 
-      <div className="space-y-2">
-        {isLoading
-          ? null
-          : verificationStep.map((item) => (
-            <VerificationStatusCard key={item.id} item={item} />
-          ))}
-      </div>
+      <ProfileCompletionPercentCard percentage={completionPercentage} />
+
+      {verificationStep.map((item) => (
+        <VerificationStatusCard
+          key={item.id}
+          item={item}
+          onClick={
+            item.title === "Email" && item.status === "Unverified"
+              ? () => handleVerificationStepClick(item)
+              : undefined
+          }
+        />
+      ))}
+
+      <EmailVerificationDialog
+        open={emailDialogOpen}
+        email={profile?.email ?? ""}
+        onOpenChange={setEmailDialogOpen}
+        verifyOtp={verifyAgencyEmailOtp}
+        onVerified={() =>
+          setProfile((currentProfile: AgencyProfileResponse | null) =>
+            currentProfile
+              ? { ...currentProfile, isEmailVerified: true }
+              : currentProfile,
+          )
+        }
+      />
     </div>
   );
 };
 
-export default page;
+export default Page;
