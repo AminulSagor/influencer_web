@@ -13,6 +13,13 @@ export type CampaignStatus =
 
 export type CampaignView = "list" | "grid";
 
+export type CampaignAssigneeUI = {
+  id: string;
+  name: string;
+  avatar?: string;
+  location?: string;
+};
+
 export type CampaignUI = {
   id: string;
   name: string;
@@ -32,7 +39,7 @@ export type CampaignUI = {
 
   assignedPersonals: {
     count: number;
-    influencers: any[];
+    influencers: CampaignAssigneeUI[];
   };
   paymentStatus?: string;
 };

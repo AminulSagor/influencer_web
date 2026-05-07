@@ -18,6 +18,7 @@ import CampaignsPagination from "./campaigns-pagination";
 import { exportCampaignsToCSV } from "@/utils/admin/campaign/campaign_export_util";
 
 import type {
+  CampaignAssigneeUI,
   CampaignStatus,
   CampaignUI,
   CampaignView,
@@ -81,15 +82,103 @@ function formatCampaignTypeLabel(type?: string | null) {
   return type || "—";
 }
 
+function toText(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function toArray(value: unknown): any[] {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+function getAssigneeName(raw: any) {
+  const profile = raw?.agency ?? raw?.influencer ?? raw?.profile ?? raw?.user ?? raw;
+  const firstLast = [profile?.firstName, profile?.lastName]
+    .map(toText)
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    toText(profile?.name) ||
+    toText(profile?.fullName) ||
+    toText(profile?.agencyName) ||
+    toText(raw?.name) ||
+    toText(raw?.agencyName) ||
+    firstLast ||
+    "Assigned"
+  );
+}
+
+function getAssigneeAvatar(raw: any) {
+  const profile = raw?.agency ?? raw?.influencer ?? raw?.profile ?? raw?.user ?? raw;
+
+  return (
+    toText(profile?.profileImage) ||
+    toText(profile?.profileImg) ||
+    toText(profile?.ImageUrl) ||
+    toText(profile?.imageUrl) ||
+    toText(profile?.image) ||
+    toText(profile?.logo) ||
+    toText(raw?.profileImage) ||
+    toText(raw?.profileImg) ||
+    toText(raw?.ImageUrl) ||
+    toText(raw?.imageUrl) ||
+    toText(raw?.image) ||
+    toText(raw?.logo) ||
+    ""
+  );
+}
+
+function getAssigneeLocation(raw: any) {
+  const profile = raw?.agency ?? raw?.influencer ?? raw?.profile ?? raw?.user ?? raw;
+  const city = toText(profile?.city) || toText(raw?.city);
+  const country = toText(profile?.country) || toText(raw?.country);
+  const address = toText(profile?.address) || toText(raw?.address);
+
+  if (city && country) return `${city}, ${country}`;
+  return city || country || address || "Dhaka, Bangladesh";
+}
+
+function normalizeAssignedPersonals(item: AdminCampaignApiItem): CampaignAssigneeUI[] {
+  const agencySource = toArray((item as any).assignedAgency).length
+    ? toArray((item as any).assignedAgency)
+    : toArray((item as any).assignedAgencies);
+  const influencerSource = toArray(item.assignedInfluencers);
+  const source = String(item.campaignType || "").toLowerCase() === "paid_ad"
+    ? agencySource
+    : influencerSource;
+  const fallbackSource = source.length ? source : [...agencySource, ...influencerSource];
+
+  return fallbackSource.map((raw, index) => {
+    const profile = raw?.agency ?? raw?.influencer ?? raw?.profile ?? raw?.user ?? raw;
+
+    return {
+      id: String(
+        raw?.agencyId ??
+          raw?.influencerId ??
+          raw?.profileId ??
+          profile?.id ??
+          raw?.id ??
+          index
+      ),
+      name: getAssigneeName(raw),
+      avatar: getAssigneeAvatar(raw),
+      location: getAssigneeLocation(raw),
+    };
+  });
+}
+
 function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
   const budget = Number(item.totalBudget || 0);
+  const assignedPersonals = normalizeAssignedPersonals(item);
 
   return {
     id: item.id,
     name: item.campaignName || "Untitled Campaign",
     category: formatCampaignTypeLabel(item.campaignType),
     niches: "—",
-    avatar: "",
+    avatar:
+      item.client?.profileImg || item.client?.image || item.client?.logo || "",
     client: item.client?.brandName || "—",
     budget,
     quote: budget,
@@ -97,12 +186,8 @@ function mapCampaignToUI(item: AdminCampaignApiItem): CampaignUI {
     endDate: addDays(item.startingDate, item.duration),
     status: item.status as CampaignStatus,
     assignedPersonals: {
-      count: item.assignedInfluencers?.length || 0,
-      influencers: (item.assignedInfluencers || []).map((inf: any) => ({
-        id: inf.id,
-        name: inf.name,
-        avatar: inf.profileImage || inf.ImageUrl || inf.imageUrl || "",
-      })),
+      count: assignedPersonals.length,
+      influencers: assignedPersonals,
     },
     paymentStatus: normalizePaymentStatus(item.paymentStatus),
   } as CampaignUI;
@@ -288,6 +373,14 @@ export default function AdminCampaigns() {
               setSelectedCampaignIds((prev) =>
                 checked ? [...prev, id] : prev.filter((p) => p !== id)
               );
+            }}
+            onDeleted={(id) => {
+              setCampaigns((prev) => prev.filter((campaign) => campaign.id !== id));
+              setSelectedCampaignIds((prev) => prev.filter((campaignId) => campaignId !== id));
+              setMeta((prev) => ({
+                ...prev,
+                total: Math.max(0, prev.total - 1),
+              }));
             }}
           />
         )}

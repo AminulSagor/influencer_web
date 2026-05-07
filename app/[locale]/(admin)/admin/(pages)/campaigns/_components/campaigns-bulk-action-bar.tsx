@@ -56,16 +56,6 @@ export default function CampaignsBulkActionBar({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* Placeholder for Date Range Picker */}
-        <Select defaultValue="nov20-dec20">
-          <SelectTrigger className="w-[160px] border-gray-300 bg-white text-sm">
-            <SelectValue placeholder="Select Date" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="nov20-dec20">Nov 20 - Dec 20</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select
           value={campaignType}
           onValueChange={(value) =>

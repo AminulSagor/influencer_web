@@ -1,10 +1,10 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { TfiMenuAlt } from "react-icons/tfi";
 import Link from "next/link";
+import { useEffect, useState, type UIEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -23,6 +23,7 @@ import { MdCampaign, MdOutlineCancel } from "react-icons/md";
 import { HiMiniClock } from "react-icons/hi2";
 import { RiUser3Fill } from "react-icons/ri";
 import { BsDot } from "react-icons/bs";
+import { getDashboardActionsClient } from "@/service/admin/dashboard/get-dashboard-actions-client";
 
 type Props = {
   actionsData: DashboardActionsResponse;
@@ -218,14 +219,54 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
     updateQuery({ tab, page: 1 });
   };
 
-  const handlePrev = () => {
-    if (filters.page <= 1) return;
-    updateQuery({ page: filters.page - 1 });
+  const [items, setItems] = useState<DashboardActionItem[]>(actionsData.data);
+  const [currentPage, setCurrentPage] = useState(filters.page);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(actionsData.data.length >= filters.limit);
+
+  useEffect(() => {
+    setItems(actionsData.data);
+    setCurrentPage(filters.page);
+    setHasMore(actionsData.data.length >= filters.limit);
+  }, [actionsData.data, filters.page, filters.limit, filters.tab]);
+
+  const loadMoreActions = async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    const nextPage = currentPage + 1;
+
+    try {
+      setIsLoadingMore(true);
+      const response = await getDashboardActionsClient({
+        tab: filters.tab,
+        page: nextPage,
+        limit: filters.limit,
+      });
+
+      setItems((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id));
+        const nextItems = response.data.filter(
+          (item) => !existingIds.has(item.id)
+        );
+
+        return [...prev, ...nextItems];
+      });
+      setCurrentPage(nextPage);
+      setHasMore(response.data.length >= filters.limit);
+    } catch (error) {
+      console.error("Failed to load more dashboard actions", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
-  const handleNext = () => {
-    if (actionsData.data.length < filters.limit) return;
-    updateQuery({ page: filters.page + 1 });
+  const handleActionsScroll = (event: UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const remaining = target.scrollHeight - target.scrollTop - target.clientHeight;
+
+    if (remaining < 120) {
+      void loadMoreActions();
+    }
   };
 
   return (
@@ -278,9 +319,12 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
       </CardHeader>
 
       <CardContent className="p-4">
-        <ScrollArea className="h-[520px] pr-2">
+        <div
+          className="h-[520px] overflow-y-auto pr-2"
+          onScroll={handleActionsScroll}
+        >
           <div className="space-y-3">
-            {actionsData.data.map((item) => {
+            {items.map((item) => {
               const ui = getActionUi(item);
               const Icon = ui.icon;
               const metaType = getMetaLine(item);
@@ -353,36 +397,18 @@ const ActionRequiredCard = ({ actionsData, filters }: Props) => {
               );
             })}
 
-            {actionsData.data.length === 0 && (
+            {items.length === 0 && (
               <div className="py-10 text-center text-sm text-dark-gray">
                 No actions found
               </div>
             )}
+
+            {isLoadingMore && (
+              <div className="py-3 text-center text-xs text-dark-gray">
+                Loading more actions...
+              </div>
+            )}
           </div>
-        </ScrollArea>
-
-        <div className="mt-4 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={handlePrev}
-            disabled={filters.page <= 1}
-            className="rounded-md border border-Primary px-3 py-1 text-xs text-Primary disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Prev
-          </button>
-
-          <div className="rounded-md bg-Secondary px-3 py-1 text-xs text-Primary">
-            Page {filters.page}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={actionsData.data.length < filters.limit}
-            className="rounded-md bg-Primary px-4 py-1 text-xs text-white disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
       </CardContent>
     </Card>

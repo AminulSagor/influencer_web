@@ -30,15 +30,6 @@ export default function CampaignsBulkBar() {
         <div className="flex gap-2">
           <Select>
             <SelectTrigger className="bg-white border border-light-green text-sm">
-              <SelectValue placeholder="Nov 20 - Dec 20" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="range">Nov 20 - Dec 20</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select>
-            <SelectTrigger className="bg-white border border-light-green text-sm">
               <SelectValue placeholder="Influencer Promotion" />
             </SelectTrigger>
             <SelectContent>

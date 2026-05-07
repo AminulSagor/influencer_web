@@ -99,10 +99,12 @@ export default function CampaignsListTable({
                 </TableCell>
 
                 <TableCell>
-                  <AssignedPersonalsCell
-                    count={campaign.assignedPersonals.count}
-                    influencers={campaign.assignedPersonals.influencers}
-                  />
+                  <div className="flex justify-center">
+                    <AssignedPersonalsCell
+                      count={campaign.assignedPersonals.count}
+                      influencers={campaign.assignedPersonals.influencers}
+                    />
+                  </div>
                 </TableCell>
 
                 <TableCell>

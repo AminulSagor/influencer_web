@@ -29,12 +29,14 @@ export default function CampaignsGrid({
   onStatusChange,
   selectedCampaignIds = [],
   onToggleSelect,
+  onDeleted,
 }: {
   campaigns: CampaignUI[];
   view: CampaignView;
   onStatusChange: (id: string, status: CampaignStatus) => void;
   selectedCampaignIds?: string[];
   onToggleSelect?: (id: string, checked: boolean) => void;
+  onDeleted?: (id: string) => void;
 }) {
   const router = useRouter();
   const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export default function CampaignsGrid({
     try {
       setIsDeletingId(id);
       await deleteCampaign(id);
+      onDeleted?.(id);
       router.refresh();
     } catch (error) {
       console.error("Failed to delete campaign", error);
@@ -96,7 +99,7 @@ export default function CampaignsGrid({
               </div>
 
               <div className="rounded-md border px-4 py-2 flex items-center gap-2">
-                <span className="text-sm font-medium text-orange">Influencers:</span>
+                <span className="text-sm font-medium text-orange">Assigned:</span>
                 <AssignedPersonalsCell
                   count={campaign.assignedPersonals.count}
                   influencers={campaign.assignedPersonals.influencers}
@@ -154,17 +157,24 @@ export default function CampaignsGrid({
 
               <div className="flex gap-2">
                 <Button asChild variant="lightGreen" className="flex-1">
-                  <Link href={`/admin/campaigns/${campaign.id}`}>View Campaign Details</Link>
+                  <Link href={`/admin/campaigns/${campaign.id}`}>
+                    View Campaign Details
+                  </Link>
                 </Button>
 
-                {/* <Button 
+                <Button
+                  type="button"
                   variant="outline"
-                  className="px-3"
+                  className="px-3 text-red-500 hover:border-red-500 hover:bg-red-50 hover:text-red-600"
                   disabled={isDeletingId === campaign.id}
                   onClick={() => void handleDelete(campaign.id)}
                 >
-                  {isDeletingId === campaign.id ? "..." : <FaRegTrashCan className="text-gray-500" />}
-                </Button> */}
+                  {isDeletingId === campaign.id ? (
+                    "..."
+                  ) : (
+                    <FaRegTrashCan className="text-sm" />
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
