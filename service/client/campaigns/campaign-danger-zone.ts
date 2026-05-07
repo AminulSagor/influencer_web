@@ -9,7 +9,7 @@ type AgencyCancelRequestPayload = {
 
 type InfluencerCancelRequestPayload = {
   targetType: "influencer";
-  assignmentId: string;
+  targetId: string;
   reason: string;
 };
 

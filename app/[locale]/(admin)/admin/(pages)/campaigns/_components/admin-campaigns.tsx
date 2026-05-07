@@ -374,14 +374,6 @@ export default function AdminCampaigns() {
                 checked ? [...prev, id] : prev.filter((p) => p !== id)
               );
             }}
-            onDeleted={(id) => {
-              setCampaigns((prev) => prev.filter((campaign) => campaign.id !== id));
-              setSelectedCampaignIds((prev) => prev.filter((campaignId) => campaignId !== id));
-              setMeta((prev) => ({
-                ...prev,
-                total: Math.max(0, prev.total - 1),
-              }));
-            }}
           />
         )}
 

@@ -14,8 +14,6 @@ interface Props {
     tab?: string;
     page?: string;
     search?: string;
-    startDate?: string;
-    endDate?: string;
   }>;
 }
 
@@ -31,9 +29,6 @@ const page = async ({ searchParams }: Props) => {
 
   const currentPage = Math.max(Number(params.page || "1"), 1);
   const currentSearch = params.search?.trim() ?? "";
-  const currentStartDate = params.startDate?.trim() ?? "";
-  const currentEndDate = params.endDate?.trim() ?? "";
-
   const agencyPage = currentTab === "agency" ? currentPage : 1;
   const brandPage = currentTab === "brand" ? currentPage : 1;
   const influencerPage = currentTab === "influencer" ? currentPage : 1;
@@ -43,22 +38,16 @@ const page = async ({ searchParams }: Props) => {
       page: agencyPage,
       limit: 10,
       search: currentTab === "agency" ? currentSearch : "",
-      startDate: currentTab === "agency" ? currentStartDate : "",
-      endDate: currentTab === "agency" ? currentEndDate : "",
     }),
     getPendingVerificationBrands({
       page: brandPage,
       limit: 10,
       search: currentTab === "brand" ? currentSearch : "",
-      startDate: currentTab === "brand" ? currentStartDate : "",
-      endDate: currentTab === "brand" ? currentEndDate : "",
     }),
     getPendingVerificationInfluencers({
       page: influencerPage,
       limit: 10,
       search: currentTab === "influencer" ? currentSearch : "",
-      startDate: currentTab === "influencer" ? currentStartDate : "",
-      endDate: currentTab === "influencer" ? currentEndDate : "",
     }),
   ]);
 
@@ -135,8 +124,6 @@ const page = async ({ searchParams }: Props) => {
           verificationTableMeta={verificationTableMeta}
           currentTab={currentTab}
           currentSearch={currentSearch}
-          currentStartDate={currentStartDate}
-          currentEndDate={currentEndDate}
         />
       </div>
     </div>

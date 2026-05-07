@@ -16,6 +16,14 @@ type CampaignDetailsContentProps = {
   campaign: ClientCampaignDetails;
 };
 
+const isDeclinedAssignedInfluencer = (status?: string | null) => {
+  const value = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  return ["decline", "declined", "rejected", "reject"].includes(value);
+};
+
 export default function CampaignDetailsContent({
   campaign,
 }: CampaignDetailsContentProps) {
@@ -60,6 +68,14 @@ export default function CampaignDetailsContent({
     [campaign.assignedInfluencers],
   );
 
+  const selectableAssignedInfluencers = React.useMemo(
+    () =>
+      assignedInfluencers.filter(
+        (influencer) => !isDeclinedAssignedInfluencer(influencer.status),
+      ),
+    [assignedInfluencers],
+  );
+
   const hasAssignedInfluencers =
     isInfluencerPromotion && assignedInfluencers.length > 0;
 
@@ -74,14 +90,20 @@ export default function CampaignDetailsContent({
       return;
     }
 
-    const hasCurrentInfluencer = assignedInfluencers.some(
+    const hasCurrentInfluencer = selectableAssignedInfluencers.some(
       (influencer) => influencer.influencerId === selectedInfluencerId,
     );
 
     if (!hasCurrentInfluencer) {
-      setSelectedInfluencerId(assignedInfluencers[0]?.influencerId ?? "");
+      setSelectedInfluencerId(
+        selectableAssignedInfluencers[0]?.influencerId ?? "",
+      );
     }
-  }, [hasAssignedInfluencers, assignedInfluencers, selectedInfluencerId]);
+  }, [
+    hasAssignedInfluencers,
+    selectableAssignedInfluencers,
+    selectedInfluencerId,
+  ]);
 
   return (
     <div className="space-y-4">

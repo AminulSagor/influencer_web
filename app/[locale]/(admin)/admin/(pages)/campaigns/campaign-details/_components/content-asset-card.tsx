@@ -43,6 +43,10 @@ export default function ContentAssetCard({ assets }: { assets: Asset[] }) {
             const meta = `${asset.mimeType ?? "file"}${
               asset.fileSize ? ` - ${asset.fileSize}` : ""
             }`;
+            const title = asset.description?.trim() || asset.fileName || "Untitled Asset";
+            const description = asset.fileName
+              ? `${asset.fileName} • ${meta}`
+              : meta;
 
             return (
               <Item
@@ -53,9 +57,9 @@ export default function ContentAssetCard({ assets }: { assets: Asset[] }) {
                 <div>{fileTypeIconMap[type]}</div>
 
                 <ItemContent>
-                  <ItemTitle>{asset.fileName}</ItemTitle>
+                  <ItemTitle>{title}</ItemTitle>
                   <ItemDescription className="text-light-green text-xs">
-                    {asset.description ? `${asset.description} • ${meta}` : meta}
+                    {description}
                   </ItemDescription>
                 </ItemContent>
 

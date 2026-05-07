@@ -211,6 +211,7 @@ export default function PlatformProfitInfluencerAssign({
 
           assignmentId: a.assignmentId ?? null,
           isAssigned: true,
+          status: a.status ?? null,
 
           committedPercentage: roundTo(clampPercent(toNum(a.percentage)), 4),
           committedOfferAmount: Math.max(0, Math.round(toNum(a.offeredAmount))),
@@ -277,6 +278,7 @@ export default function PlatformProfitInfluencerAssign({
 
           assignmentId: null,
           isAssigned: false,
+          status: null,
 
           committedPercentage: 0,
           committedOfferAmount: 0,

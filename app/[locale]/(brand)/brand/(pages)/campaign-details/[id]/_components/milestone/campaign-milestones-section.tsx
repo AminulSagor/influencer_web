@@ -40,6 +40,16 @@ type DerivedAssignedWork = {
   updatedAt?: string;
 };
 
+function isDeclinedAssignedInfluencer(
+  influencer?: CampaignAssignedInfluencer | null,
+) {
+  const status = String(influencer?.status ?? "")
+    .trim()
+    .toLowerCase();
+
+  return ["decline", "declined", "rejected", "reject"].includes(status);
+}
+
 function filterTopLevelMilestonesForInfluencer(
   allMilestones: CampaignMilestone[],
   influencer: CampaignAssignedInfluencer | null,
@@ -215,6 +225,11 @@ export default function CampaignMilestonesSection({
     campaign.campaignType === "influencer_promotion" &&
     assignedInfluencers.length > 0;
 
+  const selectableAssignedInfluencers = React.useMemo(
+    () => assignedInfluencers.filter((item) => !isDeclinedAssignedInfluencer(item)),
+    [assignedInfluencers],
+  );
+
   const influencerIds = React.useMemo(
     () =>
       assignedInfluencers
@@ -257,16 +272,19 @@ export default function CampaignMilestonesSection({
       return;
     }
 
-    const hasCurrentSelection = assignedInfluencers.some(
+    const hasCurrentSelection = selectableAssignedInfluencers.some(
       (influencer) => influencer.influencerId === currentSelectedInfluencerId,
     );
 
     if (!hasCurrentSelection) {
-      updateSelectedInfluencerId(assignedInfluencers[0]?.influencerId ?? "");
+      updateSelectedInfluencerId(
+        selectableAssignedInfluencers[0]?.influencerId ?? "",
+      );
     }
   }, [
     showInfluencerFlow,
     assignedInfluencers,
+    selectableAssignedInfluencers,
     currentSelectedInfluencerId,
     isSelectionControlled,
     updateSelectedInfluencerId,
@@ -276,13 +294,17 @@ export default function CampaignMilestonesSection({
     if (!showInfluencerFlow) return null;
 
     return (
-      assignedInfluencers.find(
+      selectableAssignedInfluencers.find(
         (influencer) => influencer.influencerId === currentSelectedInfluencerId,
       ) ??
-      assignedInfluencers[0] ??
+      selectableAssignedInfluencers[0] ??
       null
     );
-  }, [showInfluencerFlow, assignedInfluencers, currentSelectedInfluencerId]);
+  }, [
+    showInfluencerFlow,
+    selectableAssignedInfluencers,
+    currentSelectedInfluencerId,
+  ]);
 
   const milestones = React.useMemo(() => {
     const topLevelMilestones = campaign.milestones ?? [];
@@ -366,6 +388,14 @@ export default function CampaignMilestonesSection({
     );
   }, [campaign.campaignType, expandedMilestoneId, selectedInfluencer]);
 
+  const selectedInfluencerAssignmentId = React.useMemo(() => {
+    if (campaign.campaignType !== "influencer_promotion") {
+      return undefined;
+    }
+
+    return selectedInfluencer?.assignmentId ?? milestoneAssignmentId;
+  }, [campaign.campaignType, selectedInfluencer, milestoneAssignmentId]);
+
   const normalizedCampaign = React.useMemo(
     () => ({
       ...campaign,
@@ -401,10 +431,16 @@ export default function CampaignMilestonesSection({
 
   const handleSelectInfluencer = React.useCallback(
     (influencerId: string) => {
+      const influencer = assignedInfluencers.find(
+        (item) => item.influencerId === influencerId,
+      );
+
+      if (isDeclinedAssignedInfluencer(influencer)) return;
+
       updateSelectedInfluencerId(influencerId);
       setExpandedMilestoneId("");
     },
-    [updateSelectedInfluencerId],
+    [assignedInfluencers, updateSelectedInfluencerId],
   );
 
   function getBonusMilestoneIdForSelectedInfluencer(
@@ -467,8 +503,11 @@ export default function CampaignMilestonesSection({
                   ? "influencer"
                   : "agency"
               }
-              assignmentId={milestoneAssignmentId}
+              assignmentId={selectedInfluencerAssignmentId}
               agencyOfferId={campaign.agencyOfferId}
+              assignedInfluencers={assignedInfluencers}
+              selectedInfluencerId={currentSelectedInfluencerId}
+              onSelectInfluencer={handleSelectInfluencer}
             />
           ) : null}
         </>

@@ -78,6 +78,7 @@ export default function CampaignQuoteDetails({
   const [sending, setSending] = useState(false);
 
   const [localQuoteState, setLocalQuoteState] = useState<QuoteState>(quoteState);
+  const [localVatPercent, setLocalVatPercent] = useState(0);
 
   // Quote Amount should always start from Base Budget
   const [quoteAmount, setQuoteAmount] = useState<number>(
@@ -97,17 +98,28 @@ export default function CampaignQuoteDetails({
     return Math.round((vatAmount / clientBudget) * 100);
   }, [clientBudget, vatAmount]);
 
-  const PLATFORM_ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
-    instagram: PiInstagramLogoFill,
-    youtube: PiYoutubeLogoFill,
-    tiktok: AiFillTikTok,
-  };
+  useEffect(() => {
+    setLocalVatPercent(vatPercent);
+  }, [vatPercent]);
+
   const normalizedStatus = String(campaignStatus ?? "").toLowerCase();
   const showPaymentRows =
     normalizedStatus === "active" || normalizedStatus === "completed";
 
   const isLocked = localQuoteState !== "none";
+  const displayedVatPercent = isLocked ? vatPercent : localVatPercent;
+  const displayedVatAmount = isLocked
+    ? vatAmount
+    : Math.round((Number(quoteAmount ?? 0) * Number(localVatPercent ?? 0)) / 100);
+  const displayedTotalBudget = isLocked
+    ? totalBudget
+    : Number(quoteAmount ?? 0) + displayedVatAmount;
 
+  const PLATFORM_ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
+    instagram: PiInstagramLogoFill,
+    youtube: PiYoutubeLogoFill,
+    tiktok: AiFillTikTok,
+  };
   const buttonText =
     localQuoteState === "confirmed"
       ? "Quotation Confirmed"
@@ -148,7 +160,7 @@ export default function CampaignQuoteDetails({
     <>
       <Card
         className={cn(
-          "rounded-2xl border border-[rgba(100,116,139,0.14)]",
+          "h-full rounded-2xl border border-[rgba(100,116,139,0.14)]",
           className
         )}
       >
@@ -166,13 +178,19 @@ export default function CampaignQuoteDetails({
         <CardContent className="space-y-2">
           <div className="space-y-2">
             <QuoteTextRow text="Base Campaign Budget" amount={clientBudget} />
-            <QuoteTextRow text="Vat/Tax" vat={vatPercent} amount={vatAmount} />
+            <QuoteTextRow
+              text="Vat/Tax"
+              vat={displayedVatPercent}
+              vatEditable={!isLocked}
+              onVatChange={setLocalVatPercent}
+              amount={displayedVatAmount}
+            />
           </div>
 
           <Separator />
 
           <div className="space-y-3">
-            <QuoteTextRow text="Total Campaign Cost" amount={totalBudget} />
+            <QuoteTextRow text="Total Campaign Cost" amount={displayedTotalBudget} />
 
             {isLocked ? (
               <QuoteTextRow text="Quote Amount" amount={quoteAmount} />
@@ -266,7 +284,7 @@ export default function CampaignQuoteDetails({
                   <p className="text-base font-semibold">{campaignName ?? "-"}</p>
                   <p className="text-2xl font-bold">
                     {currencySymbol}
-                    {money(totalBudget)}
+                    {money(displayedTotalBudget)}
                   </p>
                 </div>
               </div>

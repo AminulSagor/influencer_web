@@ -173,7 +173,7 @@ export default function PaymentDialog({
       const result = await createPaymentSession({
         campaignId,
         amount: payAmount,
-        locale: paymentLocale,
+        locale: "en",
       });
 
       if (result.success && result.data?.gatewayUrl) {

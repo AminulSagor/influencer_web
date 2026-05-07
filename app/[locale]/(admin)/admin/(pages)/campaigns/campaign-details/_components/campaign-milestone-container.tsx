@@ -82,6 +82,9 @@ const CircularProgressChart = dynamic(() => import("./circular-progress"), {
   ssr: false,
 });
 
+const isImageProofUrl = (url: string) =>
+  /\.(png|jpe?g|webp|gif|bmp|svg)(\?|#|$)/i.test(url);
+
 interface Props {
   campaignId: string;
   campaignStatus: CampaignStatusType;
@@ -546,16 +549,28 @@ export default function CampaignMilestoneContainer({
                   <div className="flex flex-wrap gap-3">
                     {(submission?.attachments ?? []).length > 0 ? (
                       (submission?.attachments ?? []).map(
-                        (fileUrl: string, attachmentIndex: number) => (
-                          <Link
-                            key={`${fileUrl}-${attachmentIndex}`}
-                            href={fileUrl}
-                            target="_blank"
-                            className="flex h-[96px] w-[104px] items-center justify-center rounded-md border border-dashed border-gray-300 bg-white px-2 text-center text-xs text-[#232323]"
-                          >
-                            Proof {attachmentIndex + 1}
-                          </Link>
-                        )
+                        (fileUrl: string, attachmentIndex: number) => {
+                          const isImageProof = isImageProofUrl(fileUrl);
+
+                          return (
+                            <Link
+                              key={`${fileUrl}-${attachmentIndex}`}
+                              href={fileUrl}
+                              target="_blank"
+                              className="flex h-[96px] w-[104px] items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-300 bg-white text-center text-xs text-[#232323]"
+                            >
+                              {isImageProof ? (
+                                <img
+                                  src={fileUrl}
+                                  alt={`Proof ${attachmentIndex + 1}`}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="px-2">Proof {attachmentIndex + 1}</span>
+                              )}
+                            </Link>
+                          );
+                        }
                       )
                     ) : (
                       <p className="text-sm text-[#6B7280]">No proof attached.</p>
@@ -667,7 +682,7 @@ export default function CampaignMilestoneContainer({
           <CardHeader className="flex gap-4">
             <CardTitle className="text-Primary flex flex-1 items-center gap-2 text-lg">
               <Image
-                src={"/icons/person-multiple.svg"}
+                src={"/icons/milestone.svg"}
                 width={20}
                 height={20}
                 alt="influencer"

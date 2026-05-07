@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 
 import { FaClock } from "react-icons/fa";
-import { FaRegTrashCan } from "react-icons/fa6";
 
 import AssignedPersonalsCell from "./assigned-personals-cell";
 import {
@@ -21,7 +18,6 @@ import {
 import { progressMap } from "@/utils/admin/campaign/campaign_constrants_type_util";
 import StatusSelect from "./status-select";
 import ProgressBar from "./progress-bar";
-import { deleteCampaign } from "@/service/admin/campaign/delete-campaign";
 
 export default function CampaignsGrid({
   campaigns,
@@ -29,31 +25,13 @@ export default function CampaignsGrid({
   onStatusChange,
   selectedCampaignIds = [],
   onToggleSelect,
-  onDeleted,
 }: {
   campaigns: CampaignUI[];
   view: CampaignView;
   onStatusChange: (id: string, status: CampaignStatus) => void;
   selectedCampaignIds?: string[];
   onToggleSelect?: (id: string, checked: boolean) => void;
-  onDeleted?: (id: string) => void;
 }) {
-  const router = useRouter();
-  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
-
-  const handleDelete = async (id: string) => {
-    try {
-      setIsDeletingId(id);
-      await deleteCampaign(id);
-      onDeleted?.(id);
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to delete campaign", error);
-    } finally {
-      setIsDeletingId(null);
-    }
-  };
-
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {campaigns.map((campaign) => {
@@ -155,27 +133,11 @@ export default function CampaignsGrid({
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button asChild variant="lightGreen" className="flex-1">
-                  <Link href={`/admin/campaigns/${campaign.id}`}>
-                    View Campaign Details
-                  </Link>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="px-3 text-red-500 hover:border-red-500 hover:bg-red-50 hover:text-red-600"
-                  disabled={isDeletingId === campaign.id}
-                  onClick={() => void handleDelete(campaign.id)}
-                >
-                  {isDeletingId === campaign.id ? (
-                    "..."
-                  ) : (
-                    <FaRegTrashCan className="text-sm" />
-                  )}
-                </Button>
-              </div>
+              <Button asChild variant="lightGreen" className="w-full">
+                <Link href={`/admin/campaigns/${campaign.id}`}>
+                  View Campaign Details
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         );

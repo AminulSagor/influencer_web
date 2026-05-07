@@ -25,7 +25,6 @@ import {
   normalize,
   mapStatusToUI,
   mapCampaignStatus,
-  computeQuoteState,
   getCampaignTypeFlags,
   getPlatformListFromMilestones,
   getInfluencerAvatars,
@@ -33,7 +32,6 @@ import {
 } from "@/utils/admin/campaign/campaign_page_util";
 
 import {
-  getNegotiationAwareQuoteState,
   getNegotiationFinancials,
   getNegotiationRevisedCount,
 } from "@/utils/admin/campaign/campaign_negotiation_util";
@@ -52,6 +50,18 @@ function safeStr(v: unknown) {
 function toNum(v: unknown) {
   const n = Number(v ?? 0);
   return Number.isFinite(n) ? n : 0;
+}
+
+function shouldShowSendQuoteFeature(status: unknown) {
+  const value = normalize(status);
+
+  return (
+    value === "received" ||
+    value === "recieved" ||
+    value === "negotiating" ||
+    value === "agency_negotiating" ||
+    value === "agency-negotiating"
+  );
 }
 
 export default function Page() {
@@ -233,31 +243,9 @@ export default function Page() {
   }, [campaign, fetchPreferredAgenciesFromSuggested]);
 
   const rawStatus = normalize(campaign?.status);
-  const rawQuoteStatus = normalize(
-    campaign?.quote?.status ??
-    campaign?.negotiation?.status ??
-    campaign?.quoteStatus ??
-    campaign?.negotiationStatus
-  );
-  const waitingFor = normalize(
-    campaign?.negotiation?.waitingFor ??
-    campaign?.quote?.waitingFor ??
-    campaign?.waitingFor
-  );
-
-  const fallbackQuoteState = useMemo(
-    () => computeQuoteState({ campaign, rawStatus, rawQuoteStatus, waitingFor }),
-    [campaign, rawStatus, rawQuoteStatus, waitingFor]
-  );
-
   const quoteState = useMemo(
-    () =>
-      getNegotiationAwareQuoteState({
-        fallbackQuoteState,
-        campaignMeta: negotiationCampaignMeta,
-        negotiations,
-      }),
-    [fallbackQuoteState, negotiationCampaignMeta, negotiations]
+    () => (shouldShowSendQuoteFeature(campaign?.status) ? "none" : "confirmed"),
+    [campaign?.status]
   );
 
   const campaignStatus = useMemo(
@@ -391,7 +379,7 @@ export default function Page() {
   if (loading || !campaign) return <div>Loading...</div>;
   return (
     <div className="p-4 space-y-4">
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 items-stretch gap-4">
         <div className="col-span-12 md:col-span-6">
           <CampaignDetailsCard
             platform={platform}
@@ -409,6 +397,7 @@ export default function Page() {
 
         <div className="col-span-12 md:col-span-6">
           <CampaignQuoteDetails
+            className="h-full"
             campaignId={campaignId}
             quoteState={quoteState}
             onRefresh={refreshQuoteSection}

@@ -62,14 +62,23 @@ export default function InfluencerSelector({
           <div className="max-h-64 overflow-y-auto">
             {influencerOptions.map((influencer) => {
               const isSelected = influencer.id === selectedInfluencerId;
+              const isDisabled = Boolean(influencer.disabled);
 
               return (
                 <button
                   key={influencer.id}
                   type="button"
-                  onClick={() => onSelect(influencer.id)}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    onSelect(influencer.id);
+                  }}
+                  disabled={isDisabled}
                   className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
-                    isSelected ? "bg-orange/10" : "hover:bg-black/5"
+                    isDisabled
+                      ? "cursor-not-allowed bg-gray-50 opacity-50"
+                      : isSelected
+                        ? "bg-orange/10"
+                        : "hover:bg-black/5"
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -79,7 +88,7 @@ export default function InfluencerSelector({
                           src={influencer.image}
                           alt={influencer.name}
                           fill
-                          className="object-cover"
+                          className={`object-cover ${isDisabled ? "grayscale-[35%]" : ""}`}
                           sizes="32px"
                         />
                       </div>
@@ -89,9 +98,16 @@ export default function InfluencerSelector({
                       </span>
                     )}
 
-                    <span className="truncate text-sm font-medium text-Primary">
-                      {influencer.name}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-Primary">
+                        {influencer.name}
+                      </span>
+                      {isDisabled ? (
+                        <span className="text-[11px] font-medium text-gray-500">
+                          Declined
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
                   {isSelected ? (

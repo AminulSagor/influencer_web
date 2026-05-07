@@ -5,12 +5,14 @@ import { MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ClientCampaignDetails } from "@/types/client/campaigns/campaign-details";
 import InfluencerSelector from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-overview/influencer-selector";
+import type { InfluencerOption } from "@/app/[locale]/(brand)/brand/(pages)/campaign-details/[id]/_components/milestone/milestone-overview/campaign-milestones-overview";
 
-// Keep the same option shape used by the campaign milestone influencer dropdown.
-type InfluencerOption = {
-  id: string;
-  name: string;
-  image: string | null;
+const isDeclinedInfluencer = (status?: string | null) => {
+  const value = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  return ["decline", "declined", "rejected", "reject"].includes(value);
 };
 
 type ShippingAddressCardProps = {
@@ -40,6 +42,8 @@ export default function ShippingAddressCard({
         id: influencer.influencerId,
         name: influencer.name,
         image: influencer.image ?? null,
+        status: influencer.status ?? null,
+        disabled: isDeclinedInfluencer(influencer.status),
       })),
     [assignedInfluencers],
   );
@@ -47,12 +51,18 @@ export default function ShippingAddressCard({
   const effectiveSelectedInfluencerId = React.useMemo(() => {
     if (
       selectedInfluencerId &&
-      influencerOptions.some((option) => option.id === selectedInfluencerId)
+      influencerOptions.some(
+        (option) => option.id === selectedInfluencerId && !option.disabled,
+      )
     ) {
       return selectedInfluencerId;
     }
 
-    return influencerOptions[0]?.id ?? "";
+    return (
+      influencerOptions.find((option) => !option.disabled)?.id ??
+      influencerOptions[0]?.id ??
+      ""
+    );
   }, [selectedInfluencerId, influencerOptions]);
 
   const selectedInfluencer = React.useMemo(
@@ -97,6 +107,9 @@ export default function ShippingAddressCard({
   const shippingAddress = selectedInfluencer?.location?.trim();
 
   const handleSelectInfluencer = (influencerId: string) => {
+    const influencer = influencerOptions.find((option) => option.id === influencerId);
+    if (influencer?.disabled) return;
+
     onSelectInfluencer(influencerId);
     setIsDropdownOpen(false);
   };

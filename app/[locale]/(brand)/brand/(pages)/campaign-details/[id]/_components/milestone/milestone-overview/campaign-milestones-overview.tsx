@@ -21,12 +21,19 @@ export type InfluencerOption = {
   id: string;
   name: string;
   image: string | null;
+  disabled?: boolean;
+  status?: string | null;
 };
 
-const normalizeStatus = (status?: string) =>
+const normalizeStatus = (status?: string | null) =>
   String(status ?? "")
     .trim()
     .toLowerCase();
+
+const isDeclinedInfluencer = (status?: string | null) => {
+  const value = normalizeStatus(status);
+  return ["decline", "declined", "rejected", "reject"].includes(value);
+};
 
 const getInfluencerOptions = (
   campaign: ClientCampaignDetails,
@@ -35,6 +42,8 @@ const getInfluencerOptions = (
     id: item.influencerId,
     name: item.name,
     image: item.image ?? null,
+    status: item.status ?? null,
+    disabled: isDeclinedInfluencer(item.status),
   }));
 };
 
@@ -66,12 +75,18 @@ export default function CampaignMilestonesOverview({
 
     if (
       selectedInfluencerId &&
-      influencerOptions.some((item) => item.id === selectedInfluencerId)
+      influencerOptions.some(
+        (item) => item.id === selectedInfluencerId && !item.disabled,
+      )
     ) {
       return selectedInfluencerId;
     }
 
-    return influencerOptions[0]?.id ?? "";
+    return (
+      influencerOptions.find((item) => !item.disabled)?.id ??
+      influencerOptions[0]?.id ??
+      ""
+    );
   }, [showInfluencerDropdown, selectedInfluencerId, influencerOptions]);
 
   const selectedInfluencer = useMemo(() => {
@@ -123,6 +138,9 @@ export default function CampaignMilestonesOverview({
   }, [isDropdownOpen]);
 
   const handleInfluencerSelect = (influencerId: string) => {
+    const selected = influencerOptions.find((item) => item.id === influencerId);
+    if (selected?.disabled) return;
+
     onSelectInfluencer(influencerId);
     setIsDropdownOpen(false);
 

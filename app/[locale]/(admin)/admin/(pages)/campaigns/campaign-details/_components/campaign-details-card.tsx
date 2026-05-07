@@ -56,7 +56,7 @@ const CampaignDetailsCard = ({
   };
 
   return (
-    <div className="bg-linear-to-r from-Primary to-light-green p-4 rounded-lg text-off-white ">
+    <div className="flex h-full flex-col bg-linear-to-r from-Primary to-light-green p-4 rounded-lg text-off-white ">
       <div className="flex items-center justify-between">
         <Button variant="link" className="has-[>svg]:px-0 text-off-white" asChild>
           <Link href="/admin/campaigns">
@@ -115,7 +115,7 @@ const CampaignDetailsCard = ({
         )}
       </div>
 
-      <div className="mt-6 mb-4">
+      <div className="mt-auto pt-6 mb-4">
         <Separator />
       </div>
 

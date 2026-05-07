@@ -45,8 +45,6 @@ interface Props {
   verificationTableMeta: VerificationTableMeta;
   currentTab: VerificationTabKey;
   currentSearch?: string;
-  currentStartDate?: string;
-  currentEndDate?: string;
 }
 
 const labelByTab: Record<VerificationTabKey, "Influencer" | "Brand" | "Agency"> =
@@ -135,8 +133,6 @@ const VerificationCardsContainer = ({
     query.set("tab", tab);
     query.set("page", "1");
     query.delete("search");
-    query.delete("startDate");
-    query.delete("endDate");
 
     router.push(`${pathname}?${query.toString()}`);
     setSelectedIds([]);
@@ -287,12 +283,6 @@ const VerificationCardsContainer = ({
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-end">
-                    <div className="flex h-[40px] min-w-[170px] items-center justify-between rounded-[12px] border border-[#cfcfcf] bg-white px-4 text-sm text-[#2d2d2d]">
-                      <span>Nov 20 - Dec 20</span>
-                      <span className="text-base">⌄</span>
-                    </div>
-                  </div>
                 </div>
 
                 {showRejectInput && (

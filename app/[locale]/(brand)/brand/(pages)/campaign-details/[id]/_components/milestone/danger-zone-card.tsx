@@ -7,13 +7,27 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { submitCampaignCancelRequest } from "@/service/client/campaigns/campaign-danger-zone";
 import { notifyError, notifySuccess } from "@/utils/toast_util";
+import type { CampaignAssignedInfluencer } from "@/types/client/campaigns/campaign-submission.types";
+import InfluencerSelector from "./milestone-overview/influencer-selector";
+import type { InfluencerOption } from "./milestone-overview/campaign-milestones-overview";
 
 type DangerZoneCardProps = {
   campaignId: string;
   targetType: "agency" | "influencer";
   agencyOfferId?: string | null;
   assignmentId?: string;
+  assignedInfluencers?: CampaignAssignedInfluencer[];
+  selectedInfluencerId?: string;
+  onSelectInfluencer?: (influencerId: string) => void;
   onSubmitted?: () => void;
+};
+
+const isDeclinedInfluencer = (status?: string | null) => {
+  const value = String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+  return ["decline", "declined", "rejected", "reject"].includes(value);
 };
 
 export default function DangerZoneCard({
@@ -21,14 +35,89 @@ export default function DangerZoneCard({
   targetType,
   agencyOfferId,
   assignmentId,
+  assignedInfluencers = [],
+  selectedInfluencerId = "",
+  onSelectInfluencer,
   onSubmitted,
 }: DangerZoneCardProps) {
   const t = useTranslations("brand.CampaignDetailsPage");
   const [open, setOpen] = React.useState(false);
   const [reason, setReason] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isInfluencerDropdownOpen, setIsInfluencerDropdownOpen] =
+    React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement | null>(null);
 
   const trimmedReason = reason.trim();
+
+  const influencerOptions = React.useMemo<InfluencerOption[]>(
+    () =>
+      assignedInfluencers.map((item) => ({
+        id: item.influencerId,
+        name: item.name,
+        image: item.image ?? null,
+        status: item.status ?? null,
+        disabled: isDeclinedInfluencer(item.status),
+      })),
+    [assignedInfluencers],
+  );
+
+  const effectiveSelectedInfluencerId = React.useMemo(() => {
+    if (targetType !== "influencer") return "";
+
+    if (
+      selectedInfluencerId &&
+      influencerOptions.some(
+        (item) => item.id === selectedInfluencerId && !item.disabled,
+      )
+    ) {
+      return selectedInfluencerId;
+    }
+
+    return influencerOptions.find((item) => !item.disabled)?.id ?? "";
+  }, [targetType, selectedInfluencerId, influencerOptions]);
+
+  const selectedInfluencer = React.useMemo(
+    () =>
+      influencerOptions.find((item) => item.id === effectiveSelectedInfluencerId) ??
+      null,
+    [influencerOptions, effectiveSelectedInfluencerId],
+  );
+
+  React.useEffect(() => {
+    if (targetType !== "influencer") return;
+    if (!effectiveSelectedInfluencerId) return;
+    if (effectiveSelectedInfluencerId === selectedInfluencerId) return;
+
+    onSelectInfluencer?.(effectiveSelectedInfluencerId);
+  }, [
+    targetType,
+    effectiveSelectedInfluencerId,
+    selectedInfluencerId,
+    onSelectInfluencer,
+  ]);
+
+  React.useEffect(() => {
+    if (!isInfluencerDropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(event.target as Node)) {
+        setIsInfluencerDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isInfluencerDropdownOpen]);
+
+  const handleInfluencerSelect = (influencerId: string) => {
+    const influencer = influencerOptions.find((item) => item.id === influencerId);
+    if (influencer?.disabled) return;
+
+    onSelectInfluencer?.(influencerId);
+    setIsInfluencerDropdownOpen(false);
+  };
 
   const isDisabled = React.useMemo(() => {
     if (!trimmedReason) return true;
@@ -68,7 +157,7 @@ export default function DangerZoneCard({
 
         await submitCampaignCancelRequest(campaignId, {
           targetType: "influencer",
-          assignmentId,
+          targetId: assignmentId,
           reason: trimmedReason,
         });
       }
@@ -113,6 +202,22 @@ export default function DangerZoneCard({
 
       {open && (
         <div className="space-y-3 px-4 pb-4">
+          {targetType === "influencer" && influencerOptions.length > 0 ? (
+            <div ref={dropdownRef}>
+              <p className="mb-1 text-xs font-medium text-red-600">
+                Select influencer
+              </p>
+              <InfluencerSelector
+                influencerOptions={influencerOptions}
+                selectedInfluencer={selectedInfluencer}
+                selectedInfluencerId={effectiveSelectedInfluencerId}
+                isOpen={isInfluencerDropdownOpen}
+                onToggle={() => setIsInfluencerDropdownOpen((prev) => !prev)}
+                onSelect={handleInfluencerSelect}
+              />
+            </div>
+          ) : null}
+
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}

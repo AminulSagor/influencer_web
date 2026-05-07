@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 
 import { FaEye } from "react-icons/fa";
-import { FaRegTrashCan } from "react-icons/fa6";
 
 import AssignedPersonalsCell from "./assigned-personals-cell";
 import {
@@ -126,17 +125,11 @@ export default function CampaignsListTable({
                 </TableCell>
 
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button asChild variant="outline">
-                      <Link href={`/admin/campaigns/${campaign.id}`}>
-                        <FaEye />
-                      </Link>
-                    </Button>
-
-                    <Button variant="outline">
-                      <FaRegTrashCan />
-                    </Button>
-                  </div>
+                  <Button asChild variant="outline">
+                    <Link href={`/admin/campaigns/${campaign.id}`}>
+                      <FaEye />
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             );

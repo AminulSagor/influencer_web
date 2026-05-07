@@ -59,6 +59,7 @@ export type AssignedRow = {
 
   assignmentId?: string | null;
   isAssigned: boolean;
+  status?: string | null;
 
   committedPercentage: number;
   committedOfferAmount: number;
