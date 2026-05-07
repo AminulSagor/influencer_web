@@ -239,6 +239,8 @@ export default function CampaignMilestoneContainer({
     handleApproveConfirm,
     handleDeclineConfirm,
     handlePartialPaidSubmit,
+    rollbackLoadingId,
+    handleSubmissionStatusRollback,
   } = useMilestoneActions(
     isPaidAd,
     activeMilestone,
@@ -472,6 +474,11 @@ export default function CampaignMilestoneContainer({
                     }))
                   }
                   loading={actionLoading}
+                  isPaidAd={isPaidAd}
+                  rollbackLoading={rollbackLoadingId === submission.id}
+                  onSubmissionStatusRollback={(status) =>
+                    void handleSubmissionStatusRollback(submission, status)
+                  }
                 />
               </div>
             </div>
@@ -597,11 +604,14 @@ export default function CampaignMilestoneContainer({
       actionLoading,
       activeSubmissions.length,
       getSubmissionRemainingAmount,
+      handleSubmissionStatusRollback,
       isPaidAd,
       openApproveForSubmission,
       openDeclineForSubmission,
       openPayForSubmission,
       paymentActionMap,
+      rollbackLoadingId,
+      setPaymentActionMap,
       targetComments,
       targetLikes,
       targetReach,

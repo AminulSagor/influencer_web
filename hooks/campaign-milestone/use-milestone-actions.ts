@@ -3,8 +3,10 @@ import { toast } from "sonner";
 import { safeStr } from "@/utils/admin/campaign/number_util";
 import { payInfluencerSubmission } from "@/service/admin/campaign/pay-influencer-submission";
 import { updateInfluencerMilestoneStatus } from "@/service/admin/campaign/update-influencer-milestone-status";
+import { influencerMilestoneStatusRollback } from "@/service/admin/campaign/influencer-milestone-status-rollback";
 import { payAgencySubmission } from "@/service/admin/campaign/agency/pay-agency-submission";
 import { reviewAgencySubmission } from "@/service/admin/campaign/agency/review-agency-submission";
+import { agencySubmissionStatusRollback } from "@/service/admin/campaign/agency/agency-submission-status-rollback";
 import type { SubmissionItem } from "@/utils/admin/campaign/campaign-milestone/submission_helpers";
 
 export function useMilestoneActions(
@@ -21,6 +23,7 @@ export function useMilestoneActions(
   const [partialReason, setPartialReason] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [rollbackLoadingId, setRollbackLoadingId] = useState<string | null>(null);
   const [actionSubmission, setActionSubmission] = useState<SubmissionItem | null>(null);
 
   useEffect(() => {
@@ -269,6 +272,54 @@ export function useMilestoneActions(
     }
   }
 
+  const handleSubmissionStatusRollback = useCallback(
+    async (
+      submission: SubmissionItem,
+      status: "completed" | "in_review" | "approved" | "declined"
+    ) => {
+      if (!submission?.id) {
+        toast.error("Submission id is missing.");
+        return;
+      }
+
+      try {
+        setRollbackLoadingId(submission.id);
+
+        if (isPaidAd) {
+          await agencySubmissionStatusRollback({
+            submissionId: submission.id,
+            status: status as any,
+          });
+        } else {
+          const milestoneId = safeStr((activeMilestone as any)?.id);
+          if (!milestoneId) {
+            toast.error("Milestone id is missing.");
+            return;
+          }
+          await influencerMilestoneStatusRollback({
+            milestoneId,
+            status,
+          });
+        }
+
+        toast.success("Status updated successfully.");
+        await refreshMilestoneSubmissions(activeMilestoneIdSafe);
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.message || "Failed to update status."
+        );
+      } finally {
+        setRollbackLoadingId(null);
+      }
+    },
+    [
+      activeMilestone,
+      activeMilestoneIdSafe,
+      isPaidAd,
+      refreshMilestoneSubmissions,
+    ]
+  );
+
   return {
     paymentActionMap,
     setPaymentActionMap,
@@ -295,5 +346,7 @@ export function useMilestoneActions(
     handleApproveConfirm,
     handleDeclineConfirm,
     handlePartialPaidSubmit,
+    rollbackLoadingId,
+    handleSubmissionStatusRollback,
   };
 }
