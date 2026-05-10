@@ -26,7 +26,8 @@ const BrandTradeLicenseCard = ({
     : null;
 
   return (
-    <CollapsibleCard heading="Trade License">
+    <div className="h-full [&>div]:h-full">
+      <CollapsibleCard heading="Trade License">
       <div className="space-y-4 p-4">
         <div>
           <h3 className="text-xs text-Primary font-semibold">Trade License Number</h3>
@@ -48,7 +49,8 @@ const BrandTradeLicenseCard = ({
           </div>
         </div>
       </div>
-    </CollapsibleCard>
+      </CollapsibleCard>
+    </div>
   );
 };
 

@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   FaInstagram,
@@ -37,8 +36,8 @@ const BrandInfoCard = ({
   verifiedStatus,
 }: Props) => {
   return (
-    <div className="rounded-xl bg-linear-to-r from-Primary to-light-green p-4 text-white sm:p-5">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+    <div className="flex h-full min-h-[220px] items-center rounded-xl bg-linear-to-r from-Primary to-light-green p-4 text-white sm:p-5">
+      <div className="flex w-full flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
           <Avatar className="h-20 w-20 border-4 border-white/30 sm:h-24 sm:w-24">
             <AvatarImage src={image ?? ""} />
@@ -74,13 +73,6 @@ const BrandInfoCard = ({
               </div>
             );
           })}
-
-          <Button
-            variant="secondary"
-            className="mt-2 h-9 w-full bg-white text-Primary hover:bg-white/90 lg:w-auto"
-          >
-            Log Out
-          </Button>
         </div>
       </div>
     </div>

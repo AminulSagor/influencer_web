@@ -62,16 +62,28 @@ export function useMilestoneActions(
   }, []);
 
   const openPayForSubmission = useCallback(
-    (submission: SubmissionItem) => {
-      const selectedPaymentAction = paymentActionMap[submission.id] || "";
+    (
+      submission: SubmissionItem,
+      paymentActionOverride?: string,
+      directPayment = false
+    ) => {
+      const selectedPaymentAction =
+        paymentActionOverride || paymentActionMap[submission.id] || "";
       if (!selectedPaymentAction) {
         toast.error("Select a payment type first.");
         return;
       }
 
-      setActionSubmission(submission);
+      const payableAmount =
+        getSubmissionRemainingAmount(submission) > 0
+          ? getSubmissionRemainingAmount(submission)
+          : getSubmissionRequestedAmount(submission);
 
-      if (selectedPaymentAction === "partial_paid") {
+      setActionSubmission(submission);
+      setPartialAmount(String(payableAmount));
+      setPartialReason("");
+
+      if (!directPayment && (isPaidAd || selectedPaymentAction === "partial_paid")) {
         setPartialPaidOpen(true);
         return;
       }
@@ -80,21 +92,17 @@ export function useMilestoneActions(
         try {
           setActionLoading(true);
 
-          const payableAmount =
-            getSubmissionRemainingAmount(submission) > 0
-              ? getSubmissionRemainingAmount(submission)
-              : getSubmissionRequestedAmount(submission);
-
           if (isPaidAd) {
             await payAgencySubmission({
               submissionId: submission.id,
               amount: payableAmount,
+              reason: "Payment processed",
             });
           } else {
             await payInfluencerSubmission({
               submissionId: submission.id,
               amount: payableAmount,
-              reason: "Full payment completed",
+              reason: "Payment processed",
             });
           }
 
@@ -225,20 +233,17 @@ export function useMilestoneActions(
     const amountNumber = Number(partialAmount || 0);
     const remainingAmount = getSubmissionRemainingAmount(actionSubmission);
 
-    if (!partialReason.trim()) {
-      toast.error("Reason is required.");
-      return;
-    }
-
     if (!amountNumber || amountNumber <= 0) {
-      toast.error("Enter a valid partial amount.");
+      toast.error("Enter a valid amount.");
       return;
     }
 
     if (amountNumber > remainingAmount) {
-      toast.error("Partial amount cannot be greater than remaining due.");
+      toast.error("Amount cannot be greater than remaining due.");
       return;
     }
+
+    const paymentReason = partialReason.trim() || "Payment processed";
 
     try {
       setActionLoading(true);
@@ -247,17 +252,17 @@ export function useMilestoneActions(
         await payAgencySubmission({
           submissionId: actionSubmission.id,
           amount: amountNumber,
-          reason: partialReason.trim(),
+          reason: paymentReason,
         });
       } else {
         await payInfluencerSubmission({
           submissionId: actionSubmission.id,
           amount: amountNumber,
-          reason: partialReason.trim(),
+          reason: paymentReason,
         });
       }
 
-      toast.success("Partial payment updated successfully.");
+      toast.success("Payment processed successfully.");
       setPartialPaidOpen(false);
       setPartialAmount("");
       setPartialReason("");
@@ -265,7 +270,7 @@ export function useMilestoneActions(
       await refreshMilestoneSubmissions(activeMilestoneIdSafe);
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Failed to update partial payment."
+        error?.response?.data?.message || "Failed to process payment."
       );
     } finally {
       setActionLoading(false);

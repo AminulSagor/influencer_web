@@ -73,7 +73,7 @@ const page = async ({ params, searchParams }: Props) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 items-stretch gap-4">
         <div className="col-span-12 lg:col-span-6">
           <BrandInfoCard
             name={brand.brandName || "N/A"}
@@ -85,9 +85,9 @@ const page = async ({ params, searchParams }: Props) => {
         </div>
 
         <div className="col-span-12 lg:col-span-6">
-          <Card className="h-full">
-            <div className="p-4 space-y-3">
-              <div className="border p-4 rounded-md bg-linear-to-r from-white to-Secondary border-light-green">
+          <Card className="h-full min-h-[220px]">
+            <div className="flex h-full flex-col justify-center space-y-3 p-4">
+              <div className="rounded-md border border-light-green bg-linear-to-r from-white to-Secondary p-4 text-center">
                 <div className="space-y-2 text-Primary">
                   <h2 className="text-base font-medium">{moneyMetric}</h2>
                   <p className="font-semibold text-2xl">
@@ -97,14 +97,14 @@ const page = async ({ params, searchParams }: Props) => {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="border p-4 rounded-md bg-linear-to-r from-white to-Secondary border-light-green">
+                <div className="rounded-md border border-light-green bg-linear-to-r from-white to-Secondary p-4 text-center">
                   <div className="space-y-2 text-Primary">
                     <h2 className="text-base font-medium">{jobMetric}</h2>
                     <p className="font-semibold text-2xl">{jobValue}</p>
                   </div>
                 </div>
 
-                <div className="border p-4 rounded-md bg-linear-to-r from-white to-orange/10 border-orange">
+                <div className="rounded-md border border-orange bg-linear-to-r from-white to-orange/10 p-4 text-center">
                   <div className="space-y-2 text-orange">
                     <h2 className="text-base font-medium">Active Job</h2>
                     <p className="font-semibold text-2xl">{activeJobValue}</p>
@@ -119,16 +119,16 @@ const page = async ({ params, searchParams }: Props) => {
       {brand.isBlocked && <BlockedBanner userId={id} />}
 
       <Tabs defaultValue="profile_details">
-        <TabsList className="w-full bg-white rounded-full p-1 border">
+        <TabsList className="h-auto w-full rounded-full border bg-white p-1">
           <TabsTrigger
             value="profile_details"
-            className="flex-1 rounded-full data-[state=active]:bg-light-green data-[state=active]:text-white"
+            className="flex-1 rounded-full px-3 py-2 data-[state=active]:bg-light-green data-[state=active]:text-white"
           >
             Profile Details
           </TabsTrigger>
           <TabsTrigger
             value="campaigns"
-            className="flex-1 rounded-full data-[state=active]:bg-light-green data-[state=active]:text-white"
+            className="flex-1 rounded-full px-3 py-2 data-[state=active]:bg-light-green data-[state=active]:text-white"
           >
             Campaigns
           </TabsTrigger>
@@ -136,24 +136,24 @@ const page = async ({ params, searchParams }: Props) => {
 
         <TabsContent value="profile_details" className="space-y-4 mt-4">
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-12 lg:col-span-8">
+            <div className="col-span-12 lg:col-span-6">
               <BrandProfileCompletionCard
                 progress={completion.completionPercentage ?? 0}
                 niches={brand.website ? [brand.website] : []}
               />
             </div>
 
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 lg:col-span-6">
               <BrandCampaignStatusCard userId={id} />
             </div>
           </div>
 
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 h-full lg:col-span-4">
               <BrandPayoutSettingsCard />
             </div>
 
-            <div className="col-span-12 lg:col-span-8 space-y-4">
+            <div className="col-span-12 space-y-4 lg:col-span-8">
               <BrandProfileDetailsCard
                 ownerInfo={{
                   firstName: brand.firstName,
@@ -182,27 +182,27 @@ const page = async ({ params, searchParams }: Props) => {
           </div>
 
           <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 h-full lg:col-span-4">
               <BrandTradeLicenseCard
                 tradeLicenseNumber={brand.tradeLicenseNumber}
                 tradeLicenseImage={brand.tradeLicenseImg}
               />
             </div>
 
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 h-full lg:col-span-4">
               <BrandTinCertificateCard
                 tinNumber={brand.tinNumber}
                 tinImage={brand.tinImage}
               />
             </div>
 
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 h-full lg:col-span-4">
               <BrandBinCard binNumber={brand.binNumber} />
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="campaigns" className="mt-4">
+        <TabsContent value="campaigns" className="space-y-4 mt-4">
           <UserCampaignTable 
             initialData={campaignsRes?.data || []} 
             meta={campaignsRes?.meta} 

@@ -21,7 +21,8 @@ const BrandTinCertificateCard = ({ tinNumber, tinImage }: Props) => {
   const imageSrc = isValidImageSrc(tinImage) ? tinImage!.trim() : null;
 
   return (
-    <CollapsibleCard heading="TIN Certificate">
+    <div className="h-full [&>div]:h-full">
+      <CollapsibleCard heading="TIN Certificate">
       <div className="space-y-4 p-4">
         <div>
           <h3 className="text-xs text-Primary font-semibold">TIN Number</h3>
@@ -43,7 +44,8 @@ const BrandTinCertificateCard = ({ tinNumber, tinImage }: Props) => {
           </div>
         </div>
       </div>
-    </CollapsibleCard>
+      </CollapsibleCard>
+    </div>
   );
 };
 

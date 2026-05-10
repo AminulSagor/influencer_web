@@ -54,7 +54,8 @@ const PayoutSettings = ({ payoutSettings = [] }: Props) => {
   };
 
   return (
-    <CollapsibleCard heading="Payout Settings">
+    <div className="h-full [&>div]:h-full">
+      <CollapsibleCard heading="Payout Settings">
       <div className="space-y-3">
         {payoutSettings.length === 0 ? (
           <div className="text-sm text-muted-foreground p-3">
@@ -260,7 +261,8 @@ const PayoutSettings = ({ payoutSettings = [] }: Props) => {
           })
         )}
       </div>
-    </CollapsibleCard>
+      </CollapsibleCard>
+    </div>
   );
 };
 

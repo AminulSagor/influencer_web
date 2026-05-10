@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useTransition } from "react";
-import { Search, Eye, Trash2 } from "lucide-react";
+import { useState, useEffect, useTransition } from "react";
+import { Search, Eye } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useDebounce } from "use-debounce";
 import {
@@ -32,7 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { UserCampaign, UserCampaignStatus, UserCampaignTab } from "@/types/admin/user/user_campaign_type";
+import { UserCampaign, UserCampaignTab } from "@/types/admin/user/user_campaign_type";
 
 interface Props {
   initialData: UserCampaign[];
@@ -56,14 +56,29 @@ const TABS: { label: string; value: UserCampaignTab }[] = [
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
   needs_quote: { label: "Needs Quote", color: "text-gray-700", bgColor: "bg-gray-100" },
-  negotiating: { label: "Needs Quote", color: "text-gray-700", bgColor: "bg-gray-100" },
+  negotiating: { label: "Negotiating", color: "text-gray-700", bgColor: "bg-gray-100" },
   active: { label: "Active", color: "text-blue-700", bgColor: "bg-blue-50" },
   pending_invitation: { label: "Pending Invitation", color: "text-orange-700", bgColor: "bg-orange-50" },
-  pending_influencer: { label: "Pending Invitation", color: "text-orange-700", bgColor: "bg-orange-50" },
+  pending_influencer: { label: "Pending Influencer", color: "text-orange-700", bgColor: "bg-orange-50" },
+  pending_agency: { label: "Pending Agency", color: "text-orange-700", bgColor: "bg-orange-50" },
+  agency_negotiating: { label: "Agency Negotiating", color: "text-gray-700", bgColor: "bg-gray-100" },
+  agency_accepted: { label: "Agency Accepted", color: "text-green-700", bgColor: "bg-green-50" },
   completed: { label: "Completed", color: "text-green-700", bgColor: "bg-green-50" },
   paid: { label: "Paid", color: "text-green-700", bgColor: "bg-green-50" },
+  partial_paid: { label: "Partial Paid", color: "text-orange-700", bgColor: "bg-orange-50" },
   canceled: { label: "Canceled", color: "text-red-700", bgColor: "bg-red-50" },
   cancelled: { label: "Canceled", color: "text-red-700", bgColor: "bg-red-50" },
+  declined: { label: "Declined", color: "text-red-700", bgColor: "bg-red-50" },
+  draft: { label: "Draft", color: "text-gray-700", bgColor: "bg-gray-100" },
+  new_offer: { label: "New Offer", color: "text-blue-700", bgColor: "bg-blue-50" },
+};
+
+const formatStatusLabel = (status: string) => {
+  return STATUS_CONFIG[status]?.label || status
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 const UserCampaignTable = ({ initialData, meta }: Props) => {
@@ -130,6 +145,14 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
       month: "short",
       year: "numeric",
     });
+  };
+
+  const getCampaignDetailsId = (campaign: UserCampaign) => {
+    return campaign.campaignId || campaign.campaign_id || campaign.id;
+  };
+
+  const handleViewCampaign = (campaign: UserCampaign) => {
+    router.push(`/admin/campaigns/${getCampaignDetailsId(campaign)}`);
   };
 
   return (
@@ -329,30 +352,28 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
                               />
                             </div>
                           )}
-                          <Select defaultValue={campaign.status}>
-                            <SelectTrigger
-                              className={cn(
-                                "w-[140px] h-8 text-[11px] font-semibold rounded-lg border-none shadow-sm",
-                                config.bgColor,
-                                config.color
-                              )}
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={campaign.status}>{config.label}</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <span
+                            className={cn(
+                              "inline-flex min-w-[120px] items-center justify-center rounded-lg px-3 py-2 text-[11px] font-semibold shadow-sm",
+                              config.bgColor,
+                              config.color
+                            )}
+                          >
+                            {formatStatusLabel(campaign.status)}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
-                          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-Primary">
+                          <button
+                            type="button"
+                            onClick={() => handleViewCampaign(campaign)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-Primary"
+                            aria-label="View campaign details"
+                          >
                             <Eye className="w-5 h-5" />
                           </button>
-                          <button className="p-2 hover:bg-red-50 rounded-lg transition-colors text-gray-400 hover:text-red-500">
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+
                         </div>
                       </TableCell>
                     </TableRow>
@@ -367,7 +388,7 @@ const UserCampaignTable = ({ initialData, meta }: Props) => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
           <div className="text-sm text-gray-500">
             Showing <span className="font-semibold text-gray-700">
-                {((currentPage - 1) * 10) + 1}-{Math.min(currentPage * 10, meta.total)}
+                {((currentPage - 1) * meta.limit) + 1}-{Math.min(currentPage * meta.limit, meta.total)}
             </span> of <span className="font-semibold text-gray-700">{meta.total}</span> Campaigns
           </div>
 

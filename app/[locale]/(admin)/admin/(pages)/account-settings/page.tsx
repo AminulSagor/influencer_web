@@ -2,6 +2,7 @@ import DefaultValueCard from "./_components/default-value-card";
 import NicheListCard from "./_components/niche-list-card";
 import SkillsList from "./_components/skills-list";
 import ProductTypes from "./_components/product-types";
+import PlatformsList from "./_components/platforms-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SecurityCard from "./_components/security-card";
 import LoginActivityCard from "./_components/login-activity-card";
@@ -9,6 +10,7 @@ import { getPlatformFee } from "@/service/admin/settings/get-platform-fee";
 import { getNiches } from "@/service/admin/settings/get-niches";
 import { getSkills } from "@/service/admin/settings/get-skills";
 import { getProductTypes } from "@/service/admin/settings/get-productType";
+import { getPlatforms } from "@/service/admin/settings/get-platforms";
 import { getActivityLog } from "@/service/admin/settings/get-activity-log";
 
 const page = async () => {
@@ -16,6 +18,7 @@ const page = async () => {
   const niches = await getNiches();
   const skills = await getSkills();
   const productTypes = await getProductTypes();
+  const platforms = await getPlatforms();
   const activityLog = await getActivityLog();
 
   return (
@@ -25,11 +28,17 @@ const page = async () => {
       </h2>
 
       <div className="space-y-4">
-        <div>
-          <DefaultValueCard
-            initialPlatformFee={String(generalSettings?.platformFee ?? "")}
-            initialVatTax={String(generalSettings?.vatTax ?? "")}
-          />
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-12 md:col-span-8">
+            <DefaultValueCard
+              initialPlatformFee={String(generalSettings?.platformFee ?? "")}
+              initialVatTax={String(generalSettings?.vatTax ?? "")}
+            />
+          </div>
+
+          <div className="col-span-12 md:col-span-4">
+            <PlatformsList initialPlatforms={platforms} />
+          </div>
         </div>
 
         <div className="grid grid-cols-12 gap-4">

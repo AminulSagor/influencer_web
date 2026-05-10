@@ -1,6 +1,13 @@
 import { serviceClient } from "@/service/base/axios_client";
 
-export type UserChartDateRange = "today" | "week" | "month" | "lifetime";
+export type UserChartDateRange =
+  | "today"
+  | "last_3_days"
+  | "last_7_days"
+  | "last_15_days"
+  | "last_30_days"
+  | "last_1_year"
+  | "lifetime";
 
 export type UserChartStatsResponse = {
   success: boolean;

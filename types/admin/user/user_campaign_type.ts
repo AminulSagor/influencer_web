@@ -13,6 +13,9 @@ export type UserCampaignStatus =
   | "pending_invitation"
   | "completed"
   | "paid"
+  | "partial_paid"
+  | "draft"
+  | "new_offer"
   | "canceled"
   | "negotiating"
   | "pending_influencer"
@@ -24,6 +27,8 @@ export type UserCampaignStatus =
 
 export interface UserCampaign {
   id: string;
+  campaignId?: string;
+  campaign_id?: string;
   campaignInfo: {
     name: string;
     type: string;

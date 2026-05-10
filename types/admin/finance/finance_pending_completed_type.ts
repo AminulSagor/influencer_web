@@ -30,6 +30,7 @@ export type PaginationMeta = {
 
 export type PendingClearanceItem = {
   id: string;
+  submissionId?: string;
   type: "agency" | "influencer";
   transactionType: string;
   payeeName: string;

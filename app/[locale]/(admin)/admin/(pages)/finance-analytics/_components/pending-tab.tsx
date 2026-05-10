@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, Search } from "lucide-react";
 import { toast } from "sonner";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -32,6 +32,8 @@ import {
 } from "@/service/admin/finance/export-pending-clearance";
 
 import BonusClearance from "./bonus-clearance";
+import MilestonePartialPaidModal from "../../campaigns/campaign-details/_components/modals/milestone-partial-paid-modal";
+import { useMilestoneActions } from "@/hooks/campaign-milestone/use-milestone-actions";
 
 import type {
   AmountSortType,
@@ -42,6 +44,7 @@ import type {
   PendingPaymentType,
 } from "@/types/admin/finance/finance_pending_completed_type";
 import type { PendingBonusesResponse } from "@/types/admin/finance/finance_bonus_clearance_type";
+import type { SubmissionItem } from "@/utils/admin/campaign/campaign-milestone/submission_helpers";
 
 type PendingTabKey = "agency" | "influencer" | "brand" | "bonus";
 
@@ -98,6 +101,26 @@ const getTabApiValue = (tab: Exclude<PendingTabKey, "brand" | "bonus">) => {
   return "influencerpayout";
 };
 
+const getPaymentActionForTransactionType = (transactionType?: string) => {
+  const normalized = String(transactionType ?? "").trim().toLowerCase();
+
+  if (normalized.includes("partial")) return "partial_paid";
+
+  return "completed";
+};
+
+const mapPendingClearanceToSubmission = (
+  item: PendingClearanceItem
+): SubmissionItem => ({
+  id: item.submissionId || item.id,
+  influencerName: item.payeeName,
+  requestedAmount: Number(item.amountRequested ?? 0),
+  paidAmount: 0,
+  status: "approved",
+  paymentStatus: "unpaid",
+  submittedAt: item.requestDate || item.milestoneReachedDate || null,
+});
+
 const downloadCsv = (
   rows: Record<string, string | number | null>[],
   fileName: string
@@ -152,6 +175,30 @@ const PendingTab = ({ tabsData }: Props) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
 
+  const refreshPendingPayments = useCallback(async () => {
+    router.refresh();
+  }, [router]);
+
+  const {
+    partialPaidOpen,
+    setPartialPaidOpen,
+    partialReason,
+    setPartialReason,
+    partialAmount,
+    setPartialAmount,
+    actionLoading,
+    actionSubmission,
+    getSubmissionRequestedAmount,
+    getSubmissionRemainingAmount,
+    openPayForSubmission,
+    handlePartialPaidSubmit,
+  } = useMilestoneActions(
+    activeTab === "agency",
+    null,
+    "finance-analytics",
+    refreshPendingPayments
+  );
+
   useEffect(() => {
     setSearch(querySearch);
   }, [querySearch]);
@@ -192,10 +239,82 @@ const PendingTab = ({ tabsData }: Props) => {
   const currentRes = tabsData[activeTab];
   const currentData = currentRes?.data ?? [];
   const currentMeta = currentRes?.meta;
+  const currentPage = currentMeta?.page ?? Number(searchParams.get("pendingPage") ?? "1");
+  const totalPages = currentMeta?.totalPages ?? 1;
+  const limit = currentMeta?.limit ?? 10;
+  const total = currentMeta?.total ?? currentData.length;
+  const startItem = total === 0 ? 0 : (currentPage - 1) * limit + 1;
+  const endItem = total === 0 ? 0 : Math.min(currentPage * limit, total);
   const bonusTotalPending = (currentRes as PendingBonusesResponse | undefined)
     ?.summary?.totalPendingBonus;
 
   const filteredData = useMemo(() => currentData, [currentData]);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 2) return [1, 2, 3];
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
+  }, [currentPage, totalPages]);
+
+  const goToPendingPage = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setPendingParams({ pendingPage: String(page) }, false);
+  };
+
+  const pagination = currentMeta && total > 0 && (
+    <div className="flex flex-col items-center justify-between gap-3 border-t bg-white px-4 py-4 text-sm sm:flex-row sm:px-6 sm:py-5">
+      <div className="text-muted-foreground">
+        Showing <span className="font-medium text-foreground">{startItem} - {endItem}</span> of{" "}
+        <span className="font-medium text-foreground">{total}</span> Payments
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage <= 1}
+          onClick={() => goToPendingPage(currentPage - 1)}
+        >
+          Previous
+        </Button>
+
+        {paginationPages.map((pageNumber) => (
+          <Button
+            key={pageNumber}
+            type="button"
+            variant="ghost"
+            onClick={() => goToPendingPage(pageNumber)}
+            className={[
+              "h-8 min-w-8 px-0",
+              currentPage === pageNumber
+                ? "bg-light-green text-white hover:bg-light-green/90"
+                : "text-Primary",
+            ].join(" ")}
+          >
+            {pageNumber}
+          </Button>
+        ))}
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage >= totalPages}
+          onClick={() => goToPendingPage(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 
   const currentRowIds = useMemo(() => {
     if (activeTab === "bonus") return [];
@@ -235,6 +354,18 @@ const PendingTab = ({ tabsData }: Props) => {
   useEffect(() => {
     setSelectedIds([]);
   }, [activeTab, querySearch, paymentType, amountSort, dateRange]);
+
+  const handleProcessPayment = useCallback(
+    (item: PendingClearanceItem) => {
+      const submission = mapPendingClearanceToSubmission(item);
+      const paymentAction = getPaymentActionForTransactionType(
+        item.transactionType
+      );
+
+      openPayForSubmission(submission, paymentAction, true);
+    },
+    [openPayForSubmission]
+  );
 
   const handleNotifyClient = async (
     clientId: string,
@@ -506,6 +637,7 @@ const PendingTab = ({ tabsData }: Props) => {
                 <div className="divide-y divide-[#e5e5e5]">
                 {(filteredData as PendingClearanceItem[]).map((item) => {
                   const selected = selectedIds.includes(item.id);
+                  const rowSubmissionId = item.submissionId || item.id;
 
                   return (
                     <div
@@ -564,9 +696,13 @@ const PendingTab = ({ tabsData }: Props) => {
                       <div className="flex justify-end pr-2">
                         <Button
                           variant="lightGreen"
+                          onClick={() => handleProcessPayment(item)}
+                          disabled={actionLoading}
                           className="h-8 rounded-[8px] px-4 text-[11px] font-medium"
                         >
-                          Process Payment
+                          {actionLoading && actionSubmission?.id === rowSubmissionId
+                            ? "Processing..."
+                            : "Process Payment"}
                         </Button>
                       </div>
                     </div>
@@ -699,11 +835,28 @@ const PendingTab = ({ tabsData }: Props) => {
             <BonusClearance data={tabsData.bonus} searchText={search} />
           )}
 
-          <div className="flex justify-end text-sm text-muted-foreground">
-            Page {currentMeta?.page ?? 1} of {currentMeta?.totalPages ?? 1}
-          </div>
+          {pagination}
         </CardContent>
       </Card>
+
+      <MilestonePartialPaidModal
+        open={partialPaidOpen}
+        influencerName={actionSubmission?.influencerName || ""}
+        reason={partialReason}
+        amount={partialAmount}
+        maxAmount={
+          actionSubmission
+            ? getSubmissionRemainingAmount(actionSubmission) > 0
+              ? getSubmissionRemainingAmount(actionSubmission)
+              : getSubmissionRequestedAmount(actionSubmission)
+            : 0
+        }
+        onReasonChange={setPartialReason}
+        onAmountChange={setPartialAmount}
+        onClose={() => setPartialPaidOpen(false)}
+        onSubmit={handlePartialPaidSubmit}
+        loading={actionLoading}
+      />
     </TabsContent>
   );
 };

@@ -70,6 +70,10 @@ const page = async ({ searchParams }: PageProps) => {
     (getSingleValue(params.pendingAmountSort) as AmountSortType | undefined) ??
     undefined;
   const pendingDateRange = getSingleValue(params.pendingDateRange) ?? "all";
+  const pendingPage = Math.max(
+    1,
+    Number(getSingleValue(params.pendingPage) ?? "1") || 1
+  );
 
   const completedSearch = getSingleValue(params.completedSearch) ?? "";
   const completedPaymentType =
@@ -80,6 +84,14 @@ const page = async ({ searchParams }: PageProps) => {
     (getSingleValue(params.completedAmountSort) as AmountSortType | undefined) ??
     undefined;
   const completedDateRange = getSingleValue(params.completedDateRange) ?? "all";
+  const completedPage = Math.max(
+    1,
+    Number(getSingleValue(params.completedPage) ?? "1") || 1
+  );
+  const partialPage = Math.max(
+    1,
+    Number(getSingleValue(params.partialPage) ?? "1") || 1
+  );
 
   const pendingDates = getDateRange(pendingDateRange);
   const completedDates = getDateRange(completedDateRange);
@@ -100,7 +112,7 @@ const page = async ({ searchParams }: PageProps) => {
     getFinanceAnalytics(),
 
     getPendingClearance({
-      page: 1,
+      page: pendingPage,
       limit: 10,
       tab: "agencypayout",
       search: pendingSearch || undefined,
@@ -111,7 +123,7 @@ const page = async ({ searchParams }: PageProps) => {
     }),
 
     getPendingClearance({
-      page: 1,
+      page: pendingPage,
       limit: 10,
       tab: "influencerpayout",
       search: pendingSearch || undefined,
@@ -122,7 +134,7 @@ const page = async ({ searchParams }: PageProps) => {
     }),
 
     getBrandPendingPayments({
-      page: 1,
+      page: pendingPage,
       limit: 10,
       search: pendingSearch || undefined,
       amountSort: pendingAmountSort,
@@ -131,7 +143,7 @@ const page = async ({ searchParams }: PageProps) => {
     }),
 
     getCompletedPayments({
-      page: 1,
+      page: completedPage,
       limit: 10,
       tab: "agencypayout",
       search: completedSearch || undefined,
@@ -142,7 +154,7 @@ const page = async ({ searchParams }: PageProps) => {
     }),
 
     getCompletedPayments({
-      page: 1,
+      page: completedPage,
       limit: 10,
       tab: "influencerpayout",
       search: completedSearch || undefined,
@@ -153,7 +165,7 @@ const page = async ({ searchParams }: PageProps) => {
     }),
 
     getCompletedPayments({
-      page: 1,
+      page: completedPage,
       limit: 10,
       tab: "brandpayment",
       search: completedSearch || undefined,
@@ -163,21 +175,21 @@ const page = async ({ searchParams }: PageProps) => {
       dateTo: completedDates.dateTo,
     }),
     getPendingBonuses({
-      page: 1,
+      page: pendingPage,
       limit: 10,
     }),
     getPartiallyCompleted({
-      page: 1,
+      page: partialPage,
       limit: 10,
       tab: "agencypayout",
     }),
     getPartiallyCompleted({
-      page: 1,
+      page: partialPage,
       limit: 10,
       tab: "influencerpayout",
     }),
     getPartiallyCompleted({
-      page: 1,
+      page: partialPage,
       limit: 10,
       tab: "brandpayment",
     }),

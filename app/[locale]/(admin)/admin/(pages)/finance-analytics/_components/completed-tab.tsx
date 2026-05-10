@@ -186,8 +186,80 @@ const CompletedTab = ({ tabsData }: Props) => {
   const currentRes = tabsData[activeTab];
   const currentData = currentRes?.data ?? [];
   const currentMeta = currentRes?.meta;
+  const currentPage = currentMeta?.page ?? Number(searchParams.get("completedPage") ?? "1");
+  const totalPages = currentMeta?.totalPages ?? 1;
+  const limit = currentMeta?.limit ?? 10;
+  const total = currentMeta?.total ?? currentData.length;
+  const startItem = total === 0 ? 0 : (currentPage - 1) * limit + 1;
+  const endItem = total === 0 ? 0 : Math.min(currentPage * limit, total);
 
   const filteredData = useMemo(() => currentData, [currentData]);
+
+  const paginationPages = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 2) return [1, 2, 3];
+    if (currentPage >= totalPages - 1) {
+      return [totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [currentPage - 1, currentPage, currentPage + 1];
+  }, [currentPage, totalPages]);
+
+  const goToCompletedPage = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCompletedParams({ completedPage: String(page) }, false);
+  };
+
+  const pagination = currentMeta && total > 0 && (
+    <div className="flex flex-col items-center justify-between gap-3 border-t bg-white px-4 py-4 text-sm sm:flex-row sm:px-6 sm:py-5">
+      <div className="text-muted-foreground">
+        Showing <span className="font-medium text-foreground">{startItem} - {endItem}</span> of{" "}
+        <span className="font-medium text-foreground">{total}</span> Payments
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage <= 1}
+          onClick={() => goToCompletedPage(currentPage - 1)}
+        >
+          Previous
+        </Button>
+
+        {paginationPages.map((pageNumber) => (
+          <Button
+            key={pageNumber}
+            type="button"
+            variant="ghost"
+            onClick={() => goToCompletedPage(pageNumber)}
+            className={[
+              "h-8 min-w-8 px-0",
+              currentPage === pageNumber
+                ? "bg-light-green text-white hover:bg-light-green/90"
+                : "text-Primary",
+            ].join(" ")}
+          >
+            {pageNumber}
+          </Button>
+        ))}
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 px-2 text-muted-foreground"
+          disabled={currentPage >= totalPages}
+          onClick={() => goToCompletedPage(currentPage + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 
   const currentIds = filteredData.map((item) => item.id);
 
@@ -605,9 +677,7 @@ const CompletedTab = ({ tabsData }: Props) => {
             </div>
           )}
 
-          <div className="flex justify-end text-sm text-muted-foreground">
-            Page {currentMeta?.page ?? 1} of {currentMeta?.totalPages ?? 1}
-          </div>
+          {pagination}
         </CardContent>
       </Card>
     </TabsContent>

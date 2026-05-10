@@ -34,25 +34,16 @@ export default function MilestonePartialPaidModal({
       <DialogContent className="max-w-[480px] rounded-[18px] border-0 bg-white p-0 shadow-xl">
         <div className="rounded-[18px] bg-white p-6">
           <DialogTitle className="text-[18px] font-semibold text-[#7EA055]">
-            Partial Paid Reason
+            Process Payment
           </DialogTitle>
 
           <p className="mt-2 text-[16px] font-semibold text-[#29411B]">
             To: {influencerName}
           </p>
 
-          <div className="mt-5">
-            <textarea
-              value={reason}
-              onChange={(e) => onReasonChange(e.target.value)}
-              placeholder="Write your reasons..."
-              className="min-h-[140px] w-full rounded-[16px] border border-[#9BB97D] px-4 py-4 text-[16px] outline-none placeholder:text-[#A3A3A3]"
-            />
-          </div>
-
           <div className="mt-5 grid grid-cols-1 items-center gap-3 md:grid-cols-[1fr_220px]">
             <p className="text-[16px] font-semibold text-[#7EA055]">
-              Set Partial Paid Amount
+              Set Amount
             </p>
 
             <div className="flex h-12 items-center rounded-[14px] border border-[#9BB97D] px-4">
@@ -71,14 +62,23 @@ export default function MilestonePartialPaidModal({
             </div>
           </div>
 
+          <div className="mt-5">
+            <textarea
+              value={reason}
+              onChange={(e) => onReasonChange(e.target.value)}
+              placeholder="Write your reason..."
+              className="min-h-[140px] w-full rounded-[16px] border border-[#9BB97D] px-4 py-4 text-[16px] outline-none placeholder:text-[#A3A3A3]"
+            />
+          </div>
+
           <div className="mt-6">
             <Button
               type="button"
               onClick={onSubmit}
-              disabled={loading || !reason.trim() || !amount}
+              disabled={loading || !amount}
               className="h-12 w-full rounded-[12px] bg-[#7EA055] text-base font-medium text-white hover:brightness-95 disabled:opacity-60"
             >
-              {loading ? "Updating..." : "Update Staus To Partial Paid"}
+              {loading ? "Processing..." : "Process Payment"}
             </Button>
           </div>
         </div>
