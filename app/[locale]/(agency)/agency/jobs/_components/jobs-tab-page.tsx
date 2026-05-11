@@ -65,6 +65,7 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [notificationRefreshKey, setNotificationRefreshKey] = useState(0);
 
     // Stable function — never recreated, reads latest values via refs
     const updatePageQueryParam = useCallback(
@@ -98,6 +99,18 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
     useEffect(() => {
         jobsSharedUiState.sort = sortValue;
     }, [sortValue]);
+
+    useEffect(() => {
+        const handler = () => {
+            setNotificationRefreshKey((value) => value + 1);
+        };
+
+        window.addEventListener("app-data-refresh", handler);
+
+        return () => {
+            window.removeEventListener("app-data-refresh", handler);
+        };
+    }, []);
 
     // Reset to page 1 only when search or sort changes — NOT on page changes
     const isFirstRender = useRef(true);
@@ -154,7 +167,7 @@ const JobsTabPage = ({ tab, sectionTitle }: JobsTabPageProps) => {
         return () => {
             mounted = false;
         };
-    }, [currentPage, searchInput, sortValue, tab]);
+    }, [currentPage, searchInput, sortValue, tab, notificationRefreshKey]);
 
     const showingCount = useMemo(() => {
         const previousCount = (currentPage - 1) * PAGE_SIZE;

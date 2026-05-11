@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileStore } from "@/store/client-profile-store";
 import Loader from "@/components/spin-loader";
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 import Link from "next/link";
 
 const ProfileCard = () => {
@@ -14,7 +14,6 @@ const ProfileCard = () => {
   const profile = useProfileStore((state) => state.profile);
   const isLoading = useProfileStore((state) => state.isLoading);
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
-  const { logout } = useLogout();
   const locale = useLocale();
 
   useEffect(() => {
@@ -64,12 +63,9 @@ const ProfileCard = () => {
             </div>
 
             <div className="flex justify-end">
-              <button
-                className="cursor-pointer rounded-md bg-Secondary px-6 py-1 text-sm text-Primary"
-                onClick={() => logout()}
-              >
+              <LogoutConfirmButton className="cursor-pointer rounded-md bg-Secondary px-6 py-1 text-sm text-Primary disabled:opacity-60" loadingChildren="Logging out...">
                 {t("logout")}
-              </button>
+              </LogoutConfirmButton>
             </div>
           </>
         )}

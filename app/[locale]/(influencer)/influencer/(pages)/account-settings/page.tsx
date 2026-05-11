@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getInfluencerProfile } from "@/service/influencer/profile/profile";
 import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ export default function AccountSettingsPage() {
   const [profileData, setProfileData] = useState<InfluencerProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getInfluencerProfile();
@@ -30,11 +30,23 @@ export default function AccountSettingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    void fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    const handler = () => {
+      void fetchProfile();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchProfile]);
 
   const deleteAccountFullName = `${profileData?.firstName ?? ""} ${
     profileData?.lastName ?? ""
@@ -42,7 +54,7 @@ export default function AccountSettingsPage() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
         {/* Left */}
         <ProfileSummaryCard profileData={profileData} loading={loading} />
 
@@ -55,7 +67,7 @@ export default function AccountSettingsPage() {
         <SocialLinksCard />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+      <div className="grid grid-cols-1 gap-8 mt-6 lg:grid-cols-12 lg:gap-10">
         {/* Left column */}
         <div className="lg:col-span-8">
           <div className="flex flex-col gap-4">

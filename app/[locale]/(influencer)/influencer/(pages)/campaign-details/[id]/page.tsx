@@ -44,6 +44,18 @@ const Page = () => {
     fetchJob();
   }, [fetchJob]);
 
+  useEffect(() => {
+    const handler = () => {
+      void fetchJob();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchJob]);
+
   if (loading) {
     return (
       <div className="space-y-4">

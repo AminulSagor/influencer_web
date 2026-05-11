@@ -15,6 +15,7 @@ import {
 import { SidebarItem } from "@/types/app_sidebar-type";
 import TopBar from "@/app/[locale]/(influencer)/influencer/_component/top-bar";
 import { useLocale } from "next-intl";
+import NotificationPageRefresh from "@/components/notification-page-refresh";
 
 export default function InfluencerShell({
   children,
@@ -75,6 +76,7 @@ export default function InfluencerShell({
 
   return (
     <SidebarProvider>
+      <NotificationPageRefresh />
       {/* Full viewport height + proper scroll behavior */}
       <div className="flex w-full">
         {/* Sidebar */}

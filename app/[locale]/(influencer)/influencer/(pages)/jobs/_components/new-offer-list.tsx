@@ -94,6 +94,18 @@ const NewOfferList = ({ search, sort }: NewOfferListProps) => {
     fetchJobs();
   }, [fetchJobs]);
 
+  useEffect(() => {
+    const handler = () => {
+      void fetchJobs();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchJobs]);
+
   const selectedAddress = useMemo(
     () =>
       addresses.find(

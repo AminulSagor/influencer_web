@@ -71,6 +71,19 @@ const PayoutSettingsCard = () => {
   };
 
   useEffect(() => {
+    const handler = () => {
+      void fetchProfile();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, []);
+
+
+  useEffect(() => {
     fetchProfile();
   }, []);
 

@@ -131,6 +131,18 @@ const CompletedJobList = ({ search, sort }: CompletedJobListProps) => {
     fetchJobs();
   }, [fetchJobs]);
 
+  useEffect(() => {
+    const handler = () => {
+      void fetchJobs();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchJobs]);
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">

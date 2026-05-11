@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { BsFillQuestionCircleFill } from "react-icons/bs";
 import {
   FaFacebookF,
@@ -11,7 +10,7 @@ import {
 import { SlSocialYoutube } from "react-icons/sl";
 import { TbBrandTiktok, TbBrandX } from "react-icons/tb";
 import type { AgencyProfileResponse } from "@/types/agency/account-settings";
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 import Link from "next/link";
 import { useLocale } from "next-intl";
 
@@ -46,7 +45,6 @@ const getDisplayUrl = (url: string) => {
 };
 
 const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
-  const { logout } = useLogout();
   const location = [profile?.address?.thana, profile?.address?.zilla]
     .filter(Boolean)
     .join(", ");
@@ -142,14 +140,12 @@ const BasicInfoCard = ({ profile, isLoading }: BasicInfoCardProps) => {
           </div>
 
           <div className="mt-auto pt-4">
-            <Button
-              className="w-full cursor-pointer bg-off-white text-light-green hover:bg-off-white/90 hover:text-light-green"
-              size="sm"
-              type="button"
-              onClick={logout}
+            <LogoutConfirmButton
+              className="w-full cursor-pointer rounded-md bg-off-white px-4 py-2 text-sm font-medium text-light-green hover:bg-off-white/90 hover:text-light-green disabled:opacity-60"
+              loadingChildren="Logging out..."
             >
               Log out
-            </Button>
+            </LogoutConfirmButton>
           </div>
         </div>
       </div>

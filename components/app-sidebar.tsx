@@ -1,6 +1,6 @@
 "use client";
 
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 import {
   LayoutDashboard,
   BriefcaseBusiness,
@@ -59,11 +59,10 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ items: _items }: { items?: unknown[] }) {
+  void _items;
   const pathname = usePathname();
   const locale = useLocale();
-  const { logout, loading: logoutLoading } = useLogout();
-
   return (
     <Sidebar>
       <SidebarContent className="bg-white">
@@ -102,16 +101,20 @@ export function AppSidebar() {
               })}
 
               <SidebarMenuItem>
-                <SidebarMenuButton
+                <LogoutConfirmButton
                   className={cn(
-                    "py-5 border text-[#2D5016] transition-all duration-150 ease-in-out hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer",
-                    logoutLoading && "opacity-50 pointer-events-none"
+                    "flex w-full items-center gap-2 rounded-md py-5 px-2 border text-[#2D5016] transition-all duration-150 ease-in-out hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer"
                   )}
-                  onClick={logout}
+                  loadingChildren={
+                    <>
+                      <LogOut className="size-4" />
+                      <span>Logging out...</span>
+                    </>
+                  }
                 >
-                  <LogOut />
-                  <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
-                </SidebarMenuButton>
+                  <LogOut className="size-4" />
+                  <span>Logout</span>
+                </LogoutConfirmButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 import { cn } from "@/lib/utils";
 import { SidebarItem } from "@/types/app_sidebar-type";
 import { LogOut } from "lucide-react";
@@ -33,8 +33,6 @@ const isActiveRoute = (currentPath: string, itemPath: string) => {
 
 export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
   const pathname = usePathname();
-  const { logout, loading } = useLogout();
-
   const normalizedPath = stripLocale(pathname);
 
   // show logout on all influencer/brand routes (locale removed)
@@ -83,21 +81,21 @@ export function GenericAppSidebar({ items }: { items: SidebarItem[] }) {
                 {/* ================= LOGOUT (ACTION, NOT LINK) ================= */}
                 {showLogout && (
                   <div>
-                    <button
-                      onClick={logout}
+                    <LogoutConfirmButton
                       className={cn(
                         "flex w-full items-center gap-2 rounded-md border px-2 py-3",
-                        "text-[#2D5016] transition hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current",
-                        loading && "opacity-60 cursor-not-allowed"
+                        "text-[#2D5016] transition hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current"
                       )}
-                      disabled={loading}
-                      type="button"
+                      loadingChildren={
+                        <>
+                          <LogOut className="w-5 h-5" />
+                          <span className="font-medium"><Loader /></span>
+                        </>
+                      }
                     >
                       <LogOut className="w-5 h-5" />
-                      <span className="font-medium">
-                        {loading ? <Loader /> : "Logout"}
-                      </span>
-                    </button>
+                      <span className="font-medium">Logout</span>
+                    </LogoutConfirmButton>
                   </div>
                 )}
               </SidebarMenu>

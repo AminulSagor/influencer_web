@@ -5,6 +5,7 @@ import { GenericAppSidebar } from "@/components/generic-sidebar";
 import TopBar from "@/app/[locale]/(brand)/brand/_components/top-bar";
 import { useLocale } from "next-intl";
 import { getBrandSidebarItems } from "@/constant/navigation";
+import NotificationPageRefresh from "@/components/notification-page-refresh";
 
 export default function BrandShell({
   children,
@@ -18,6 +19,7 @@ export default function BrandShell({
 
   return (
     <SidebarProvider>
+      <NotificationPageRefresh />
       <div className="flex h-dvh w-full bg-[#F4F5F7]">
         <GenericAppSidebar items={items} />
 

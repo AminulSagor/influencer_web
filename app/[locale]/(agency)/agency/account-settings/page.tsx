@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import BasicInfoCard from "./_components/basic-info-card";
 import NicheCard from "./_components/niche-card";
 import ProfileCompletionCard from "./_components/profile-completion-card";
@@ -18,25 +16,34 @@ import type { AgencyProfileResponse } from "@/types/agency/account-settings";
 const Page = () => {
   const [profile, setProfile] = useState<AgencyProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const params = useParams<{ locale: string }>();
-  const locale = params?.locale || "en";
+  const fetchAgencyProfile = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await getAgencyProfile();
+      setProfile(response);
+    } catch (error) {
+      console.error("Failed to load agency profile:", error);
+      setProfile(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchAgencyProfile = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getAgencyProfile();
-        setProfile(response);
-      } catch (error) {
-        console.error("Failed to load agency profile:", error);
-        setProfile(null);
-      } finally {
-        setIsLoading(false);
-      }
+    void fetchAgencyProfile();
+  }, [fetchAgencyProfile]);
+
+  useEffect(() => {
+    const handler = () => {
+      void fetchAgencyProfile();
     };
 
-    fetchAgencyProfile();
-  }, []);
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchAgencyProfile]);
 
   const deleteAccountFullName =
     profile?.agencyName?.trim() ||

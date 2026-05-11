@@ -91,6 +91,7 @@ const BrandAssetsCard = () => {
   const [platformOptions, setPlatformOptions] = useState<PlatformOption[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
+  const [profileRefreshKey, setProfileRefreshKey] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
   const availablePlatformNames = useMemo(() => {
@@ -138,6 +139,18 @@ const BrandAssetsCard = () => {
       },
     ];
   };
+
+  useEffect(() => {
+    const handler = () => {
+      setProfileRefreshKey((value) => value + 1);
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -199,7 +212,7 @@ const BrandAssetsCard = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [profileRefreshKey]);
 
   const usedPlatforms = useMemo(
     () => rows.map((row) => normalizePlatform(row.platform)),

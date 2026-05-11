@@ -243,6 +243,18 @@ export default function CampaignsPage() {
     setCampaignReloadKey((value) => value + 1);
   };
 
+  useEffect(() => {
+    const handler = () => {
+      setCampaignReloadKey((value) => value + 1);
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, []);
+
   //tabs
   const localizedTabItems = CAMPAIGN_TAB_ITEMS.map((item) => ({
     ...item,

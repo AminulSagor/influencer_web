@@ -54,6 +54,19 @@ export default function SkillsCard() {
     }
   };
 
+  useEffect(() => {
+    const handler = () => {
+      void fetchProfile();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, []);
+
+
   const fetchSkillOptions = async () => {
     try {
       setIsOptionsLoading(true);

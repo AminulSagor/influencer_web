@@ -85,6 +85,18 @@ export default function CampaignDetailsProvider({
     await fetchCampaign(false);
   }, [fetchCampaign]);
 
+  React.useEffect(() => {
+    const handler = () => {
+      void refreshCampaign();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [refreshCampaign]);
+
   if (loading) {
     return <CampaignDetailsLoading />;
   }

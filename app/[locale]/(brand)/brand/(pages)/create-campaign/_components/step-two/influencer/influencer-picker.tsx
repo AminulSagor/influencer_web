@@ -1,5 +1,6 @@
 import SelectedTagsBox from "@/app/[locale]/(brand)/brand/(pages)/create-campaign/_components/step-two/influencer/selected-tags-box";
 import { Input } from "@/components/ui/input";
+import type { KeyboardEvent } from "react";
 type Influencer = { id: string; fullName: string };
 
 type InfluencerPickerProps = {
@@ -27,8 +28,14 @@ const InfluencerPicker = ({
   onClearError,
   error,
 }: InfluencerPickerProps) => {
+  const normalizeName = (name: string) => name.trim().toLowerCase();
+
   const addInfluencer = (influencer: Influencer) => {
-    const exists = selected.some((item) => item.id === influencer.id);
+    const exists = selected.some(
+      (item) =>
+        item.id === influencer.id ||
+        normalizeName(item.fullName) === normalizeName(influencer.fullName)
+    );
 
     if (!exists) {
       setSelected([...selected, influencer]);
@@ -37,6 +44,64 @@ const InfluencerPicker = ({
     setValue("");
     setSuggestions([]);
     onClearError();
+  };
+
+  const addTypedInfluencers = (names: string[], nextInputValue = "") => {
+    const cleanedNames = names.map((name) => name.trim()).filter(Boolean);
+
+    if (cleanedNames.length === 0) {
+      setValue(nextInputValue);
+      return;
+    }
+
+    const nextSelected = [...selected];
+
+    cleanedNames.forEach((name) => {
+      const exists = nextSelected.some(
+        (item) => normalizeName(item.fullName) === normalizeName(name)
+      );
+
+      if (!exists) {
+        nextSelected.push({
+          id: `custom-${normalizeName(name).replace(/\s+/g, "-")}`,
+          fullName: name,
+        });
+      }
+    });
+
+    setSelected(nextSelected);
+    setValue(nextInputValue);
+    setSuggestions([]);
+    onClearError();
+  };
+
+  const handleInputChange = (nextValue: string) => {
+    if (nextValue.includes(",")) {
+      const parts = nextValue.split(",");
+      const remainingValue = parts[parts.length - 1] ?? "";
+      addTypedInfluencers(parts.slice(0, -1), remainingValue);
+
+      if (remainingValue.trim()) {
+        onSearch(remainingValue);
+      }
+
+      return;
+    }
+
+    setValue(nextValue);
+
+    if (nextValue.trim()) {
+      onSearch(nextValue);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+
+    event.preventDefault();
+    addTypedInfluencers([value]);
   };
 
   const removeInfluencer = (fullName: string) => {
@@ -49,16 +114,8 @@ const InfluencerPicker = ({
 
       <Input
         value={value}
-        onChange={(e) => {
-          const nextValue = e.target.value;
-          setValue(nextValue);
-
-          if (nextValue.trim()) {
-            onSearch(nextValue);
-          } else {
-            setSuggestions([]);
-          }
-        }}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onKeyDown={handleInputKeyDown}
         placeholder="Type influencer name..."
         className={`h-12 placeholder:text-sm focus-visible:ring-1 ${
           error ? "border-red-500" : ""

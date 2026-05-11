@@ -5,10 +5,12 @@ import ProfileUpdateCard from "@/app/[locale]/(brand)/brand/(pages)/account-sett
 import VerificationMethodsCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/verification-methods-card";
 import BrandDeleteAccountSection from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/brand-delete-account-section";
 import NicheCard from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/niche-card";
+import AccountSettingsNotificationRefresh from "@/app/[locale]/(brand)/brand/(pages)/account-settings/_components/account-settings-notification-refresh";
 
 const AccountSettingsPage = () => {
   return (
     <div className="space-y-4">
+      <AccountSettingsNotificationRefresh />
       <div className="flex flex-col md:flex-row gap-4 lg:gap-8">
         <ProfileCard />
         <InformationCard />

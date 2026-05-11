@@ -1,6 +1,6 @@
 "use client";
 
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 
 import { BriefcaseBusiness, LayoutDashboard, Settings, XCircle } from "lucide-react";
 
@@ -80,8 +80,6 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { logout, loading: logoutLoading } = useLogout();
-
   // Handle locale prefix for matching
   const normalizedPathname = pathname.replace(/^\/(?:en|bn)/, "") || "/";
 
@@ -182,16 +180,18 @@ export function AppSidebar() {
 
               {/* Logout button */}
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  className={cn(
-                    "py-5 border text-Primary hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer",
-                    logoutLoading && "opacity-50 pointer-events-none"
-                  )}
-                  onClick={logout}
+                <LogoutConfirmButton
+                  className="flex w-full items-center gap-2 rounded-md py-5 px-2 border text-Primary hover:border-destructive hover:bg-destructive hover:text-white hover:[&_svg]:!text-white hover:[&_svg]:!stroke-white [&_svg]:text-current [&_svg]:stroke-current cursor-pointer disabled:opacity-60"
+                  loadingChildren={
+                    <>
+                      <RiLogoutCircleRLine />
+                      <span>Logging out...</span>
+                    </>
+                  }
                 >
                   <RiLogoutCircleRLine />
-                  <span>{logoutLoading ? "Logging out..." : "Logout"}</span>
-                </SidebarMenuButton>
+                  <span>Logout</span>
+                </LogoutConfirmButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

@@ -63,6 +63,18 @@ const ActiveJobList = ({ search, sort }: ActiveJobListProps) => {
     fetchJobs();
   }, [fetchJobs]);
 
+  useEffect(() => {
+    const handler = () => {
+      void fetchJobs();
+    };
+
+    window.addEventListener("app-data-refresh", handler);
+
+    return () => {
+      window.removeEventListener("app-data-refresh", handler);
+    };
+  }, [fetchJobs]);
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",

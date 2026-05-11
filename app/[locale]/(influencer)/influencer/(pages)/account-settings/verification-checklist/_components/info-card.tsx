@@ -2,7 +2,7 @@
 
 import { Music, AlertCircle } from "lucide-react";
 import { FaInstagram, FaYoutube } from "react-icons/fa6";
-import { useLogout } from "@/hooks/useLogout";
+import LogoutConfirmButton from "@/components/logout-confirm-button";
 import { InfluencerProfileData } from "@/types/influencer/account_setting/profile_type";
 
 type InfoCardProps = {
@@ -11,8 +11,6 @@ type InfoCardProps = {
 };
 
 export default function InfoCard({ status, profile }: InfoCardProps) {
-  const { logout, loading: logoutLoading } = useLogout();
-
   const fullName =
     [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") ||
     "Influencer";
@@ -84,13 +82,12 @@ export default function InfoCard({ status, profile }: InfoCardProps) {
             </div>
           </div>
 
-          <button
-            onClick={logout}
-            disabled={logoutLoading}
+          <LogoutConfirmButton
             className="rounded-lg bg-[#F1F6DE] px-6 py-1.5 text-sm font-medium text-[#2D5016] hover:opacity-90 disabled:opacity-50 sm:max-w-44"
+            loadingChildren="Logging out..."
           >
-            {logoutLoading ? "Logging out..." : "Log Out"}
-          </button>
+            Log Out
+          </LogoutConfirmButton>
         </div>
       </div>
     </div>

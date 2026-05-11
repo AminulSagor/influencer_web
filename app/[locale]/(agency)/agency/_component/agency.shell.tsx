@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import TopBar from "./top-bar";
 import { getAgencySidebarItems } from "@/constant/navigation";
 import { useLocale } from "next-intl";
+import NotificationPageRefresh from "@/components/notification-page-refresh";
 const AgencyShell = ({
   children,
   isVerified,
@@ -17,6 +18,7 @@ const AgencyShell = ({
   return (
     <div>
       <SidebarProvider>
+      <NotificationPageRefresh />
         <AppSidebar items={items} />
         <main className="w-full flex flex-col">
           <TopBar />
